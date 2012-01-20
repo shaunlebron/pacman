@@ -1,8 +1,15 @@
 <head>
 <script>
-var map_w = 28;
-var map_h = 31;
-var map = (
+
+//
+// =========== TILE MAP ============
+//
+
+var tileCols = 28;
+var tileRows = 31;
+
+// initial tile state
+var tiles = (
 "||||||||||||||||||||||||||||" +
 "|............||............|" +
 "|.||||.|||||.||.|||||.||||.|" +
@@ -35,44 +42,374 @@ var map = (
 "|..........................|" +
 "||||||||||||||||||||||||||||");
 
-var drawPill = function(x,y,c,p) {
+// current tile state
+var currentTiles;
+var resetTiles = function() {
+    currentTiles = tiles.split("");
+};
+var getTile = function(x,y) {
+    if (x>=0 && x<tileCols && y>=0 && y<tileRows) 
+        return currentTiles[x+y*tileCols];
+};
+
+//
+// ========== TILE DRAWING ============
+//
+
+var size = 8; // tile size
+
+var drawPill = function(x,y,c,s) {
     ctx.fillStyle = c;
-    ctx.fillRect(x*size + size/2 - p/2, y*size + size/2 - p/2, p, p);
+    ctx.fillRect(x*size + size/2 - s/2, y*size + size/2 - s/2, s, s);
 };
 var drawBlock = function(x,y,c) {
     ctx.fillStyle = c;
     ctx.fillRect(x*size,y*size,size,size);
 };
 var drawFloor = function(x,y) { drawBlock(x,y,"#DDD"); };
+var drawGhost = function(px,py,c,s) {
+    ctx.fillStyle = c;
+    ctx.fillRect(px-s/2, py-s/2, s, s);
+};
 
 var cellDraw = {};
 cellDraw['|'] = function(x,y) { };
-cellDraw['.'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",3); };
+cellDraw['.'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",2); };
 cellDraw['o'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",6); };
-cellDraw[' '] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#FFF",3); };
+cellDraw[' '] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#FFF",2); };
 cellDraw['_'] = function(x,y) { };
 cellDraw['-'] = function(x,y) { };
 
-var size = 8;
-var drawMap = function () {
+var isTileWalkable = function(t) {
+    return t==' ' || t=='.' || t=='o';
+};
+
+var drawTiles = function () {
     var x,y;
     var i=0;
-    for (y=0; y<map_h; y++) {
-        for (x=0; x<map_w; x++) {
-            cellDraw[map[i++]](x,y);
+    for (y=0; y<tileRows; y++)
+    for (x=0; x<tileCols; x++)
+        cellDraw[currentTiles[i++]](x,y);
+};
+
+//
+// ============ TILE DIRECTION ============
+// 
+
+// direction enums (in order of ghost turn preference)
+var DIR_UP = 0;
+var DIR_LEFT = 1;
+var DIR_DOWN = 2;
+var DIR_RIGHT = 3;
+
+// get direction enum from a direction vector
+var getEnumFromDir = function(dir) {
+    if (dir.x==-1) return DIR_LEFT;
+    if (dir.x==1) return DIR_RIGHT;
+    if (dir.y==-1) return DIR_UP;
+    if (dir.y==1) return DIR_DOWN;
+};
+
+// set direction vector from a direction enum
+var setDirFromEnum = function(dir,dirEnum) {
+    if (dirEnum == DIR_UP)         { dir.x = 0; dir.y =-1; }
+    else if (dirEnum == DIR_LEFT)  { dir.x =-1; dir.y = 0; }
+    else if (dirEnum == DIR_DOWN)  { dir.x = 0; dir.y = 1; }
+    else if (dirEnum == DIR_RIGHT) { dir.x = 1; dir.y = 0; }
+};
+
+// get a list of the four surrounding tiles
+var getSurroundingTiles = function(tile) {
+    return [
+        getTile(tile.x, tile.y-1), // DIR_UP
+        getTile(tile.x-1, tile.y), // DIR_LEFT
+        getTile(tile.x, tile.y+1), // DIR_DOWN
+        getTile(tile.x+1, tile.y)  // DIR_RIGHT
+    ];
+};
+
+//
+// ============ ACTOR SPEEDS ============
+//
+
+// speed control table (from Jamey Pittman)
+var stepSizes = (
+                     // LEVEL 1
+"1111111111111111" + // pac-man (normal)
+"0111111111111111" + // ghosts (normal)
+"1111211111112111" + // pac-man (fright)
+"0110110101101101" + // ghosts (fright)
+"0101010101010101" + // ghosts (tunnel)
+"1111111111111111" + // elroy 1
+"1111111121111111" + // elroy 2
+
+                     // LEVELS 2-4
+"1111211111112111" + // pac-man (normal)
+"1111111121111111" + // ghosts (normal)
+"1111211112111121" + // pac-man (fright)
+"0110110110110111" + // ghosts (fright)
+"0110101011010101" + // ghosts (tunnel)
+"1111211111112111" + // elroy 1
+"1111211112111121" + // elroy 2
+
+                     // LEVELS 5-20
+"1121112111211121" + // pac-man (normal)
+"1111211112111121" + // ghosts (normal)
+"1121112111211121" + // pac-man (fright) (N/A for levels 17, 19 & 20)
+"0111011101110111" + // ghosts (fright)  (N/A for levels 17, 19 & 20)
+"0110110101101101" + // ghosts (tunnel)
+"1121112111211121" + // elroy 1
+"1121121121121121" + // elroy 2
+
+                     // LEVELS 21+
+"1111211111112111" + // pac-man (normal)
+"1111211112111121" + // ghosts (normal)
+"0000000000000000" + // pac-man (fright) N/A
+"0000000000000000" + // ghosts (fright)  N/A
+"0110110101101101" + // ghosts (tunnel)
+"1121112111211121" + // elroy 1
+"1121121121121121"); // elroy 2
+
+// used as "pattern" parameter in getStepSize()
+var STEP_PAC = 0;
+var STEP_GHOST = 1;
+var STEP_PAC_FRIGHT = 2;
+var STEP_GHOST_FRIGHT = 3;
+var STEP_GHOST_TUNNEL = 4;
+var STEP_ELROY1 = 5;
+var STEP_ELROY2 = 6;
+
+var getStepSize = function(level, pattern, frame) {
+    var entry;
+    if (level < 1) return;
+    else if (level==1)                  entry = 0;
+    else if (level >= 2 && level <= 4)  entry = 1;
+    else if (level >= 5 && level <= 20) entry = 2;
+    else if (level >= 21)               entry = 3;
+    return stepSizes[entry*7*16 + pattern*16 + frame%16];
+};
+
+//
+// ============== GHOST BEHAVIOR ==============
+//
+
+var MODE_GHOST_CHASE = 0;
+var MODE_GHOST_SCATTER = 1;
+var MODE_GHOST_FRIGHT = 2;
+
+var Ghost = function() {
+    this.mode = 0;
+    this.target = {};
+    this.home = {};
+    this.tile = {};
+    this.pixel = {};
+    this.dir = {};
+    this.dirEnum = 0;
+    this.frame = 0;
+    this.color = 0;
+    this.reverse = false;
+};
+
+Ghost.prototype.getStepPattern = function() {
+    // TODO: override this function for blinky to trigger elroy states
+    // TODO: add tunnel case
+    var pattern;
+    if (this.mode == MODE_GHOST_CHASE || this.mode == MODE_GHOST_SCATTER)
+        return STEP_GHOST;
+    else
+        return STEP_GHOST_FRIGHT;
+};
+
+// sets direction by changing two coupled variables
+Ghost.prototype.setDir = function(dirEnum) {
+    setDirFromEnum(this.dir, dirEnum);
+    this.dirEnum = dirEnum;
+};
+
+// sets position by changing two coupled variables
+Ghost.prototype.setPos = function(px,py) {
+    this.pixel.x = px;
+    this.pixel.y = py;
+    this.tile.x = Math.floor(px / size);
+    this.tile.y = Math.floor(py / size);
+};
+
+// determines the new direction
+Ghost.prototype.steer = function() {
+    var dirEnum;
+    var blocked;
+
+    var dir = {};
+    var oppDirEnum = (this.dirEnum+2)%4;
+    var i,dx,dy;
+    var dist,minDist = Infinity;
+
+    var surroundTiles;
+
+    // only steer at mid tile
+    var px = this.pixel.x % size;
+    var py = this.pixel.y % size;
+    if (px != size/2 || py != size/2)
+        return;
+
+    // reverse direction if commanded
+    if (this.reverse) {
+        dirEnum = oppDirEnum;
+        this.reverse = false;
+    }
+    else {
+        // get blocked passages
+        surroundTiles = getSurroundingTiles(this.tile);
+        blocked = [1,1,1,1];
+        for (i=0; i<4; i++) {
+            blocked[i] = !isTileWalkable(surroundTiles[i]);
+        }
+
+        // not allowed to turn around
+        blocked[oppDirEnum] = true;
+
+        // random turn if frightened
+        if (this.mode == MODE_GHOST_FRIGHT) {
+            dirEnum = Math.floor(Math.random()*5);
+            while (blocked[dirEnum])
+                dirEnum = (dirEnum+1)%4;
+        }
+        // choose direction that minimizes distance to target
+        else for (i=0; i<4; i++) if (!blocked[i]) {
+            setDirFromEnum(dir,i);
+            dx = dir.x + this.tile.x - this.target.x;
+            dy = dir.y + this.tile.y - this.target.y;
+            dist = dx*dx+dy*dy;
+            if (dist < minDist) {
+                minDist = dist;
+                dirEnum = i;
+            }
+        }
+
+        // output debug info if couldn't find direction
+        if (!(dirEnum>=0 && dirEnum<=4)) {
+            console.log("no direction chosen");
+            console.log(surroundTiles, this.dirEnum, oppDirEnum);
+            console.log(blocked);
         }
     }
+
+    // commit the direction
+    this.setDir(dirEnum);
 };
 
-var ctx;
-var ctx_w, ctx_h;
+Ghost.prototype.update = function() {
+
+    // get number of steps to advance in this frame
+    var steps = getStepSize(level, this.getStepPattern(), this.frame);
+    var i;
+
+    for (i=0; i<steps; i++) {
+        // step ahead one pixel
+        this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
+        this.steer();
+    }
+
+    this.frame += 1;
+};
+
+Ghost.prototype.draw = function() {
+    drawGhost(this.pixel.x, this.pixel.y, this.color, 20);
+};
+
+var ghosts = [ new Ghost() ];
+var blinky = ghosts[0];
+
+var initGhosts = function() {
+
+    // define blinky
+    blinky.setDir(DIR_LEFT);
+    blinky.setPos(size*tileCols/2, 11*size+size/2);
+    blinky.target.x = 0;
+    blinky.target.y = 0;
+    blinky.color = "rgb(200,0,0)";
+};
+
+//
+// ============== PLAYER BEHAVIOR ==============
+//
+
+var Player = function() {
+    this.mode = 0; // bool
+    this.tile = {};
+    this.pixel = {};
+    this.dir = {};
+    this.nextDir = {};
+};
+
+Player.prototype.update = function() {
+    // turn without waiting to hit mid tile
+    // stop mid tile if cannot continue direction
+    // stop for 1 frame when eat pill
+    // reverse ghost direction when eat energizer
+    // increase speed when eat energizer and stop for 3 frames
+};
+
+//
+// =========== MAIN SETUP ==========
+//
+
+var canvas;
+var ctx, ctx_w, ctx_h;
 
 window.onload = function() {
-    ctx = document.getElementById("canvas").getContext("2d");
+    canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d");
     ctx_w = ctx.canvas.width;
     ctx_h = ctx.canvas.height;
-    drawMap();
+
+    resetTiles();
+    initGhosts();
+
+    setInterval(update, 1000/60);
+    setInterval(draw, 1000/25);
+
+    canvas.addEventListener("mousemove", function(evt) {
+        var mousePos = getMousePos(canvas,evt);
+        blinky.target.x = Math.floor(mousePos.x / size);
+        blinky.target.y = Math.floor(mousePos.y / size);
+    }, false);
 };
+
+function getMousePos(canvas, evt){
+    // get canvas position
+    var obj = canvas;
+    var top = 0;
+    var left = 0;
+    while (obj.tagName != 'BODY') {
+        top += obj.offsetTop;
+        left += obj.offsetLeft;
+        obj = obj.offsetParent;
+    }
+
+    // return relative mouse position
+    var mouseX = evt.clientX - left + window.pageXOffset;
+    var mouseY = evt.clientY - top + window.pageYOffset;
+    return {
+        x: mouseX,
+        y: mouseY
+    };
+}
+
+var level = 1;
+
+// update the game state at 60Hz
+var update = function() {
+    blinky.update();
+};
+
+// draw the game state at 30Hz
+var draw = function() {
+    ctx.clearRect(0,0,ctx_w,ctx_h);
+    drawTiles();
+    blinky.draw();
+};
+
 </script>
 </head>
 <body>

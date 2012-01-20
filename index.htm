@@ -61,8 +61,8 @@ var getTile = function(x,y) {
 // ========== TILE DRAWING ============
 //
 
-var size = 8; // tile size
-var mid = {x:3, y:4};
+var size = 8;         // tile size
+var mid = {x:3, y:4}; // x,y center of a tile
 
 var drawPill = function(x,y,c,s) {
     ctx.fillStyle = c;
@@ -81,12 +81,12 @@ var drawActor = function(px,py,c,s) {
 };
 
 var cellDraw = {};
-cellDraw['|'] = function(x,y) { };
-cellDraw['.'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",2); };
-cellDraw['o'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",6); };
-cellDraw[' '] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#FFF",2); };
-cellDraw['_'] = function(x,y) { };
-cellDraw['-'] = function(x,y) { };
+cellDraw['|'] = function(x,y) { }; // wall
+cellDraw['.'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",2); }; // pellet
+cellDraw['o'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",6); }; // energizer
+cellDraw[' '] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#FFF",2); }; // walkable space
+cellDraw['_'] = function(x,y) { }; // dead space
+cellDraw['-'] = function(x,y) { }; // ghost door
 
 var isTileWalkable = function(t) {
     return t==' ' || t=='.' || t=='o';
@@ -209,13 +209,13 @@ var getStepSize = function(level, pattern, frame) {
 
 var Actor = function() {
     this.mode = 0;
-    this.tile = {};
-    this.pixel = {};
-    this.tilePixel = {};
-    this.distToMid = {};
-    this.dir = {};
-    this.dirEnum = 0;
-    this.frame = 0;
+    this.tile = {};      // x,y tile position (0<=x<tileCols, 0<=y<tileRows)
+    this.pixel = {};     // x,y pixel position (0<=x<tileCols*size, 0<=y<tileRows*size)
+    this.tilePixel = {}; // x,y pixel in tile (0<=x,y<size)
+    this.distToMid = {}; // x,y pixel distance from center of tile
+    this.dir = {};       // x,y direction (0<=x,y<=1)
+    this.dirEnum = 0;    // direction enumeration (0<=x,y<=4)
+    this.frame = 0;      // frame count
     this.color = 0;
 };
 
@@ -267,15 +267,17 @@ var MODE_GHOST_CHASE = 0;
 var MODE_GHOST_SCATTER = 1;
 var MODE_GHOST_FRIGHT = 2;
 
+// Ghost constructor
 var Ghost = function() {
-    Actor.apply(this);
-    this.target = {}; // target tile
-    this.home = {};   // home tile
+    Actor.apply(this); // inherit data from Actor
+    this.target = {}; // x,y target tile
+    this.home = {};   // x,y home tile
     this.color = 0;
-    this.reverse = false;
+    this.reverse = false; // signal to reverse ghost direction
 };
-Ghost.prototype.__proto__ = Actor.prototype;
+Ghost.prototype.__proto__ = Actor.prototype; // inherit functions from Actor
 
+// gets the step pattern (speed) used in speed control table
 Ghost.prototype.getStepPattern = function() {
     // TODO: override this function for blinky to trigger elroy states
     // TODO: add tunnel case
@@ -385,12 +387,13 @@ var initGhosts = function() {
 var MODE_PACMAN_NORM = 0;
 var MODE_PACMAN_ENERGY = 1;
 
+// Pacman constructor
 var Pacman = function() {
-    Actor.apply(this);
-    this.nextDir = {};
-    this.nextDirEnum = 0;
+    Actor.apply(this); // inherit data from Actor
+    this.nextDir = {};    // x,y direction which reflects the player's controls
+    this.nextDirEnum = 0; // direction enumeration for nextDir
 };
-Pacman.prototype.__proto__ = Actor.prototype;
+Pacman.prototype.__proto__ = Actor.prototype; // inherit functions from Actor
 
 // sets the next direction and updates its dependent variables
 Pacman.prototype.setNextDir = function(nextDirEnum) {
@@ -398,6 +401,7 @@ Pacman.prototype.setNextDir = function(nextDirEnum) {
     this.nextDirEnum = nextDirEnum;
 };
 
+// gets the step pattern (speed) used in speed control table
 Pacman.prototype.getStepPattern = function() {
     var pattern;
     if (this.mode == MODE_PACMAN_NORM) 

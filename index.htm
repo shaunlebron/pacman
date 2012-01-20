@@ -6,10 +6,13 @@
 //
 
 var tileCols = 28;
-var tileRows = 31;
+var tileRows = 36;
 
 // initial tile state
 var tiles = (
+"____________________________" +
+"____________________________" +
+"____________________________" +
 "||||||||||||||||||||||||||||" +
 "|............||............|" +
 "|.||||.|||||.||.|||||.||||.|" +
@@ -40,7 +43,9 @@ var tiles = (
 "|.||||||||||.||.||||||||||.|" +
 "|.||||||||||.||.||||||||||.|" +
 "|..........................|" +
-"||||||||||||||||||||||||||||");
+"||||||||||||||||||||||||||||" +
+"____________________________" +
+"____________________________");
 
 // current tile state
 var currentTiles;
@@ -57,17 +62,20 @@ var getTile = function(x,y) {
 //
 
 var size = 8; // tile size
+var mid = {x:3, y:4};
 
 var drawPill = function(x,y,c,s) {
     ctx.fillStyle = c;
-    ctx.fillRect(x*size + size/2 - s/2, y*size + size/2 - s/2, s, s);
+    ctx.fillRect(x*size + mid.x - s/2, y*size + mid.y - s/2, s, s);
 };
 var drawBlock = function(x,y,c) {
     ctx.fillStyle = c;
     ctx.fillRect(x*size,y*size,size,size);
 };
-var drawFloor = function(x,y) { drawBlock(x,y,"#DDD"); };
-var drawGhost = function(px,py,c,s) {
+var drawFloor = function(x,y) {
+    drawBlock(x,y,"#DDD");
+};
+var drawActor = function(px,py,c,s) {
     ctx.fillStyle = c;
     ctx.fillRect(px-s/2, py-s/2, s, s);
 };
@@ -128,6 +136,11 @@ var getSurroundingTiles = function(tile) {
     ];
 };
 
+// get a tile next to the given tile
+var getNextTile = function(tile, dir) {
+    return getTile(tile.x+dir.x, tile.y+dir.y);
+};
+
 //
 // ============ ACTOR SPEEDS ============
 //
@@ -171,14 +184,15 @@ var stepSizes = (
 "1121121121121121"); // elroy 2
 
 // used as "pattern" parameter in getStepSize()
-var STEP_PAC = 0;
+var STEP_PACMAN = 0;
 var STEP_GHOST = 1;
-var STEP_PAC_FRIGHT = 2;
+var STEP_PACMAN_FRIGHT = 2;
 var STEP_GHOST_FRIGHT = 3;
 var STEP_GHOST_TUNNEL = 4;
 var STEP_ELROY1 = 5;
 var STEP_ELROY2 = 6;
 
+// getter function to extract a step size from the table
 var getStepSize = function(level, pattern, frame) {
     var entry;
     if (level < 1) return;
@@ -190,7 +204,63 @@ var getStepSize = function(level, pattern, frame) {
 };
 
 //
-// ============== GHOST BEHAVIOR ==============
+// ============= COMMON ACTOR ==============
+//
+
+var Actor = function() {
+    this.mode = 0;
+    this.tile = {};
+    this.pixel = {};
+    this.tilePixel = {};
+    this.distToMid = {};
+    this.dir = {};
+    this.dirEnum = 0;
+    this.frame = 0;
+    this.color = 0;
+};
+
+// sets the position and updates its dependent variables
+Actor.prototype.setPos = function(px,py) {
+    this.pixel.x = px;
+    this.pixel.y = py;
+    this.commitPos();
+};
+
+// updates the position's dependent variables
+Actor.prototype.commitPos = function() {
+    this.tile.x = Math.floor(this.pixel.x / size);
+    this.tile.y = Math.floor(this.pixel.y / size);
+    this.tilePixel.x = this.pixel.x % size;
+    this.tilePixel.y = this.pixel.y % size;
+    this.distToMid.x = mid.x - this.tilePixel.x;
+    this.distToMid.y = mid.y - this.tilePixel.y;
+};
+
+// sets the direction and updates its dependent variables
+Actor.prototype.setDir = function(dirEnum) {
+    setDirFromEnum(this.dir, dirEnum);
+    this.dirEnum = dirEnum;
+};
+
+// updates the actor state
+Actor.prototype.update = function() {
+    // get number of steps to advance in this frame
+    var steps = getStepSize(level, this.getStepPattern(), this.frame);
+    var i;
+    for (i=0; i<steps; i++) {
+        this.step();
+        this.steer();
+    }
+    this.frame += 1;
+};
+
+// draws the actor
+Actor.prototype.draw = function() {
+    drawActor(this.pixel.x, this.pixel.y, this.color, 20);
+};
+
+//
+// ============== GHOST ACTOR ==============
 //
 
 var MODE_GHOST_CHASE = 0;
@@ -198,17 +268,13 @@ var MODE_GHOST_SCATTER = 1;
 var MODE_GHOST_FRIGHT = 2;
 
 var Ghost = function() {
-    this.mode = 0;
-    this.target = {};
-    this.home = {};
-    this.tile = {};
-    this.pixel = {};
-    this.dir = {};
-    this.dirEnum = 0;
-    this.frame = 0;
+    Actor.apply(this);
+    this.target = {}; // target tile
+    this.home = {};   // home tile
     this.color = 0;
     this.reverse = false;
 };
+Ghost.prototype.__proto__ = Actor.prototype;
 
 Ghost.prototype.getStepPattern = function() {
     // TODO: override this function for blinky to trigger elroy states
@@ -220,21 +286,12 @@ Ghost.prototype.getStepPattern = function() {
         return STEP_GHOST_FRIGHT;
 };
 
-// sets direction by changing two coupled variables
-Ghost.prototype.setDir = function(dirEnum) {
-    setDirFromEnum(this.dir, dirEnum);
-    this.dirEnum = dirEnum;
+// move forward
+Ghost.prototype.step = function() {
+    this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
 };
 
-// sets position by changing two coupled variables
-Ghost.prototype.setPos = function(px,py) {
-    this.pixel.x = px;
-    this.pixel.y = py;
-    this.tile.x = Math.floor(px / size);
-    this.tile.y = Math.floor(py / size);
-};
-
-// determines the new direction
+// determine direction
 Ghost.prototype.steer = function() {
     var dirEnum;
     var blocked;
@@ -247,9 +304,7 @@ Ghost.prototype.steer = function() {
     var surroundTiles;
 
     // only steer at mid tile
-    var px = this.pixel.x % size;
-    var py = this.pixel.y % size;
-    if (px != size/2 || py != size/2)
+    if (this.tilePixel.x != mid.x || this.tilePixel.y != mid.y)
         return;
 
     // reverse direction if commanded
@@ -274,23 +329,32 @@ Ghost.prototype.steer = function() {
             while (blocked[dirEnum])
                 dirEnum = (dirEnum+1)%4;
         }
-        // choose direction that minimizes distance to target
-        else for (i=0; i<4; i++) if (!blocked[i]) {
-            setDirFromEnum(dir,i);
-            dx = dir.x + this.tile.x - this.target.x;
-            dy = dir.y + this.tile.y - this.target.y;
-            dist = dx*dx+dy*dy;
-            if (dist < minDist) {
-                minDist = dist;
-                dirEnum = i;
+        else {
+            // set target
+            if (this.mode == MODE_GHOST_SCATTER) {
+                this.target.x = this.home.x;
+                this.target.y = this.home.y;
             }
-        }
+            else if (this.mode == MODE_GHOST_CHASE) {
+                this.target.x = pacman.tile.x;
+                this.target.y = pacman.tile.y;
+            }
 
-        // output debug info if couldn't find direction
-        if (!(dirEnum>=0 && dirEnum<=4)) {
-            console.log("no direction chosen");
-            console.log(surroundTiles, this.dirEnum, oppDirEnum);
-            console.log(blocked);
+            // not allowed to go up at these points
+            if ((this.tile.x == 12 || this.tile.x == 15) && (this.tile.y == 14 || this.tile.y == 26))
+                blocked[DIR_UP] = true;
+
+            // choose direction that minimizes distance to target
+            for (i=0; i<4; i++) if (!blocked[i]) {
+                setDirFromEnum(dir,i);
+                dx = dir.x + this.tile.x - this.target.x;
+                dy = dir.y + this.tile.y - this.target.y;
+                dist = dx*dx+dy*dy;
+                if (dist < minDist) {
+                    minDist = dist;
+                    dirEnum = i;
+                }
+            }
         }
     }
 
@@ -298,85 +362,94 @@ Ghost.prototype.steer = function() {
     this.setDir(dirEnum);
 };
 
-Ghost.prototype.update = function() {
+// create the ghosts
+var blinky = new Ghost();
+var pinky = new Ghost();
+var inky = new Ghost();
+var clyde = new Ghost();
+var ghosts = [ blinky, pinky, inky, clyde ];
 
-    // get number of steps to advance in this frame
-    var steps = getStepSize(level, this.getStepPattern(), this.frame);
-    var i;
-
-    for (i=0; i<steps; i++) {
-        // step ahead one pixel
-        this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
-        this.steer();
-    }
-
-    this.frame += 1;
-};
-
-Ghost.prototype.draw = function() {
-    drawGhost(this.pixel.x, this.pixel.y, this.color, 20);
-};
-
-var ghosts = [ new Ghost() ];
-var blinky = ghosts[0];
-
+// initialize the ghosts
 var initGhosts = function() {
 
-    // define blinky
+    // initialize blinky
     blinky.setDir(DIR_LEFT);
-    blinky.setPos(size*tileCols/2, 11*size+size/2);
-    blinky.target.x = 0;
-    blinky.target.y = 0;
+    blinky.setPos(size*tileCols/2, 14*size+mid.y);
     blinky.color = "rgb(200,0,0)";
 };
 
 //
-// ============== PLAYER BEHAVIOR ==============
+// ============== PAC-MAN ACTOR ==============
 //
 
-var Player = function() {
-    this.mode = 0; // bool
-    this.tile = {};
-    this.pixel = {};
-    this.dir = {};
+var MODE_PACMAN_NORM = 0;
+var MODE_PACMAN_ENERGY = 1;
+
+var Pacman = function() {
+    Actor.apply(this);
     this.nextDir = {};
+    this.nextDirEnum = 0;
+};
+Pacman.prototype.__proto__ = Actor.prototype;
+
+// sets the next direction and updates its dependent variables
+Pacman.prototype.setNextDir = function(nextDirEnum) {
+    setDirFromEnum(this.nextDir, nextDirEnum);
+    this.nextDirEnum = nextDirEnum;
 };
 
-Player.prototype.update = function() {
-    // turn without waiting to hit mid tile
-    // stop mid tile if cannot continue direction
+Pacman.prototype.getStepPattern = function() {
+    var pattern;
+    if (this.mode == MODE_PACMAN_NORM) 
+        return STEP_PACMAN;
+    else if (this.mode == MODE_PACMAN_ENERGY) 
+        return STEP_PACMAN_FRIGHT;
+};
+
+// move forward
+Pacman.prototype.step = function() {
+
+    var a = (this.dir.x != 0) ? 'x' : 'y'; // axis of motion
+    var b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
+
+    // Don't proceed past the middle of a tile if facing a wall
+    var stop = this.distToMid[a] == 0 && !isTileWalkable(getNextTile(this.tile, this.dir));
+    if (!stop)
+        this.pixel[a] += this.dir[a];
+
+    // Drift toward the center of the track (a.k.a. cornering)
+    this.pixel[b] += sign(this.distToMid[b]);
+
+    this.commitPos();
+
+    // TODO: HANDLE EATING:
     // stop for 1 frame when eat pill
     // reverse ghost direction when eat energizer
     // increase speed when eat energizer and stop for 3 frames
 };
 
-//
-// =========== MAIN SETUP ==========
-//
-
-var canvas;
-var ctx, ctx_w, ctx_h;
-
-window.onload = function() {
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");
-    ctx_w = ctx.canvas.width;
-    ctx_h = ctx.canvas.height;
-
-    resetTiles();
-    initGhosts();
-
-    setInterval(update, 1000/60);
-    setInterval(draw, 1000/25);
-
-    canvas.addEventListener("mousemove", function(evt) {
-        var mousePos = getMousePos(canvas,evt);
-        blinky.target.x = Math.floor(mousePos.x / size);
-        blinky.target.y = Math.floor(mousePos.y / size);
-    }, false);
+// determine direction
+Pacman.prototype.steer = function() {
+    // head in the desired direction if possible
+    if (isTileWalkable(getNextTile(this.tile, this.nextDir)))
+        this.setDir(this.nextDirEnum);
 };
 
-function getMousePos(canvas, evt){
+var pacman = new Pacman();
+
+var initPacman = function() {
+    pacman.setDir(DIR_LEFT);
+    pacman.setPos(size*tileCols/2, 26*size + mid.y);
+    pacman.color = "rgb(255,215,0)";
+};
+
+//
+// =============== USER INPUT ==================
+//
+
+// get mouse position relative to canvas
+// from: http://www.html5canvastutorials.com/advanced/html5-canvas-mouse-coordinates/
+var getMousePos = function(canvas, evt) {
     // get canvas position
     var obj = canvas;
     var top = 0;
@@ -390,30 +463,101 @@ function getMousePos(canvas, evt){
     // return relative mouse position
     var mouseX = evt.clientX - left + window.pageXOffset;
     var mouseY = evt.clientY - top + window.pageYOffset;
-    return {
-        x: mouseX,
-        y: mouseY
+    return { x: mouseX, y: mouseY };
+};
+
+var initInput = function() {
+    // for debugging
+    // set blinky's target tile using the mouse position
+    // canvas.addEventListener("mousemove", function(evt) {
+    //     var mousePos = getMousePos(canvas,evt);
+    //     blinky.target.x = Math.floor(mousePos.x / size);
+    //     blinky.target.y = Math.floor(mousePos.y / size);
+    // }, false);
+    
+    // make "focusable" to isolate keypresses when canvas is clicked
+    canvas.tabIndex = 0;
+
+    // activate input focus
+    canvas.onmousedown = function(e) {
+        this.focus();
     };
-}
+
+    // handle key press event
+    canvas.onkeydown = function(e) {
+        var key = (e||window.event).keyCode;
+        switch (key) {
+            case 65: case 37: pacman.setNextDir(DIR_LEFT); break; // left
+            case 87: case 38: pacman.setNextDir(DIR_UP); break; // up
+            case 68: case 39: pacman.setNextDir(DIR_RIGHT); break; // right
+            case 83: case 40: pacman.setNextDir(DIR_DOWN); break;// down
+        }
+    };
+
+};
+
+//
+// ================ GAME STATE ===================
+//
 
 var level = 1;
 
-// update the game state at 60Hz
-var update = function() {
-    blinky.update();
+// initialize the game
+var initGame = function() {
+
+    resetTiles();
+    initPacman();
+    initGhosts();
+    initInput();
+
+    setInterval(updateGame, 1000/60); // update at 60Hz (original arcade rate)
+    setInterval(drawGame, 1000/25);   // draw at 25Hz (helps performance)
 };
 
-// draw the game state at 30Hz
-var draw = function() {
+// update the game state
+var updateGame = function() {
+    blinky.update();
+    pacman.update();
+};
+
+// draw the game state
+var drawGame = function() {
     ctx.clearRect(0,0,ctx_w,ctx_h);
     drawTiles();
     blinky.draw();
+    pacman.draw();
 };
 
+//
+// =========== MAIN SETUP ==========
+//
+
+// return sign of a number
+var sign = function(x) {
+    if (x<0) return -1;
+    if (x>0) return 1;
+    return 0;
+};
+
+var canvas;
+var ctx, ctx_w, ctx_h;
+
+window.onload = function() {
+    canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d");
+    ctx_w = ctx.canvas.width;
+    ctx_h = ctx.canvas.height;
+    initGame();
+};
+
+
+//
+// ============= END ===============
+//
 </script>
 </head>
 <body>
-<canvas id="canvas" width="224" height="248" style="border:1px solid #DDD"></canvas>
+<canvas id="canvas" width="224" height="288" style="border:1px solid #DDD; outline:none;"></canvas>
 <p>
 built following reverse-engineered research from <a href="http://home.comcast.net/~jpittman2/pacman/pacmandossier.html">The Pac-Man Dossier</a>.
 </p>

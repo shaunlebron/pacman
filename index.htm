@@ -213,7 +213,7 @@ var Actor = function() {
     this.pixel = {};     // x,y pixel position (0<=x<tileCols*size, 0<=y<tileRows*size)
     this.tilePixel = {}; // x,y pixel in tile (0<=x,y<size)
     this.distToMid = {}; // x,y pixel distance from center of tile
-    this.dir = {};       // x,y direction (0<=x,y<=1)
+    this.dir = {};       // x,y direction (-1<=x,y<=1)
     this.dirEnum = 0;    // direction enumeration (0<=x,y<=4)
     this.frame = 0;      // frame count
     this.color = 0;
@@ -269,9 +269,9 @@ var MODE_GHOST_FRIGHT = 2;
 
 // Ghost constructor
 var Ghost = function() {
-    Actor.apply(this); // inherit data from Actor
-    this.target = {}; // x,y target tile
-    this.home = {};   // x,y home tile
+    Actor.apply(this);    // inherit data from Actor
+    this.target = {};     // x,y target tile (0<=x<tileCols, 0<=y<tileRows)
+    this.home = {};       // x,y home tile (0<=x<tileCols, 0<=y<tileRows)
     this.color = 0;
     this.reverse = false; // signal to reverse ghost direction
 };
@@ -389,7 +389,7 @@ var MODE_PACMAN_ENERGY = 1;
 
 // Pacman constructor
 var Pacman = function() {
-    Actor.apply(this); // inherit data from Actor
+    Actor.apply(this);    // inherit data from Actor
     this.nextDir = {};    // x,y direction which reflects the player's controls
     this.nextDirEnum = 0; // direction enumeration for nextDir
 };
@@ -439,8 +439,10 @@ Pacman.prototype.steer = function() {
         this.setDir(this.nextDirEnum);
 };
 
+// create pacman
 var pacman = new Pacman();
 
+// initialize pacman
 var initPacman = function() {
     pacman.setDir(DIR_LEFT);
     pacman.setPos(size*tileCols/2, 26*size + mid.y);
@@ -504,6 +506,7 @@ var initInput = function() {
 // ================ GAME STATE ===================
 //
 
+// current level of the game
 var level = 1;
 
 // initialize the game

@@ -1,0 +1,83 @@
+<head>
+<script>
+var map_w = 28;
+var map_h = 31;
+var map = (
+"||||||||||||||||||||||||||||" +
+"|............||............|" +
+"|.||||.|||||.||.|||||.||||.|" +
+"|o|__|.|___|.||.|___|.|__|o|" +
+"|.||||.|||||.||.|||||.||||.|" +
+"|..........................|" +
+"|.||||.||.||||||||.||.||||.|" +
+"|.||||.||.||||||||.||.||||.|" +
+"|......||....||....||......|" +
+"||||||.||||| || |||||.||||||" +
+"_____|.||||| || |||||.|_____" +
+"_____|.||          ||.|_____" +
+"_____|.|| |||--||| ||.|_____" +
+"||||||.|| |______| ||.||||||" +
+"      .   |______|   .      " +
+"||||||.|| |______| ||.||||||" +
+"_____|.|| |||||||| ||.|_____" +
+"_____|.||          ||.|_____" +
+"_____|.||.||||||||.||.|_____" +
+"||||||.||.||||||||.||.||||||" +
+"|............||............|" +
+"|.||||.|||||.||.|||||.||||.|" +
+"|.||||.|||||.||.|||||.||||.|" +
+"|o..||.......  .......||..o|" +
+"|||.||.||.||||||||.||.||.|||" +
+"|||.||.||.||||||||.||.||.|||" +
+"|......||....||....||......|" +
+"|.||||||||||.||.||||||||||.|" +
+"|.||||||||||.||.||||||||||.|" +
+"|..........................|" +
+"||||||||||||||||||||||||||||");
+
+var drawPill = function(x,y,c,p) {
+    ctx.fillStyle = c;
+    ctx.fillRect(x*size + size/2 - p/2, y*size + size/2 - p/2, p, p);
+};
+var drawBlock = function(x,y,c) {
+    ctx.fillStyle = c;
+    ctx.fillRect(x*size,y*size,size,size);
+};
+var drawFloor = function(x,y) { drawBlock(x,y,"#DDD"); };
+
+var cellDraw = {};
+cellDraw['|'] = function(x,y) { };
+cellDraw['.'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",3); };
+cellDraw['o'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",6); };
+cellDraw[' '] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#FFF",3); };
+cellDraw['_'] = function(x,y) { };
+cellDraw['-'] = function(x,y) { };
+
+var size = 8;
+var drawMap = function () {
+    var x,y;
+    var i=0;
+    for (y=0; y<map_h; y++) {
+        for (x=0; x<map_w; x++) {
+            cellDraw[map[i++]](x,y);
+        }
+    }
+};
+
+var ctx;
+var ctx_w, ctx_h;
+
+window.onload = function() {
+    ctx = document.getElementById("canvas").getContext("2d");
+    ctx_w = ctx.canvas.width;
+    ctx_h = ctx.canvas.height;
+    drawMap();
+};
+</script>
+</head>
+<body>
+<canvas id="canvas" width="224" height="248" style="border:1px solid #DDD"></canvas>
+<p>
+built following reverse-engineered research from <a href="http://home.comcast.net/~jpittman2/pacman/pacmandossier.html">The Pac-Man Dossier</a>.
+</p>
+</body>

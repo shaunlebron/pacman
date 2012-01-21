@@ -273,7 +273,8 @@ var Ghost = function() {
     this.target = {};     // x,y target tile (0<=x<tileCols, 0<=y<tileRows)
     this.home = {};       // x,y home tile (0<=x<tileCols, 0<=y<tileRows)
     this.color = 0;
-    this.reverse = false; // signal to reverse ghost direction
+    this.reverse = false; // reverse signal
+    this.reverseTile = {}; // x,y tile to reverse direction after leaving
 };
 Ghost.prototype.__proto__ = Actor.prototype; // inherit functions from Actor
 
@@ -293,6 +294,13 @@ Ghost.prototype.step = function() {
     this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
 };
 
+// make ghost reverse direction after leaving current tile
+Ghost.prototype.signalReverse = function() {
+    this.reverseTile.x = this.tile.x;
+    this.reverseTile.y = this.tile.y;
+    this.reverse = true;
+}
+
 // determine direction
 Ghost.prototype.steer = function() {
     var dirEnum;
@@ -305,57 +313,56 @@ Ghost.prototype.steer = function() {
 
     var surroundTiles;
 
+    // reverse direction once we exit the tile occupied when reverse signal was given
+    if (this.reverse && !(this.tile.x == this.reverseTile.x && this.tile.y == this.reverseTile.y)) {
+        this.reverse = false;
+        this.setDir(oppDirEnum);
+    }
+
     // only steer at mid tile
     if (this.tilePixel.x != mid.x || this.tilePixel.y != mid.y)
         return;
 
-    // reverse direction if commanded
-    if (this.reverse) {
-        dirEnum = oppDirEnum;
-        this.reverse = false;
+    // get blocked passages
+    surroundTiles = getSurroundingTiles(this.tile);
+    blocked = [1,1,1,1];
+    for (i=0; i<4; i++) {
+        blocked[i] = !isTileWalkable(surroundTiles[i]);
+    }
+
+    // not allowed to turn around
+    blocked[oppDirEnum] = true;
+
+    // random turn if frightened
+    if (this.mode == MODE_GHOST_FRIGHT) {
+        dirEnum = Math.floor(Math.random()*5);
+        while (blocked[dirEnum])
+            dirEnum = (dirEnum+1)%4;
     }
     else {
-        // get blocked passages
-        surroundTiles = getSurroundingTiles(this.tile);
-        blocked = [1,1,1,1];
-        for (i=0; i<4; i++) {
-            blocked[i] = !isTileWalkable(surroundTiles[i]);
+        // set target
+        if (this.mode == MODE_GHOST_SCATTER) {
+            this.target.x = this.home.x;
+            this.target.y = this.home.y;
+        }
+        else if (this.mode == MODE_GHOST_CHASE) {
+            this.target.x = pacman.tile.x;
+            this.target.y = pacman.tile.y;
         }
 
-        // not allowed to turn around
-        blocked[oppDirEnum] = true;
+        // not allowed to go up at these points
+        if ((this.tile.x == 12 || this.tile.x == 15) && (this.tile.y == 14 || this.tile.y == 26))
+            blocked[DIR_UP] = true;
 
-        // random turn if frightened
-        if (this.mode == MODE_GHOST_FRIGHT) {
-            dirEnum = Math.floor(Math.random()*5);
-            while (blocked[dirEnum])
-                dirEnum = (dirEnum+1)%4;
-        }
-        else {
-            // set target
-            if (this.mode == MODE_GHOST_SCATTER) {
-                this.target.x = this.home.x;
-                this.target.y = this.home.y;
-            }
-            else if (this.mode == MODE_GHOST_CHASE) {
-                this.target.x = pacman.tile.x;
-                this.target.y = pacman.tile.y;
-            }
-
-            // not allowed to go up at these points
-            if ((this.tile.x == 12 || this.tile.x == 15) && (this.tile.y == 14 || this.tile.y == 26))
-                blocked[DIR_UP] = true;
-
-            // choose direction that minimizes distance to target
-            for (i=0; i<4; i++) if (!blocked[i]) {
-                setDirFromEnum(dir,i);
-                dx = dir.x + this.tile.x - this.target.x;
-                dy = dir.y + this.tile.y - this.target.y;
-                dist = dx*dx+dy*dy;
-                if (dist < minDist) {
-                    minDist = dist;
-                    dirEnum = i;
-                }
+        // choose direction that minimizes distance to target
+        for (i=0; i<4; i++) if (!blocked[i]) {
+            setDirFromEnum(dir,i);
+            dx = dir.x + this.tile.x - this.target.x;
+            dy = dir.y + this.tile.y - this.target.y;
+            dist = dx*dx+dy*dy;
+            if (dist < minDist) {
+                minDist = dist;
+                dirEnum = i;
             }
         }
     }

@@ -52,9 +52,16 @@ var currentTiles;
 var resetTiles = function() {
     currentTiles = tiles.split("");
 };
+
+// offscreen tiles for tunnel
+var isOffscreenTunnelTile = function(x,y) {
+    return (y == 17 && (x<0 || x>tileCols-1));
+};
 var getTile = function(x,y) {
     if (x>=0 && x<tileCols && y>=0 && y<tileRows) 
         return currentTiles[x+y*tileCols];
+    if (isOffscreenTunnelTile(x,y))
+        return ' ';
 };
 
 //
@@ -228,6 +235,15 @@ Actor.prototype.setPos = function(px,py) {
 
 // updates the position's dependent variables
 Actor.prototype.commitPos = function() {
+
+    // teleport position to opposite side of map if past tunnel tiles
+    // (there are two invisible tiles on each side of the tunnel)
+    if (isOffscreenTunnelTile(this.tile.x, this.tile.y))
+        if (this.pixel.x == -2*size-1)
+            this.pixel.x = (tileCols+2)*size-1;
+        else if (this.pixel.x == (tileCols+2)*size)
+            this.pixel.x = -2*size;
+
     this.tile.x = Math.floor(this.pixel.x / size);
     this.tile.y = Math.floor(this.pixel.y / size);
     this.tilePixel.x = this.pixel.x % size;
@@ -281,10 +297,12 @@ Ghost.prototype.__proto__ = Actor.prototype; // inherit functions from Actor
 // gets the step pattern (speed) used in speed control table
 Ghost.prototype.getStepPattern = function() {
     // TODO: override this function for blinky to trigger elroy states
-    // TODO: add tunnel case
     var pattern;
-    if (this.mode == MODE_GHOST_CHASE || this.mode == MODE_GHOST_SCATTER)
+    if (this.mode == MODE_GHOST_CHASE || this.mode == MODE_GHOST_SCATTER) {
+        if (this.tile.y == 17 && (this.tile.x <= 5 || this.tile.x >= tileCols-1-5))
+            return STEP_GHOST_TUNNEL;
         return STEP_GHOST;
+    }
     else
         return STEP_GHOST_FRIGHT;
 };

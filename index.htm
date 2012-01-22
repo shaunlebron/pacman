@@ -216,14 +216,22 @@ var getStepSize = function(level, pattern, frame) {
 
 var Actor = function() {
     this.mode = 0;
-    this.tile = {};      // x,y tile position (0<=x<tileCols, 0<=y<tileRows)
-    this.pixel = {};     // x,y pixel position (0<=x<tileCols*size, 0<=y<tileRows*size)
-    this.tilePixel = {}; // x,y pixel in tile (0<=x,y<size)
-    this.distToMid = {}; // x,y pixel distance from center of tile
-    this.dir = {};       // x,y direction (-1<=x,y<=1)
-    this.dirEnum = 0;    // direction enumeration (0<=x,y<=4)
-    this.frame = 0;      // frame count
+    this.startPos = {};    // x,y pixel starting position (0<=x<tileCols*size, 0<=y<tileRows*size)
+    this.startDirEnum = 0; // starting direction enumeration (0<=x,y<=4)
+    this.tile = {};        // x,y tile position (0<=x<tileCols, 0<=y<tileRows)
+    this.pixel = {};       // x,y pixel position (0<=x<tileCols*size, 0<=y<tileRows*size)
+    this.tilePixel = {};   // x,y pixel in tile (0<=x,y<size)
+    this.distToMid = {};   // x,y pixel distance from center of tile
+    this.dir = {};         // x,y direction (-1<=x,y<=1)
+    this.dirEnum = 0;      // direction enumeration (0<=x,y<=4)
+    this.frame = 0;        // frame count
     this.color = 0;
+};
+
+// reset state for start of a level
+Actor.prototype.reset = function() {
+    this.setDir(this.startDirEnum);
+    this.setPos(this.startPos.x, this.startPos.y);
 };
 
 // sets the position and updates its dependent variables
@@ -286,7 +294,7 @@ var MODE_GHOST_FRIGHT = 2;
 // Ghost constructor
 var Ghost = function() {
     Actor.apply(this);    // inherit data from Actor
-    this.target = {};     // x,y target tile (0<=x<tileCols, 0<=y<tileRows)
+    this.target = {x:0,y:0};     // x,y target tile (0<=x<tileCols, 0<=y<tileRows)
     this.home = {};       // x,y home tile (0<=x<tileCols, 0<=y<tileRows)
     this.color = 0;
     this.reverse = false; // reverse signal
@@ -363,10 +371,8 @@ Ghost.prototype.steer = function() {
             this.target.x = this.home.x;
             this.target.y = this.home.y;
         }
-        else if (this.mode == MODE_GHOST_CHASE) {
-            this.target.x = pacman.tile.x;
-            this.target.y = pacman.tile.y;
-        }
+        else // mode == MODE_GHOST_CHASE
+            this.setTarget();
 
         // not allowed to go up at these points
         if ((this.tile.x == 12 || this.tile.x == 15) && (this.tile.y == 14 || this.tile.y == 26))
@@ -389,54 +395,48 @@ Ghost.prototype.steer = function() {
     this.setDir(dirEnum);
 };
 
-// create the ghosts
-var blinky = new Ghost();
-var pinky = new Ghost();
-var inky = new Ghost();
-var clyde = new Ghost();
-var ghosts = [ blinky, pinky, inky, clyde ];
-
-// initialize the ghosts
-var initGhosts = function() {
-
-    // initialize blinky
-    blinky.setDir(DIR_LEFT);
-    blinky.setPos(size*tileCols/2, 14*size+mid.y);
-    blinky.color = "rgb(200,0,0)";
+// draw the line of sight of the ghost
+Ghost.prototype.drawSight = function() {
+    ctx.strokeStyle = this.color;
+    ctx.beginPath();
+    ctx.moveTo(this.pixel.x, this.pixel.y);
+    ctx.lineTo(this.target.x*size, this.target.y*size);
+    ctx.closePath();
+    ctx.stroke();
 };
 
 //
-// ============== PAC-MAN ACTOR ==============
+// ============== PLAYER ACTOR ==============
 //
 
-var MODE_PACMAN_NORM = 0;
-var MODE_PACMAN_ENERGY = 1;
+var MODE_PLAYER_NORM = 0;
+var MODE_PLAYER_ENERGY = 1;
 
 // Pacman constructor
-var Pacman = function() {
+var Player = function() {
     Actor.apply(this);    // inherit data from Actor
     this.nextDir = {};    // x,y direction which reflects the player's controls
     this.nextDirEnum = 0; // direction enumeration for nextDir
 };
-Pacman.prototype.__proto__ = Actor.prototype; // inherit functions from Actor
+Player.prototype.__proto__ = Actor.prototype; // inherit functions from Actor
 
 // sets the next direction and updates its dependent variables
-Pacman.prototype.setNextDir = function(nextDirEnum) {
+Player.prototype.setNextDir = function(nextDirEnum) {
     setDirFromEnum(this.nextDir, nextDirEnum);
     this.nextDirEnum = nextDirEnum;
 };
 
 // gets the step pattern (speed) used in speed control table
-Pacman.prototype.getStepPattern = function() {
+Player.prototype.getStepPattern = function() {
     var pattern;
-    if (this.mode == MODE_PACMAN_NORM) 
+    if (this.mode == MODE_PLAYER_NORM) 
         return STEP_PACMAN;
-    else if (this.mode == MODE_PACMAN_ENERGY) 
+    else if (this.mode == MODE_PLAYER_ENERGY) 
         return STEP_PACMAN_FRIGHT;
 };
 
 // move forward
-Pacman.prototype.step = function() {
+Player.prototype.step = function() {
 
     var a = (this.dir.x != 0) ? 'x' : 'y'; // axis of motion
     var b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
@@ -458,54 +458,177 @@ Pacman.prototype.step = function() {
 };
 
 // determine direction
-Pacman.prototype.steer = function() {
+Player.prototype.steer = function() {
     // head in the desired direction if possible
     if (isTileWalkable(getNextTile(this.tile, this.nextDir)))
         this.setDir(this.nextDirEnum);
 };
 
-// create pacman
-var pacman = new Pacman();
+//
+// ================ ACTOR DEFINITIONS ==============
+// 
 
-// initialize pacman
-var initPacman = function() {
-    pacman.setDir(DIR_LEFT);
-    pacman.setPos(size*tileCols/2, 26*size + mid.y);
-    pacman.color = "rgb(255,215,0)";
+// create blinky
+var blinky = new Ghost();
+blinky.color = "#FF0000";
+blinky.startDirEnum = DIR_LEFT;
+blinky.startPos.x = size*tileCols/2;
+blinky.startPos.y = 14*size+mid.y;
+blinky.home.x = tileCols-1-2;
+blinky.home.y = 0;
+blinky.setTarget = function() {
+    // directly target pacman
+    this.target.x = pacman.tile.x;
+    this.target.y = pacman.tile.y;
 };
+
+// create pinky
+var pinky = new Ghost();
+pinky.color = "#FFB8FF";
+pinky.startDirEnum = DIR_RIGHT;
+pinky.startPos.x = size*tileCols/2;
+pinky.startPos.y = 20*size+mid.y;
+pinky.home.x = 2;
+pinky.home.y = 0;
+pinky.setTarget = function() {
+    // target four tiles ahead of pacman
+    this.target.x = pacman.tile.x + 4*pacman.dir.x;
+    this.target.y = pacman.tile.y + 4*pacman.dir.y;
+    if (pacman.dirEnum == DIR_UP)
+        this.target.x -= 4; // arcade overflow bug
+};
+
+// create inky
+var inky = new Ghost();
+inky.color = "#00FFFF";
+inky.startDirEnum = DIR_DOWN;
+inky.startPos.x = 9*size + mid.x;
+inky.startPos.y = 17*size + mid.y;
+inky.home.x = 0;
+inky.home.y = tileRows - 2;
+inky.setTarget = function() {
+    // target twice the distance from blinky to two tiles ahead of pacman
+    var px = pacman.tile.x + 2*pacman.dir.x;
+    var py = pacman.tile.y + 2*pacman.dir.y;
+    if (pacman.dirEnum == DIR_UP)
+        px -= 2; // arcade overflow bug
+    this.target.x = blinky.tile.x + 2*(px - blinky.tile.x);
+    this.target.y = blinky.tile.y + 2*(py - blinky.tile.y);
+};
+
+// create clyde
+var clyde = new Ghost();
+clyde.color = "#FFB851";
+clyde.startDirEnum = DIR_RIGHT;
+clyde.startPos.x = 18*size + mid.x;
+clyde.startPos.y = 17*size + mid.y;
+clyde.home.x = tileCols-1;
+clyde.home.y = tileRows-2;
+clyde.setTarget = function() {
+    // target pacman if >=8 tiles away, otherwise go home
+    var dx = pacman.tile.x - this.tile.x;
+    var dy = pacman.tile.y - this.tile.y;
+    var dist = dx*dx+dy*dy;
+    if (dist >= 64) {
+        this.target.x = pacman.tile.x;
+        this.target.y = pacman.tile.y;
+    }
+    else {
+        this.target.x = this.home.x;
+        this.target.y = this.home.y;
+    }
+};
+
+var ghosts = [ blinky, pinky, inky, clyde ];
+
+// create pacman
+var pacman = new Player();
+pacman.color = "#FFFF00";
+pacman.startDirEnum = DIR_LEFT;
+pacman.startPos.x = size*tileCols/2;
+pacman.startPos.y = 26*size + mid.y;
+
+//
+// ================ GAME STATES ===================
+//
+
+var state; // current state object
+var level = 1; // current level
+
+// switch to the given state
+var switchToState = function(s) {
+    s.init();
+    state = s;
+};
+
+// start state
+var stateStart = {};
+stateStart.init = function() {
+    resetTiles();
+    var i;
+    for (i=0; i<4; i++)
+        ghosts[i].reset();
+    pacman.reset();
+
+    this.frame = 0;
+    this.text = "ready";
+    this.textWidth = ctx.measureText(this.text).width;
+};
+stateStart.draw = function() {
+    ctx.clearRect(0,0,ctx_w,ctx_h);
+    drawTiles();
+    var i;
+    for (i=0; i<4; i++)
+        ghosts[i].draw();
+    pacman.draw();
+    ctx.fillStyle = "#000";
+    ctx.fillText(this.text, tileCols*size/2 - this.textWidth/2, 17*size+mid.y);
+};
+stateStart.update = function() {
+    if (this.frame == 2*60)
+        switchToState(playState);
+    this.frame += 1;
+};
+
+// play state
+var playState = {};
+playState.init = function(){};
+playState.draw = function() {
+    ctx.clearRect(0,0,ctx_w,ctx_h);
+    drawTiles();
+    var i;
+    for (i=0; i<4; i++) {
+        ghosts[i].draw();
+        ghosts[i].drawSight();
+    }
+    pacman.draw();
+};
+playState.update = function() {
+    var i;
+    for (i=0; i<4; i++)
+        ghosts[i].update();
+    pacman.update();
+    // TODO: if collision, state = deadState
+    // TODO: if collect all pellets, state = finishState
+};
+
+// dead state
+var deadState = {};
+deadState.init = function() { };
+deadState.draw = function() { };
+deadState.update = function() { };
+
+// finish state
+var finishState = {};
+finishState.init = function() { };
+finishState.draw = function() { };
+finishState.update = function() { };
 
 //
 // =============== USER INPUT ==================
 //
 
-// get mouse position relative to canvas
-// from: http://www.html5canvastutorials.com/advanced/html5-canvas-mouse-coordinates/
-var getMousePos = function(canvas, evt) {
-    // get canvas position
-    var obj = canvas;
-    var top = 0;
-    var left = 0;
-    while (obj.tagName != 'BODY') {
-        top += obj.offsetTop;
-        left += obj.offsetLeft;
-        obj = obj.offsetParent;
-    }
-
-    // return relative mouse position
-    var mouseX = evt.clientX - left + window.pageXOffset;
-    var mouseY = evt.clientY - top + window.pageYOffset;
-    return { x: mouseX, y: mouseY };
-};
-
 var initInput = function() {
-    // for debugging
-    // set blinky's target tile using the mouse position
-    // canvas.addEventListener("mousemove", function(evt) {
-    //     var mousePos = getMousePos(canvas,evt);
-    //     blinky.target.x = Math.floor(mousePos.x / size);
-    //     blinky.target.y = Math.floor(mousePos.y / size);
-    // }, false);
-    
     // make "focusable" to isolate keypresses when canvas is clicked
     canvas.tabIndex = 0;
 
@@ -524,41 +647,9 @@ var initInput = function() {
             case 83: case 40: pacman.setNextDir(DIR_DOWN); break;// down
         }
     };
-
 };
 
-//
-// ================ GAME STATE ===================
-//
 
-// current level of the game
-var level = 1;
-
-// initialize the game
-var initGame = function() {
-
-    resetTiles();
-    initPacman();
-    initGhosts();
-    initInput();
-
-    setInterval(updateGame, 1000/60); // update at 60Hz (original arcade rate)
-    setInterval(drawGame, 1000/25);   // draw at 25Hz (helps performance)
-};
-
-// update the game state
-var updateGame = function() {
-    blinky.update();
-    pacman.update();
-};
-
-// draw the game state
-var drawGame = function() {
-    ctx.clearRect(0,0,ctx_w,ctx_h);
-    drawTiles();
-    blinky.draw();
-    pacman.draw();
-};
 
 //
 // =========== MAIN SETUP ==========
@@ -579,7 +670,12 @@ window.onload = function() {
     ctx = canvas.getContext("2d");
     ctx_w = ctx.canvas.width;
     ctx_h = ctx.canvas.height;
-    initGame();
+    ctx.font = "bold 12px sans-serif";
+    initInput();
+
+    this.switchToState(stateStart);
+    setInterval("state.update()", 1000/60); // update at 60Hz (original arcade rate)
+    setInterval("state.draw()", 1000/25);   // draw at 25Hz (helps performance)
 };
 
 

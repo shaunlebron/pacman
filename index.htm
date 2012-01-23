@@ -506,7 +506,7 @@ inky.color = "#00FFFF";
 inky.startDirEnum = DIR_DOWN;
 inky.startPos.x = 9*size + mid.x;
 inky.startPos.y = 17*size + mid.y;
-inky.home.x = 0;
+inky.home.x = tileCols-1;
 inky.home.y = tileRows - 2;
 inky.setTarget = function() {
     // target twice the distance from blinky to two tiles ahead of pacman
@@ -524,7 +524,7 @@ clyde.color = "#FFB851";
 clyde.startDirEnum = DIR_RIGHT;
 clyde.startPos.x = 18*size + mid.x;
 clyde.startPos.y = 17*size + mid.y;
-clyde.home.x = tileCols-1;
+clyde.home.x = 0;
 clyde.home.y = tileRows-2;
 clyde.setTarget = function() {
     // target pacman if >=8 tiles away, otherwise go home
@@ -549,6 +549,23 @@ pacman.color = "#FFFF00";
 pacman.startDirEnum = DIR_LEFT;
 pacman.startPos.x = size*tileCols/2;
 pacman.startPos.y = 26*size + mid.y;
+
+// order at which they appear in original arcade memory
+// (suggests drawing/update order)
+var actors = [blinky, pinky, inky, clyde, pacman];
+
+var drawActors = function() {
+    var i;
+    if (pacman.mode == MODE_PLAYER_ENERGY)
+        for (i=0; i<=4; i++) actors[i].draw();
+    else
+        for (i=4; i>=0; i--) actors[i].draw();
+};
+
+var updateActors = function() {
+    var i;
+    for (i=0; i<=4; i++) actors[i].update();
+};
 
 //
 // ================ GAME STATES ===================
@@ -579,10 +596,7 @@ stateStart.init = function() {
 stateStart.draw = function() {
     drawBackground();
     drawTiles();
-    var i;
-    for (i=0; i<4; i++)
-        ghosts[i].draw();
-    pacman.draw();
+    drawActors();
     ctx.fillStyle = "#FF0";
     ctx.fillText(this.text, tileCols*size/2 - this.textWidth/2, 17*size+mid.y);
 };
@@ -598,18 +612,10 @@ playState.init = function(){};
 playState.draw = function() {
     drawBackground();
     drawTiles();
-    var i;
-    for (i=0; i<4; i++) {
-        ghosts[i].draw();
-        ghosts[i].drawSight();
-    }
-    pacman.draw();
+    drawActors();
 };
 playState.update = function() {
-    var i;
-    for (i=0; i<4; i++)
-        ghosts[i].update();
-    pacman.update();
+    updateActors();
     // TODO: if collision, state = deadState
     // TODO: if collect all pellets, state = finishState
 };

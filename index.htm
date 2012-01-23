@@ -71,16 +71,17 @@ var getTile = function(x,y) {
 var size = 8;         // tile size
 var mid = {x:3, y:4}; // x,y center of a tile
 
+var drawBackground = function() {
+    ctx.fillStyle = "#333";
+    ctx.fillRect(0,0,ctx_w,ctx_h);
+};
 var drawPill = function(x,y,c,s) {
     ctx.fillStyle = c;
     ctx.fillRect(x*size + mid.x - s/2, y*size + mid.y - s/2, s, s);
 };
-var drawBlock = function(x,y,c) {
+var drawFloor = function(x,y,c,p) {
     ctx.fillStyle = c;
-    ctx.fillRect(x*size,y*size,size,size);
-};
-var drawFloor = function(x,y) {
-    drawBlock(x,y,"#DDD");
+    ctx.fillRect(x*size+p,y*size+p,size-2*p,size-2*p);
 };
 var drawActor = function(px,py,c,s) {
     ctx.fillStyle = c;
@@ -89,9 +90,9 @@ var drawActor = function(px,py,c,s) {
 
 var cellDraw = {};
 cellDraw['|'] = function(x,y) { }; // wall
-cellDraw['.'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",2); }; // pellet
-cellDraw['o'] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#000",6); }; // energizer
-cellDraw[' '] = function(x,y) { drawFloor(x,y); drawPill(x,y,"#FFF",2); }; // walkable space
+cellDraw['.'] = function(x,y) { drawFloor(x,y,"#888",0); }; // pellet
+cellDraw['o'] = function(x,y) { drawFloor(x,y,"#FFF",0); }; // energizer
+cellDraw[' '] = function(x,y) { drawFloor(x,y,"#555",0); }; // walkable space
 cellDraw['_'] = function(x,y) { }; // dead space
 cellDraw['-'] = function(x,y) { }; // ghost door
 
@@ -400,9 +401,10 @@ Ghost.prototype.drawSight = function() {
     ctx.strokeStyle = this.color;
     ctx.beginPath();
     ctx.moveTo(this.pixel.x, this.pixel.y);
-    ctx.lineTo(this.target.x*size, this.target.y*size);
+    ctx.lineTo(this.target.x*size+mid.x, this.target.y*size+mid.y);
     ctx.closePath();
     ctx.stroke();
+    drawFloor(this.target.x,this.target.y, this.color,1);
 };
 
 //
@@ -575,13 +577,13 @@ stateStart.init = function() {
     this.textWidth = ctx.measureText(this.text).width;
 };
 stateStart.draw = function() {
-    ctx.clearRect(0,0,ctx_w,ctx_h);
+    drawBackground();
     drawTiles();
     var i;
     for (i=0; i<4; i++)
         ghosts[i].draw();
     pacman.draw();
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#FF0";
     ctx.fillText(this.text, tileCols*size/2 - this.textWidth/2, 17*size+mid.y);
 };
 stateStart.update = function() {
@@ -594,7 +596,7 @@ stateStart.update = function() {
 var playState = {};
 playState.init = function(){};
 playState.draw = function() {
-    ctx.clearRect(0,0,ctx_w,ctx_h);
+    drawBackground();
     drawTiles();
     var i;
     for (i=0; i<4; i++) {

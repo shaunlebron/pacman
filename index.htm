@@ -50,6 +50,7 @@ var tiles = (
 // current tile state
 var currentTiles;
 var resetTiles = function() {
+    dotCount = 0;
     currentTiles = tiles.split("");
 };
 
@@ -63,6 +64,14 @@ var getTile = function(x,y) {
     if (isOffscreenTunnelTile(x,y))
         return ' ';
 };
+
+// location of the ghost door and home boundary
+var ghostDoorTile = {x:13, y:14};
+var ghostDoorPixel = {x:ghostDoorTile.x*size + 7, y:ghostDoorTile.y*size + mid.y};
+var ghostHomeLeftPixel = ghostDoorPixel.x - 2*size;
+var ghostHomeRightPixel = ghostDoorPixel.x + 2*size;
+var ghostHomeTopPixel = 17*size;
+var ghostHomeBottomPixel = 18*size;
 
 //
 // ========== TILE DRAWING ============
@@ -217,7 +226,7 @@ var getStepSize = function(level, pattern, frame) {
 
 var Actor = function() {
     this.mode = 0;
-    this.startPos = {};    // x,y pixel starting position (0<=x<tileCols*size, 0<=y<tileRows*size)
+    this.startPixel = {};    // x,y pixel starting position (0<=x<tileCols*size, 0<=y<tileRows*size)
     this.startDirEnum = 0; // starting direction enumeration (0<=x,y<=4)
     this.tile = {};        // x,y tile position (0<=x<tileCols, 0<=y<tileRows)
     this.pixel = {};       // x,y pixel position (0<=x<tileCols*size, 0<=y<tileRows*size)
@@ -229,10 +238,20 @@ var Actor = function() {
     this.color = 0;
 };
 
-// reset state for start of a level
-Actor.prototype.reset = function() {
+// reset position and direction
+Actor.prototype.resetPosAndDir = function() {
     this.setDir(this.startDirEnum);
-    this.setPos(this.startPos.x, this.startPos.y);
+    this.setPos(this.startPixel.x, this.startPixel.y);
+};
+
+// function called when new level begins
+Actor.prototype.onNewLevel = function() {
+    this.resetPosAndDir();
+};
+
+// function called when pacman dies and level restarts
+Actor.prototype.onRestartLevel = function() {
+    this.resetPosAndDir();
 };
 
 // sets the position and updates its dependent variables
@@ -295,18 +314,31 @@ var MODE_GHOST_FRIGHT = 2;
 // Ghost constructor
 var Ghost = function() {
     Actor.apply(this);    // inherit data from Actor
-    this.target = {x:0,y:0};     // x,y target tile (0<=x<tileCols, 0<=y<tileRows)
-    this.home = {};       // x,y home tile (0<=x<tileCols, 0<=y<tileRows)
+
     this.color = 0;
+
+    // current and home targets
+    this.targetTile = {x:0,y:0};     // x,y target tile (0<=x<tileCols, 0<=y<tileRows)
+    this.homeTile = {};       // x,y home tile (0<=x<tileCols, 0<=y<tileRows)
+
+    // reversal info
     this.reverse = false; // reverse signal
     this.reverseTile = {}; // x,y tile to reverse direction after leaving
+
+    // home-related flags
+    this.justDied = false;
+    this.goingHome = false;
+    this.pacingHome = false;
+    this.leavingHome = false;
+
+    // TODO: timers
+    // chase/scatter, fright, pace
 };
 Ghost.prototype.__proto__ = Actor.prototype; // inherit functions from Actor
 
 // gets the step pattern (speed) used in speed control table
 Ghost.prototype.getStepPattern = function() {
-    // TODO: override this function for blinky to trigger elroy states
-    var pattern;
+    //TODO: speeds for home flags
     if (this.mode == MODE_GHOST_CHASE || this.mode == MODE_GHOST_SCATTER) {
         if (this.tile.y == 17 && (this.tile.x <= 5 || this.tile.x >= tileCols-1-5))
             return STEP_GHOST_TUNNEL;
@@ -316,20 +348,113 @@ Ghost.prototype.getStepPattern = function() {
         return STEP_GHOST_FRIGHT;
 };
 
+// determines if this ghost is inside the ghost home
+Ghost.prototype.isInsideHome = function() {
+    return (this.pixel.x >= ghostHomeLeftPixel && this.pixel.x <= ghostHomeRightPixel &&
+        this.tile.y > ghostDoorTile.y && this.pixel.y <= ghostHomeBottomPixel);
+};
+
+// signal ghost to reverse direction after leaving current tile
+Ghost.prototype.signalReverse = function() {
+    this.reverseTile.x = this.tile.x;
+    this.reverseTile.y = this.tile.y;
+    this.reverse = true;
+};
+
+Ghost.prototype.onEnergyEat = function() {
+    if (!this.isInsideHome())
+        this.signalReverse();
+
+    // TODO: add level condition to prevent fright
+    mode = MODE_GHOST_FRIGHT;
+};
+
+Ghost.prototype.onEaten = function() {
+    this.justDied = true;
+};
+
+Ghost.prototype.onNewLevel = function() {
+    // TODO: enable dot counter?
+};
+
+Ghost.prototype.onRestartLevel = function() {
+    // TODO: disable dot counter?
+};
+
 // move forward
 Ghost.prototype.step = function() {
     this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
 };
 
-// make ghost reverse direction after leaving current tile
-Ghost.prototype.signalReverse = function() {
-    this.reverseTile.x = this.tile.x;
-    this.reverseTile.y = this.tile.y;
-    this.reverse = true;
-}
-
 // determine direction
 Ghost.prototype.steer = function() {
+
+    // initially, only consider a turn if we're at the middle of a tile
+    // (overridden to true later if we're just leaving home)
+    var considerTurning = (this.distToMid.x == 0 && this.distToMid.y == 0);
+
+    // heading home
+    if (this.goingHome) {
+        // at the doormat
+        if (this.tile.x == ghostDoorTile.x && this.tile.y == ghostDoorTile.y) {
+            // walk to the door, or go through if already there
+            this.setDir(this.pixel.x == ghostDoorPixel.x ? DIR_DOWN : DIR_RIGHT);
+            return;
+        }
+
+        // inside
+        if (this.isInsideHome()) {
+            if (this.pixel.y == this.ghostHomeBottomPixel) {
+                // revive
+                if (this.pixel.x == this.startPixel.x) {
+                    this.goingHome = false;
+                    this.pacingHome = true;
+                    this.setDir(DIR_UP);
+                    // TODO: change mode ?
+                }
+                // sidestep to its seat
+                else {
+                    this.setDir(this.startPixel.x < this.pixel.x ? DIR_LEFT : DIR_RIGHT);
+                }
+            }
+            // keep walking down
+            return;
+        }
+
+        // still outside, so keep looking for the door
+    }
+    // pacing home
+    else if (this.pacingHome) {
+
+        // pace back and forth
+        if (this.shouldStayHome()) { // TODO: implement shouldStayHome()
+            if (this.pixel.y == ghostHomeTopPixel)
+                this.setDir(DIR_DOWN);
+            else if (this.pixel.y == ghostHomeBottomPixel)
+                this.setDir(DIR_UP);
+        }
+        // head for the door
+        else {
+            this.leavingHome = true;
+            if (this.pixel.x == ghostDoorPixel.x)
+                this.setDir(DIR_UP);
+            else
+                this.setDir(this.pixel.x < ghostDoorPixel.x ? DIR_RIGHT : DIR_LEFT);
+        }
+        return;
+    }
+    // leaving home
+    else if (this.leavingHome) {
+        if (this.pixel.x == ghostDoorPixel.x && this.pixel.y == ghostDoorPixel.y) {
+            this.leavingHome = false;
+            considerTurning = true;
+        }
+        else if (this.pixel.x == ghostDoorPixel.x) {
+            this.setDir(DIR_UP);
+            return;
+        }
+    }
+
     var dirEnum;
     var blocked;
 
@@ -344,10 +469,11 @@ Ghost.prototype.steer = function() {
     if (this.reverse && !(this.tile.x == this.reverseTile.x && this.tile.y == this.reverseTile.y)) {
         this.reverse = false;
         this.setDir(oppDirEnum);
+        return;
     }
 
-    // only steer at mid tile
-    if (this.tilePixel.x != mid.x || this.tilePixel.y != mid.y)
+    // exit if not considering turning
+    if (!considerTurning)
         return;
 
     // get blocked passages
@@ -369,8 +495,8 @@ Ghost.prototype.steer = function() {
     else {
         // set target
         if (this.mode == MODE_GHOST_SCATTER) {
-            this.target.x = this.home.x;
-            this.target.y = this.home.y;
+            this.targetTile.x = this.homeTile.x;
+            this.targetTile.y = this.homeTile.y;
         }
         else // mode == MODE_GHOST_CHASE
             this.setTarget();
@@ -396,7 +522,27 @@ Ghost.prototype.steer = function() {
     this.setDir(dirEnum);
 };
 
-// draw the line of sight of the ghost
+Ghost.prototype.update = function() {
+
+    // when the ghost is eaten, signal that it has taken its first step back home
+    // (this is to allows the dead ghost to remain traveling while the playState freezes all other actors)
+    if (this.mode == MODE_GHOST_DEAD)
+        this.isGoingHome = true;
+    
+    // call super function to update position and direction
+    Actor.prototype.update.apply(this);
+};
+
+Ghost.prototype.draw = function() {
+    if (this.mode == MODE_GHOST_FRIGHT)
+        drawActor(this.pixel.x, this.pixel.y, "#00F", 20);
+    else if (this.mode == MODE_GHOST_DEAD)
+        drawActor(this.pixel.x, this.pixel.y, "rgba(255,255,255,0.2)", 20);
+    else 
+        Actor.prototype.draw.apply(this);
+};
+
+// draw the line of sight of the ghost (for visualization)
 Ghost.prototype.drawSight = function() {
     ctx.strokeStyle = this.color;
     ctx.beginPath();
@@ -416,11 +562,17 @@ var MODE_PLAYER_ENERGY = 1;
 
 // Pacman constructor
 var Player = function() {
-    Actor.apply(this);    // inherit data from Actor
-    this.nextDir = {};    // x,y direction which reflects the player's controls
-    this.nextDirEnum = 0; // direction enumeration for nextDir
+    Actor.apply(this);          // inherit data from Actor
+    this.nextDir = {};          // x,y direction which reflects the player's controls
+    this.nextDirEnum = 0;       // direction enumeration for nextDir
+    this.skippedFramesLeft = 0;   // current # of frames skipped after energizing
 };
 Player.prototype.__proto__ = Actor.prototype; // inherit functions from Actor
+
+Player.prototype.reset = function() {
+    Actor.prototype.reset.apply(this);
+    this.skippedFramesLeft = 0;
+};
 
 // sets the next direction and updates its dependent variables
 Player.prototype.setNextDir = function(nextDirEnum) {
@@ -430,7 +582,6 @@ Player.prototype.setNextDir = function(nextDirEnum) {
 
 // gets the step pattern (speed) used in speed control table
 Player.prototype.getStepPattern = function() {
-    var pattern;
     if (this.mode == MODE_PLAYER_NORM) 
         return STEP_PACMAN;
     else if (this.mode == MODE_PLAYER_ENERGY) 
@@ -452,11 +603,6 @@ Player.prototype.step = function() {
     this.pixel[b] += sign(this.distToMid[b]);
 
     this.commitPos();
-
-    // TODO: HANDLE EATING:
-    // stop for 1 frame when eat pill
-    // reverse ghost direction when eat energizer
-    // increase speed when eat energizer and stop for 3 frames
 };
 
 // determine direction
@@ -464,6 +610,36 @@ Player.prototype.steer = function() {
     // head in the desired direction if possible
     if (isTileWalkable(getNextTile(this.tile, this.nextDir)))
         this.setDir(this.nextDirEnum);
+};
+
+Player.prototype.update = function() {
+
+    // skip frames
+    if (this.skippedFramesLeft > 0) {
+        this.skippedFramesLeft -= 1;
+        return;
+    }
+
+    // eat something
+    var i;
+    var t = getTile(this.tile.x, this.tile.y);
+    if (t == '.' || t == 'o') {
+        currentTiles[this.tile.x+this.tile.y*tileCols] = ' ';
+        dotCount += 1;
+        if (dotCount == 244) {
+            state = finishState;
+            return;
+        }
+        if (t == 'o') {
+            this.skippedFramesLeft = 2;
+            for (i=0; i<4; i++) 
+                actors[i].onEnergyEat();
+        }
+        return; // don't update position this frame
+    }
+
+    // call super function to update position and direction
+    Actor.prototype.update.apply(this);
 };
 
 //
@@ -474,56 +650,59 @@ Player.prototype.steer = function() {
 var blinky = new Ghost();
 blinky.color = "#FF0000";
 blinky.startDirEnum = DIR_LEFT;
-blinky.startPos.x = size*tileCols/2;
-blinky.startPos.y = 14*size+mid.y;
-blinky.home.x = tileCols-1-2;
-blinky.home.y = 0;
+blinky.startPixel.x = 14*size-1;
+blinky.startPixel.y = 14*size+mid.y;
+blinky.homeTile.x = tileCols-1-2;
+blinky.homeTile.y = 0;
 blinky.setTarget = function() {
     // directly target pacman
-    this.target.x = pacman.tile.x;
-    this.target.y = pacman.tile.y;
+    this.targetTile.x = pacman.tile.x;
+    this.targetTile.y = pacman.tile.y;
 };
+// TODO: override getStepPattern function to trigger elroy states
 
 // create pinky
 var pinky = new Ghost();
 pinky.color = "#FFB8FF";
 pinky.startDirEnum = DIR_RIGHT;
-pinky.startPos.x = size*tileCols/2;
-pinky.startPos.y = 20*size+mid.y;
-pinky.home.x = 2;
-pinky.home.y = 0;
+pinky.startPixel.x = 14*size-1;
+pinky.startPixel.y = 17*size+mid.y;
+pinky.homeTile.x = 2;
+pinky.homeTile.y = 0;
 pinky.setTarget = function() {
     // target four tiles ahead of pacman
-    this.target.x = pacman.tile.x + 4*pacman.dir.x;
-    this.target.y = pacman.tile.y + 4*pacman.dir.y;
+    this.targetTile.x = pacman.tile.x + 4*pacman.dir.x;
+    this.targetTile.y = pacman.tile.y + 4*pacman.dir.y;
     if (pacman.dirEnum == DIR_UP)
-        this.target.x -= 4; // arcade overflow bug
+        this.targetTile.x -= 4; // arcade overflow bug
 };
+pinky.getDotLimit = function() { return 0; };
 
 // create inky
 var inky = new Ghost();
 inky.color = "#00FFFF";
 inky.startDirEnum = DIR_DOWN;
-inky.startPos.x = 9*size + mid.x;
-inky.startPos.y = 17*size + mid.y;
-inky.home.x = tileCols-1;
-inky.home.y = tileRows - 2;
+inky.startPixel.x = 12*size-1;
+inky.startPixel.y = 17*size + mid.y;
+inky.homeTile.x = tileCols-1;
+inky.homeTile.y = tileRows - 2;
 inky.setTarget = function() {
     // target twice the distance from blinky to two tiles ahead of pacman
     var px = pacman.tile.x + 2*pacman.dir.x;
     var py = pacman.tile.y + 2*pacman.dir.y;
     if (pacman.dirEnum == DIR_UP)
         px -= 2; // arcade overflow bug
-    this.target.x = blinky.tile.x + 2*(px - blinky.tile.x);
-    this.target.y = blinky.tile.y + 2*(py - blinky.tile.y);
+    this.targetTile.x = blinky.tile.x + 2*(px - blinky.tile.x);
+    this.targetTile.y = blinky.tile.y + 2*(py - blinky.tile.y);
 };
+inky.getDotLimit = function() { return (level==1) ? 30 : 0; };
 
 // create clyde
 var clyde = new Ghost();
 clyde.color = "#FFB851";
 clyde.startDirEnum = DIR_RIGHT;
-clyde.startPos.x = 18*size + mid.x;
-clyde.startPos.y = 17*size + mid.y;
+clyde.startPixel.x = 16*size-1;
+clyde.startPixel.y = 17*size + mid.y;
 clyde.home.x = 0;
 clyde.home.y = tileRows-2;
 clyde.setTarget = function() {
@@ -532,23 +711,30 @@ clyde.setTarget = function() {
     var dy = pacman.tile.y - this.tile.y;
     var dist = dx*dx+dy*dy;
     if (dist >= 64) {
-        this.target.x = pacman.tile.x;
-        this.target.y = pacman.tile.y;
+        this.targetTile.x = pacman.tile.x;
+        this.targetTile.y = pacman.tile.y;
     }
     else {
-        this.target.x = this.home.x;
-        this.target.y = this.home.y;
+        this.targetTile.x = this.homeTile.x;
+        this.targetTile.y = this.homeTile.y;
     }
 };
-
-var ghosts = [ blinky, pinky, inky, clyde ];
+clyde.getDotLimit = function() {
+    if (level == 1) return 60;
+    else if (level == 2) return 50;
+    else return 0;
+};
 
 // create pacman
 var pacman = new Player();
 pacman.color = "#FFFF00";
 pacman.startDirEnum = DIR_LEFT;
-pacman.startPos.x = size*tileCols/2;
-pacman.startPos.y = 26*size + mid.y;
+pacman.startPixel.x = size*tileCols/2;
+pacman.startPixel.y = 26*size + mid.y;
+
+//
+// ============== ACTOR MANAGEMENT ==================
+//
 
 // order at which they appear in original arcade memory
 // (suggests drawing/update order)
@@ -557,22 +743,27 @@ var actors = [blinky, pinky, inky, clyde, pacman];
 var drawActors = function() {
     var i;
     if (pacman.mode == MODE_PLAYER_ENERGY)
-        for (i=0; i<=4; i++) actors[i].draw();
+        for (i=0; i<=4; i++) 
+            actors[i].draw();
     else
-        for (i=4; i>=0; i--) actors[i].draw();
+        for (i=4; i>=0; i--) 
+            actors[i].draw();
 };
 
-var updateActors = function() {
-    var i;
-    for (i=0; i<=4; i++) actors[i].update();
-};
+//
+// ================ COUNTERS =================
+//
+
+
 
 //
 // ================ GAME STATES ===================
 //
 
-var state; // current state object
+var state;     // current state object
 var level = 1; // current level
+var lives = 2; // current lives
+var dotCount;  // current number of dots eaten
 
 // switch to the given state
 var switchToState = function(s) {
@@ -581,26 +772,47 @@ var switchToState = function(s) {
 };
 
 // start state
-var stateStart = {};
-stateStart.init = function() {
-    resetTiles();
+var startState = {};
+startState.init = function() {
+    initTiles();
     var i;
-    for (i=0; i<4; i++)
-        ghosts[i].reset();
-    pacman.reset();
-
+    for (i=0; i<5; i++)
+        actors[i].onNewLevel();
     this.frame = 0;
     this.text = "ready";
     this.textWidth = ctx.measureText(this.text).width;
 };
-stateStart.draw = function() {
+startState.draw = function() {
     drawBackground();
     drawTiles();
     drawActors();
     ctx.fillStyle = "#FF0";
     ctx.fillText(this.text, tileCols*size/2 - this.textWidth/2, 17*size+mid.y);
 };
-stateStart.update = function() {
+startState.update = function() {
+    if (this.frame == 2*60)
+        switchToState(playState);
+    this.frame += 1;
+};
+
+// restart state
+var restartState = {};
+restartState.init = function() {
+    var i;
+    for (i=0; i<5; i++)
+        actors[i].onNewLevel();
+    this.frame = 0;
+    this.text = "ready";
+    this.textWidth = ctx.measureText(this.text).width;
+};
+restartState.draw = function() {
+    drawBackground();
+    drawTiles();
+    drawActors();
+    ctx.fillStyle = "#FF0";
+    ctx.fillText(this.text, tileCols*size/2 - this.textWidth/2, 17*size+mid.y);
+};
+restartState.update = function() {
     if (this.frame == 2*60)
         switchToState(playState);
     this.frame += 1;
@@ -608,16 +820,43 @@ stateStart.update = function() {
 
 // play state
 var playState = {};
-playState.init = function(){};
+playState.init = function() {
+    this.skippedFramesLeft = 0;
+};
 playState.draw = function() {
     drawBackground();
     drawTiles();
     drawActors();
 };
 playState.update = function() {
-    updateActors();
-    // TODO: if collision, state = deadState
-    // TODO: if collect all pellets, state = finishState
+
+    var skip = this.skippedFramesLeft > 0;
+
+    // if we're skipping this frame, we still need to update the dead ghosts running home
+    var i;
+    for (i = 0; i<5; i++)
+        if (!skip || (i<4 && actors[i].mode == MODE_GHOST_DEAD && actors[i].isGoingHome))
+            actors[i].update();
+
+    if (skip) {
+        this.skippedFramesLeft -= 1;
+        return;
+    }
+
+    // test pacman collision with each ghost
+    for (i = 0; i<4; i++) {
+        if (actors[i].tile.x == pacman.tile.x && actors[i].tile.y == pacman.tile.y) {
+            if (actors[i].mode == MODE_GHOST_CHASE || actors[i].mode == MODE_GHOST_SCATTER) {
+                switchToState(deadState);
+                return;
+            }
+            else if (pacman.mode == MODE_PLAYER_ENERGY) {
+                actors[i].onEaten();
+                this.skippedFramesLeft = 120;
+                return;
+            }
+        }
+    }
 };
 
 // dead state
@@ -681,7 +920,7 @@ window.onload = function() {
     ctx.font = "bold 12px sans-serif";
     initInput();
 
-    this.switchToState(stateStart);
+    this.switchToState(startState);
     setInterval("state.update()", 1000/60); // update at 60Hz (original arcade rate)
     setInterval("state.draw()", 1000/25);   // draw at 25Hz (helps performance)
 };

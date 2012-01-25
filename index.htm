@@ -533,7 +533,10 @@ Ghost.prototype.onEnergized = function() {
     // only reverse if we are in an active targetting mode
     if (this.homeMode == LEFT_HOME)
         this.reverse();
-    this.scared = true;
+
+    // don't scare me again on the way to home
+    if (this.homeMode != GOING_HOME)
+        this.scared = true;
 };
 
 // function called when this ghost gets eaten
@@ -640,7 +643,9 @@ Ghost.prototype.steer = function() {
     var minDist = Infinity;              // variable used for finding minimum distance path
 
     // reverse direction once we exit the tile occupied when reverse signal was given
-    if (this.sigReverse && !(this.tile.x == this.reverseTile.x && this.tile.y == this.reverseTile.y)) {
+    // but only do so if we can go back (after leaving ghost door for instance)
+    if (this.sigReverse && !(this.tile.x == this.reverseTile.x && this.tile.y == this.reverseTile.y) &&
+        isFloorTile(getTile(this.tile.x-this.dir.x, this.tile.y-this.dir.y))) {
         this.sigReverse = false;
         this.setDir(oppDirEnum);
         return;
@@ -728,7 +733,7 @@ Ghost.prototype.update = function() {
         this.homeMode = GOING_HOME;
     }
     // handle active targetting mode
-    else if (!this.scared && this.homeMode == LEFT_HOME) {
+    else if (!this.scared && this.homeMode != GOING_HOME) {
         newMode = getNewGhostTargetMode(this.targetCount);
         if (newMode != undefined) {
             if (this.targetMode != newMode) {

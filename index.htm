@@ -386,8 +386,8 @@ var initGhostTargetModeTimes = function() {
     ghostTargetModeTimes[1][t+=7*60] = MODE_GHOST_ATTACK;
     ghostTargetModeTimes[1][t+=20*60] = MODE_GHOST_PATROL;
     ghostTargetModeTimes[1][t+=5*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[1][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[1][t+=5*60] = MODE_GHOST_ATTACK;
+    ghostTargetModeTimes[1][t+=1033*60] = MODE_GHOST_PATROL;
+    ghostTargetModeTimes[1][t+=1] = MODE_GHOST_ATTACK;
     // level 5+
     ghostTargetModeTimes[2][t=0] = MODE_GHOST_PATROL;
     ghostTargetModeTimes[2][t+=7*60] = MODE_GHOST_ATTACK;
@@ -395,8 +395,8 @@ var initGhostTargetModeTimes = function() {
     ghostTargetModeTimes[2][t+=7*60] = MODE_GHOST_ATTACK;
     ghostTargetModeTimes[2][t+=20*60] = MODE_GHOST_PATROL;
     ghostTargetModeTimes[2][t+=5*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[2][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[2][t+=5*60] = MODE_GHOST_ATTACK;
+    ghostTargetModeTimes[2][t+=1037*60] = MODE_GHOST_PATROL;
+    ghostTargetModeTimes[2][t+=1] = MODE_GHOST_ATTACK;
 };
 
 // retrieves a target mode if there is one to be triggered at the given frame (time)
@@ -482,14 +482,14 @@ Ghost.prototype.getNumSteps = function(frame) {
 
     var pattern;
 
-    if (this.scared)
-        pattern = STEP_GHOST_FRIGHT;
-    else if (this.homeMode == GOING_HOME) 
-        return 2;
+    if (this.homeMode == GOING_HOME) 
+        return 2; // TODO: confirm
     else if (this.homeMode == LEAVING_HOME)
-        pattern = STEP_GHOST_TUNNEL;
+        pattern = STEP_GHOST_TUNNEL; // TODO: confirm
     else if (this.homeMode == PACING_HOME)
-        pattern = STEP_GHOST_TUNNEL;
+        pattern = STEP_GHOST_TUNNEL; // TODO: confirm
+    else if (this.scared)
+        pattern = STEP_GHOST_FRIGHT;
     else if (this.homeMode == LEFT_HOME)
         pattern = isTunnelTile(this.tile.x, this.tile.y) ? STEP_GHOST_TUNNEL : STEP_GHOST;
 
@@ -737,7 +737,8 @@ Ghost.prototype.update = function() {
         newMode = getNewGhostTargetMode(this.targetCount);
         if (newMode != undefined) {
             if (this.targetMode != newMode) {
-                this.reverse();
+                if (this.homeMode == LEFT_HOME)
+                    this.reverse();
                 this.targetMode = newMode;
             }
         }
@@ -760,7 +761,7 @@ Ghost.prototype.draw = function() {
     else 
         Actor.prototype.draw.apply(this);
 
-    //if (!this.scared && this.homeMode == LEFT_HOME)
+    //if (!this.scared)
         //this.drawSight();
 };
 

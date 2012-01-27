@@ -418,16 +418,31 @@ var getNewGhostTargetMode = function(t) {
 
 // time limits for how long pacman should be energized for each level.
 // also the number of times a scared ghost should flash before returning to normal.
-var energizedTimeLimits =  [0,6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
-var scaredGhostFlashes = [0,5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
+var energizedTimeLimits =  [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
+var scaredGhostFlashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
 
 var getEnergizedTimeLimit = function() {
     var i = game.level;
-    return (i > 18) ? 0 : 60*energizedTimeLimits[i];
+    return (i > 18) ? 0 : 60*energizedTimeLimits[i-1];
 };
 var getScaredGhostFlashes = function() {
     var i = game.level;
-    return (i > 18) ? 0 : 60*scaredGhostFlashes[i];
+    return (i > 18) ? 0 : 60*scaredGhostFlashes[i-1];
+};
+
+var elroy1DotsLeft = [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120];
+var elroy2DotsLeft = [10,15,20,20,20,25,25,25,30,30,30,40,40,40, 50, 50, 50, 50, 60, 60, 60];
+
+var getElroy1DotsLeft = function() {
+    var i = game.level;
+    if (i>21) i = 21;
+    return elroy1DotsLeft[i-1];
+};
+
+var getElroy2DotsLeft = function() {
+    var i = game.level;
+    if (i>21) i = 21;
+    return elroy2DotsLeft[i-1];
 };
 
 //
@@ -485,6 +500,10 @@ Ghost.prototype.getNumSteps = function(frame) {
         pattern = STEP_GHOST_TUNNEL;
     else if (this.scared)
         pattern = STEP_GHOST_FRIGHT;
+    else if (this.elroy == 1)
+        pattern = STEP_ELROY1;
+    else if (this.elroy == 2)
+        pattern = STEP_ELROY2;
 
     return getStepSizeFromTable(game.level, pattern, frame);
 };
@@ -682,7 +701,7 @@ Ghost.prototype.steer = function() {
             this.targetTile.y = ghostDoorTile.y;
         }
         // target corner when patrolling
-        else if (ghostTargetMode == MODE_GHOST_PATROL) {
+        else if (!this.elroy && ghostTargetMode == MODE_GHOST_PATROL) {
             this.targetTile.x = this.cornerTile.x;
             this.targetTile.y = this.cornerTile.y;
         }
@@ -894,7 +913,6 @@ blinky.setTarget = function() {
     this.targetTile.x = pacman.tile.x;
     this.targetTile.y = pacman.tile.y;
 };
-// TODO: override getStepPattern function to trigger elroy states
 
 // create pinky
 var pinky = new Ghost();
@@ -1113,6 +1131,18 @@ counter.update = function() {
         }
         this.targetCount++;
     }
+
+    // set elroy modes
+    var dotsLeft = game.maxDots - game.dotCount;
+    if (dotsLeft <= getElroy2DotsLeft()) {
+        blinky.elroy = 2;
+    }
+    else if (dotsLeft <= getElroy1DotsLeft()) {
+        blinky.elroy = 1;
+    }
+    else {
+        blinky.elroy = 0;
+    }
 };
 
 //
@@ -1206,8 +1236,6 @@ playState.update = function() {
     for (i = 0; i<5; i++)
         actors[i].update();
 
-    // TODO: do we check collision before we eat the dot?
-
     // test pacman collision with each ghost
     var g; // temporary ghost variable
     for (i = 0; i<4; i++) {
@@ -1278,17 +1306,17 @@ deadState.leave = function() {
 // freeze for a moment then flash the tiles four times
 var finishState = { __proto__: scriptState };
 finishState.script = {
-    0 : function(t) { drawActors(); },
-    60: function(t) { },
-    120: function(t) { floorColor = brightFloorColor },
-    135: function(t) { floorColor = normalFloorColor },
-    150: function(t) { floorColor = brightFloorColor },
-    165: function(t) { floorColor = normalFloorColor },
-    180: function(t) { floorColor = brightFloorColor },
-    195: function(t) { floorColor = normalFloorColor },
-    210: function(t) { floorColor = brightFloorColor },
-    225: function(t) { floorColor = normalFloorColor },
-    255: function(t) { this.leave() }
+    0 : function(t)  { drawActors(); },
+    60: function(t)  { pacman.draw();},
+    120: function(t) { pacman.draw(); floorColor = brightFloorColor; },
+    135: function(t) { pacman.draw(); floorColor = normalFloorColor; },
+    150: function(t) { pacman.draw(); floorColor = brightFloorColor; },
+    165: function(t) { pacman.draw(); floorColor = normalFloorColor; },
+    180: function(t) { pacman.draw(); floorColor = brightFloorColor; },
+    195: function(t) { pacman.draw(); floorColor = normalFloorColor; },
+    210: function(t) { pacman.draw(); floorColor = brightFloorColor; },
+    225: function(t) { pacman.draw(); floorColor = normalFloorColor; },
+    255: function(t) { pacman.draw(); this.leave(); }
 };
 finishState.leave = function() {
     game.level++;
@@ -1387,8 +1415,4 @@ window.onload = function() {
 </head>
 <body>
 <canvas id="canvas" width="224" height="288" style="border:1px solid #DDD; outline:none;"></canvas>
-<p>
-based on the <a href="http://home.comcast.net/~jpittman2/pacman/pacmandossier.html">The Pac-Man Dossier</a>.<br/>
-project tracked on <a href="https://github.com/shaunew/Pac-Man">GitHub</a>
-</p>
 </body>

@@ -140,6 +140,15 @@ var drawExtraLives = function() {
         drawActor((2*i+3)*tileSize, (tileRows-2)*tileSize+midTile.y,"rgba(255,255,0,0.6)",actorSize);
 };
 
+var drawLevelIcons = function() {
+    var i;
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    var w = 2;
+    var h = actorSize;
+    for (i=0; i<game.level; i++)
+        ctx.fillRect((tileCols-2)*tileSize - i*2*w, (tileRows-2)*tileSize+midTile.y-h/2, w, h);
+};
+
 // floor colors to use when flashing after finishing a level
 var normalFloorColor = "#555";
 var brightFloorColor = "#999";
@@ -1232,6 +1241,7 @@ commonStartState.draw = function() {
     drawTiles();
     drawActors();
     drawExtraLives();
+    drawLevelIcons();
     drawMessage("READY","#FF0");
 };
 commonStartState.update = function() {
@@ -1268,6 +1278,7 @@ playState.draw = function() {
     drawTiles();
     drawActors();
     drawExtraLives();
+    drawLevelIcons();
 };
 playState.update = function() {
 
@@ -1334,6 +1345,7 @@ scriptState.draw = function() {
     drawBackground();
     drawTiles();
     drawExtraLives();
+    drawLevelIcons();
     this.scriptFunc(this.frames - this.scriptFuncFrame);
 };
 scriptState.update = function() {

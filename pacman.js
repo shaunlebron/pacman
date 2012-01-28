@@ -134,6 +134,12 @@ var drawMessage = function(text, color) {
     ctx.fillText(text, tileCols*tileSize/2 - w/2, messageRow*tileSize);
 };
 
+var drawExtraLives = function() {
+    var i;
+    for (i=0; i<game.extraLives; i++)
+        drawActor((2*i+3)*tileSize, (tileRows-2)*tileSize+midTile.y,"rgba(255,255,0,0.6)",actorSize);
+};
+
 // floor colors to use when flashing after finishing a level
 var normalFloorColor = "#555";
 var brightFloorColor = "#999";
@@ -1181,9 +1187,9 @@ counter.update = function() {
 var game = {};
 game.maxDots = 244; // number of dots per level
 game.init = function(s) {
-    this.lives = 3;
+    this.extraLives = 3;
     this.level = 1;
-    this.switchState(startState);
+    this.switchState(firstState);
 };
 game.switchState = function(s) {
     s.init();
@@ -1193,6 +1199,25 @@ game.switchState = function(s) {
 //
 // ================ start states =================
 //
+
+var firstState = {};
+firstState.init = function() {
+    this.frames = 0;
+};
+firstState.draw = function() {
+    drawBackground();
+    drawTiles();
+    drawExtraLives();
+    drawMessage("READY","#FF0");
+};
+firstState.update = function() {
+    if (this.frames == 60) {
+        game.extraLives--;
+        game.switchState(startState);
+    }
+    else 
+        this.frames++;
+};
 
 // common start state when the all players return to their places
 var commonStartState = {};
@@ -1206,6 +1231,7 @@ commonStartState.draw = function() {
     drawBackground();
     drawTiles();
     drawActors();
+    drawExtraLives();
     drawMessage("READY","#FF0");
 };
 commonStartState.update = function() {
@@ -1225,6 +1251,7 @@ startState.init = function() {
 // start state for restarting level
 var restartState = { __proto__:commonStartState };
 restartState.init = function() {
+    game.extraLives--;
     counter.onRestartLevel();
     commonStartState.init.apply(this);
 };
@@ -1240,6 +1267,7 @@ playState.draw = function() {
     drawBackground();
     drawTiles();
     drawActors();
+    drawExtraLives();
 };
 playState.update = function() {
 
@@ -1305,6 +1333,7 @@ scriptState.init = function() {
 scriptState.draw = function() {
     drawBackground();
     drawTiles();
+    drawExtraLives();
     this.scriptFunc(this.frames - this.scriptFuncFrame);
 };
 scriptState.update = function() {
@@ -1325,8 +1354,7 @@ deadState.script = {
     240 : function(t) { this.leave(); } 
 };
 deadState.leave = function() {
-    game.lives--;
-    game.switchState( game.lives == 0 ? overState : restartState);
+    game.switchState( game.extraLives == 0 ? overState : restartState);
 };
 
 // freeze for a moment then flash the tiles four times
@@ -1409,7 +1437,7 @@ window.onload = function() {
     ctx = canvas.getContext("2d");
     ctx_w = ctx.canvas.width;
     ctx_h = ctx.canvas.height;
-    ctx.font = "bold " + 2*tileSize + "px monospace";
+    ctx.font = "bold " + 2*tileSize + "px sans-serif";
 
     // init various things
     initInput();

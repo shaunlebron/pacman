@@ -1212,6 +1212,7 @@ game.switchState = function(s) {
 var firstState = {};
 firstState.init = function() {
     this.frames = 0;
+    resetTiles();
 };
 firstState.draw = function() {
     drawBackground();
@@ -1253,7 +1254,6 @@ commonStartState.update = function() {
 // start state for new level
 var startState = { __proto__:commonStartState };
 startState.init = function() {
-    resetTiles();
     counter.onNewLevel();
     commonStartState.init.apply(this);
 };
@@ -1387,6 +1387,7 @@ finishState.script = {
 finishState.leave = function() {
     game.level++;
     game.switchState(startState);
+    resetTiles();
 };
 
 // display game over

@@ -506,7 +506,7 @@ var Ghost = function() {
 
     // signals (received to indicate changes to be made in the update() function)
     this.sigReverse = false;   // reverse signal
-    this.sigGoHome = false;    // go home signal
+    this.justEaten = false;    // go home signal
     this.sigLeaveHome = false; // leave home signal
 
     // modes
@@ -522,7 +522,7 @@ Ghost.prototype.reset = function() {
 
     // signals
     this.sigReverse = false;
-    this.sigGoHome = false;
+    this.justEaten = false;
     this.sigLeaveHome = false;
 
     // modes
@@ -572,7 +572,7 @@ Ghost.prototype.reverse = function() {
 // set after the update() function is called so that we are still frozen
 // for 3 seconds before traveling home uninterrupted.
 Ghost.prototype.goHome = function() {
-    this.sigGoHome = true; 
+    this.justEaten = true; 
 };
 
 // Following the pattern that state changes be made via signaling (e.g. reversing, going home)
@@ -782,8 +782,8 @@ Ghost.prototype.update = function() {
     var newMode;
 
     // react to signal to go home
-    if (this.sigGoHome) {
-        this.sigGoHome = false;
+    if (this.justEaten) {
+        this.justEaten = false;
         this.homeMode = GOING_HOME;
     }
     
@@ -795,8 +795,6 @@ Ghost.prototype.update = function() {
 Ghost.prototype.draw = function() {
     if (this.scared)
         drawActor(this.pixel.x, this.pixel.y, "#00F", actorSize);
-    else if (this.sigGoHome)
-        drawActor(this.pixel.x, this.pixel.y, "rgba(255,255,255,0.1)", actorSize);
     else if (this.homeMode == GOING_HOME)
         drawActor(this.pixel.x, this.pixel.y, "rgba(255,255,255,0.2)", actorSize);
     else 
@@ -928,6 +926,7 @@ Player.prototype.update = function() {
         if (++game.dotCount == game.maxDots)
             return;
         if (t == 'o') {
+            this.eatPoints = 100;
             this.energized = true;
             this.energizedCount = 0;
             this.eatPauseFramesLeft = 3;
@@ -1036,9 +1035,17 @@ var actors = [blinky, pinky, inky, clyde, pacman];
 var drawActors = function() {
     var i;
     // draw such that pacman appears on top
-    if (pacman.energized)
-        for (i=0; i<=4; i++) 
-            actors[i].draw();
+    if (pacman.energized) {
+        for (i=0; i<4; i++)
+            if (actors[i].justEaten) {
+                // TODO: draw eatPoints
+            }
+            else {
+                actors[i].draw();
+            }
+        if (playState.skippedFramesLeft == 0)
+            pacman.draw();
+    }
     // draw such that pacman appears on bottom
     else
         for (i=4; i>=0; i--) 
@@ -1198,6 +1205,8 @@ game.maxDots = 244; // number of dots per level
 game.init = function(s) {
     this.extraLives = 3;
     this.level = 1;
+    this.score = 0;
+    this.hiscore = 0;
     this.switchState(firstState);
 };
 game.switchState = function(s) {
@@ -1312,6 +1321,8 @@ playState.update = function() {
                     game.switchState(deadState);
                 }
                 else if (pacman.energized) {
+                    pacman.eatPoints *= 2;
+                    this.score += pacman.eatPoints;
                     g.onEaten();
                     this.skippedFramesLeft = 1*60;
                 }

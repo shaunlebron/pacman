@@ -56,6 +56,10 @@ var messageRow = 22;
 var tileSize = 8;
 var midTile = {x:3, y:4};
 
+// size of the tile map
+var widthPixels = tileCols*tileSize;
+var heightPixels = tileRows*tileSize;
+
 // actor size
 var actorSize = (tileSize-1)*2;
 
@@ -116,7 +120,7 @@ var fruitPixel = {x:tileSize*(1+fruitTile.x)-1, y:tileSize*fruitTile.y + midTile
 // draw background
 var drawBackground = function() {
     ctx.fillStyle = "#333";
-    ctx.fillRect(0,0,ctx_w,ctx_h);
+    ctx.fillRect(0,0,widthPixels, heightPixels);
 };
 
 // draw floor tile
@@ -1569,13 +1573,19 @@ var sign = function(x) {
 };
 
 var canvas;
-var ctx, ctx_w, ctx_h;
+var ctx;
 
 window.onload = function() {
-    canvas = document.getElementById("canvas");
+
+    // set drawing scale
+    var scale = 1.25;
+
+    // get canvas and set its size
+    canvas = document.getElementById("pacman");
+    canvas.width = widthPixels*scale;
+    canvas.height = heightPixels*scale;
     ctx = canvas.getContext("2d");
-    ctx_w = ctx.canvas.width;
-    ctx_h = ctx.canvas.height;
+    ctx.scale(scale,scale);
 
     // init various things
     initInput();
@@ -1593,7 +1603,6 @@ window.onload = function() {
         setInterval("game.state.update()", 1000/60); // update at 60Hz (original arcade rate)
         setInterval(function() { 
             game.state.draw(); 
-            //stackBlurCanvasRGB('canvas', 0, 0, ctx_w, ctx_h, 1);
         }, 1000/25);   // draw at 25Hz (helps performance)
         canvas.onmousedown = undefined;
     };

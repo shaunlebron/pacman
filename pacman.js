@@ -146,12 +146,14 @@ var drawEatenPoints = function() {
     ctx.fillText(text, pacman.pixel.x, pacman.pixel.y);
 };
 
+// draw extra lives indicator
 var drawExtraLives = function() {
     var i;
     for (i=0; i<game.extraLives; i++)
         drawActor((2*i+3)*tileSize, (tileRows-2)*tileSize+midTile.y,"rgba(255,255,0,0.6)",actorSize);
 };
 
+// draw current level indicator
 var drawLevelIcons = function() {
     var i;
     ctx.fillStyle = "rgba(255,255,255,0.5)";
@@ -159,6 +161,21 @@ var drawLevelIcons = function() {
     var h = actorSize;
     for (i=0; i<game.level; i++)
         ctx.fillRect((tileCols-2)*tileSize - i*2*w, (tileRows-2)*tileSize+midTile.y-h/2, w, h);
+};
+
+var drawScore = function() {
+    ctx.font = 1.5*tileSize + "px sans-serf";
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#FFF";
+    ctx.fillText(game.score, tileSize, tileSize*2);
+
+    ctx.font = "bold " + 1.5*tileSize + "px sans-serf";
+    ctx.textBaseline = "top";
+    ctx.textAlign = "center";
+    ctx.fillText("hi score", tileSize*tileCols/2, 3);
+    ctx.fillText(game.hiscore, tileSize*tileCols/2, tileSize*2);
+
 };
 
 // floor colors to use when flashing after finishing a level
@@ -934,6 +951,7 @@ Player.prototype.update = function() {
     var t = getTile(this.tile.x, this.tile.y);
     if (t == '.' || t == 'o') {
         counter.addDot();
+        game.addScore((t=='.') ? 10 : 50);
         currentTiles[this.tile.x+this.tile.y*tileCols] = ' ';
         if (++game.dotCount == game.maxDots)
             return;
@@ -1212,16 +1230,21 @@ counter.update = function() {
 
 var game = {};
 game.maxDots = 244; // number of dots per level
+game.hiscore = 0;
 game.init = function(s) {
     this.extraLives = 3;
     this.level = 1;
     this.score = 0;
-    this.hiscore = 0;
     this.switchState(firstState);
 };
 game.switchState = function(s) {
     s.init();
     this.state = s;
+};
+game.addScore = function(p) {
+    this.score += p;
+    if (this.score > this.hiscore)
+        this.hiscore = this.score;
 };
 
 //
@@ -1237,10 +1260,12 @@ firstState.draw = function() {
     drawBackground();
     drawTiles();
     drawExtraLives();
+    drawLevelIcons();
+    drawScore();
     drawMessage("READY","#FF0");
 };
 firstState.update = function() {
-    if (this.frames == 60) {
+    if (this.frames == 2*60) {
         game.extraLives--;
         game.switchState(startState);
     }
@@ -1262,6 +1287,7 @@ commonStartState.draw = function() {
     drawActors();
     drawExtraLives();
     drawLevelIcons();
+    drawScore();
     drawMessage("READY","#FF0");
 };
 commonStartState.update = function() {
@@ -1298,6 +1324,7 @@ playState.draw = function() {
     drawActors();
     drawExtraLives();
     drawLevelIcons();
+    drawScore();
 };
 playState.update = function() {
 
@@ -1332,7 +1359,7 @@ playState.update = function() {
                 }
                 else if (pacman.energized) {
                     pacman.eatPoints *= 2;
-                    this.score += pacman.eatPoints;
+                    game.addScore(pacman.eatPoints);
                     g.onEaten();
                     this.skippedFramesLeft = 1*60;
                 }
@@ -1367,6 +1394,7 @@ scriptState.draw = function() {
     drawTiles();
     drawExtraLives();
     drawLevelIcons();
+    drawScore();
     this.scriptFunc(this.frames - this.scriptFuncFrame);
 };
 scriptState.update = function() {
@@ -1423,6 +1451,9 @@ overState.init = function() {
 overState.draw = function() {
     drawBackground();
     drawTiles();
+    drawExtraLives();
+    drawLevelIcons();
+    drawScore();
     drawMessage("GAME OVER", "#F00");
 };
 overState.update = function() {};

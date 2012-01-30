@@ -706,6 +706,8 @@ Ghost.prototype.steer = function() {
         if (this.sigLeaveHome) {
             this.sigLeaveHome = false;
             this.homeMode = LEAVING_HOME;
+            if (this == clyde) 
+                counter.elroyWaitForClyde = false;
             if (this.pixel.x == ghostDoorPixel.x)
                 this.setDir(DIR_UP);
             else
@@ -1170,6 +1172,7 @@ counter.onNewLevel = function() {
     clyde.dotCount = 0;
     this.fruitFramesLeft = 0;
     this.fruitScoreFramesLeft = 0;
+    this.elroyWaitForClyde = false;
 };
 
 // when player dies and level restarts
@@ -1181,6 +1184,7 @@ counter.onRestartLevel = function() {
     this.framesSinceLastDot = 0;
     this.fruitFramesLeft = 0;
     this.fruitScoreFramesLeft = 0;
+    this.elroyWaitForClyde = true;
 };
 
 // this is how long it will take to release a ghost after pacman stops eating
@@ -1273,14 +1277,15 @@ counter.update = function() {
 
     // set elroy modes
     var dotsLeft = game.maxDots - game.dotCount;
-    if (dotsLeft <= getElroy2DotsLeft()) {
-        blinky.elroy = 2;
-    }
-    else if (dotsLeft <= getElroy1DotsLeft()) {
-        blinky.elroy = 1;
-    }
-    else {
+    if (this.elroyWaitForClyde)
         blinky.elroy = 0;
+    else {
+        if (dotsLeft <= getElroy2DotsLeft())
+            blinky.elroy = 2;
+        else if (dotsLeft <= getElroy1DotsLeft())
+            blinky.elroy = 1;
+        else
+            blinky.elroy = 0;
     }
 
     // update fruit
@@ -1581,7 +1586,7 @@ var ctx;
 window.onload = function() {
 
     // set drawing scale
-    var scale = 1.25;
+    var scale = 1;
 
     // get canvas and set its size
     canvas = document.getElementById("pacman");

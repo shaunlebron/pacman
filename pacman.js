@@ -515,13 +515,17 @@ var getNewGhostTargetMode = function(t) {
 var energizedTimeLimits =  [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
 var scaredGhostFlashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
 
+// "The ghosts change colors every 14 game cycles when they start "flashing" near the end of frightened mode."
+// -Jamey Pittman
+var ghostFlashInterval = 14; 
+
 var getEnergizedTimeLimit = function() {
     var i = game.level;
     return (i > 18) ? 0 : 60*energizedTimeLimits[i-1];
 };
 var getScaredGhostFlashes = function() {
     var i = game.level;
-    return (i > 18) ? 0 : 60*scaredGhostFlashes[i-1];
+    return (i > 18) ? 0 : scaredGhostFlashes[i-1];
 };
 
 var elroy1DotsLeft = [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120];
@@ -844,7 +848,7 @@ Ghost.prototype.update = function() {
 // draw ghost differently to reflect modes
 Ghost.prototype.draw = function() {
     if (this.scared)
-        drawActor(this.pixel.x, this.pixel.y, "#00F", actorSize);
+        drawActor(this.pixel.x, this.pixel.y, pacman.energizedFlash ? "#FFF" : "#00F", actorSize);
     else if (this.homeMode == GOING_HOME)
         drawActor(this.pixel.x, this.pixel.y, "rgba(255,255,255,0.2)", actorSize);
     else 
@@ -880,6 +884,7 @@ var Player = function() {
 
     // energized state
     this.energized = false;        // indicates energized state
+    this.energizedFlash = false;   // whether ghosts are currently flashing
     this.energizedCount = 0;       // how long in frames we have been energized
 
     this.eatPauseFramesLeft = 0;   // current # of frames left to pause after eating
@@ -954,21 +959,31 @@ Player.prototype.update = function() {
 
     // handle energized timing
     var i;
-    if (this.energizedCount == getEnergizedTimeLimit()) {
-        this.energized = false;
-        this.energizedCount = 0;
-        for (i=0; i<4; i++)
-            actors[i].scared = false;
+    var energizedFramesLeft;
+    if (this.energized) {
+        if (this.energizedCount == getEnergizedTimeLimit()) {
+            this.energized = false;
+            this.energizedFlash = false;
+            this.energizedCount = 0;
+            for (i=0; i<4; i++)
+                actors[i].scared = false;
+        }
+        else {
+            this.energizedCount++;
+
+            // flash ghost at the end of frightened mode
+            energizedFramesLeft = getEnergizedTimeLimit() - this.energizedCount;
+            if (energizedFramesLeft <= ghostFlashInterval*(getScaredGhostFlashes()*2 - 1) && 
+                energizedFramesLeft % ghostFlashInterval == 0)
+                this.energizedFlash = !this.energizedFlash;
+        }
     }
-    else
-        this.energizedCount++;
 
 
     // call super function to update position and direction
     Actor.prototype.update.apply(this);
 
     // eat something
-    var i;
     var t = getTile(this.tile.x, this.tile.y);
     if (t == '.' || t == 'o') {
         counter.addDot();
@@ -979,6 +994,7 @@ Player.prototype.update = function() {
         if (t == 'o') {
             this.eatPoints = 100;
             this.energized = true;
+            this.energizedFlash = false;
             this.energizedCount = 0;
             this.eatPauseFramesLeft = 3;
             for (i=0; i<4; i++) 

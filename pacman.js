@@ -105,6 +105,10 @@ var ghostHomeRightPixel = ghostDoorPixel.x + 2*tileSize;
 var ghostHomeTopPixel = 17*tileSize;
 var ghostHomeBottomPixel = 18*tileSize;
 
+// location of the fruit
+var fruitTile = {x:13, y:20};
+var fruitPixel = {x:tileSize*(1+fruitTile.x)-1, y:tileSize*fruitTile.y + midTile.y};
+
 //
 // ========== TILE DRAWING ============
 //
@@ -163,6 +167,7 @@ var drawLevelIcons = function() {
         ctx.fillRect((tileCols-2)*tileSize - i*2*w, (tileRows-2)*tileSize+midTile.y-h/2, w, h);
 };
 
+// draw current and high scores
 var drawScore = function() {
     ctx.font = 1.5*tileSize + "px sans-serif";
     ctx.textBaseline = "top";
@@ -175,7 +180,6 @@ var drawScore = function() {
     ctx.textAlign = "center";
     ctx.fillText("high score", tileSize*tileCols/2, 3);
     ctx.fillText(game.highScore, tileSize*tileCols/2, tileSize*2);
-
 };
 
 // floor colors to use when flashing after finishing a level
@@ -227,6 +231,23 @@ var drawTiles = function () {
         e = energizers[i];
         if (currentTiles[e.x+e.y*tileCols] == 'o')
             drawFloor(e.x,e.y,"#FFF",-1);
+    }
+};
+
+// draw fruit or fruit score
+var drawFruit = function() {
+    var w;
+    if (counter.fruitFramesLeft > 0) {
+        ctx.fillStyle = "rgba(0,255,0,0.5)";
+        w = tileSize+2;
+        ctx.fillRect(fruitPixel.x-w/2, fruitPixel.y-w/2, w, w);
+    }
+    else if (counter.fruitScoreFramesLeft > 0) {
+        ctx.font = 1.5*tileSize + "px sans-serif";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#FFF";
+        ctx.fillText(getFruitPoints(), fruitPixel.x, fruitPixel.y);
     }
 };
 
@@ -1084,11 +1105,20 @@ var drawActors = function() {
 // ================ COUNTERS =================
 //
 
-// This is a counter that decides when a ghost
-// can leave its home and when it should change
-// targets.
+// counters:
+// 1. release ghosts from home
+// 2. change ghost modes chase/scatter
+// 3. set elroy modes
+// 4. fruit timer
 
-// two separate counter modes
+var fruitPoints = [100,300,500,500,700,700,1000,1000,2000,2000,3000,3000,5000]
+var getFruitPoints = function() {
+    var i = game.level;
+    if (i > 13) i = 13;
+    return fruitPoints[i-1];
+};
+
+// two separate counter modes for releasing the ghosts from home
 var MODE_COUNTER_PERSONAL = 0;
 var MODE_COUNTER_GLOBAL = 1;
 
@@ -1118,6 +1148,8 @@ counter.onNewLevel = function() {
     pinky.dotCount = 0;
     inky.dotCount = 0;
     clyde.dotCount = 0;
+    this.fruitFramesLeft = 0;
+    this.fruitScoreFramesLeft = 0;
 };
 
 // when player dies and level restarts
@@ -1127,6 +1159,8 @@ counter.onRestartLevel = function() {
     this.mode = MODE_COUNTER_GLOBAL;
     this.dotCount = 0;
     this.framesSinceLastDot = 0;
+    this.fruitFramesLeft = 0;
+    this.fruitScoreFramesLeft = 0;
 };
 
 // this is how long it will take to release a ghost after pacman stops eating
@@ -1152,6 +1186,12 @@ counter.addDot = function() {
     }
     else {
         this.dotCount++;
+    }
+
+    // show fruit
+    if (game.dotCount == 70 || game.dotCount == 170) {
+        this.fruitScoreFramesLeft = 0;
+        this.fruitFramesLeft = 60*10;
     }
 };
 
@@ -1222,6 +1262,14 @@ counter.update = function() {
     else {
         blinky.elroy = 0;
     }
+
+    // update fruit
+    if (this.fruitFramesLeft > 0) {
+        this.fruitFramesLeft--;
+    }
+    else if (this.fruitScoreFramesLeft > 0) {
+        this.fruitScoreFramesLeft--;
+    }
 };
 
 //
@@ -1245,6 +1293,8 @@ game.addScore = function(p) {
     this.score += p;
     if (this.score > this.highScore)
         this.highScore = this.score;
+    if (this.score % 10000 == 0)
+        this.extraLives++;
 };
 
 //
@@ -1321,6 +1371,7 @@ playState.init = function() {
 playState.draw = function() {
     drawBackground();
     drawTiles();
+    drawFruit();
     drawActors();
     drawExtraLives();
     drawLevelIcons();
@@ -1366,6 +1417,13 @@ playState.update = function() {
                 break;
             }
         }
+    }
+
+    // test collision with fruit
+    if (counter.fruitFramesLeft > 0 && pacman.tile.x == fruitTile.x && pacman.tile.y == fruitTile.y) {
+        counter.fruitFramesLeft = 0;
+        counter.fruitScoreFramesLeft = 3*60;
+        game.addScore(getFruitPoints());
     }
 
     // finish level if all dots have been eaten

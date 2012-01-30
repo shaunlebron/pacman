@@ -1558,6 +1558,9 @@ var initInput = function() {
             case 68: case 39: pacman.setNextDir(DIR_RIGHT); break; // right
             case 83: case 40: pacman.setNextDir(DIR_DOWN); break;// down
         }
+        
+        e.preventDefault(); // prevent arrow keys from scrolling page
+        return false;
     };
 };
 

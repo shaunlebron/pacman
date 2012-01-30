@@ -129,9 +129,21 @@ var drawActor = function(px,py,color,size) {
 
 // draw message
 var drawMessage = function(text, color) {
-    var w = ctx.measureText(text).width;
+    ctx.font = "bold " + 2*tileSize + "px sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
     ctx.fillStyle = color;
-    ctx.fillText(text, tileCols*tileSize/2 - w/2, messageRow*tileSize);
+    ctx.fillText(text, tileCols*tileSize/2, messageRow*tileSize);
+};
+
+// draw points after eating ghost
+var drawEatenPoints = function() {
+    var text = pacman.eatPoints;
+    ctx.font = 1.5*tileSize + "px sans-serf";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#0FF";
+    ctx.fillText(text, pacman.pixel.x, pacman.pixel.y);
 };
 
 var drawExtraLives = function() {
@@ -1037,14 +1049,12 @@ var drawActors = function() {
     // draw such that pacman appears on top
     if (pacman.energized) {
         for (i=0; i<4; i++)
-            if (actors[i].justEaten) {
-                // TODO: draw eatPoints
-            }
-            else {
+            if (!actors[i].justEaten)
                 actors[i].draw();
-            }
         if (playState.skippedFramesLeft == 0)
             pacman.draw();
+        else
+            drawEatenPoints();
     }
     // draw such that pacman appears on bottom
     else
@@ -1461,7 +1471,6 @@ window.onload = function() {
     ctx = canvas.getContext("2d");
     ctx_w = ctx.canvas.width;
     ctx_h = ctx.canvas.height;
-    ctx.font = "bold " + 2*tileSize + "px sans-serif";
 
     // init various things
     initInput();

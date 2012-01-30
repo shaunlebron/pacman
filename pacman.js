@@ -139,7 +139,7 @@ var drawMessage = function(text, color) {
 // draw points after eating ghost
 var drawEatenPoints = function() {
     var text = pacman.eatPoints;
-    ctx.font = 1.5*tileSize + "px sans-serf";
+    ctx.font = 1.5*tileSize + "px sans-serif";
     ctx.textBaseline = "middle";
     ctx.textAlign = "center";
     ctx.fillStyle = "#0FF";
@@ -164,17 +164,17 @@ var drawLevelIcons = function() {
 };
 
 var drawScore = function() {
-    ctx.font = 1.5*tileSize + "px sans-serf";
+    ctx.font = 1.5*tileSize + "px sans-serif";
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
     ctx.fillStyle = "#FFF";
     ctx.fillText(game.score, tileSize, tileSize*2);
 
-    ctx.font = "bold " + 1.5*tileSize + "px sans-serf";
+    ctx.font = "bold " + 1.5*tileSize + "px sans-serif";
     ctx.textBaseline = "top";
     ctx.textAlign = "center";
-    ctx.fillText("hi score", tileSize*tileCols/2, 3);
-    ctx.fillText(game.hiscore, tileSize*tileCols/2, tileSize*2);
+    ctx.fillText("high score", tileSize*tileCols/2, 3);
+    ctx.fillText(game.highScore, tileSize*tileCols/2, tileSize*2);
 
 };
 
@@ -1230,7 +1230,7 @@ counter.update = function() {
 
 var game = {};
 game.maxDots = 244; // number of dots per level
-game.hiscore = 0;
+game.highScore = 0;
 game.init = function(s) {
     this.extraLives = 3;
     this.level = 1;
@@ -1243,8 +1243,8 @@ game.switchState = function(s) {
 };
 game.addScore = function(p) {
     this.score += p;
-    if (this.score > this.hiscore)
-        this.hiscore = this.score;
+    if (this.score > this.highScore)
+        this.highScore = this.score;
 };
 
 //
@@ -1262,7 +1262,7 @@ firstState.draw = function() {
     drawExtraLives();
     drawLevelIcons();
     drawScore();
-    drawMessage("READY","#FF0");
+    drawMessage("ready","#FF0");
 };
 firstState.update = function() {
     if (this.frames == 2*60) {
@@ -1288,7 +1288,7 @@ commonStartState.draw = function() {
     drawExtraLives();
     drawLevelIcons();
     drawScore();
-    drawMessage("READY","#FF0");
+    drawMessage("ready","#FF0");
 };
 commonStartState.update = function() {
     if (this.frame == 2*60)
@@ -1454,7 +1454,7 @@ overState.draw = function() {
     drawExtraLives();
     drawLevelIcons();
     drawScore();
-    drawMessage("GAME OVER", "#F00");
+    drawMessage("game over", "#F00");
 };
 overState.update = function() {};
 
@@ -1511,7 +1511,7 @@ window.onload = function() {
     drawBackground();
     resetTiles();
     drawTiles();
-    drawMessage("START", "#FFF");
+    drawMessage("start", "#FFF");
 
     // begin game when canvas is clicked
     canvas.onmousedown = function() {

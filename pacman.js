@@ -49,19 +49,12 @@ var tiles = (
 "____________________________" +
 "____________________________");
 
-// row for the displayed message
-var messageRow = 22;
-
-// tile size and midpoint in pixels
+// tile size
 var tileSize = 8;
-var midTile = {x:3, y:4};
 
 // size of the tile map
 var widthPixels = tileCols*tileSize;
 var heightPixels = tileRows*tileSize;
-
-// actor size
-var actorSize = (tileSize-1)*2;
 
 // current tile state
 // a copy of the initial state, with edits to represent the eaten dots
@@ -74,6 +67,24 @@ var resetTiles = function() {
     currentTiles = tiles.split("");
 };
 
+
+var getTile = function(x,y) {
+    if (x>=0 && x<tileCols && y>=0 && y<tileRows) 
+        return currentTiles[x+y*tileCols];
+    if (isOffscreenTunnelTile(x,y))
+        return ' ';
+};
+
+//
+// =============== TILE LOCATIONS ===================
+//
+
+// the center pixel of a tile
+var midTile = {x:3, y:4};
+
+// row for the displayed message
+var messageRow = 22;
+
 // define which tiles are inside the tunnel
 var isTunnelTile = function(x,y) {
     return (y == 17 && (x <= 5 || x >= tileCols-1-5));
@@ -83,12 +94,6 @@ var isTunnelTile = function(x,y) {
 // which extends two tiles past the end of the map on both sides
 var isOffscreenTunnelTile = function(x,y) {
     return (y == 17 && (x<0 || x>tileCols-1));
-};
-var getTile = function(x,y) {
-    if (x>=0 && x<tileCols && y>=0 && y<tileRows) 
-        return currentTiles[x+y*tileCols];
-    if (isOffscreenTunnelTile(x,y))
-        return ' ';
 };
 
 // tunnel portal locations
@@ -114,7 +119,7 @@ var fruitTile = {x:13, y:20};
 var fruitPixel = {x:tileSize*(1+fruitTile.x)-1, y:tileSize*fruitTile.y + midTile.y};
 
 //
-// ========== TILE DRAWING ============
+// ========== MAIN DRAWING ============
 //
 
 // draw background
@@ -127,63 +132,6 @@ var drawBackground = function() {
 var drawFloor = function(x,y,color,pad) {
     ctx.fillStyle = color;
     ctx.fillRect(x*tileSize+pad,y*tileSize+pad,tileSize-2*pad,tileSize-2*pad);
-};
-
-// draw actor just as a block
-var drawActor = function(px,py,color,size) {
-    ctx.fillStyle = color;
-    ctx.fillRect(px-size/2, py-size/2, size, size);
-};
-
-// draw message
-var drawMessage = function(text, color) {
-    ctx.font = "bold " + 2*tileSize + "px sans-serif";
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "center";
-    ctx.fillStyle = color;
-    ctx.fillText(text, tileCols*tileSize/2, messageRow*tileSize);
-};
-
-// draw points after eating ghost
-var drawEatenPoints = function() {
-    var text = pacman.eatPoints;
-    ctx.font = 1.5*tileSize + "px sans-serif";
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#0FF";
-    ctx.fillText(text, pacman.pixel.x, pacman.pixel.y);
-};
-
-// draw extra lives indicator
-var drawExtraLives = function() {
-    var i;
-    for (i=0; i<game.extraLives; i++)
-        drawActor((2*i+3)*tileSize, (tileRows-2)*tileSize+midTile.y,"rgba(255,255,0,0.6)",actorSize);
-};
-
-// draw current level indicator
-var drawLevelIcons = function() {
-    var i;
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
-    var w = 2;
-    var h = actorSize;
-    for (i=0; i<game.level; i++)
-        ctx.fillRect((tileCols-2)*tileSize - i*2*w, (tileRows-2)*tileSize+midTile.y-h/2, w, h);
-};
-
-// draw current and high scores
-var drawScore = function() {
-    ctx.font = 1.5*tileSize + "px sans-serif";
-    ctx.textBaseline = "top";
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#FFF";
-    ctx.fillText(game.score, tileSize, tileSize*2);
-
-    ctx.font = "bold " + 1.5*tileSize + "px sans-serif";
-    ctx.textBaseline = "top";
-    ctx.textAlign = "center";
-    ctx.fillText("high score", tileSize*tileCols/2, 3);
-    ctx.fillText(game.highScore, tileSize*tileCols/2, tileSize*2);
 };
 
 // floor colors to use when flashing after finishing a level
@@ -238,6 +186,58 @@ var drawTiles = function () {
     }
 };
 
+// draw message
+var drawMessage = function(text, color) {
+    ctx.font = "bold " + 2*tileSize + "px sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.fillStyle = color;
+    ctx.fillText(text, tileCols*tileSize/2, messageRow*tileSize);
+};
+
+// draw points after eating ghost
+var drawEatenPoints = function() {
+    var text = pacman.eatPoints;
+    ctx.font = 1.5*tileSize + "px sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#0FF";
+    ctx.fillText(text, pacman.pixel.x, pacman.pixel.y);
+};
+
+// draw extra lives indicator
+var drawExtraLives = function() {
+    var i;
+    for (i=0; i<game.extraLives; i++)
+        drawActor((2*i+3)*tileSize, (tileRows-2)*tileSize+midTile.y,"rgba(255,255,0,0.6)",actorSize);
+};
+
+// draw current level indicator
+var drawLevelIcons = function() {
+    var i;
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    var w = 2;
+    var h = actorSize;
+    for (i=0; i<game.level; i++)
+        ctx.fillRect((tileCols-2)*tileSize - i*2*w, (tileRows-2)*tileSize+midTile.y-h/2, w, h);
+};
+
+// draw current and high scores
+var drawScore = function() {
+    ctx.font = 1.5*tileSize + "px sans-serif";
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#FFF";
+    ctx.fillText(game.score, tileSize, tileSize*2);
+
+    ctx.font = "bold " + 1.5*tileSize + "px sans-serif";
+    ctx.textBaseline = "top";
+    ctx.textAlign = "center";
+    ctx.fillText("high score", tileSize*tileCols/2, 3);
+    ctx.fillText(game.highScore, tileSize*tileCols/2, tileSize*2);
+};
+
+
 // draw fruit or fruit score
 var drawFruit = function() {
     var w;
@@ -252,6 +252,66 @@ var drawFruit = function() {
         ctx.textAlign = "center";
         ctx.fillStyle = "#FFF";
         ctx.fillText(getFruitPoints(), fruitPixel.x, fruitPixel.y);
+    }
+};
+
+// draw actor just as a block
+var drawActor = function(px,py,color,size) {
+    ctx.fillStyle = color;
+    ctx.fillRect(px-size/2, py-size/2, size, size);
+};
+
+// actor size
+var actorSize = (tileSize-1)*2;
+
+// draw ghost differently to reflect modes
+var drawGhost = function(g) {
+    if (g.mode == GHOST_EATEN)
+        return;
+    var color = g.color;
+    if (g.scared)
+        color = pacman.energizedFlash ? "#FFF" : "#00F";
+    else if (g.mode == GHOST_GOING_HOME)
+        color = "rgba(255,255,255,0.2)";
+    drawActor(g.pixel.x, g.pixel.y, color, actorSize);
+};
+
+// draw pacman
+var drawPacman = function() {
+    drawActor(pacman.pixel.x, pacman.pixel.y, pacman.color, actorSize);
+};
+
+// draw a line of sight from the ghost to its active target tile 
+// (for debugging and visualization)
+var drawGhostSight = function(g) {
+    if (!g.scared && g.mode == GHOST_OUTSIDE && game.state == playState) {
+        ctx.strokeStyle = g.color;
+        ctx.beginPath();
+        ctx.moveTo(g.pixel.x, g.pixel.y);
+        ctx.lineTo(g.targetTile.x*tileSize+midTile.x, g.targetTile.y*tileSize+midTile.y);
+        ctx.closePath();
+        ctx.stroke();
+        drawFloor(g.targetTile.x, g.targetTile.y, g.color,1);
+    }
+};
+
+// draw all the actors with correct z-ordering
+var drawActors = function() {
+    var i;
+    // draw such that pacman appears on top
+    if (pacman.energized) {
+        for (i=0; i<4; i++)
+            drawGhost(actors[i]);
+        if (playState.skippedFramesLeft == 0)
+            drawPacman();
+        else
+            drawEatenPoints();
+    }
+    // draw such that pacman appears on bottom
+    else {
+        drawPacman();
+        for (i=3; i>=0; i--) 
+            drawGhost(actors[i]);
     }
 };
 
@@ -445,111 +505,21 @@ Actor.prototype.update = function() {
     this.frame++;
 };
 
-// draws the actor
-Actor.prototype.draw = function() {
-    drawActor(this.pixel.x, this.pixel.y, this.color, actorSize);
-};
-
-//
-// ============== GHOST DATA ==============
-//
-
-// modes representing to the ghosts' active target
-var ghostTargetMode;
-var MODE_GHOST_ATTACK = 0;   // (a.k.a. "chase")
-var MODE_GHOST_PATROL = 1;   // (a.k.a. "scatter")
-
-// modes representing the ghost's last home actions
-// traveling inside, to, and from the ghost home 
-// requires special handling of each state.
-var LEFT_HOME = 0;     // left home and being active
-var GOING_HOME = 1;    // going back home to be revived
-var PACING_HOME = 2;   // pacing back and forth in the home
-var LEAVING_HOME = 3;  // leaving home to be active
-
-// time table for when a ghost should be in a targetting mode
-// There are 3 tables for level 1, level 2-4, and level 5+.
-// Each element represents a targetting mode that the ghost
-// should be in that given time.
-var ghostTargetModeTimes = [{},{},{}];
-
-// creates the ghost target mode time table
-var initGhostTargetModeTimes = function() {
-    var t;
-    // level 1
-    ghostTargetModeTimes[0][t=7*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[0][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[0][t+=7*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[0][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[0][t+=5*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[0][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[0][t+=5*60] = MODE_GHOST_ATTACK;
-    // level 2-4
-    ghostTargetModeTimes[1][t=7*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[1][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[1][t+=7*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[1][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[1][t+=5*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[1][t+=1033*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[1][t+=1] = MODE_GHOST_ATTACK;
-    // level 5+
-    ghostTargetModeTimes[2][t=7*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[2][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[2][t+=7*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[2][t+=20*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[2][t+=5*60] = MODE_GHOST_ATTACK;
-    ghostTargetModeTimes[2][t+=1037*60] = MODE_GHOST_PATROL;
-    ghostTargetModeTimes[2][t+=1] = MODE_GHOST_ATTACK;
-};
-
-// retrieves a target mode if there is one to be triggered at the given frame (time)
-var getNewGhostTargetMode = function(t) {
-    var i;
-    if (game.level == 1)
-        i = 0;
-    else if (game.level >= 2 && game.level <= 4)
-        i = 1;
-    else
-        i = 2;
-    return ghostTargetModeTimes[i][t];
-};
-
-// time limits for how long pacman should be energized for each level.
-// also the number of times a scared ghost should flash before returning to normal.
-var energizedTimeLimits =  [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
-var scaredGhostFlashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
-
-// "The ghosts change colors every 14 game cycles when they start "flashing" near the end of frightened mode."
-// -Jamey Pittman
-var ghostFlashInterval = 14; 
-
-var getEnergizedTimeLimit = function() {
-    var i = game.level;
-    return (i > 18) ? 0 : 60*energizedTimeLimits[i-1];
-};
-var getScaredGhostFlashes = function() {
-    var i = game.level;
-    return (i > 18) ? 0 : scaredGhostFlashes[i-1];
-};
-
-var elroy1DotsLeft = [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120];
-var elroy2DotsLeft = [10,15,20,20,20,25,25,25,30,30,30,40,40,40, 50, 50, 50, 50, 60, 60, 60];
-
-var getElroy1DotsLeft = function() {
-    var i = game.level;
-    if (i>21) i = 21;
-    return elroy1DotsLeft[i-1];
-};
-
-var getElroy2DotsLeft = function() {
-    var i = game.level;
-    if (i>21) i = 21;
-    return elroy2DotsLeft[i-1];
-};
-
 //
 // ==================== GHOST ACTOR =======================
 //
+
+// modes representing the ghosts' current command
+var ghostCommand;
+var GHOST_CMD_CHASE = 0;
+var GHOST_CMD_SCATTER = 1;
+
+// modes representing the ghost's current state
+var GHOST_OUTSIDE = 0;
+var GHOST_EATEN = 1;
+var GHOST_GOING_HOME = 2;
+var GHOST_PACING_HOME = 3;
+var GHOST_LEAVING_HOME = 4;
 
 // Ghost constructor
 var Ghost = function() {
@@ -564,11 +534,10 @@ var Ghost = function() {
 
     // signals (received to indicate changes to be made in the update() function)
     this.sigReverse = false;   // reverse signal
-    this.justEaten = false;    // go home signal
     this.sigLeaveHome = false; // leave home signal
 
     // modes
-    this.homeMode = 0;    // LEFT_HOME, GOING_HOME, PACING_HOME, or LEAVING_HOME
+    this.mode = 0;        // GHOST_OUTSIDE, GHOST_EATEN, ...
     this.scared = false;  // currently scared
 };
 
@@ -580,11 +549,10 @@ Ghost.prototype.reset = function() {
 
     // signals
     this.sigReverse = false;
-    this.justEaten = false;
     this.sigLeaveHome = false;
 
     // modes
-    this.homeMode = (this == blinky) ? LEFT_HOME : PACING_HOME;
+    this.mode = (this == blinky) ? GHOST_OUTSIDE : GHOST_PACING_HOME;
     this.scared = false;
 
     // call Actor's reset function to reset position and direction
@@ -596,9 +564,9 @@ Ghost.prototype.getNumSteps = function(frame) {
 
     var pattern = STEP_GHOST;
 
-    if (this.homeMode == GOING_HOME) 
+    if (this.mode == GHOST_GOING_HOME) 
         return 2;
-    else if (this.homeMode == LEAVING_HOME || this.homeMode == PACING_HOME || isTunnelTile(this.tile.x, this.tile.y))
+    else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME || isTunnelTile(this.tile.x, this.tile.y))
         pattern = STEP_GHOST_TUNNEL;
     else if (this.scared)
         pattern = STEP_GHOST_FRIGHT;
@@ -626,11 +594,11 @@ Ghost.prototype.reverse = function() {
 // It is useful to have this because as soon as the ghost gets eaten,
 // we have to freeze all the actors for 3 seconds, except for the
 // ones who are already traveling to the ghost home to be revived.
-// We use this signal to change homeMode to GOING_HOME, which will be
+// We use this signal to change mode to GHOST_GOING_HOME, which will be
 // set after the update() function is called so that we are still frozen
 // for 3 seconds before traveling home uninterrupted.
 Ghost.prototype.goHome = function() {
-    this.justEaten = true; 
+    this.mode = GHOST_EATEN;
 };
 
 // Following the pattern that state changes be made via signaling (e.g. reversing, going home)
@@ -643,11 +611,11 @@ Ghost.prototype.leaveHome = function() {
 // function called when pacman eats an energizer
 Ghost.prototype.onEnergized = function() {
     // only reverse if we are in an active targetting mode
-    if (this.homeMode == LEFT_HOME)
+    if (this.mode == GHOST_OUTSIDE)
         this.reverse();
 
     // don't scare me again on the way to home
-    if (this.homeMode != GOING_HOME)
+    if (this.mode != GHOST_GOING_HOME)
         this.scared = true;
 };
 
@@ -673,7 +641,7 @@ Ghost.prototype.steer = function() {
     // The following if-else chain takes care of the special home mode movement cases
 
     // going home to be revived
-    if (this.homeMode == GOING_HOME) {
+    if (this.mode == GHOST_GOING_HOME) {
         // at the doormat
         if (this.tile.x == ghostDoorTile.x && this.tile.y == ghostDoorTile.y) {
             // walk to the door, or go through if already there
@@ -687,7 +655,7 @@ Ghost.prototype.steer = function() {
                 // revive if reached its seat
                 if (this.pixel.x == this.startPixel.x) {
                     this.setDir(DIR_UP);
-                    this.homeMode = (this == blinky) ? LEAVING_HOME : PACING_HOME;
+                    this.mode = (this == blinky) ? GHOST_LEAVING_HOME : GHOST_PACING_HOME;
                 }
                 // sidestep to its seat
                 else {
@@ -701,11 +669,11 @@ Ghost.prototype.steer = function() {
         // still outside, so keep looking for the door by proceeding to the rest of this function
     }
     // pacing home
-    else if (this.homeMode == PACING_HOME) {
+    else if (this.mode == GHOST_PACING_HOME) {
         // head for the door
         if (this.sigLeaveHome) {
             this.sigLeaveHome = false;
-            this.homeMode = LEAVING_HOME;
+            this.mode = GHOST_LEAVING_HOME;
             if (this == clyde) 
                 counter.elroyWaitForClyde = false;
             if (this.pixel.x == ghostDoorPixel.x)
@@ -723,11 +691,11 @@ Ghost.prototype.steer = function() {
         return;
     }
     // leaving home
-    else if (this.homeMode == LEAVING_HOME) {
+    else if (this.mode == GHOST_LEAVING_HOME) {
         if (this.pixel.x == ghostDoorPixel.x) {
             // reached door
             if (this.pixel.y == ghostDoorPixel.y) {
-                this.homeMode = LEFT_HOME;
+                this.mode = GHOST_OUTSIDE;
                 this.setDir(DIR_LEFT); // always turn left at door?
             }
             // keep walking up to the door
@@ -752,7 +720,7 @@ Ghost.prototype.steer = function() {
     var minDist = Infinity;              // variable used for finding minimum distance path
 
     // reverse direction if commanded
-    if (this.sigReverse && this.homeMode == LEFT_HOME) {
+    if (this.sigReverse && this.mode == GHOST_OUTSIDE) {
 
         // reverse direction only if we've reached a new tile
         if ((this.dirEnum == DIR_UP && this.tilePixel.y == tileSize-1) ||
@@ -800,17 +768,17 @@ Ghost.prototype.steer = function() {
     }
     else {
         // target ghost door
-        if (this.homeMode == GOING_HOME) {
+        if (this.mode == GHOST_GOING_HOME) {
             this.targetTile.x = ghostDoorTile.x;
             this.targetTile.y = ghostDoorTile.y;
         }
         // target corner when patrolling
-        else if (!this.elroy && ghostTargetMode == MODE_GHOST_PATROL) {
+        else if (!this.elroy && ghostCommand == GHOST_CMD_SCATTER) {
             this.targetTile.x = this.cornerTile.x;
             this.targetTile.y = this.cornerTile.y;
         }
         // use custom function for each ghost when in attack mode
-        else // mode == MODE_GHOST_ATTACK
+        else // mode == GHOST_CMD_CHASE
             this.setTarget();
 
         // not allowed to go up at these points
@@ -842,38 +810,12 @@ Ghost.prototype.update = function() {
     var newMode;
 
     // react to signal to go home
-    if (this.justEaten) {
-        this.justEaten = false;
-        this.homeMode = GOING_HOME;
+    if (this.mode == GHOST_EATEN) {
+        this.mode = GHOST_GOING_HOME;
     }
     
     // call super function to update position and direction
     Actor.prototype.update.apply(this);
-};
-
-// draw ghost differently to reflect modes
-Ghost.prototype.draw = function() {
-    if (this.scared)
-        drawActor(this.pixel.x, this.pixel.y, pacman.energizedFlash ? "#FFF" : "#00F", actorSize);
-    else if (this.homeMode == GOING_HOME)
-        drawActor(this.pixel.x, this.pixel.y, "rgba(255,255,255,0.2)", actorSize);
-    else 
-        Actor.prototype.draw.apply(this);
-
-    //if (!this.scared && this.homeMode == LEFT_HOME && game.state == playState && playState.skippedFramesLeft == 0)
-        //this.drawSight();
-};
-
-// draw a line of sight from the ghost to its active target tile 
-// (for debugging and visualization)
-Ghost.prototype.drawSight = function() {
-    ctx.strokeStyle = this.color;
-    ctx.beginPath();
-    ctx.moveTo(this.pixel.x, this.pixel.y);
-    ctx.lineTo(this.targetTile.x*tileSize+midTile.x, this.targetTile.y*tileSize+midTile.y);
-    ctx.closePath();
-    ctx.stroke();
-    drawFloor(this.targetTile.x,this.targetTile.y, this.color,1);
 };
 
 //
@@ -1097,31 +1039,9 @@ pacman.startDirEnum = DIR_LEFT;
 pacman.startPixel.x = tileSize*tileCols/2;
 pacman.startPixel.y = 26*tileSize + midTile.y;
 
-//
-// ============== ACTOR MANAGEMENT ==================
-//
-
 // order at which they appear in original arcade memory
 // (suggests drawing/update order)
 var actors = [blinky, pinky, inky, clyde, pacman];
-
-var drawActors = function() {
-    var i;
-    // draw such that pacman appears on top
-    if (pacman.energized) {
-        for (i=0; i<4; i++)
-            if (!actors[i].justEaten)
-                actors[i].draw();
-        if (playState.skippedFramesLeft == 0)
-            pacman.draw();
-        else
-            drawEatenPoints();
-    }
-    // draw such that pacman appears on bottom
-    else
-        for (i=4; i>=0; i--) 
-            actors[i].draw();
-};
 
 //
 // ================ COUNTERS =================
@@ -1132,6 +1052,87 @@ var drawActors = function() {
 // 2. change ghost modes chase/scatter
 // 3. set elroy modes
 // 4. fruit timer
+
+
+// time table for when a ghost should be in a targetting mode
+// There are 3 tables for level 1, level 2-4, and level 5+.
+// Each element represents a targetting mode that the ghost
+// should be in that given time.
+var ghostCommandTimes = [{},{},{}];
+
+// creates the ghost target mode time table
+var initGhostCommandTimes = function() {
+    var t;
+    // level 1
+    ghostCommandTimes[0][t=7*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[0][t+=20*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[0][t+=7*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[0][t+=20*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[0][t+=5*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[0][t+=20*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[0][t+=5*60] = GHOST_CMD_CHASE;
+    // level 2-4
+    ghostCommandTimes[1][t=7*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[1][t+=20*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[1][t+=7*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[1][t+=20*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[1][t+=5*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[1][t+=1033*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[1][t+=1] = GHOST_CMD_CHASE;
+    // level 5+
+    ghostCommandTimes[2][t=7*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[2][t+=20*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[2][t+=7*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[2][t+=20*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[2][t+=5*60] = GHOST_CMD_CHASE;
+    ghostCommandTimes[2][t+=1037*60] = GHOST_CMD_SCATTER;
+    ghostCommandTimes[2][t+=1] = GHOST_CMD_CHASE;
+};
+
+// retrieves a target mode if there is one to be triggered at the given frame (time)
+var getNewGhostCommand = function(t) {
+    var i;
+    if (game.level == 1)
+        i = 0;
+    else if (game.level >= 2 && game.level <= 4)
+        i = 1;
+    else
+        i = 2;
+    return ghostCommandTimes[i][t];
+};
+
+// time limits for how long pacman should be energized for each level.
+// also the number of times a scared ghost should flash before returning to normal.
+var energizedTimeLimits =  [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
+var scaredGhostFlashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
+
+// "The ghosts change colors every 14 game cycles when they start "flashing" near the end of frightened mode."
+// -Jamey Pittman
+var ghostFlashInterval = 14; 
+
+var getEnergizedTimeLimit = function() {
+    var i = game.level;
+    return (i > 18) ? 0 : 60*energizedTimeLimits[i-1];
+};
+var getScaredGhostFlashes = function() {
+    var i = game.level;
+    return (i > 18) ? 0 : scaredGhostFlashes[i-1];
+};
+
+var elroy1DotsLeft = [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120];
+var elroy2DotsLeft = [10,15,20,20,20,25,25,25,30,30,30,40,40,40, 50, 50, 50, 50, 60, 60, 60];
+
+var getElroy1DotsLeft = function() {
+    var i = game.level;
+    if (i>21) i = 21;
+    return elroy1DotsLeft[i-1];
+};
+
+var getElroy2DotsLeft = function() {
+    var i = game.level;
+    if (i>21) i = 21;
+    return elroy2DotsLeft[i-1];
+};
 
 var fruitPoints = [100,300,500,500,700,700,1000,1000,2000,2000,3000,3000,5000]
 var getFruitPoints = function() {
@@ -1165,7 +1166,7 @@ var counter = {};
 counter.onNewLevel = function() {
     this.mode = MODE_COUNTER_PERSONAL;
     this.framesSinceLastDot = 0;
-    ghostTargetMode = MODE_GHOST_PATROL;
+    ghostCommand = GHOST_CMD_SCATTER;
     this.targetCount = 0;
     pinky.dotCount = 0;
     inky.dotCount = 0;
@@ -1177,7 +1178,7 @@ counter.onNewLevel = function() {
 
 // when player dies and level restarts
 counter.onRestartLevel = function() {
-    ghostTargetMode = MODE_GHOST_PATROL;
+    ghostCommand = GHOST_CMD_SCATTER;
     this.targetCount = 0;
     this.mode = MODE_COUNTER_GLOBAL;
     this.dotCount = 0;
@@ -1188,7 +1189,7 @@ counter.onRestartLevel = function() {
 };
 
 // this is how long it will take to release a ghost after pacman stops eating
-counter.getFramesSinceLastDotLimit = function() {
+var getFramesSinceLastDotLimit = function() {
     return (game.level < 5) ? 4*60 : 3*60;
 };
 
@@ -1202,7 +1203,7 @@ counter.addDot = function() {
     if (this.mode == MODE_COUNTER_PERSONAL) {
         for (i=1;i<4;i++) {
             g = actors[i];
-            if (g.homeMode == PACING_HOME) {
+            if (g.mode == GHOST_PACING_HOME) {
                 g.dotCount++;
                 break;
             }
@@ -1228,7 +1229,7 @@ counter.update = function() {
     if (this.mode == MODE_COUNTER_PERSONAL) {
         for (i=1;i<4;i++) {
             var g = actors[i];
-            if (g.homeMode == PACING_HOME) {
+            if (g.mode == GHOST_PACING_HOME) {
                 if (g.dotCount >= g.getDotLimit()) {
                     g.leaveHome();
                 }
@@ -1238,11 +1239,11 @@ counter.update = function() {
     }
     // use global dot counter
     else if (this.mode == MODE_COUNTER_GLOBAL) {
-        if (this.dotCount == 7 && pinky.homeMode == PACING_HOME)
+        if (this.dotCount == 7 && pinky.mode == GHOST_PACING_HOME)
             pinky.leaveHome();
-        else if (this.dotCount == 17 && inky.homeMode == PACING_HOME)
+        else if (this.dotCount == 17 && inky.mode == GHOST_PACING_HOME)
             inky.leaveHome();
-        else if (this.dotCount == 32 && clyde.homeMode == PACING_HOME) {
+        else if (this.dotCount == 32 && clyde.mode == GHOST_PACING_HOME) {
             this.dotCount = 0;
             this.mode = MODE_COUNTER_PERSONAL;
             clyde.leaveHome();
@@ -1250,11 +1251,11 @@ counter.update = function() {
     }
 
     // also use time since last dot was eaten
-    if (this.framesSinceLastDot > this.getFramesSinceLastDotLimit()) {
+    if (this.framesSinceLastDot > getFramesSinceLastDotLimit()) {
         this.framesSinceLastDot = 0;
         for (i=1;i<4;i++) {
             var g = actors[i];
-            if (g.homeMode == PACING_HOME) {
+            if (g.mode == GHOST_PACING_HOME) {
                 g.leaveHome();
                 break;
             }
@@ -1264,11 +1265,11 @@ counter.update = function() {
         this.framesSinceLastDot++;
 
     // change ghost target modes
-    var newMode;
+    var newCmd;
     if (!pacman.energized) {
-        newMode = getNewGhostTargetMode(this.targetCount);
-        if (newMode != undefined) {
-            ghostTargetMode = newMode;
+        newCmd = getNewGhostCommand(this.targetCount);
+        if (newCmd != undefined) {
+            ghostCommand = newCmd;
             for (i=0; i<4; i++)
                 actors[i].reverse();
         }
@@ -1410,7 +1411,7 @@ playState.update = function() {
     // but update ghosts running home
     if (this.skippedFramesLeft > 0) {
         for (i=0; i<4; i++)
-            if (actors[i].homeMode == GOING_HOME)
+            if (actors[i].mode == GHOST_GOING_HOME)
                 actors[i].update();
         this.skippedFramesLeft--;
         return;
@@ -1428,7 +1429,7 @@ playState.update = function() {
     for (i = 0; i<4; i++) {
         g = actors[i];
         if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y) {
-            if (g.homeMode == LEFT_HOME) {
+            if (g.mode == GHOST_OUTSIDE) {
                 // somebody is going to die
                 if (!g.scared) {
                     game.switchState(deadState);
@@ -1492,7 +1493,7 @@ scriptState.update = function() {
 var deadState = { __proto__: scriptState };
 deadState.script = {
     0 : function(t) { drawActors(); },
-    60 : function(t) { pacman.draw(); },
+    60 : function(t) { drawPacman(); },
     120 : function(t) { drawActor(pacman.pixel.x, pacman.pixel.y, pacman.color, actorSize*(60-t)/60); },
     180 : function(t) { var p = t/15; drawActor(pacman.pixel.x, pacman.pixel.y, "rgba(255,255,0,"+(1-p)+ ")", actorSize*p); },
     240 : function(t) { this.leave(); } 
@@ -1505,16 +1506,16 @@ deadState.leave = function() {
 var finishState = { __proto__: scriptState };
 finishState.script = {
     0 : function(t)  { drawActors(); },
-    60: function(t)  { pacman.draw();},
-    120: function(t) { pacman.draw(); floorColor = brightFloorColor; },
-    135: function(t) { pacman.draw(); floorColor = normalFloorColor; },
-    150: function(t) { pacman.draw(); floorColor = brightFloorColor; },
-    165: function(t) { pacman.draw(); floorColor = normalFloorColor; },
-    180: function(t) { pacman.draw(); floorColor = brightFloorColor; },
-    195: function(t) { pacman.draw(); floorColor = normalFloorColor; },
-    210: function(t) { pacman.draw(); floorColor = brightFloorColor; },
-    225: function(t) { pacman.draw(); floorColor = normalFloorColor; },
-    255: function(t) { pacman.draw(); this.leave(); }
+    60: function(t)  { drawPacman();},
+    120: function(t) { drawPacman(); floorColor = brightFloorColor; },
+    135: function(t) { drawPacman(); floorColor = normalFloorColor; },
+    150: function(t) { drawPacman(); floorColor = brightFloorColor; },
+    165: function(t) { drawPacman(); floorColor = normalFloorColor; },
+    180: function(t) { drawPacman(); floorColor = brightFloorColor; },
+    195: function(t) { drawPacman(); floorColor = normalFloorColor; },
+    210: function(t) { drawPacman(); floorColor = brightFloorColor; },
+    225: function(t) { drawPacman(); floorColor = normalFloorColor; },
+    255: function(t) { drawPacman(); this.leave(); }
 };
 finishState.leave = function() {
     game.level++;
@@ -1570,6 +1571,100 @@ var initInput = function() {
 };
 
 //
+// =============== HTML ELEMENT CREATION ==============
+//
+
+var createCanvas = function() {
+    // set drawing scale
+    var scale = 1;
+
+    // get canvas and set its size
+    canvas = document.createElement("canvas");
+    canvas.width = widthPixels*scale;
+    canvas.height = heightPixels*scale;
+    ctx = canvas.getContext("2d");
+    ctx.scale(scale,scale);
+    return canvas;
+};
+
+//
+// debug tables
+// 
+var numWatches = 0;
+var Watch = function(name, update) {
+    this.name = name;
+    this.update = update;
+    this.index = numWatches++;
+};
+
+var watches = [
+    new Watch('dots eaten', function(){return game.dotCount}),
+    new Watch('energizer', function(){return pacman.energizedCount + "/" + getEnergizedTimeLimit();}),
+    new Watch('fruit', function(){return counter.fruitFramesLeft;}),
+    new Watch('elroy', function(){return blinky.elroy;}),
+    new Watch('last ghost command', function(){return ghostCommand;}),
+    new Watch('no eat timer', function(){return counter.framesSinceLastDot + "/" + getFramesSinceLastDotLimit();}),
+    new Watch('global dot', function(){return counter.dotCount;}),
+    new Watch('inky dot', function(){return inky.dotCount + "/" + inky.getDotLimit()}),
+    new Watch('clyde dot', function(){return clyde.dotCount + "/" + clyde.getDotLimit()}),
+];
+
+var createTable = function() {
+    table = document.createElement("table");
+    var i,w;
+    var tableStr = "";
+    for (i=0; i<numWatches; i++) {
+        w = watches[i];
+        tableStr += '<tr><td align="right"><span style="font-weight:bold;">' + w.name + '</span></td><td><span id="watch' + i + '"></span></td></tr>';
+    }
+    table.innerHTML = tableStr;
+    return table;
+};
+
+var updateTable = function() {
+    var i,w;
+    for (i=0; i<numWatches; i++) {
+        w = watches[i];
+        document.getElementById('watch'+i).innerHTML = w.update();
+    }
+};
+
+/*
+game:
+    - level
+    - lives
+    - kills
+    - deaths
+    - dots
+    - score
+    - high score
+pacman:
+    - energizer frames
+    - global dot count
+    - frames since last eat
+    - fruit 
+ghosts:
+    - last command
+ghost:
+    - personal dot count
+    - position
+    - direction
+    - speed
+    - scared
+    - mode
+    - target
+    - elroy
+
+controls:
+    - invincible
+    - show targets
+    - turn on AI
+    - pause
+    - slowdown
+    - restart
+*/
+
+//
 // =========== MAIN SETUP ==========
 //
 
@@ -1585,19 +1680,14 @@ var ctx;
 
 window.onload = function() {
 
-    // set drawing scale
-    var scale = 1;
+    canvas = createCanvas();
 
-    // get canvas and set its size
-    canvas = document.getElementById("pacman");
-    canvas.width = widthPixels*scale;
-    canvas.height = heightPixels*scale;
-    ctx = canvas.getContext("2d");
-    ctx.scale(scale,scale);
+    var pacmanDiv = document.getElementById('pacman');
+    pacmanDiv.appendChild(canvas);
 
     // init various things
     initInput();
-    initGhostTargetModeTimes();
+    initGhostCommandTimes();
 
     // display maze
     drawBackground();
@@ -1609,9 +1699,7 @@ window.onload = function() {
     canvas.onmousedown = function() {
         game.init();
         setInterval("game.state.update()", 1000/60); // update at 60Hz (original arcade rate)
-        setInterval(function() { 
-            game.state.draw(); 
-        }, 1000/25);   // draw at 25Hz (helps performance)
+        setInterval("game.state.draw()", 1000/25);   // draw at 25Hz (helps performance)
         canvas.onmousedown = undefined;
     };
 };

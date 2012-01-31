@@ -471,6 +471,7 @@ var Actor = function() {
     this.startDirEnum = 0; // starting direction enumeration (0<=x,y<=4)
 
     // current position
+    this.targetTile = {x:0,y:0}; // x,y current target tile (0<=x<tileCols, 0<=y<tileRows)
     this.tile = {};        // x,y tile position (0<=x<tileCols, 0<=y<tileRows)
     this.pixel = {};       // x,y pixel position (0<=x<tileCols*tileSize, 0<=y<tileRows*tileSize)
     this.tilePixel = {};   // x,y pixel in tile (0<=x,y<tileSize)
@@ -535,6 +536,59 @@ Actor.prototype.update = function() {
     this.frame++;
 };
 
+// retrieve four surrounding tiles and indicate whether they are open
+Actor.prototype.getOpenSurroundTiles = function() {
+
+    // get open passages
+    var surroundTiles = getSurroundingTiles(this.tile);
+    var openTiles = {};
+    var numOpenTiles = 0;
+    var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
+    var i;
+    for (i=0; i<4; i++)
+        if (openTiles[i] = isFloorTile(surroundTiles[i]))
+            numOpenTiles++;
+
+    // By design, no mazes should have dead ends,
+    // but allow player to turn around if and only if it's necessary.
+    // Only close the passage behind the player if there are other openings.
+    if (numOpenTiles > 1) {
+        openTiles[oppDirEnum] = false;
+    }
+    // somehow we got stuck
+    else if (numOpenTiles == 0) {
+        this.dir.x = 0;
+        this.dir.y = 0;
+        this.dirEnum = -1;
+        console.log(this.name,'got stuck');
+        return;
+    }
+
+    return openTiles;
+};
+
+Actor.prototype.getTurnClosestToTarget = function(openTiles) {
+
+    var dx,dy,dist;                      // variables used for euclidean distance
+    var minDist = Infinity;              // variable used for finding minimum distance path
+    var dir = {};
+    var dirEnum = 0;
+    var i;
+    for (i=0; i<4; i++) {
+        if (openTiles[i]) {
+            setDirFromEnum(dir,i);
+            dx = dir.x + this.tile.x - this.targetTile.x;
+            dy = dir.y + this.tile.y - this.targetTile.y;
+            dist = dx*dx+dy*dy;
+            if (dist < minDist) {
+                minDist = dist;
+                dirEnum = i;
+            }
+        }
+    }
+    return dirEnum;
+};
+
 //
 // ==================== GHOST ACTOR =======================
 //
@@ -558,9 +612,7 @@ var Ghost = function() {
     Actor.apply(this);
 
     // tiles
-    this.targetTile = {x:0,y:0}; // x,y current target tile (0<=x<tileCols, 0<=y<tileRows)
     this.cornerTile = {};        // x,y corner tile to patrol (0<=x<tileCols, 0<=y<tileRows)
-    this.reverseTile = {};       // x,y tile to reverse direction after leaving
 
     // signals (received to indicate changes to be made in the update() function)
     this.sigReverse = false;   // reverse signal
@@ -738,16 +790,9 @@ Ghost.prototype.steer = function() {
 
     var i;                               // loop counter
 
-    var dir = {};                        // temporary direction vector
     var dirEnum;                         // final direction to update to
     var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
-
-    var surroundTiles;                   // list of four surrounding tile characters
     var openTiles;                       // list of four booleans indicating which surrounding tiles are open
-    var numOpenTiles;                    // number of open surrounding tiles
-
-    var dx,dy,dist;                      // variables used for euclidean distance
-    var minDist = Infinity;              // variable used for finding minimum distance path
 
     // reverse direction if commanded
     if (this.sigReverse && this.mode == GHOST_OUTSIDE) {
@@ -767,28 +812,7 @@ Ghost.prototype.steer = function() {
     if (!considerTurning)
         return;
 
-    // get open passages
-    surroundTiles = getSurroundingTiles(this.tile);
-    openTiles = {};
-    numOpenTiles = 0;
-    for (i=0; i<4; i++)
-        if (openTiles[i] = isFloorTile(surroundTiles[i]))
-            numOpenTiles++;
-
-    // By design, no mazes should have dead ends,
-    // but allow player to turn around if and only if it's necessary.
-    // Only close the passage behind the player if there are other openings.
-    if (numOpenTiles > 1) {
-        openTiles[oppDirEnum] = false;
-    }
-    // somehow we got stuck
-    else if (numOpenTiles == 0) {
-        this.dir.x = 0;
-        this.dir.y = 0;
-        this.dirEnum = -1;
-        console.log(this.name,'got stuck');
-        return;
-    }
+    openTiles = this.getOpenSurroundTiles();
 
     // random turn if scared
     if (this.scared) {
@@ -816,18 +840,7 @@ Ghost.prototype.steer = function() {
             openTiles[DIR_UP] = false;
 
         // choose direction that minimizes distance to target
-        for (i=0; i<4; i++) {
-            if (openTiles[i]) {
-                setDirFromEnum(dir,i);
-                dx = dir.x + this.tile.x - this.targetTile.x;
-                dy = dir.y + this.tile.y - this.targetTile.y;
-                dist = dx*dx+dy*dy;
-                if (dist < minDist) {
-                    minDist = dist;
-                    dirEnum = i;
-                }
-            }
-        }
+        dirEnum = this.getTurnClosestToTarget(openTiles);
     }
 
     // commit the direction
@@ -870,6 +883,9 @@ var Player = function() {
     // next direction to be taken when possible (set by joystick)
     this.nextDir = {};             // x,y direction
     this.nextDirEnum = 0;          // direction enumeration
+
+    // determines if this player should be AI controlled
+    this.ai = false;
 };
 
 // inherit functions from Actor
@@ -921,6 +937,18 @@ Player.prototype.step = function() {
 
 // determine direction
 Player.prototype.steer = function() {
+
+    // if AI-controlled, only turn at mid-tile
+    if (this.ai) {
+        if (this.distToMid.x != 0 || this.distToMid.y != 0)
+            return;
+
+        // make turn that is closest to target
+        var openTiles = this.getOpenSurroundTiles();
+        this.setTarget();
+        this.setNextDir(this.getTurnClosestToTarget(openTiles));
+    }
+
     // head in the desired direction if possible
     if (isFloorTile(getNextTile(this.tile, this.nextDir)))
         this.setDir(this.nextDirEnum);
@@ -998,11 +1026,6 @@ blinky.startPixel.x = 14*tileSize-1;
 blinky.startPixel.y = 14*tileSize+midTile.y;
 blinky.cornerTile.x = tileCols-1-2;
 blinky.cornerTile.y = 0;
-blinky.setTarget = function() {
-    // directly target pacman
-    this.targetTile.x = pacman.tile.x;
-    this.targetTile.y = pacman.tile.y;
-};
 
 // create pinky
 var pinky = new Ghost();
@@ -1013,13 +1036,6 @@ pinky.startPixel.x = 14*tileSize-1;
 pinky.startPixel.y = 17*tileSize+midTile.y;
 pinky.cornerTile.x = 2;
 pinky.cornerTile.y = 0;
-pinky.setTarget = function() {
-    // target four tiles ahead of pacman
-    this.targetTile.x = pacman.tile.x + 4*pacman.dir.x;
-    this.targetTile.y = pacman.tile.y + 4*pacman.dir.y;
-    if (pacman.dirEnum == DIR_UP)
-        this.targetTile.x -= 4; // arcade overflow bug
-};
 
 // create inky
 var inky = new Ghost();
@@ -1030,15 +1046,6 @@ inky.startPixel.x = 12*tileSize-1;
 inky.startPixel.y = 17*tileSize + midTile.y;
 inky.cornerTile.x = tileCols-1;
 inky.cornerTile.y = tileRows - 2;
-inky.setTarget = function() {
-    // target twice the distance from blinky to two tiles ahead of pacman
-    var px = pacman.tile.x + 2*pacman.dir.x;
-    var py = pacman.tile.y + 2*pacman.dir.y;
-    if (pacman.dirEnum == DIR_UP)
-        px -= 2; // arcade overflow bug
-    this.targetTile.x = blinky.tile.x + 2*(px - blinky.tile.x);
-    this.targetTile.y = blinky.tile.y + 2*(py - blinky.tile.y);
-};
 
 // create clyde
 var clyde = new Ghost();
@@ -1049,6 +1056,43 @@ clyde.startPixel.x = 16*tileSize-1;
 clyde.startPixel.y = 17*tileSize + midTile.y;
 clyde.cornerTile.x = 0;
 clyde.cornerTile.y = tileRows-2;
+
+// create pacman
+var pacman = new Player();
+pacman.color = "#FFFF00";
+pacman.startDirEnum = DIR_LEFT;
+pacman.startPixel.x = tileSize*tileCols/2;
+pacman.startPixel.y = 26*tileSize + midTile.y;
+
+// order at which they appear in original arcade memory
+// (suggests drawing/update order)
+var actors = [blinky, pinky, inky, clyde, pacman];
+
+//
+// =================== TARGETTING ================
+//
+
+blinky.setTarget = function() {
+    // directly target pacman
+    this.targetTile.x = pacman.tile.x;
+    this.targetTile.y = pacman.tile.y;
+};
+pinky.setTarget = function() {
+    // target four tiles ahead of pacman
+    this.targetTile.x = pacman.tile.x + 4*pacman.dir.x;
+    this.targetTile.y = pacman.tile.y + 4*pacman.dir.y;
+    if (pacman.dirEnum == DIR_UP)
+        this.targetTile.x -= 4; // arcade overflow bug
+};
+inky.setTarget = function() {
+    // target twice the distance from blinky to two tiles ahead of pacman
+    var px = pacman.tile.x + 2*pacman.dir.x;
+    var py = pacman.tile.y + 2*pacman.dir.y;
+    if (pacman.dirEnum == DIR_UP)
+        px -= 2; // arcade overflow bug
+    this.targetTile.x = blinky.tile.x + 2*(px - blinky.tile.x);
+    this.targetTile.y = blinky.tile.y + 2*(py - blinky.tile.y);
+};
 clyde.setTarget = function() {
     // target pacman if >=8 tiles away, otherwise go home
     var dx = pacman.tile.x - this.tile.x;
@@ -1063,17 +1107,16 @@ clyde.setTarget = function() {
         this.targetTile.y = this.cornerTile.y;
     }
 };
-
-// create pacman
-var pacman = new Player();
-pacman.color = "#FFFF00";
-pacman.startDirEnum = DIR_LEFT;
-pacman.startPixel.x = tileSize*tileCols/2;
-pacman.startPixel.y = 26*tileSize + midTile.y;
-
-// order at which they appear in original arcade memory
-// (suggests drawing/update order)
-var actors = [blinky, pinky, inky, clyde, pacman];
+pacman.setTarget = function() {
+    if (blinky.mode == GHOST_GOING_HOME || blinky.scared) {
+        this.targetTile.x = pinky.tile.x;
+        this.targetTile.y = pinky.tile.y;
+    }
+    else {
+        this.targetTile.x = pinky.tile.x + 2*(pacman.tile.x-pinky.tile.x);
+        this.targetTile.y = pinky.tile.y + 2*(pacman.tile.y-pinky.tile.y);
+    }
+};
 
 //
 // ================ COUNTERS =================
@@ -1636,7 +1679,30 @@ var createCanvas = function() {
 
     var pacmanDiv = document.getElementById('pacman');
     pacmanDiv.appendChild(canvas);
-    pacmanDiv.appendChild(table);
+};
+
+//
+// input controls
+//
+
+var createControls = function() {
+
+    var form = document.createElement('form');
+
+    var aiCheckbox = document.createElement('input');
+    aiCheckbox.type = 'checkbox';
+    aiCheckbox.id = 'aiCheckbox';
+    aiCheckbox.onchange = function() { pacman.ai = aiCheckbox.checked; };
+
+    var label = document.createElement('label');
+    label.htmlFor = 'aiCheckbox';
+    label.appendChild(document.createTextNode('attract mode'));
+
+    form.appendChild(aiCheckbox);
+    form.appendChild(label);
+
+    var pacmanDiv = document.getElementById('pacman');
+    pacmanDiv.appendChild(form);
 };
 
 //
@@ -1742,7 +1808,9 @@ var sign = function(x) {
 
 window.onload = function() {
 
+    // add HTML elements to pacman div
     createCanvas();
+    createControls();
 
     // init various things
     initInput();

@@ -1640,13 +1640,13 @@ var initInput = function() {
     };
 
     // handle key press event
-    canvas.onkeydown = function(e) {
+    document.onkeydown = function(e) {
         var key = (e||window.event).keyCode;
         switch (key) {
-            case 65: case 37: pacman.setNextDir(DIR_LEFT); break; // left
-            case 87: case 38: pacman.setNextDir(DIR_UP); break; // up
-            case 68: case 39: pacman.setNextDir(DIR_RIGHT); break; // right
-            case 83: case 40: pacman.setNextDir(DIR_DOWN); break;// down
+            case 37: pacman.setNextDir(DIR_LEFT); break; // left
+            case 38: pacman.setNextDir(DIR_UP); break; // up
+            case 39: pacman.setNextDir(DIR_RIGHT); break; // right
+            case 40: pacman.setNextDir(DIR_DOWN); break;// down
             default: return;
         }
         e.preventDefault();

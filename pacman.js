@@ -65,6 +65,7 @@ var currentTiles;
 var resetTiles = function() {
     game.dotCount = 0;
     currentTiles = tiles.split("");
+    drawBackground();
 };
 
 
@@ -84,6 +85,11 @@ var midTile = {x:3, y:4};
 
 // row for the displayed message
 var messageRow = 22;
+
+// determines if a given tile character is a walkable floor
+var isFloorTile = function(t) {
+    return t==' ' || t=='.' || t=='o';
+};
 
 // define which tiles are inside the tunnel
 var isTunnelTile = function(x,y) {
@@ -118,43 +124,6 @@ var ghostHomeBottomPixel = 18*tileSize;
 var fruitTile = {x:13, y:20};
 var fruitPixel = {x:tileSize*(1+fruitTile.x)-1, y:tileSize*fruitTile.y + midTile.y};
 
-//
-// ========== MAIN DRAWING ============
-//
-
-// draw background
-var drawBackground = function() {
-    ctx.fillStyle = "#333";
-    ctx.fillRect(0,0,widthPixels, heightPixels);
-};
-
-// draw floor tile
-var drawFloor = function(x,y,color,pad) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x*tileSize+pad,y*tileSize+pad,tileSize-2*pad,tileSize-2*pad);
-};
-
-// floor colors to use when flashing after finishing a level
-var normalFloorColor = "#555";
-var brightFloorColor = "#999";
-
-// current floor color
-var floorColor = normalFloorColor;
-
-// draw functions for each possible tile
-var tileDraw = {};
-tileDraw['|'] = function(x,y) { }; // wall
-tileDraw['.'] = function(x,y) { drawFloor(x,y,"#888",0); }; // pellet
-tileDraw['o'] = function(x,y) { }; // energizer
-tileDraw[' '] = function(x,y) { drawFloor(x,y,floorColor,0); }; // floor
-tileDraw['_'] = function(x,y) { }; // dead space
-tileDraw['-'] = function(x,y) { }; // ghost door
-
-// determines if a given tile character is a walkable floor
-var isFloorTile = function(t) {
-    return t==' ' || t=='.' || t=='o';
-};
-
 // parse energizer locations from map
 var numEnergizers = 0;
 var energizers = [];
@@ -169,20 +138,79 @@ var energizers = [];
         }
 })();
 
-// draw the current tile map
-var drawTiles = function () {
-    var x,y;
-    var i=0;
-    for (y=0; y<tileRows; y++)
-    for (x=0; x<tileCols; x++)
-        tileDraw[currentTiles[i++]](x,y);
 
-    // must draw the energizers last because they are larger than surround tiles
+//
+// ========== MAIN DRAWING ============
+//
+
+// floor colors to use when flashing after finishing a level
+var normalFloorColor = "#555";
+var brightFloorColor = "#999";
+var pelletColor = "#888";
+var energizerColor = "#FFF";
+
+// current floor color
+var floorColor = normalFloorColor;
+
+// draw background
+var drawBackground = function() {
+    bgCtx.fillStyle = "#333";
+    bgCtx.fillRect(0,0,widthPixels, heightPixels);
+
+    var x,y;
+    var i;
+    var t;
+
+    // we draw same-colored tiles together
+    // to help performance
+
+    // draw pellet tiles
+    bgCtx.fillStyle = pelletColor;
+    i=0;
+    for (y=0; y<tileRows; y++)
+    for (x=0; x<tileCols; x++) {
+        t = currentTiles[i++];
+        if (t == '.')
+            drawFloor(bgCtx,x,y,0);
+    }
+
+    // draw floor tiles
+    bgCtx.fillStyle = floorColor;
+    i=0;
+    for (y=0; y<tileRows; y++)
+    for (x=0; x<tileCols; x++) {
+        t = currentTiles[i++];
+        if (t == ' ' || t == 'o')
+            drawFloor(bgCtx,x,y,0);
+    }
+};
+
+// erase pellet from background
+var erasePellet = function(x,y) {
+    bgCtx.fillStyle = floorColor;
+    drawFloor(bgCtx,x,y,0);
+};
+
+// blit background canvas to screen
+var blitBackground = function() {
+    drawBackground();
+    ctx.drawImage(bgCanvas,0,0);
+    //ctx.clearRect(0,0,widthPixels,heightPixels);
+};
+
+// draw floor tile
+var drawFloor = function(context,x,y,pad) {
+    context.fillRect(x*tileSize+pad,y*tileSize+pad,tileSize-2*pad,tileSize-2*pad);
+};
+
+// draw energizers
+var drawEnergizers = function() {
+    ctx.fillStyle = energizerColor;
     var e;
     for (i=0; i<numEnergizers; i++) {
         e = energizers[i];
         if (currentTiles[e.x+e.y*tileCols] == 'o')
-            drawFloor(e.x,e.y,"#FFF",-1);
+            drawFloor(ctx,e.x,e.y,-1);
     }
 };
 
@@ -291,7 +319,8 @@ var drawGhostSight = function(g) {
         ctx.lineTo(g.targetTile.x*tileSize+midTile.x, g.targetTile.y*tileSize+midTile.y);
         ctx.closePath();
         ctx.stroke();
-        drawFloor(g.targetTile.x, g.targetTile.y, g.color,1);
+        //ctx.fillStyle = g.color;
+        //drawFloor(g.targetTile.x, g.targetTile.y, 1);
     }
 };
 
@@ -937,6 +966,8 @@ Player.prototype.update = function() {
         counter.addDot();
         game.addScore((t=='.') ? 10 : 50);
         currentTiles[this.tile.x+this.tile.y*tileCols] = ' ';
+        if (t == '.')
+            erasePellet(this.tile.x, this.tile.y);
         if (++game.dotCount == game.maxDots)
             return;
         if (t == 'o') {
@@ -1333,8 +1364,8 @@ firstState.init = function() {
     resetTiles();
 };
 firstState.draw = function() {
-    drawBackground();
-    drawTiles();
+    blitBackground();
+    drawEnergizers();
     drawExtraLives();
     drawLevelIcons();
     drawScore();
@@ -1358,8 +1389,8 @@ commonStartState.init = function() {
     this.frame = 0;
 };
 commonStartState.draw = function() {
-    drawBackground();
-    drawTiles();
+    blitBackground();
+    drawEnergizers();
     drawActors();
     drawExtraLives();
     drawLevelIcons();
@@ -1395,8 +1426,8 @@ playState.init = function() {
     this.skippedFramesLeft = 0;
 };
 playState.draw = function() {
-    drawBackground();
-    drawTiles();
+    blitBackground();
+    drawEnergizers();
     drawFruit();
     drawActors();
     drawExtraLives();
@@ -1446,7 +1477,7 @@ playState.update = function() {
     }
 
     // test collision with fruit
-    if (counter.fruitFramesLeft > 0 && pacman.tile.x == fruitTile.x && pacman.tile.y == fruitTile.y) {
+    if (counter.fruitFramesLeft > 0 && pacman.pixel.y == fruitPixel.y && Math.abs(pacman.pixel.x - fruitPixel.x) <= midTile.x) {
         counter.fruitFramesLeft = 0;
         counter.fruitScoreFramesLeft = 3*60;
         game.addScore(getFruitPoints());
@@ -1474,8 +1505,8 @@ scriptState.init = function() {
     this.scriptFuncFrame = 0;
 };
 scriptState.draw = function() {
-    drawBackground();
-    drawTiles();
+    blitBackground();
+    drawEnergizers();
     drawExtraLives();
     drawLevelIcons();
     drawScore();
@@ -1483,6 +1514,7 @@ scriptState.draw = function() {
 };
 scriptState.update = function() {
     if (this.script[this.frames] != undefined) {
+        this.firstFrame = true;
         this.scriptFunc = this.script[this.frames];
         this.scriptFuncFrame = this.frames;
     }
@@ -1504,18 +1536,26 @@ deadState.leave = function() {
 
 // freeze for a moment then flash the tiles four times
 var finishState = { __proto__: scriptState };
+finishState.flashFloor = function(t) {
+    if (this.firstFrame) {
+        this.firstFrame = false;
+        floorColor = (floorColor == brightFloorColor) ? normalFloorColor : brightFloorColor;
+        drawBackground();
+    }
+    drawPacman();
+};
 finishState.script = {
-    0 : function(t)  { drawActors(); },
-    60: function(t)  { drawPacman();},
-    120: function(t) { drawPacman(); floorColor = brightFloorColor; },
-    135: function(t) { drawPacman(); floorColor = normalFloorColor; },
-    150: function(t) { drawPacman(); floorColor = brightFloorColor; },
-    165: function(t) { drawPacman(); floorColor = normalFloorColor; },
-    180: function(t) { drawPacman(); floorColor = brightFloorColor; },
-    195: function(t) { drawPacman(); floorColor = normalFloorColor; },
-    210: function(t) { drawPacman(); floorColor = brightFloorColor; },
-    225: function(t) { drawPacman(); floorColor = normalFloorColor; },
-    255: function(t) { drawPacman(); this.leave(); }
+    0 : drawActors,
+    60: drawPacman,
+    120: finishState.flashFloor,
+    135: finishState.flashFloor,
+    150: finishState.flashFloor,
+    165: finishState.flashFloor,
+    180: finishState.flashFloor,
+    195: finishState.flashFloor,
+    210: finishState.flashFloor,
+    225: finishState.flashFloor,
+    255: function(t) { this.leave(); }
 };
 finishState.leave = function() {
     game.level++;
@@ -1533,8 +1573,8 @@ overState.init = function() {
     };
 };
 overState.draw = function() {
-    drawBackground();
-    drawTiles();
+    blitBackground();
+    drawEnergizers();
     drawExtraLives();
     drawLevelIcons();
     drawScore();
@@ -1563,10 +1603,9 @@ var initInput = function() {
             case 87: case 38: pacman.setNextDir(DIR_UP); break; // up
             case 68: case 39: pacman.setNextDir(DIR_RIGHT); break; // right
             case 83: case 40: pacman.setNextDir(DIR_DOWN); break;// down
+            default: return;
         }
-        
-        e.preventDefault(); // prevent arrow keys from scrolling page
-        return false;
+        e.preventDefault();
     };
 };
 
@@ -1574,17 +1613,23 @@ var initInput = function() {
 // =============== HTML ELEMENT CREATION ==============
 //
 
-var createCanvas = function() {
-    // set drawing scale
-    var scale = 1;
+var canvas, ctx;
+var bgCanvas, bgCtx;
 
-    // get canvas and set its size
+var createCanvas = function() {
+
     canvas = document.createElement("canvas");
-    canvas.width = widthPixels*scale;
-    canvas.height = heightPixels*scale;
+    canvas.width = widthPixels;
+    canvas.height = heightPixels;
     ctx = canvas.getContext("2d");
-    ctx.scale(scale,scale);
-    return canvas;
+
+    bgCanvas = document.createElement("canvas");
+    bgCanvas.width = widthPixels;
+    bgCanvas.height = heightPixels;
+    bgCtx = bgCanvas.getContext("2d");
+
+    var pacmanDiv = document.getElementById('pacman');
+    pacmanDiv.appendChild(canvas);
 };
 
 //
@@ -1674,25 +1719,18 @@ var sign = function(x) {
     if (x>0) return 1;
     return 0;
 };
-
-var canvas;
-var ctx;
-
 window.onload = function() {
 
-    canvas = createCanvas();
-
-    var pacmanDiv = document.getElementById('pacman');
-    pacmanDiv.appendChild(canvas);
+    createCanvas();
 
     // init various things
     initInput();
     initGhostCommandTimes();
 
     // display maze
-    drawBackground();
     resetTiles();
-    drawTiles();
+    blitBackground();
+    drawEnergizers();
     drawMessage("start", "#FFF");
 
     // begin game when canvas is clicked

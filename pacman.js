@@ -193,9 +193,9 @@ var erasePellet = function(x,y) {
 
 // blit background canvas to screen
 var blitBackground = function() {
-    drawBackground();
+    ctx.scale(1/scale,1/scale);
     ctx.drawImage(bgCanvas,0,0);
-    //ctx.clearRect(0,0,widthPixels,heightPixels);
+    ctx.scale(scale,scale);
 };
 
 // draw floor tile
@@ -319,14 +319,15 @@ var drawGhostSight = function(g) {
         ctx.lineTo(g.targetTile.x*tileSize+midTile.x, g.targetTile.y*tileSize+midTile.y);
         ctx.closePath();
         ctx.stroke();
-        //ctx.fillStyle = g.color;
-        //drawFloor(g.targetTile.x, g.targetTile.y, 1);
+        ctx.fillStyle = g.color;
+        drawFloor(ctx,g.targetTile.x, g.targetTile.y, 1);
     }
 };
 
 // draw all the actors with correct z-ordering
 var drawActors = function() {
     var i;
+
     // draw such that pacman appears on top
     if (pacman.energized) {
         for (i=0; i<4; i++)
@@ -1544,6 +1545,11 @@ finishState.flashFloor = function(t) {
     }
     drawPacman();
 };
+finishState.leave = function() {
+    game.level++;
+    game.switchState(startState);
+    resetTiles();
+};
 finishState.script = {
     0 : drawActors,
     60: drawPacman,
@@ -1555,12 +1561,7 @@ finishState.script = {
     195: finishState.flashFloor,
     210: finishState.flashFloor,
     225: finishState.flashFloor,
-    255: function(t) { this.leave(); }
-};
-finishState.leave = function() {
-    game.level++;
-    game.switchState(startState);
-    resetTiles();
+    255: finishState.leave,
 };
 
 // display game over
@@ -1615,21 +1616,27 @@ var initInput = function() {
 
 var canvas, ctx;
 var bgCanvas, bgCtx;
+var scale = 1.5; // scale of the canvas
 
 var createCanvas = function() {
 
     canvas = document.createElement("canvas");
-    canvas.width = widthPixels;
-    canvas.height = heightPixels;
+    canvas.width = widthPixels*scale;
+    canvas.height = heightPixels*scale;
     ctx = canvas.getContext("2d");
+    ctx.scale(scale,scale);
 
     bgCanvas = document.createElement("canvas");
-    bgCanvas.width = widthPixels;
-    bgCanvas.height = heightPixels;
+    bgCanvas.width = widthPixels*scale;
+    bgCanvas.height = heightPixels*scale;
     bgCtx = bgCanvas.getContext("2d");
+    bgCtx.scale(scale,scale);
+
+    var table = createTable();
 
     var pacmanDiv = document.getElementById('pacman');
     pacmanDiv.appendChild(canvas);
+    pacmanDiv.appendChild(table);
 };
 
 //
@@ -1643,15 +1650,15 @@ var Watch = function(name, update) {
 };
 
 var watches = [
-    new Watch('dots eaten', function(){return game.dotCount}),
-    new Watch('energizer', function(){return pacman.energizedCount + "/" + getEnergizedTimeLimit();}),
-    new Watch('fruit', function(){return counter.fruitFramesLeft;}),
-    new Watch('elroy', function(){return blinky.elroy;}),
-    new Watch('last ghost command', function(){return ghostCommand;}),
-    new Watch('no eat timer', function(){return counter.framesSinceLastDot + "/" + getFramesSinceLastDotLimit();}),
-    new Watch('global dot', function(){return counter.dotCount;}),
-    new Watch('inky dot', function(){return inky.dotCount + "/" + inky.getDotLimit()}),
-    new Watch('clyde dot', function(){return clyde.dotCount + "/" + clyde.getDotLimit()}),
+    //new Watch('dots eaten', function(){return game.dotCount}),
+    //new Watch('energizer', function(){return pacman.energizedCount + "/" + getEnergizedTimeLimit();}),
+    //new Watch('fruit', function(){return counter.fruitFramesLeft;}),
+    //new Watch('elroy', function(){return blinky.elroy;}),
+    //new Watch('last ghost command', function(){return ghostCommand;}),
+    //new Watch('no eat timer', function(){return counter.framesSinceLastDot + "/" + getFramesSinceLastDotLimit();}),
+    //new Watch('global dot', function(){return counter.dotCount;}),
+    //new Watch('inky dot', function(){return inky.dotCount + "/" + inky.getDotLimit()}),
+    //new Watch('clyde dot', function(){return clyde.dotCount + "/" + clyde.getDotLimit()}),
 ];
 
 var createTable = function() {
@@ -1713,12 +1720,26 @@ controls:
 // =========== MAIN SETUP ==========
 //
 
+var framePeriod = 1000/60;
+var nextFrameTime;
+
+var tick = function() {
+    // call update for every frame period that has elapsed
+    while ((new Date).getTime() > nextFrameTime) {
+        game.state.update();
+        nextFrameTime += framePeriod;
+    }
+    // draw after updates are caught up
+    game.state.draw();
+};
+
 // return sign of a number
 var sign = function(x) {
     if (x<0) return -1;
     if (x>0) return 1;
     return 0;
 };
+
 window.onload = function() {
 
     createCanvas();
@@ -1736,8 +1757,9 @@ window.onload = function() {
     // begin game when canvas is clicked
     canvas.onmousedown = function() {
         game.init();
-        setInterval("game.state.update()", 1000/60); // update at 60Hz (original arcade rate)
-        setInterval("game.state.draw()", 1000/25);   // draw at 25Hz (helps performance)
+        startTime = (new Date).getTime();
+        nextFrameTime = (new Date).getTime();
+        setInterval(tick, framePeriod);
         canvas.onmousedown = undefined;
     };
 };

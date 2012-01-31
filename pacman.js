@@ -1394,7 +1394,7 @@ game.addScore = function(p) {
     this.score += p;
     if (this.score > this.highScore)
         this.highScore = this.score;
-    if (this.score % 10000 == 0)
+    if (this.score == 10000)
         this.extraLives++;
 };
 

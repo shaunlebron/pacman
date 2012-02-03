@@ -1,5 +1,4 @@
-
-
+//////////////////////////////////////////////////////////////////////////////////////
 // The actor class defines common data functions for the ghosts and pacman
 // It provides everything for updating position and direction.
 
@@ -14,20 +13,13 @@
 // Actor constructor
 var Actor = function() {
 
-    // initial position and direction
-    this.startPixel = {};  // x,y pixel starting position (0<=x<tileCols*tileSize, 0<=y<tileRows*tileSize)
-    this.startDirEnum = 0; // starting direction enumeration (0<=x,y<=4)
+    this.dir = {};
+    this.pixel = {};
+    this.tile = {};
+    this.tilePixel = {};
+    this.distToMid = {};
 
-    // current position
-    this.targetTile = {x:0,y:0}; // x,y current target tile (0<=x<tileCols, 0<=y<tileRows)
-    this.tile = {};        // x,y tile position (0<=x<tileCols, 0<=y<tileRows)
-    this.pixel = {};       // x,y pixel position (0<=x<tileCols*tileSize, 0<=y<tileRows*tileSize)
-    this.tilePixel = {};   // x,y pixel in tile (0<=x,y<tileSize)
-    this.distToMid = {};   // x,y pixel distance from center of tile
-
-    // current direction
-    this.dir = {};         // x,y direction (-1<=x,y<=1)
-    this.dirEnum = 0;      // direction enumeration (0<=x,y<=4)
+    this.targetTile = {};
 
     // current frame count
     this.frame = 0;        // frame count
@@ -37,6 +29,7 @@ var Actor = function() {
 Actor.prototype.reset = function() {
     this.setDir(this.startDirEnum);
     this.setPos(this.startPixel.x, this.startPixel.y);
+    this.frame = 0;
 };
 
 // sets the position and updates its dependent variables
@@ -155,7 +148,7 @@ Actor.prototype.getOpenSurroundTiles = function() {
     var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
     var i;
     for (i=0; i<4; i++)
-        if (openTiles[i] = tileMap.isFloorTile(surroundTiles[i]))
+        if (openTiles[i] = tileMap.isFloorTileChar(surroundTiles[i]))
             numOpenTiles++;
 
     // By design, no mazes should have dead ends,
@@ -168,7 +161,6 @@ Actor.prototype.getOpenSurroundTiles = function() {
     else if (numOpenTiles == 0) {
         this.dir.x = 0;
         this.dir.y = 0;
-        this.dirEnum = -1;
         console.log(this.name,'got stuck');
         return;
     }
@@ -197,4 +189,3 @@ Actor.prototype.getTurnClosestToTarget = function(openTiles) {
     }
     return dirEnum;
 };
-

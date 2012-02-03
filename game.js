@@ -1,8 +1,10 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// Game
 
 var game = (function(){
 
-    var interval;
-    var framePeriod = 1000/60;
+    var interval; // used by setInterval and clearInterval to execute the game loop
+    var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
 
     return {
         highScore:0,

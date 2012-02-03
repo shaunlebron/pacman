@@ -1,7 +1,9 @@
+//////////////////////////////////////////////////////////////////////////////////////
 // Config
 
 // sets map, fruit position, actor starting positions for a given configuration
-
+//
+var tileMap;
 var config = {
 
     // set configuration to original arcade Pac-Man
@@ -56,40 +58,6 @@ var config = {
         // row for the displayed message
         tileMap.messageRow = 22;
 
-        // location of the fruit
-        var fruitTile = {x:13, y:20};
-        fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
-
-        // actor starting states
-
-        blinky.startDirEnum = DIR_LEFT;
-        blinky.startPixel.x = 14*tileSize-1;
-        blinky.startPixel.y = 14*tileSize+midTile.y;
-        blinky.cornerTile.x = tileCols-1-2;
-        blinky.cornerTile.y = 0;
-
-        pinky.startDirEnum = DIR_DOWN;
-        pinky.startPixel.x = 14*tileSize-1;
-        pinky.startPixel.y = 17*tileSize+midTile.y;
-        pinky.cornerTile.x = 2;
-        pinky.cornerTile.y = 0;
-
-        inky.startDirEnum = DIR_UP;
-        inky.startPixel.x = 12*tileSize-1;
-        inky.startPixel.y = 17*tileSize + midTile.y;
-        inky.cornerTile.x = tileCols-1;
-        inky.cornerTile.y = tileRows - 2;
-
-        clyde.startDirEnum = DIR_UP;
-        clyde.startPixel.x = 16*tileSize-1;
-        clyde.startPixel.y = 17*tileSize + midTile.y;
-        clyde.cornerTile.x = 0;
-        clyde.cornerTile.y = tileRows-2;
-
-        pacman.startDirEnum = DIR_LEFT;
-        pacman.startPixel.x = tileSize*tileCols/2;
-        pacman.startPixel.y = 26*tileSize + midTile.y;
-
         // ghost home location
         tileMap.doorTile = {x:13, y:14};
         tileMap.doorPixel = {
@@ -99,6 +67,66 @@ var config = {
         tileMap.homeTopPixel = 17*tileSize;
         tileMap.homeBottomPixel = 18*tileSize;
 
-    };
+        // location of the fruit
+        var fruitTile = {x:13, y:20};
+        fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
 
+        // actor starting states
+
+        blinky.startDirEnum = DIR_LEFT;
+        blinky.startPixel = {
+            x: 14*tileSize-1,
+            y: 14*tileSize+midTile.y
+        };
+        blinky.cornerTile = {
+            x: tileMap.numCols-1-2,
+            y: 0
+        };
+        blinky.startMode = GHOST_OUTSIDE;
+        blinky.arriveHomeMode = GHOST_LEAVING_HOME;
+
+        pinky.startDirEnum = DIR_DOWN;
+        pinky.startPixel = {
+            x: 14*tileSize-1,
+            y: 17*tileSize+midTile.y,
+        };
+        pinky.cornerTile = {
+            x: 2,
+            y: 0
+        };
+        pinky.startMode = GHOST_PACING_HOME;
+        pinky.arriveHomeMode = GHOST_PACING_HOME;
+
+        inky.startDirEnum = DIR_UP;
+        inky.startPixel = {
+            x: 12*tileSize-1,
+            y: 17*tileSize + midTile.y,
+        };
+        inky.cornerTile = {
+            x: tileMap.numCols-1,
+            y: tileMap.numRows - 2,
+        };
+        inky.startMode = GHOST_PACING_HOME;
+        inky.arriveHomeMode = GHOST_PACING_HOME;
+
+        clyde.startDirEnum = DIR_UP;
+        clyde.startPixel = {
+            x: 16*tileSize-1,
+            y: 17*tileSize + midTile.y,
+        };
+        clyde.cornerTile = {
+            x: 0,
+            y: tileMap.numRows-2,
+        };
+        clyde.startMode = GHOST_PACING_HOME;
+        clyde.arriveHomeMode = GHOST_PACING_HOME;
+
+        pacman.startDirEnum = DIR_LEFT;
+        pacman.startPixel = {
+            x: tileSize*tileMap.numCols/2,
+            y: 26*tileSize + midTile.y,
+        };
+
+    },
 };
+

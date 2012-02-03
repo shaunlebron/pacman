@@ -1,3 +1,4 @@
+//////////////////////////////////////////////////////////////////////////////////////
 // Elroy Timer
 
 // Determines when to put blinky into faster elroy modes
@@ -25,7 +26,7 @@ var elroyTimer = (function(){
             waitForClyde = true;
         },
         update: function() {
-            var dotsLeft = game.maxDots - game.dotCount;
+            var dotsLeft = tileMap.dotsLeft();
 
             if (waitForClyde && clyde.mode != GHOST_PACING_HOME)
                 waitForClyde = false;
@@ -42,4 +43,3 @@ var elroyTimer = (function(){
         },
     };
 })();
-

@@ -1,3 +1,4 @@
+//////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander
 
 // Determines when a ghost should be chasing a target
@@ -45,12 +46,12 @@ var ghostCommander = (function() {
         };
     })();
 
-    var count;
-    var command;
+    var count;   // current frame
+    var command; // last command given to ghosts
 
     return {
         reset: function() { 
-            command = GHOST_CMD_CHASE;
+            command = GHOST_CMD_SCATTER;
             count = 0;
         },
         update: function() {
@@ -70,4 +71,3 @@ var ghostCommander = (function() {
         },
     };
 })();
-

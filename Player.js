@@ -1,8 +1,9 @@
+//////////////////////////////////////////////////////////////////////////////////////
 // Player is the controllable character (Pac-Man)
 
 
 // DEPENDENCIES:
-// 1. energizedTimer
+// 1. energizer
 // 2. playEvents
 // 3. game
 
@@ -12,11 +13,7 @@ var Player = function() {
     // inherit data from Actor
     Actor.apply(this);
 
-    this.eatPauseFramesLeft = 0;   // current # of frames left to pause after eating
-
-    // next direction to be taken when possible (set by joystick)
-    this.nextDir = {};             // x,y direction
-    this.nextDirEnum = 0;          // direction enumeration
+    this.nextDir = {};
 
     // determines if this player should be AI controlled
     this.ai = false;
@@ -28,9 +25,10 @@ Player.prototype.__proto__ = Actor.prototype;
 // reset the state of the player on new level or level restart
 Player.prototype.reset = function() {
 
-    energizedTimer.reset();
-    this.eatPauseFramesLeft = 0;
+    energizer.reset();
     this.setNextDir(DIR_LEFT);
+
+    this.eatPauseFramesLeft = 0;   // current # of frames left to pause after eating
 
     // call Actor's reset function to reset to initial position and direction
     Actor.prototype.reset.apply(this);
@@ -105,7 +103,7 @@ Player.prototype.update = function() {
     }
 
     // handle energized timing
-    energizedTimer.update();
+    energizer.update();
 
     // call super function to update position and direction
     Actor.prototype.update.apply(this);
@@ -115,13 +113,12 @@ Player.prototype.update = function() {
     if (t == '.' || t == 'o') {
         this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
 
+        tileMap.onDotEat(this.tile.x, this.tile.y);
         ghostReleaser.onDotEat();
         fruit.onDotEat();
-        tileMap.onDotEat(this.tile.x, this.tile.y);
         game.addScore((t=='.') ? 10 : 50);
 
         if (!tileMap.allDotsEaten() && t=='o')
             energizer.activate();
     }
 };
-

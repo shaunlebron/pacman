@@ -1,3 +1,4 @@
+//////////////////////////////////////////////////////////////////////////////////////
 // Ghost Releaser
 
 // Determines when to release ghosts from home
@@ -34,8 +35,8 @@ var ghostReleaser = (function(){
 
     var mode;
     var framesSinceLastDot;
-    var ghostCounts = {};
-    var globalCount;
+    var ghostCounts = {};   // personal dot counts for each ghost
+    var globalCount;        // global dot count
 
     return {
         onNewLevel: function() {
@@ -55,7 +56,7 @@ var ghostReleaser = (function(){
 
             framesSinceLastDot = 0;
 
-            if (this.mode == MODE_GLOBAL) {
+            if (mode == MODE_GLOBAL) {
                 globalCount++;
             }
             else {
@@ -72,11 +73,11 @@ var ghostReleaser = (function(){
             var g;
 
             // use personal dot counter
-            if (this.mode == MODE_PERSONAL) {
+            if (mode == MODE_PERSONAL) {
                 for (i=1;i<4;i++) {
                     g = actors[i];
                     if (g.mode == GHOST_PACING_HOME) {
-                        if (ghostCounts[i] >= getDotLimit[i]()) {
+                        if (ghostCounts[i] >= personalDotLimit[i]()) {
                             g.leaveHome();
                             return;
                         }
@@ -85,7 +86,7 @@ var ghostReleaser = (function(){
                 }
             }
             // use global dot counter
-            else if (this.mode == MODE_GLOBAL) {
+            else if (mode == MODE_GLOBAL) {
                 if (globalCount == globalDotLimit[PINKY] && pinky.mode == GHOST_PACING_HOME) {
                     pinky.leaveHome();
                     return;

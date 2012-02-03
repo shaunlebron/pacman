@@ -1,4 +1,4 @@
-
+//////////////////////////////////////////////////////////////////////////////////////
 // create all the actors
 
 var blinky = new Ghost();
@@ -63,6 +63,7 @@ clyde.setTarget = function() {
     }
 };
 pacman.setTarget = function() {
+    // target twice the distance from pinky to pacman or target pinky
     if (blinky.mode == GHOST_GOING_HOME || blinky.scared) {
         this.targetTile.x = pinky.tile.x;
         this.targetTile.y = pinky.tile.y;
@@ -72,4 +73,3 @@ pacman.setTarget = function() {
         this.targetTile.y = pinky.tile.y + 2*(pacman.tile.y-pinky.tile.y);
     }
 };
-

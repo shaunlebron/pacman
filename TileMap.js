@@ -1,3 +1,4 @@
+//////////////////////////////////////////////////////////////////////////////////////
 // direction enums (in clockwise order)
 var DIR_UP = 0;
 var DIR_RIGHT = 1;
@@ -20,8 +21,10 @@ var setDirFromEnum = function(dir,dirEnum) {
     else if (dirEnum == DIR_LEFT) { dir.x = -1; dir.y = 0; }
 };
 
+//////////////////////////////////////////////////////////////////////////////////////
 // size of a tile in play space (not necessarily draw space)
 var tileSize = 8;
+var actorSize = (tileSize-1)*2
 
 // the center pixel of a tile
 var midTile = {x:3, y:4};
@@ -38,10 +41,11 @@ var TileMap = function(numCols, numRows, tiles) {
 
     // ascii map
     this.tiles = tiles;
+    this.currentTiles = this.tiles.split("");
+    this.dotsEaten = 0;
 
     this.parseDots();
     this.parseTunnels();
-    this.resetCurrent();
 
     this.backColor = "#333";
     this.pelletColor = "#888";
@@ -52,7 +56,7 @@ var TileMap = function(numCols, numRows, tiles) {
     this.brightFloorColor = "#999";
 
     // current floor color
-    var floorColor = normalFloorColor;
+    this.floorColor = this.normalFloorColor;
 };
 
 // reset current tiles
@@ -72,7 +76,7 @@ TileMap.prototype.parseDots = function() {
     var x,y;
     var i = 0;
     var tile;
-    for (x=0; x<this.numCols; x++) for (y=0; y<this.numRows; y++) {
+    for (y=0; y<this.numRows; y++) for (x=0; x<this.numCols; x++) {
         tile = this.tiles[i++];
         if (tile == '.') {
             this.numDots++;
@@ -85,6 +89,14 @@ TileMap.prototype.parseDots = function() {
     }
 };
 
+TileMap.prototype.dotsLeft = function() {
+    return this.numDots - this.dotsEaten;
+};
+
+TileMap.prototype.allDotsEaten = function() {
+    return this.dotsLeft() == 0;
+};
+
 // parse tunnels
 TileMap.prototype.parseTunnels = (function(){
     
@@ -93,6 +105,8 @@ TileMap.prototype.parseTunnels = (function(){
             x += dx;
         return x;
     };
+
+    var marginTiles = 2;
 
     return function() {
         this.tunnelRows = {};
@@ -103,28 +117,23 @@ TileMap.prototype.parseTunnels = (function(){
             // walkable tiles at opposite horizontal ends of the map
             if (this.isFloorTile(0,y) && this.isFloorTile(this.numCols-1,y))
                 this.tunnelRows[y] = {
-                    'leftEntrance': getTunnelEntrance.call(this,0,y,1);
-                    'rightEntrance':getTunnelEntrance.call(this,this.numCols-1,y,-1);
+                    'leftEntrance': getTunnelEntrance.call(this,0,y,1),
+                    'rightEntrance':getTunnelEntrance.call(this,this.numCols-1,y,-1),
+                    'leftExit': -marginTiles*tileSize,
+                    'rightExit': (this.numCols+marginTiles)*tileSize-1,
                 };
     };
 })();
 
 // teleport actor to other side of tunnel if necessary
-TileMap.prototype.teleport = (function(){
-
-    // tunnel portal locations
-    var marginTiles = 2;
-    var leftExit = -marginTiles*tileSize;
-    var rightExit = (tileCols+marginTiles)*tileSize-1;
-
-    return function(actor) {
-        var i;
-        if (this.tunnelRows[actor.tile.y]) {
-            if (actor.pixel.x < leftEnd)       actor.pixel.x = rightEnd;
-            else if (actor.pixel.x > rightEnd) actor.pixel.x = leftEnd;
-        }
-    };
-})();
+TileMap.prototype.teleport = function(actor){
+    var i;
+    var t = this.tunnelRows[actor.tile.y];
+    if (t) {
+        if (actor.pixel.x < t.leftExit)       actor.pixel.x = t.rightExit;
+        else if (actor.pixel.x > t.rightExit) actor.pixel.x = t.leftExit;
+    }
+};
 
 // define which tiles are inside the tunnel
 TileMap.prototype.isTunnelTile = function(x,y) {
@@ -159,7 +168,7 @@ TileMap.prototype.getSurroundingTiles = function(tile) {
     ];
 };
 
-TileMap.prototype.isNextTileFloor(tile,dir) {
+TileMap.prototype.isNextTileFloor = function(tile,dir) {
     return this.isFloorTile(tile.x+dir.x,tile.y+dir.y);
 };
 
@@ -187,8 +196,8 @@ TileMap.prototype.draw = function(ctx) {
     // draw floor tiles
     ctx.fillStyle = this.floorColor;
     i=0;
-    for (y=0; y<numRows; y++)
-    for (x=0; x<numCols; x++) {
+    for (y=0; y<this.numRows; y++)
+    for (x=0; x<this.numCols; x++) {
         tile = this.currentTiles[i++];
         if (tile == ' ' || tile == 'o')
             this.drawFloor(ctx,x,y,0);
@@ -202,14 +211,15 @@ TileMap.prototype.drawEnergizers = function(ctx) {
     var i;
     for (i=0; i<this.numEnergizers; i++) {
         e = this.energizers[i];
-        if (this.currentTiles[e.x+e.y*tileCols] == 'o')
+        if (this.currentTiles[e.x+e.y*this.numCols] == 'o')
             this.drawFloor(ctx,e.x,e.y,-1);
     }
 };
 
 // erase pellet from background
 TileMap.prototype.onDotEat = function(x,y) {
-    this.dotsEaten--;
+    this.dotsEaten++;
+    this.currentTiles[x+y*this.numCols] = ' ';
     screen.erasePellet(x,y);
 };
 
@@ -227,4 +237,3 @@ TileMap.prototype.drawFloor = function(ctx,x,y,pad) {
 TileMap.prototype.toggleFloorFlash = function() {
     this.floorColor = (this.floorColor == this.brightFloorColor) ? this.normalFloorColor : this.brightFloorColor;
 };
-

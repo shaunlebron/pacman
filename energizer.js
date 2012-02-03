@@ -1,3 +1,4 @@
+//////////////////////////////////////////////////////////////////////////////////////
 // Energizer
 
 // handle how long the energizer lasts
@@ -29,15 +30,14 @@ var energizer = (function() {
     // "The ghosts change colors every 14 game cycles when they start 'flashing'" -Jamey Pittman
     var flashInterval = 14;
 
-    var count;
-    var active;
-    
-    var pointsFramesLeft;
+    var count;  // how many frames energizer has been active
+    var active; // is energizer active
+    var points; // points that the last eaten ghost was worth
+    var pointsFramesLeft; // number of frames left to display points earned from eating ghost
 
     return {
         reset: function() {
             count = 0;
-            flash = false;
             active = false;
             points = 100;
             pointsFramesLeft = 0;
@@ -55,6 +55,7 @@ var energizer = (function() {
         },
         activate: function() { 
             active = true;
+            count = 0;
             for (i=0; i<4; i++) 
                 actors[i].onEnergized();
         },
@@ -64,6 +65,9 @@ var energizer = (function() {
             return (i<=2*getFlashes()-1) ? (i%2==0) : false;
         },
 
+        getPoints: function() {
+            return points;
+        },
         addPoints: function() {
             game.addScore(points*=2);
             pointsFramesLeft = pointsDuration*60;
@@ -72,4 +76,3 @@ var energizer = (function() {
         updatePointsTimer: function() { if (pointsFramesLeft > 0) pointsFramesLeft--; },
     };
 })();
-

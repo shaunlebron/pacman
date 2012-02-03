@@ -1,5 +1,6 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// States
 
-////////////////////////////////////////////////////
 var startupState = {
     init: function() {
         screen.drawMap();
@@ -17,8 +18,9 @@ var startupState = {
 // state when waiting for the user to click
 var clickState = {
     init: function() {
+        var that = this;
         screen.onClick = function() {
-            game.switchState(this.nextState);
+            game.switchState(that.nextState);
             screen.onClick = undefined;
         }
     },
@@ -85,7 +87,7 @@ var readyState =  (function(){
                 frames++;
         },
     };
-});
+})();
 
 ////////////////////////////////////////////////////
 
@@ -136,11 +138,12 @@ var playState = {
 
         // skip this frame if needed,
         // but update ghosts running home
-        if (energizer.isShowingPoints()) {
+        if (energizer.showingPoints()) {
             for (i=0; i<4; i++)
-                if (actors[i].mode == GHOST_GOING_HOME)
+                if (actors[i].mode == GHOST_GOING_HOME || actors[i].mode == GHOST_ENTERING_HOME)
                     actors[i].update();
-            energizer.updatePointTimer();
+            energizer.updatePointsTimer();
+            return;
         }
 
         // update counters
@@ -157,7 +160,8 @@ var playState = {
         fruit.testCollide();
 
         // finish level if all dots have been eaten
-        if (tileMap.allDotsEaten())
+        if (tileMap.allDotsEaten()) {
+            this.draw();
             game.switchState(finishState);
             return;
         }
@@ -320,3 +324,4 @@ var overState = {
     draw: function() {},
     update: function() {},
 };
+

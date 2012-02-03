@@ -1,3 +1,4 @@
+//////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
 
 // DEPENDENCIES:
@@ -18,20 +19,8 @@ var GHOST_LEAVING_HOME = 5;
 
 // Ghost constructor
 var Ghost = function() {
-
     // inherit data from Actor
     Actor.apply(this);
-
-    // tiles
-    this.cornerTile = {};        // x,y corner tile to patrol (0<=x<tileCols, 0<=y<tileRows)
-
-    // signals (received to indicate changes to be made in the update() function)
-    this.sigReverse = false;   // reverse signal
-    this.sigLeaveHome = false; // leave home signal
-
-    // modes
-    this.mode = 0;        // GHOST_OUTSIDE, GHOST_EATEN, ...
-    this.scared = false;  // currently scared
 };
 
 // inherit functions from Actor class
@@ -45,7 +34,7 @@ Ghost.prototype.reset = function() {
     this.sigLeaveHome = false;
 
     // modes
-    this.mode = (this == blinky) ? GHOST_OUTSIDE : GHOST_PACING_HOME;
+    this.mode = this.startMode;
     this.scared = false;
 
     // call Actor's reset function to reset position and direction
@@ -57,7 +46,7 @@ Ghost.prototype.getNumSteps = function(frame) {
 
     var pattern = STEP_GHOST;
 
-    if (this.mode == GHOST_GOING_HOME) 
+    if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
     else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME || tileMap.isTunnelTile(this.tile.x, this.tile.y))
         pattern = STEP_GHOST_TUNNEL;
@@ -100,8 +89,8 @@ Ghost.prototype.onEnergized = function() {
     if (this.mode == GHOST_OUTSIDE)
         this.reverse();
 
-    // don't scare me again on the way to home
-    if (this.mode != GHOST_GOING_HOME)
+    // only scare me if not already going home
+    if (this.mode != GHOST_GOING_HOME && this.mode != GHOST_ENTERING_HOME)
         this.scared = true;
 };
 
@@ -111,83 +100,81 @@ Ghost.prototype.onEaten = function() {
     this.scared = false; // turn off scared
 };
 
-
 // move forward one step
 Ghost.prototype.step = function() {
     this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
 };
 
 // ghost home-specific path steering
-tileMap.homeSteer = (function(){
+Ghost.prototype.homeSteer = (function(){
 
     // steering functions to execute for each mode
-    var steerFuncs = {
+    var steerFuncs = {};
 
-        GHOST_EATEN: function() {
-            this.mode = GHOST_GOING_HOME;
-        },
+    steerFuncs[GHOST_EATEN] = function() {
+        this.mode = GHOST_GOING_HOME;
+    };
 
-        GHOST_GOING_HOME: function() {
-            // at the doormat
-            if (this.tile.x == tileMap.doorTile.x && this.tile.y == tileMap.doorTile.y)
-                // walk to the door, or go through if already there
-                if (this.pixel.x == tileMap.doorPixel.x) {
-                    this.mode = GHOST_ENTERING_HOME;
-                    this.setDir(DIR_DOWN);
-                }
-                else
-                    this.setDir(DIR_RIGHT);
-        },
-
-        GHOST_ENTERING_HOME: function() {
-            if (this.pixel.y == tileMap.homeBottomPixel)
-                // revive if reached its seat
-                if (this.pixel.x == this.startPixel.x) {
-                    this.setDir(DIR_UP);
-                    this.mode = (this == blinky) ? GHOST_LEAVING_HOME : GHOST_PACING_HOME;
-                }
-                // sidestep to its seat
-                else
-                    this.setDir(this.startPixel.x < this.pixel.x ? DIR_LEFT : DIR_RIGHT);
-        },
-
-        GHOST_PACING_HOME: function() {
-            // head for the door
-            if (this.sigLeaveHome) {
-                this.sigLeaveHome = false;
-                this.mode = GHOST_LEAVING_HOME;
-                if (this.pixel.x == tileMap.doorPixel.x)
-                    this.setDir(DIR_UP);
-                else
-                    this.setDir(this.pixel.x < tileMap.doorPixel.x ? DIR_RIGHT : DIR_LEFT);
+    steerFuncs[GHOST_GOING_HOME] = function() {
+        // at the doormat
+        if (this.tile.x == tileMap.doorTile.x && this.tile.y == tileMap.doorTile.y)
+            // walk to the door, or go through if already there
+            if (this.pixel.x == tileMap.doorPixel.x) {
+                this.mode = GHOST_ENTERING_HOME;
+                this.setDir(DIR_DOWN);
             }
-            // pace back and forth
-            else {
-                if (this.pixel.y == tileMap.homeTopPixel)
-                    this.setDir(DIR_DOWN);
-                else if (this.pixel.y == tileMap.homeBottomPixel)
-                    this.setDir(DIR_UP);
-            }
-        },
+            else
+                this.setDir(DIR_RIGHT);
+    };
 
-        GHOST_LEAVING_HOME: function() {
+    steerFuncs[GHOST_ENTERING_HOME] = function() {
+        if (this.pixel.y == tileMap.homeBottomPixel)
+            // revive if reached its seat
+            if (this.pixel.x == this.startPixel.x) {
+                this.setDir(DIR_UP);
+                this.mode = this.arriveHomeMode;
+            }
+            // sidestep to its seat
+            else
+                this.setDir(this.startPixel.x < this.pixel.x ? DIR_LEFT : DIR_RIGHT);
+    };
+
+    steerFuncs[GHOST_PACING_HOME] = function() {
+        // head for the door
+        if (this.sigLeaveHome) {
+            this.sigLeaveHome = false;
+            this.mode = GHOST_LEAVING_HOME;
             if (this.pixel.x == tileMap.doorPixel.x)
-                // reached door
-                if (this.pixel.y == tileMap.doorPixel.y) {
-                    this.mode = GHOST_OUTSIDE;
-                    this.setDir(DIR_LEFT); // always turn left at door?
-                }
-                // keep walking up to the door
-                else
-                    this.setDir(DIR_UP);
-        },
+                this.setDir(DIR_UP);
+            else
+                this.setDir(this.pixel.x < tileMap.doorPixel.x ? DIR_RIGHT : DIR_LEFT);
+        }
+        // pace back and forth
+        else {
+            if (this.pixel.y == tileMap.homeTopPixel)
+                this.setDir(DIR_DOWN);
+            else if (this.pixel.y == tileMap.homeBottomPixel)
+                this.setDir(DIR_UP);
+        }
+    };
+
+    steerFuncs[GHOST_LEAVING_HOME] = function() {
+        if (this.pixel.x == tileMap.doorPixel.x)
+            // reached door
+            if (this.pixel.y == tileMap.doorPixel.y) {
+                this.mode = GHOST_OUTSIDE;
+                this.setDir(DIR_LEFT); // always turn left at door?
+            }
+            // keep walking up to the door
+            else
+                this.setDir(DIR_UP);
     };
 
     // return a function to execute appropriate steering function for a given ghost
     return function() { 
         var f = steerFuncs[this.mode];
         if (f)
-            f.apply(this); };
+            f.apply(this);
     };
 
 })();
@@ -198,15 +185,8 @@ Ghost.prototype.steer = function() {
 
     var i;                               // loop counter
     var dirEnum;                         // final direction to update to
-    var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
     var openTiles;                       // list of four booleans indicating which surrounding tiles are open
-
-    // special map-specific steering when going to, entering, pacing inside, or leaving home
-    this.homeSteer();
-
-    // only execute rest of the steering logic if we're pursuing a target tile
-    if (this.mode != GHOST_GOING_HOME)
-        return;
+    var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
 
     // reverse direction if commanded
     if (this.sigReverse && this.mode == GHOST_OUTSIDE) {
@@ -220,6 +200,15 @@ Ghost.prototype.steer = function() {
                 return;
         }
     }
+
+    // special map-specific steering when going to, entering, pacing inside, or leaving home
+    this.homeSteer();
+
+    oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
+
+    // only execute rest of the steering logic if we're pursuing a target tile
+    if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME)
+        return;
 
     // don't steer if we're not at the middle of the tile
     if (this.distToMid.x != 0 || this.distToMid.y != 0)
@@ -237,8 +226,8 @@ Ghost.prototype.steer = function() {
     else {
         // target ghost door
         if (this.mode == GHOST_GOING_HOME) {
-            this.targetTile.x = ghostDoorTile.x;
-            this.targetTile.y = ghostDoorTile.y;
+            this.targetTile.x = tileMap.doorTile.x;
+            this.targetTile.y = tileMap.doorTile.y;
         }
         // target corner when patrolling
         else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
@@ -259,4 +248,3 @@ Ghost.prototype.steer = function() {
     // commit the direction
     this.setDir(dirEnum);
 };
-

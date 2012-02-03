@@ -21,6 +21,7 @@ var GHOST_LEAVING_HOME = 5;
 var Ghost = function() {
     // inherit data from Actor
     Actor.apply(this);
+    this.randomScatter = false;
 };
 
 // inherit functions from Actor class
@@ -218,7 +219,7 @@ Ghost.prototype.steer = function() {
     openTiles = this.getOpenSurroundTiles();
 
     // random turn if scared
-    if (this.scared) {
+    if (this.scared || (ghostCommander.getCommand() == GHOST_CMD_SCATTER && this.randomScatter)) {
         dirEnum = Math.floor(Math.random()*5);
         while (!openTiles[dirEnum])
             dirEnum = (dirEnum+1)%4;

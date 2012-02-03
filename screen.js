@@ -30,11 +30,6 @@ var screen = (function() {
         divContainer.appendChild(form);
     };
 
-    var drawCenteredSquare = function(px,py,color,size) {
-        ctx.fillStyle = color;
-        ctx.fillRect(px-size/2, py-size/2, size, size);
-    };
-
     return {
         create: function() {
             canvas = makeCanvas();
@@ -45,11 +40,26 @@ var screen = (function() {
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
             addControls();
+
+            var that = this;
+            canvas.onmousedown = function() {
+                if (that.onClick)
+                    that.onClick();
+            };
         },
-        blitBackground: function() {
+        drawMap: function() {
+            tileMap.draw(bgCtx);
+        },
+        blitMap: function() {
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);
+        },
+        erasePellet: function(x,y) {
+            tileMap.erasePellet(bgCtx,x,y);
+        },
+        drawEnergizers: function() {
+            tileMap.drawEnergizers(ctx);
         },
         drawMessage: function(text, color) {
             ctx.font = "bold " + 2*tileSize + "px sans-serif";
@@ -69,7 +79,7 @@ var screen = (function() {
         drawExtraLives: function() {
             var i;
             for (i=0; i<game.extraLives; i++)
-                drawActor((2*i+3)*tileSize, (tileRows-2)*tileSize+midTile.y,"rgba(255,255,0,0.6)",actorSize);
+                this.drawCenteredSquare((2*i+3)*tileSize, (tileRows-2)*tileSize+midTile.y,"rgba(255,255,0,0.6)",actorSize);
         },
         drawLevelIcons: function() {
             var i;
@@ -92,12 +102,13 @@ var screen = (function() {
             ctx.fillText("high score", tileSize*tileCols/2, 3);
             ctx.fillText(game.highScore, tileSize*tileCols/2, tileSize*2);
         },
+        drawCenteredSquare: function(px,py,color,size) {
+            ctx.fillStyle = color;
+            ctx.fillRect(px-size/2, py-size/2, size, size);
+        },
         drawFruit: function() {
-            var w;
             if (fruit.isPresent()) {
-                ctx.fillStyle = "rgba(0,255,0,0.5)";
-                w = tileSize+2;
-                ctx.fillRect(fruitPixel.x-w/2, fruitPixel.y-w/2, w, w);
+                this.drawCenteredSquare(fruitPixel.x, fruitPixel.y, "rgba(0,255,0,0.7)", tileSize+2);
             }
             else if (fruit.isScorePresent()) {
                 ctx.font = 1.5*tileSize + "px sans-serif";
@@ -115,10 +126,10 @@ var screen = (function() {
                 color = energizer.isFlash() ? "#FFF" : "#00F";
             else if (g.mode == GHOST_GOING_HOME)
                 color = "rgba(255,255,255,0.2)";
-            drawCenteredSquare(g.pixel.x, g.pixel.y, color, actorSize);
+            this.drawCenteredSquare(g.pixel.x, g.pixel.y, color, actorSize);
         },
         drawPacman: function() {
-            drawCenteredSquare(pacman.pixel.x, pacman.pixel.y, pacman.color, actorSize);
+            this.drawCenteredSquare(pacman.pixel.x, pacman.pixel.y, pacman.color, actorSize);
         },
         drawActors: function() {
             var i;

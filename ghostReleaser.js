@@ -96,7 +96,7 @@ var ghostReleaser = (function(){
                 }
                 else if (globalCount == globalDotLimit[CLYDE] && clyde.mode == GHOST_PACING_HOME) {
                     globalCount = 0;
-                    mode = MODE_COUNTER_PERSONAL;
+                    mode = MODE_PERSONAL;
                     clyde.leaveHome();
                     return;
                 }

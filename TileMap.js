@@ -59,6 +59,7 @@ var TileMap = function(numCols, numRows, tiles) {
 TileMap.prototype.resetCurrent = function() {
     this.currentTiles = this.tiles.split("");
     this.dotsEaten = 0;
+    screen.drawMap();
 };
 
 // count pellets and energizers
@@ -207,6 +208,11 @@ TileMap.prototype.drawEnergizers = function(ctx) {
 };
 
 // erase pellet from background
+TileMap.prototype.onDotEat = function(x,y) {
+    this.dotsEaten--;
+    screen.erasePellet(x,y);
+};
+
 TileMap.prototype.erasePellet = function(ctx,x,y) {
     ctx.fillStyle = this.floorColor;
     this.drawFloor(ctx,x,y,0);

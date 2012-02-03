@@ -49,22 +49,32 @@ Player.prototype.getNumSteps = function(frame) {
 };
 
 // move forward one step
-Player.prototype.step = function() {
+Player.prototype.step = (function(){
 
-    // identify the axes of motion
-    var a = (this.dir.x != 0) ? 'x' : 'y'; // axis of motion
-    var b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
+    // return sign of a number
+    var sign = function(x) {
+        if (x<0) return -1;
+        if (x>0) return 1;
+        return 0;
+    };
 
-    // Don't proceed past the middle of a tile if facing a wall
-    var stop = this.distToMid[a] == 0 && !tileMap.isNextTileFloor(this.tile, this.dir);
-    if (!stop)
-        this.pixel[a] += this.dir[a];
+    return function() {
 
-    // Drift toward the center of the track (a.k.a. cornering)
-    this.pixel[b] += sign(this.distToMid[b]);
+        // identify the axes of motion
+        var a = (this.dir.x != 0) ? 'x' : 'y'; // axis of motion
+        var b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
 
-    this.commitPos();
-};
+        // Don't proceed past the middle of a tile if facing a wall
+        var stop = this.distToMid[a] == 0 && !tileMap.isNextTileFloor(this.tile, this.dir);
+        if (!stop)
+            this.pixel[a] += this.dir[a];
+
+        // Drift toward the center of the track (a.k.a. cornering)
+        this.pixel[b] += sign(this.distToMid[b]);
+
+        this.commitPos();
+    };
+})();
 
 // determine direction
 Player.prototype.steer = function() {
@@ -105,14 +115,12 @@ Player.prototype.update = function() {
     if (t == '.' || t == 'o') {
         this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
 
-        playEvents.onDotEat();
+        ghostReleaser.onDotEat();
+        fruit.onDotEat();
+        tileMap.onDotEat(this.tile.x, this.tile.y);
         game.addScore((t=='.') ? 10 : 50);
-        tileMap.erasePellet(this.tile.x, this.tile.y);
 
-        if (++game.dotCount == tileMap.numDots)
-            return;
-
-        if (t == 'o')
+        if (!tileMap.allDotsEaten() && t=='o')
             energizer.activate();
     }
 };

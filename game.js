@@ -1,16 +1,20 @@
 
-var game = (function() {
+var game = (function(){
 
+    var interval;
     var framePeriod = 1000/60;
-    var nextFrameTime;
 
     return {
         highScore:0,
-        reset: function() {
-            this.extraLives = 3;
-            this.level = 1;
-            this.score = 0;
-            this.switchState(firstState);
+        restart: function() {
+            this.switchState(startupState);
+            this.resume();
+        },
+        pause: function() {
+            clearInterval(interval);
+        },
+        resume: function() {
+            interval = setInterval("game.tick()", framePeriod);
         },
         switchState: function(s) {
             s.init();
@@ -23,15 +27,17 @@ var game = (function() {
             if (this.score == 10000)
                 this.extraLives++;
         },
-        tick = function() {
-            // call update for every frame period that has elapsed
-            while ((new Date).getTime() > nextFrameTime) {
-                this.state.update();
-                nextFrameTime += framePeriod;
-            }
-            // draw after updates are caught up
-            this.state.draw();
-        };
+        tick: (function(){
+            var nextFrameTime = (new Date).getTime();
+            return function() {
+                // call update for every frame period that has elapsed
+                while ((new Date).getTime() > nextFrameTime) {
+                    this.state.update();
+                    nextFrameTime += framePeriod;
+                }
+                // draw after updates are caught up
+                this.state.draw();
+            };
+        })(),
     };
 })();
-

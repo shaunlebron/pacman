@@ -24,7 +24,6 @@ var setDirFromEnum = function(dir,dirEnum) {
 //////////////////////////////////////////////////////////////////////////////////////
 // size of a tile in play space (not necessarily draw space)
 var tileSize = 8;
-var actorSize = (tileSize-1)*2
 
 // the center pixel of a tile
 var midTile = {x:3, y:4};
@@ -41,29 +40,16 @@ var TileMap = function(numCols, numRows, tiles) {
 
     // ascii map
     this.tiles = tiles;
-    this.currentTiles = this.tiles.split("");
-    this.dotsEaten = 0;
 
+    this.resetCurrent();
     this.parseDots();
     this.parseTunnels();
-
-    this.backColor = "#333";
-    this.pelletColor = "#888";
-    this.energizerColor = "#FFF";
-    
-    // floor colors to use when flashing after finishing a level
-    this.normalFloorColor = "#555";
-    this.brightFloorColor = "#999";
-
-    // current floor color
-    this.floorColor = this.normalFloorColor;
 };
 
 // reset current tiles
 TileMap.prototype.resetCurrent = function() {
     this.currentTiles = this.tiles.split("");
     this.dotsEaten = 0;
-    screen.drawMap();
 };
 
 // count pellets and energizers
@@ -172,68 +158,9 @@ TileMap.prototype.isNextTileFloor = function(tile,dir) {
     return this.isFloorTile(tile.x+dir.x,tile.y+dir.y);
 };
 
-// draw the map tiles
-TileMap.prototype.draw = function(ctx) {
-
-    // fill background
-    ctx.fillStyle = this.backColor;
-    ctx.fillRect(0,0,this.widthPixels, this.heightPixels);
-
-    var x,y;
-    var i;
-    var tile;
-
-    // draw pellet tiles
-    ctx.fillStyle = this.pelletColor;
-    i=0;
-    for (y=0; y<this.numRows; y++)
-    for (x=0; x<this.numCols; x++) {
-        tile = this.currentTiles[i++];
-        if (tile == '.')
-            this.drawFloor(ctx,x,y,0);
-    }
-
-    // draw floor tiles
-    ctx.fillStyle = this.floorColor;
-    i=0;
-    for (y=0; y<this.numRows; y++)
-    for (x=0; x<this.numCols; x++) {
-        tile = this.currentTiles[i++];
-        if (tile == ' ' || tile == 'o')
-            this.drawFloor(ctx,x,y,0);
-    }
-};
-
-// draw energizers
-TileMap.prototype.drawEnergizers = function(ctx) {
-    ctx.fillStyle = this.energizerColor;
-    var e;
-    var i;
-    for (i=0; i<this.numEnergizers; i++) {
-        e = this.energizers[i];
-        if (this.currentTiles[e.x+e.y*this.numCols] == 'o')
-            this.drawFloor(ctx,e.x,e.y,-1);
-    }
-};
-
 // erase pellet from background
 TileMap.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
     this.currentTiles[x+y*this.numCols] = ' ';
-    screen.erasePellet(x,y);
-};
-
-TileMap.prototype.erasePellet = function(ctx,x,y) {
-    ctx.fillStyle = this.floorColor;
-    this.drawFloor(ctx,x,y,0);
-};
-
-// draw floor tile
-TileMap.prototype.drawFloor = function(ctx,x,y,pad) {
-    ctx.fillRect(x*tileSize+pad,y*tileSize+pad,tileSize-2*pad,tileSize-2*pad);
-};
-
-// switch floor color to flash
-TileMap.prototype.toggleFloorFlash = function() {
-    this.floorColor = (this.floorColor == this.brightFloorColor) ? this.normalFloorColor : this.brightFloorColor;
+    screen.renderer.erasePellet(x,y);
 };

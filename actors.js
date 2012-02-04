@@ -36,15 +36,11 @@ pinky.setTarget = function() {
     // target four tiles ahead of pacman
     this.targetTile.x = pacman.tile.x + 4*pacman.dir.x;
     this.targetTile.y = pacman.tile.y + 4*pacman.dir.y;
-    if (pacman.dirEnum == DIR_UP)
-        this.targetTile.x -= 4; // arcade overflow bug
 };
 inky.setTarget = function() {
     // target twice the distance from blinky to two tiles ahead of pacman
     var px = pacman.tile.x + 2*pacman.dir.x;
     var py = pacman.tile.y + 2*pacman.dir.y;
-    if (pacman.dirEnum == DIR_UP)
-        px -= 2; // arcade overflow bug
     this.targetTile.x = blinky.tile.x + 2*(px - blinky.tile.x);
     this.targetTile.y = blinky.tile.y + 2*(py - blinky.tile.y);
 };

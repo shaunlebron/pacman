@@ -240,7 +240,8 @@ Ghost.prototype.steer = function() {
             this.setTarget();
 
         // edit openTiles to reflect the current map's special contraints
-        tileMap.constrainGhostTurns(this.tile.x, this.tile.y, openTiles);
+        if (tileMap.constrainGhostTurns)
+            tileMap.constrainGhostTurns(this.tile.x, this.tile.y, openTiles);
 
         // choose direction that minimizes distance to target
         dirEnum = this.getTurnClosestToTarget(openTiles);

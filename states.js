@@ -3,9 +3,11 @@
 
 var startupState = {
     init: function() {
-        screen.drawMap();
+        tileMap.onLoad();
+        screen.renderer.drawMap();
         screen.blitMap();
-        screen.drawMessage("start","#FFF");
+        screen.renderer.drawEnergizers();
+        screen.renderer.drawMessage("start","#FFF");
         clickState.nextState = newGameState;
         game.switchState(clickState);
     },
@@ -39,17 +41,18 @@ var newGameState = (function() {
         init: function() {
             frames = 0;
             tileMap.resetCurrent();
+            screen.renderer.drawMap();
             game.extraLives = 3;
             game.level = 1;
             game.score = 0;
         },
         draw: function() {
             screen.blitMap();
-            screen.drawEnergizers();
-            screen.drawExtraLives();
-            screen.drawLevelIcons();
-            screen.drawScore();
-            screen.drawMessage("ready","#FF0");
+            screen.renderer.drawEnergizers();
+            screen.renderer.drawExtraLives();
+            screen.renderer.drawLevelIcons();
+            screen.renderer.drawScore();
+            screen.renderer.drawMessage("ready","#FF0");
         },
         update: function() {
             if (frames == duration*60) {
@@ -78,7 +81,7 @@ var readyState =  (function(){
         },
         draw: function() {
             newGameState.draw();
-            screen.drawActors();
+            screen.renderer.drawActors();
         },
         update: function() {
             if (frames == duration*60)
@@ -125,12 +128,12 @@ var playState = {
     init: function() { },
     draw: function() {
         screen.blitMap();
-        screen.drawEnergizers();
-        screen.drawExtraLives();
-        screen.drawLevelIcons();
-        screen.drawScore();
-        screen.drawFruit();
-        screen.drawActors();
+        screen.renderer.drawEnergizers();
+        screen.renderer.drawExtraLives();
+        screen.renderer.drawLevelIcons();
+        screen.renderer.drawScore();
+        screen.renderer.drawFruit();
+        screen.renderer.drawActors();
     },
     update: function() {
         var i; // loop index
@@ -173,7 +176,8 @@ var playState = {
                 if (g.mode == GHOST_OUTSIDE) {
                     // somebody is going to die
                     if (!g.scared) {
-                        game.switchState(deadState);
+                        if (!pacman.invincible)
+                            game.switchState(deadState);
                     }
                     else if (energizer.isActive()) {
                         energizer.addPoints();
@@ -225,11 +229,11 @@ var deadState = (function() {
     
     var commonDraw = function() {
         screen.blitMap();
-        screen.drawEnergizers();
-        screen.drawExtraLives();
-        screen.drawLevelIcons();
-        screen.drawScore();
-        screen.drawFruit();
+        screen.renderer.drawEnergizers();
+        screen.renderer.drawExtraLives();
+        screen.renderer.drawLevelIcons();
+        screen.renderer.drawScore();
+        screen.renderer.drawFruit();
     };
 
     return {
@@ -241,20 +245,19 @@ var deadState = (function() {
             60: {
                 init: function() { // freeze
                     commonDraw();
-                    screen.drawPacman();
+                    screen.renderer.drawPacman();
                 },
             },
             120: {
                 draw: function(t) { // shrink
                     commonDraw();
-                    screen.drawCenteredSquare(pacman.pixel.x, pacman.pixel.y, pacman.color, actorSize*(60-t)/60);
+                    screen.renderer.drawDyingPacman(t/60);
                 },
             },
             180: {
                 draw: function(t) { // explode
                     commonDraw();
-                    var p = t/15;
-                    screen.drawCenteredSquare(pacman.pixel.x, pacman.pixel.y, "rgba(255,255,0,"+(1-p)+")", actorSize*p);
+                    screen.renderer.drawExplodingPacman(t/15);
                 },
             },
             195: {
@@ -274,18 +277,18 @@ var deadState = (function() {
 var finishState = (function(){
 
     var commonDraw = function() {
-        screen.drawMap();
+        screen.renderer.drawMap();
         screen.blitMap();
-        screen.drawEnergizers();
-        screen.drawExtraLives();
-        screen.drawLevelIcons();
-        screen.drawScore();
-        screen.drawFruit();
-        screen.drawPacman();
+        screen.renderer.drawEnergizers();
+        screen.renderer.drawExtraLives();
+        screen.renderer.drawLevelIcons();
+        screen.renderer.drawScore();
+        screen.renderer.drawFruit();
+        screen.renderer.drawPacman();
     };
     
     var flashFloor = function() {
-        tileMap.toggleFloorFlash();
+        screen.renderer.toggleLevelFlash();
         commonDraw();
     };
 
@@ -306,6 +309,7 @@ var finishState = (function(){
                     game.level++;
                     game.switchState(readyNewState);
                     tileMap.resetCurrent();
+                    screen.renderer.drawMap();
                 }
             },
         },
@@ -317,7 +321,7 @@ var finishState = (function(){
 // display game over
 var overState = {
     init: function() {
-        screen.drawMessage("game over", "#F00");
+        screen.renderer.drawMessage("game over", "#F00");
         clickState.nextState = newGameState;
         game.switchState(clickState);
     },

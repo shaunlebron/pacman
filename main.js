@@ -4,8 +4,6 @@
 
 //////////////////////////////////////////////////////////////////////////////////////
 window.onload = function() {
-    //config.setOriginal();
-    config.setMsPacman4();
     screen.create();
     game.restart();
 };

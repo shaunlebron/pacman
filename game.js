@@ -18,6 +18,12 @@ var game = (function(){
         resume: function() {
             interval = setInterval("game.tick()", framePeriod);
         },
+        switchMap: function(i) {
+            // just restart the map I guess?
+            tileMap = maps[i];
+            tileMap.onLoad();
+            this.switchState(newGameState);
+        },
         switchState: function(s) {
             s.init();
             this.state = s;
@@ -31,11 +37,14 @@ var game = (function(){
         },
         tick: (function(){
             var nextFrameTime = (new Date).getTime();
+            var maxFrameSkip = 5;
             return function() {
                 // call update for every frame period that has elapsed
-                while ((new Date).getTime() > nextFrameTime) {
+                var frames = 0;
+                while (frames < maxFrameSkip && (new Date).getTime() > nextFrameTime) {
                     this.state.update();
                     nextFrameTime += framePeriod;
+                    frames++;
                 }
                 // draw after updates are caught up
                 this.state.draw();

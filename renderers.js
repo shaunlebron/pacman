@@ -149,7 +149,7 @@ renderers.Simple = function(ctx,bgCtx) {
     this.pointsEarnedTextSize = 1.5*tileSize;
 
     this.backColor = "#222";
-    this.floorColor = "#555";
+    this.floorColor = "#444";
     this.flashFloorColor = "#999";
 };
 

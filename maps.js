@@ -83,7 +83,7 @@ var MAP_MSPACMAN4 = 5;
 
         pacman.startDirEnum = DIR_LEFT;
         pacman.startPixel = {
-            x: tileSize*this.numCols/2,
+            x: 14*tileSize-1,
             y: 26*tileSize + midTile.y,
         };
     };

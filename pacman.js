@@ -1599,6 +1599,7 @@ var energizer = (function() {
         activate: function() { 
             active = true;
             count = 0;
+            points = 100;
             for (i=0; i<4; i++) 
                 actors[i].onEnergized();
         },
@@ -2214,7 +2215,7 @@ var MAP_MSPACMAN4 = 5;
 
         pacman.startDirEnum = DIR_LEFT;
         pacman.startPixel = {
-            x: tileSize*this.numCols/2,
+            x: 14*tileSize-1,
             y: 26*tileSize + midTile.y,
         };
     };

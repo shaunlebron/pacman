@@ -305,8 +305,14 @@ var deadState = (function() {
 
         // freeze for a moment, then shrink and explode
         triggers: {
+            0: {
+                init: function() { // pause
+                    commonDraw();
+                    screen.renderer.drawActors();
+                },
+            },
             60: {
-                init: function() { // freeze
+                init: function() { // isolate pacman
                     commonDraw();
                     screen.renderer.drawPacman();
                 },

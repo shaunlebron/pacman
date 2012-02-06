@@ -212,6 +212,11 @@ renderers.Common.prototype = {
         }
     },
 
+    drawFadeIn: function(t) {
+        this.ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
+        this.ctx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
+    },
+
     // erase pellet from background
     erasePellet: function(x,y) {
         this.bgCtx.fillStyle = this.floorColor;
@@ -283,7 +288,7 @@ renderers.Common.prototype = {
         if (g.scared)
             color = energizer.isFlash() ? "#FFF" : "#00F";
         else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
-            color = "rgba(255,255,255,0.2)";
+            color = "rgba(255,255,255,0.3)";
         this.ctx.fillStyle = color;
         this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
     },
@@ -495,12 +500,15 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 2;
+    var scale = 1;
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");
-        c.width = tileMap.widthPixels*scale;
-        c.height = tileMap.heightPixels*scale;
+
+        // use conventional pacman map size
+        c.width = 28*tileSize*scale;
+        c.height = 36*tileSize*scale;
+
         c.getContext("2d").scale(scale,scale);
         return c;
     };
@@ -577,11 +585,19 @@ var screen = (function() {
         ///////////////////////////////////////////////////
         // maps
         fieldset = makeFieldSet('Maps');
-        addRadio(fieldset, 'map', 'Pac-Man', function(on) { game.switchMap(0);},true);
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 1', function(on) { game.switchMap(1); });
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 2', function(on) { game.switchMap(2); });
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 3', function(on) { game.switchMap(3); });
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 4', function(on) { game.switchMap(4); });
+        var makeSwitchMap = function(map) {
+            return function(on) {
+                if (on) {
+                    readyNewState.nextMap = map;
+                    game.switchState(readyNewState, 60);
+                }
+            };
+        };
+        addRadio(fieldset, 'map', 'Pac-Man',       makeSwitchMap(MAP_PACMAN),true);
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 1', makeSwitchMap(MAP_MSPACMAN1));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 2', makeSwitchMap(MAP_MSPACMAN2));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 3', makeSwitchMap(MAP_MSPACMAN3));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 4', makeSwitchMap(MAP_MSPACMAN4));
         form.appendChild(fieldset);
 
         divContainer.appendChild(form);
@@ -899,7 +915,7 @@ Ghost.prototype.getNumSteps = function(frame) {
     else if (this.elroy == 2)
         pattern = STEP_ELROY2;
 
-    return this.getStepSizeFromTable(game.level, pattern, frame);
+    return this.getStepSizeFromTable(game.level ? game.level : 1, pattern, frame);
 };
 
 // signal ghost to reverse direction after leaving current tile
@@ -1670,7 +1686,7 @@ var game = (function(){
     return {
         highScore:0,
         restart: function() {
-            this.switchState(menuState);
+            this.switchState(menuState, 60);
             this.resume();
         },
         pause: function() {
@@ -1679,13 +1695,13 @@ var game = (function(){
         resume: function() {
             interval = setInterval("game.tick()", framePeriod);
         },
-        switchMap: function(i) {
-            tileMap = maps[i];
+        switchMap: function(map) {
+            tileMap = maps[map];
             tileMap.onLoad();
         },
-        switchState: function(s) {
-            s.init();
-            this.state = s;
+        switchState: function(nextState,fadeDuration) {
+            this.state = (fadeDuration) ? fadeState(this.state,nextState,fadeDuration) : nextState;
+            this.state.init();
         },
         addScore: function(p) {
             this.score += p;
@@ -1712,28 +1728,80 @@ var game = (function(){
     };
 })();
 //////////////////////////////////////////////////////////////////////////////////////
-// States
+// Fade state
 
-var menuState = {
-    init: function() {
-        var prevMap = tileMap;
-        game.switchMap(menuMap);
-        screen.renderer.drawMap();
-        screen.onClick = function() {
-            game.switchMap(prevMap ? prevMap : maps[0]);
-            game.switchState(newGameState);
+var fadeState = function (prevState, nextState, frameDuration) {
+    var frames;
+    return {
+        init: function() {
+            frames = 0;
+        },
+        draw: function() {
+            var t;
+            if (frames < frameDuration/2) {
+                t = frames/frameDuration*2;
+                if (prevState) {
+                    prevState.draw();
+                    screen.renderer.drawFadeIn(1-t);
+                }
+            }
+            else {
+                t = frames/frameDuration*2 - 1;
+                nextState.draw();
+                screen.renderer.drawFadeIn(t);
+            }
+        },
+        update: function() {
+            if (frames == frameDuration)
+                game.state = nextState;
+            else {
+                if (frames == frameDuration/2)
+                    nextState.init();
+                frames++;
+            }
         },
     }
-    draw: function() {
-        screen.blitMap();
-        screen.renderer.drawMessage("pacman","#FFF");
-        screen.renderer.drawActors();
-    },
-    update: function() {
-        for (i = 0; i<4; i++)
-            actors[i].update();
-    },
 };
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Menu State
+
+var menuState = (function() {
+    var frames;
+    var fadeFrames = 120;
+    return {
+        init: function() {
+            game.switchMap(MAP_MENU);
+            for (i=0; i<5; i++)
+                actors[i].reset();
+            screen.renderer.drawMap();
+            screen.onClick = function() {
+
+                // if we have already left this state by other means
+                // cancel this action
+                if (game.state != menuState) {
+                    screen.onClick = undefined;
+                    return;
+                }
+
+                newGameState.nextMap = MAP_PACMAN;
+                game.switchState(newGameState,60);
+                screen.onClick = undefined;
+            };
+            frames = 0;
+        },
+        draw: function() {
+            screen.blitMap();
+            screen.renderer.drawMessage("A Pac-Man Remake","#FFF");
+            screen.renderer.drawActors();
+        },
+        update: function() {
+            var i;
+            for (i = 0; i<4; i++)
+                actors[i].update();
+        },
+    };
+})();
 
 ////////////////////////////////////////////////////
 
@@ -1744,6 +1812,10 @@ var newGameState = (function() {
 
     return {
         init: function() {
+            if (this.nextMap != undefined) {
+                game.switchMap(this.nextMap);
+                this.nextMap = undefined;
+            }
             frames = 0;
             tileMap.resetCurrent();
             screen.renderer.drawMap();
@@ -1803,6 +1875,21 @@ var readyState =  (function(){
 var readyNewState = { 
     __proto__: readyState, 
     init: function() {
+        // kludge: redirect to new game state
+        //   if user clicks map without game being initialized
+        if (game.score == undefined) {
+            newGameState.nextMap = this.nextMap;
+            game.switchState(newGameState);
+            return;
+        }
+
+        if (this.nextMap != undefined) {
+            game.switchMap(this.nextMap);
+            this.nextMap = undefined;
+
+            tileMap.resetCurrent();
+            screen.renderer.drawMap();
+        }
         ghostCommander.reset();
         ghostReleaser.onNewLevel();
         fruit.reset();
@@ -2012,7 +2099,7 @@ var finishState = (function(){
             255: { 
                 init: function() {
                     game.level++;
-                    game.switchState(readyNewState);
+                    game.switchState(readyNewState,60);
                     tileMap.resetCurrent();
                     screen.renderer.drawMap();
                 }
@@ -2028,7 +2115,7 @@ var overState = {
     init: function() {
         screen.renderer.drawMessage("game over", "#F00");
         screen.onClick = function() {
-            game.switchState(newGameState);
+            game.switchState(menuState,60);
             screen.onClick = undefined;
         }
     },
@@ -2039,9 +2126,16 @@ var overState = {
 //////////////////////////////////////////////////////////////////////////////////////
 // maps
 
-// available maps
+// current map
+var tileMap;
 var maps;
-var menuMap;
+
+var MAP_MENU = 0;
+var MAP_PACMAN = 1;
+var MAP_MSPACMAN1 = 2;
+var MAP_MSPACMAN2 = 3;
+var MAP_MSPACMAN3 = 4;
+var MAP_MSPACMAN4 = 5;
 
 // create maps
 (function() {
@@ -2159,7 +2253,8 @@ var menuMap;
         "____________________________"));
 
     mapPacman.onLoad = onLoad;
-    mapPacman.color = "#00C";
+    //mapPacman.color = "#00C";
+    mapPacman.color = "#47b897"; // from Pac-Man Plus
     mapPacman.constrainGhostTurns = function(x,y,openTiles) {
         // prevent ghost from turning up at these tiles
         if ((x == 12 || x == 15) && (y == 14 || y == 26)) {
@@ -2273,7 +2368,7 @@ var menuMap;
         "|.||                    ||.|" +
         "|.|||| ||||| || ||||| ||||.|" +
         "|.|||| ||||| || ||||| ||||.|" +
-        "|......||.   ||   .||......|" +
+        "|......||....||....||......|" +
         "|||.||.||.||||||||.||.||.|||" +
         "|||.||.||.||||||||.||.||.|||" +
         "|o..||.......  .......||..o|" +
@@ -2331,33 +2426,24 @@ var menuMap;
     mapMsPacman4.onLoad = onLoad;
     mapMsPacman4.color = "#2121ff";
 
-    // create global list of maps
-    maps = [
-        mapPacman,
-        mapMsPacman1,
-        mapMsPacman2,
-        mapMsPacman3,
-        mapMsPacman4,
-    ];
-
-    menuMap = new TileMap(28, 36, (
+    var menuMap = new TileMap(28, 36, (
         "____________________________" +
-        "______||||||||||||||||______" +
-        "______||||||||||||||||______" +
-        "______||............||______" +
-        "______||.|||||.||||.||______" +
-        "______||.|||||.||||.||______" +
-        "______||.||......||.||______" +
-        "______||.||.||||.||.||______" +
-        "______||....||||.||.||______" +
-        "______||.||.||||....||______" +
-        "______||.||.||||.||.||______" +
-        "______||.||......||.||______" +
-        "______||.||||.|||||.||______" +
-        "______||.||||.|||||.||______" +
-        "______||............||______" +
-        "______||||||||||||||||______" +
-        "______||||||||||||||||______" +
+        "____________________________" +
+        "____________________________" +
+        "________............________" +
+        "________.|||||.||||.________" +
+        "________.|||||.||||.________" +
+        "________.||......||.________" +
+        "________.||.____.||.________" +
+        "________....____.||.________" +
+        "________.||.____....________" +
+        "________.||.____.||.________" +
+        "________.||......||.________" +
+        "________.||||.|||||.________" +
+        "________.||||.|||||.________" +
+        "________............________" +
+        "____________________________" +
+        "____________________________" +
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -2379,9 +2465,13 @@ var menuMap;
         "____________________________"));
 
     menuMap.onLoad = function() {
+
+        var delay = 0;
+
+        ghostCommander.reset();
         blinky.startDirEnum = DIR_LEFT;
         blinky.startPixel = {
-            x: 14*tileSize+midTile.x,
+            x: 15*tileSize+midTile.x - delay,
             y: 3*tileSize+midTile.y
         };
         blinky.cornerTile = {
@@ -2390,10 +2480,10 @@ var menuMap;
         };
         blinky.startMode = GHOST_OUTSIDE;
 
-        pinky.startDirEnum = DIR_RIGHT;
+        pinky.startDirEnum = DIR_DOWN;
         pinky.startPixel = {
-            x: 13*tileSize+midTile.x,
-            y: 14*tileSize+midTile.y,
+            x: 8*tileSize + midTile.x,
+            y: 7*tileSize + midTile.y - delay*2,
         };
         pinky.cornerTile = {
             x: 2,
@@ -2401,10 +2491,21 @@ var menuMap;
         };
         pinky.startMode = GHOST_OUTSIDE;
 
+        clyde.startDirEnum = DIR_RIGHT;
+        clyde.startPixel = {
+            x: 11*tileSize+midTile.x - delay*3,
+            y: 14*tileSize+midTile.y,
+        };
+        clyde.cornerTile = {
+            x: 8,
+            y: 14,
+        };
+        clyde.startMode = GHOST_OUTSIDE;
+
         inky.startDirEnum = DIR_UP;
         inky.startPixel = {
-            x: 8*tileSize + midTile.x,
-            y: 8*tileSize + midTile.y,
+            x: 19*tileSize + midTile.x,
+            y: 10*tileSize + midTile.y + delay*4,
         };
         inky.cornerTile = {
             x: this.numCols-1,
@@ -2412,29 +2513,25 @@ var menuMap;
         };
         inky.startMode = GHOST_OUTSIDE;
 
-        clyde.startDirEnum = DIR_UP;
-        clyde.startPixel = {
-            x: 19*tileSize-1,
-            y: 9*tileSize + midTile.y,
-        };
-        clyde.cornerTile = {
-            x: 0,
-            y: this.numRows-2,
-        };
-        clyde.startMode = GHOST_OUTSIDE;
 
         pacman.startDirEnum = DIR_UP;
         pacman.startPixel = {
             x: tileSize*this.numCols/2,
-            y: 8*tileSize,
+            y: 9*tileSize,
         };
     };
+    menuMap.color = "#777";
 
+    maps = [
+        menuMap,
+        mapPacman,
+        mapMsPacman1,
+        mapMsPacman2,
+        mapMsPacman3,
+        mapMsPacman4
+    ];
 
 })();
-
-// current map defaults to first
-var tileMap = maps[0];
 //////////////////////////////////////////////////////////////////////////////////////
 // Pac-Man
 // Thanks to Jamey Pittman for "The Pac-Man Dossier"

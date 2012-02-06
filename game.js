@@ -23,7 +23,7 @@ var game = (function(){
             tileMap.onLoad();
         },
         switchState: function(nextState,fadeDuration) {
-            this.state = (fadeDuration) ? fadeState(this.state,nextState,fadeDuration) : nextState;
+            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration) : nextState;
             this.state.init();
         },
         addScore: function(p) {

@@ -578,8 +578,15 @@ var screen = (function() {
         ///////////////////////////////////////////////////
         // renderers
         fieldset = makeFieldSet('Renderer');
-        addRadio(fieldset, 'render', 'minimal', function(on) { if (on) screen.switchRenderer(0); },true);
-        addRadio(fieldset, 'render', 'arcade (w.i.p.)', function(on) { if (on) screen.switchRenderer(1); });
+        var makeSwitchRenderer = function(renderer) {
+            return function(on) {
+                if (on) {
+                    game.switchState(fadeRendererState(game.state, renderer, 24));
+                }
+            };
+        };
+        addRadio(fieldset, 'render', 'minimal',         makeSwitchRenderer(0), true);
+        addRadio(fieldset, 'render', 'arcade (w.i.p.)', makeSwitchRenderer(1));
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -1701,7 +1708,7 @@ var game = (function(){
             tileMap.onLoad();
         },
         switchState: function(nextState,fadeDuration) {
-            this.state = (fadeDuration) ? fadeState(this.state,nextState,fadeDuration) : nextState;
+            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration) : nextState;
             this.state.init();
         },
         addScore: function(p) {
@@ -1731,7 +1738,7 @@ var game = (function(){
 //////////////////////////////////////////////////////////////////////////////////////
 // Fade state
 
-var fadeState = function (prevState, nextState, frameDuration) {
+var fadeNextState = function (prevState, nextState, frameDuration) {
     var frames;
     return {
         init: function() {
@@ -1758,6 +1765,36 @@ var fadeState = function (prevState, nextState, frameDuration) {
             else {
                 if (frames == frameDuration/2)
                     nextState.init();
+                frames++;
+            }
+        },
+    }
+};
+
+var fadeRendererState = function (currState, nextRenderer, frameDuration) {
+    var frames;
+    return {
+        init: function() {
+            frames = 0;
+        },
+        draw: function() {
+            var t;
+            currState.draw();
+            if (frames < frameDuration/2) {
+                t = frames/frameDuration*2;
+                screen.renderer.drawFadeIn(1-t);
+            }
+            else {
+                t = frames/frameDuration*2 - 1;
+                screen.renderer.drawFadeIn(t);
+            }
+        },
+        update: function() {
+            if (frames == frameDuration)
+                game.state = currState;
+            else {
+                if (frames == frameDuration/2)
+                    screen.switchRenderer(nextRenderer);
                 frames++;
             }
         },

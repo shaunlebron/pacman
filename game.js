@@ -9,7 +9,7 @@ var game = (function(){
     return {
         highScore:0,
         restart: function() {
-            this.switchState(startupState);
+            this.switchState(menuState);
             this.resume();
         },
         pause: function() {
@@ -19,10 +19,8 @@ var game = (function(){
             interval = setInterval("game.tick()", framePeriod);
         },
         switchMap: function(i) {
-            // just restart the map I guess?
             tileMap = maps[i];
             tileMap.onLoad();
-            this.switchState(newGameState);
         },
         switchState: function(s) {
             s.init();

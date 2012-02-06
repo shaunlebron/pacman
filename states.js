@@ -1,34 +1,39 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // States
 
-var startupState = {
-    init: function() {
-        tileMap.onLoad();
-        screen.renderer.drawMap();
-        screen.blitMap();
-        screen.renderer.drawEnergizers();
-        screen.renderer.drawMessage("start","#FFF");
-        clickState.nextState = newGameState;
-        game.switchState(clickState);
-    },
-    draw: function(){},
-    update: function(){},
-};
-
-////////////////////////////////////////////////////
-
-// state when waiting for the user to click
-var clickState = {
-    init: function() {
-        var that = this;
-        screen.onClick = function() {
-            game.switchState(that.nextState);
-            screen.onClick = undefined;
-        }
-    },
-    draw: function(){},
-    update: function(){},
-};
+var menuState = (function() {
+    var frames;
+    var fadeFrames = 120;
+    return {
+        init: function() {
+            tileMap = menuMap;
+            tileMap.onLoad();
+            for (i=0; i<5; i++)
+                actors[i].reset();
+            screen.renderer.drawMap();
+            screen.onClick = function() {
+                game.switchMap(0);
+                game.switchState(newGameState);
+            };
+            frames = 0;
+        },
+        draw: function() {
+            screen.blitMap();
+            screen.renderer.drawMessage("pacman","#FFF");
+            screen.renderer.drawActors();
+            if (frames < fadeFrames) {
+                screen.renderer.drawFadeIn(frames/fadeFrames);
+            }
+        },
+        update: function() {
+            var i;
+            if (frames < fadeFrames)
+                frames++;
+            for (i = 0; i<4; i++)
+                actors[i].update();
+        },
+    };
+})();
 
 ////////////////////////////////////////////////////
 
@@ -322,8 +327,10 @@ var finishState = (function(){
 var overState = {
     init: function() {
         screen.renderer.drawMessage("game over", "#F00");
-        clickState.nextState = newGameState;
-        game.switchState(clickState);
+        screen.onClick = function() {
+            game.switchState(newGameState);
+            screen.onClick = undefined;
+        }
     },
     draw: function() {},
     update: function() {},

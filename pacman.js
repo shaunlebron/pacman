@@ -1670,7 +1670,7 @@ var game = (function(){
     return {
         highScore:0,
         restart: function() {
-            this.switchState(startupState);
+            this.switchState(menuState);
             this.resume();
         },
         pause: function() {
@@ -1680,10 +1680,8 @@ var game = (function(){
             interval = setInterval("game.tick()", framePeriod);
         },
         switchMap: function(i) {
-            // just restart the map I guess?
             tileMap = maps[i];
             tileMap.onLoad();
-            this.switchState(newGameState);
         },
         switchState: function(s) {
             s.init();
@@ -1716,33 +1714,25 @@ var game = (function(){
 //////////////////////////////////////////////////////////////////////////////////////
 // States
 
-var startupState = {
+var menuState = {
     init: function() {
-        tileMap.onLoad();
+        var prevMap = tileMap;
+        game.switchMap(menuMap);
         screen.renderer.drawMap();
-        screen.blitMap();
-        screen.renderer.drawEnergizers();
-        screen.renderer.drawMessage("start","#FFF");
-        clickState.nextState = newGameState;
-        game.switchState(clickState);
-    },
-    draw: function(){},
-    update: function(){},
-};
-
-////////////////////////////////////////////////////
-
-// state when waiting for the user to click
-var clickState = {
-    init: function() {
-        var that = this;
         screen.onClick = function() {
-            game.switchState(that.nextState);
-            screen.onClick = undefined;
-        }
+            game.switchMap(prevMap ? prevMap : maps[0]);
+            game.switchState(newGameState);
+        },
+    }
+    draw: function() {
+        screen.blitMap();
+        screen.renderer.drawMessage("pacman","#FFF");
+        screen.renderer.drawActors();
     },
-    draw: function(){},
-    update: function(){},
+    update: function() {
+        for (i = 0; i<4; i++)
+            actors[i].update();
+    },
 };
 
 ////////////////////////////////////////////////////
@@ -2037,8 +2027,10 @@ var finishState = (function(){
 var overState = {
     init: function() {
         screen.renderer.drawMessage("game over", "#F00");
-        clickState.nextState = newGameState;
-        game.switchState(clickState);
+        screen.onClick = function() {
+            game.switchState(newGameState);
+            screen.onClick = undefined;
+        }
     },
     draw: function() {},
     update: function() {},
@@ -2049,6 +2041,7 @@ var overState = {
 
 // available maps
 var maps;
+var menuMap;
 
 // create maps
 (function() {
@@ -2346,6 +2339,96 @@ var maps;
         mapMsPacman3,
         mapMsPacman4,
     ];
+
+    menuMap = new TileMap(28, 36, (
+        "____________________________" +
+        "______||||||||||||||||______" +
+        "______||||||||||||||||______" +
+        "______||............||______" +
+        "______||.|||||.||||.||______" +
+        "______||.|||||.||||.||______" +
+        "______||.||......||.||______" +
+        "______||.||.||||.||.||______" +
+        "______||....||||.||.||______" +
+        "______||.||.||||....||______" +
+        "______||.||.||||.||.||______" +
+        "______||.||......||.||______" +
+        "______||.||||.|||||.||______" +
+        "______||.||||.|||||.||______" +
+        "______||............||______" +
+        "______||||||||||||||||______" +
+        "______||||||||||||||||______" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________"));
+
+    menuMap.onLoad = function() {
+        blinky.startDirEnum = DIR_LEFT;
+        blinky.startPixel = {
+            x: 14*tileSize+midTile.x,
+            y: 3*tileSize+midTile.y
+        };
+        blinky.cornerTile = {
+            x: this.numCols-1-2,
+            y: 0
+        };
+        blinky.startMode = GHOST_OUTSIDE;
+
+        pinky.startDirEnum = DIR_RIGHT;
+        pinky.startPixel = {
+            x: 13*tileSize+midTile.x,
+            y: 14*tileSize+midTile.y,
+        };
+        pinky.cornerTile = {
+            x: 2,
+            y: 0
+        };
+        pinky.startMode = GHOST_OUTSIDE;
+
+        inky.startDirEnum = DIR_UP;
+        inky.startPixel = {
+            x: 8*tileSize + midTile.x,
+            y: 8*tileSize + midTile.y,
+        };
+        inky.cornerTile = {
+            x: this.numCols-1,
+            y: this.numRows - 2,
+        };
+        inky.startMode = GHOST_OUTSIDE;
+
+        clyde.startDirEnum = DIR_UP;
+        clyde.startPixel = {
+            x: 19*tileSize-1,
+            y: 9*tileSize + midTile.y,
+        };
+        clyde.cornerTile = {
+            x: 0,
+            y: this.numRows-2,
+        };
+        clyde.startMode = GHOST_OUTSIDE;
+
+        pacman.startDirEnum = DIR_UP;
+        pacman.startPixel = {
+            x: tileSize*this.numCols/2,
+            y: 8*tileSize,
+        };
+    };
 
 
 })();

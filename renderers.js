@@ -46,6 +46,11 @@ renderers.Common.prototype = {
         }
     },
 
+    drawFadeIn: function(t) {
+        this.ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
+        this.ctx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
+    },
+
     // erase pellet from background
     erasePellet: function(x,y) {
         this.bgCtx.fillStyle = this.floorColor;

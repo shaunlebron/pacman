@@ -58,7 +58,7 @@ Ghost.prototype.getNumSteps = function(frame) {
     else if (this.elroy == 2)
         pattern = STEP_ELROY2;
 
-    return this.getStepSizeFromTable(game.level, pattern, frame);
+    return this.getStepSizeFromTable(game.level ? game.level : 1, pattern, frame);
 };
 
 // signal ghost to reverse direction after leaving current tile

@@ -3,6 +3,7 @@
 
 // available maps
 var maps;
+var menuMap;
 
 // create maps
 (function() {
@@ -120,7 +121,8 @@ var maps;
         "____________________________"));
 
     mapPacman.onLoad = onLoad;
-    mapPacman.color = "#00C";
+    //mapPacman.color = "#00C";
+    mapPacman.color = "#47b897"; // from Pac-Man Plus
     mapPacman.constrainGhostTurns = function(x,y,openTiles) {
         // prevent ghost from turning up at these tiles
         if ((x == 12 || x == 15) && (y == 14 || y == 26)) {
@@ -300,6 +302,99 @@ var maps;
         mapMsPacman3,
         mapMsPacman4,
     ];
+
+    menuMap = new TileMap(28, 36, (
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "________............________" +
+        "________.|||||.||||.________" +
+        "________.|||||.||||.________" +
+        "________.||......||.________" +
+        "________.||.____.||.________" +
+        "________....____.||.________" +
+        "________.||.____....________" +
+        "________.||.____.||.________" +
+        "________.||......||.________" +
+        "________.||||.|||||.________" +
+        "________.||||.|||||.________" +
+        "________............________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________"));
+
+    menuMap.onLoad = function() {
+        console.log('loading menu config');
+        ghostCommander.reset();
+        blinky.startDirEnum = DIR_LEFT;
+        blinky.startPixel = {
+            x: 15*tileSize+midTile.x,
+            y: 3*tileSize+midTile.y
+        };
+        blinky.cornerTile = {
+            x: this.numCols-1-2,
+            y: 0
+        };
+        blinky.startMode = GHOST_OUTSIDE;
+
+        pinky.startDirEnum = DIR_DOWN;
+        pinky.startPixel = {
+            x: 8*tileSize + midTile.x,
+            y: 7*tileSize + midTile.y,
+        };
+        pinky.cornerTile = {
+            x: 2,
+            y: 0
+        };
+        pinky.startMode = GHOST_OUTSIDE;
+
+        inky.startDirEnum = DIR_UP;
+        inky.startPixel = {
+            x: 19*tileSize + midTile.x,
+            y: 10*tileSize + midTile.y,
+        };
+        inky.cornerTile = {
+            x: this.numCols-1,
+            y: this.numRows - 2,
+        };
+        inky.startMode = GHOST_OUTSIDE;
+
+        clyde.startDirEnum = DIR_RIGHT;
+        clyde.startPixel = {
+            x: 11*tileSize+midTile.x,
+            y: 14*tileSize+midTile.y,
+        };
+        clyde.cornerTile = {
+            x: 8,
+            y: 14,
+        };
+        clyde.startMode = GHOST_OUTSIDE;
+
+        pacman.startDirEnum = DIR_UP;
+        pacman.startPixel = {
+            x: tileSize*this.numCols/2,
+            y: 9*tileSize,
+        };
+    };
+    menuMap.color = "#777";
 
 
 })();

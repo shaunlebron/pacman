@@ -9,7 +9,7 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 2;
+    var scale = 1;
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");
@@ -91,11 +91,19 @@ var screen = (function() {
         ///////////////////////////////////////////////////
         // maps
         fieldset = makeFieldSet('Maps');
-        addRadio(fieldset, 'map', 'Pac-Man', function(on) { game.switchMap(0);},true);
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 1', function(on) { game.switchMap(1); });
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 2', function(on) { game.switchMap(2); });
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 3', function(on) { game.switchMap(3); });
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 4', function(on) { game.switchMap(4); });
+        var makeSwitchMap = function(map) {
+            return function(on) {
+                if (on) {
+                    game.switchMap(map);
+                    game.switchState(newGameState);
+                }
+            };
+        };
+        addRadio(fieldset, 'map', 'Pac-Man',       makeSwitchMap(0),true);
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 1', makeSwitchMap(1));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 2', makeSwitchMap(2));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 3', makeSwitchMap(3));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 4', makeSwitchMap(4));
         form.appendChild(fieldset);
 
         divContainer.appendChild(form);

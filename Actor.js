@@ -22,14 +22,14 @@ var Actor = function() {
     this.targetTile = {};
 
     // current frame count
-    this.frame = 0;        // frame count
+    this.frames = 0;        // frame count
 };
 
 // reset to initial position and direction
 Actor.prototype.reset = function() {
     this.setDir(this.startDirEnum);
     this.setPos(this.startPixel.x, this.startPixel.y);
-    this.frame = 0;
+    this.frames = 0;
 };
 
 // sets the position and updates its dependent variables
@@ -114,14 +114,14 @@ Actor.prototype.getStepSizeFromTable = (function(){
     "1121112111211121" + // elroy 1
     "1121121121121121"); // elroy 2
 
-    return function(level, pattern, frame) {
+    return function(level, pattern) {
         var entry;
         if (level < 1) return;
         else if (level==1)                  entry = 0;
         else if (level >= 2 && level <= 4)  entry = 1;
         else if (level >= 5 && level <= 20) entry = 2;
         else if (level >= 21)               entry = 3;
-        return stepSizes[entry*7*16 + pattern*16 + frame%16];
+        return stepSizes[entry*7*16 + pattern*16 + this.frames%16];
     };
 })();
 
@@ -129,13 +129,13 @@ Actor.prototype.getStepSizeFromTable = (function(){
 // updates the actor state
 Actor.prototype.update = function() {
     // get number of steps to advance in this frame
-    var steps = this.getNumSteps(this.frame);
+    var numSteps = this.getNumSteps();
     var i;
-    for (i=0; i<steps; i++) {
+    for (i=0; i<numSteps; i++) {
         this.step();
         this.steer();
     }
-    this.frame++;
+    this.frames++;
 };
 
 // retrieve four surrounding tiles and indicate whether they are open

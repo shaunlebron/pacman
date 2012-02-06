@@ -41,9 +41,9 @@ Player.prototype.setNextDir = function(nextDirEnum) {
 };
 
 // gets the number of steps to move in this frame
-Player.prototype.getNumSteps = function(frame) {
+Player.prototype.getNumSteps = function() {
     var pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
-    return this.getStepSizeFromTable(game.level, pattern, frame);
+    return this.getStepSizeFromTable(game.level, pattern);
 };
 
 // move forward one step

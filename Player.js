@@ -42,6 +42,9 @@ Player.prototype.setNextDir = function(nextDirEnum) {
 
 // gets the number of steps to move in this frame
 Player.prototype.getNumSteps = function() {
+    if (this.speedHack)
+        return 2;
+
     var pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
     return this.getStepSizeFromTable(game.level, pattern);
 };
@@ -93,20 +96,23 @@ Player.prototype.steer = function() {
         this.setDir(this.nextDirEnum);
 };
 
+
 // update this frame
-Player.prototype.update = function() {
+Player.prototype.update = function(j) {
+
+    var numSteps = this.getNumSteps();
+    if (j >= numSteps)
+        return;
 
     // skip frames
     if (this.eatPauseFramesLeft > 0) {
-        this.eatPauseFramesLeft--;
+        if (j == numSteps-1)
+            this.eatPauseFramesLeft--;
         return;
     }
 
-    // handle energized timing
-    energizer.update();
-
     // call super function to update position and direction
-    Actor.prototype.update.apply(this);
+    Actor.prototype.update.call(this,j);
 
     // eat something
     var t = tileMap.getTile(this.tile.x, this.tile.y);

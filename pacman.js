@@ -573,6 +573,7 @@ var screen = (function() {
         fieldset = makeFieldSet('Options');
         addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
         addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
+        addCheckbox(fieldset, 'speed hack', function(on) { pacman.speedHack = on; });
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -798,17 +799,15 @@ Actor.prototype.getStepSizeFromTable = (function(){
     };
 })();
 
-
 // updates the actor state
-Actor.prototype.update = function() {
+Actor.prototype.update = function(j) {
     // get number of steps to advance in this frame
     var numSteps = this.getNumSteps();
-    var i;
-    for (i=0; i<numSteps; i++) {
-        this.step();
-        this.steer();
-    }
-    this.frames++;
+    if (j >= numSteps) 
+        return;
+
+    this.step();
+    this.steer();
 };
 
 // retrieve four surrounding tiles and indicate whether they are open
@@ -1158,6 +1157,9 @@ Player.prototype.setNextDir = function(nextDirEnum) {
 
 // gets the number of steps to move in this frame
 Player.prototype.getNumSteps = function() {
+    if (this.speedHack)
+        return 2;
+
     var pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
     return this.getStepSizeFromTable(game.level, pattern);
 };
@@ -1209,20 +1211,23 @@ Player.prototype.steer = function() {
         this.setDir(this.nextDirEnum);
 };
 
+
 // update this frame
-Player.prototype.update = function() {
+Player.prototype.update = function(j) {
+
+    var numSteps = this.getNumSteps();
+    if (j >= numSteps)
+        return;
 
     // skip frames
     if (this.eatPauseFramesLeft > 0) {
-        this.eatPauseFramesLeft--;
+        if (j == numSteps-1)
+            this.eatPauseFramesLeft--;
         return;
     }
 
-    // handle energized timing
-    energizer.update();
-
     // call super function to update position and direction
-    Actor.prototype.update.apply(this);
+    Actor.prototype.update.call(this,j);
 
     // eat something
     var t = tileMap.getTile(this.tile.x, this.tile.y);
@@ -1968,13 +1973,16 @@ var playState = {
     update: function() {
         var i; // loop index
         var g; // loop ghost
+        var j;
+        var maxSteps = 2;
 
         // skip this frame if needed,
         // but update ghosts running home
         if (energizer.showingPoints()) {
-            for (i=0; i<4; i++)
-                if (actors[i].mode == GHOST_GOING_HOME || actors[i].mode == GHOST_ENTERING_HOME)
-                    actors[i].update();
+            for (j=0; j<maxSteps; j++)
+                for (i=0; i<4; i++)
+                    if (actors[i].mode == GHOST_GOING_HOME || actors[i].mode == GHOST_ENTERING_HOME)
+                        actors[i].update(j);
             energizer.updatePointsTimer();
             return;
         }
@@ -1984,39 +1992,46 @@ var playState = {
         ghostCommander.update();
         elroyTimer.update();
         fruit.update();
+        energizer.update();
+
 
         // update actors
-        for (i = 0; i<5; i++)
-            actors[i].update();
+        for (j=0; j<maxSteps; j++) {
+            for (i = 0; i<5; i++)
+                actors[i].update(j);
 
-        // test collision with fruit
-        fruit.testCollide();
+            // test collision with fruit
+            fruit.testCollide();
 
-        // finish level if all dots have been eaten
-        if (tileMap.allDotsEaten()) {
-            this.draw();
-            game.switchState(finishState);
-            return;
-        }
+            // finish level if all dots have been eaten
+            if (tileMap.allDotsEaten()) {
+                this.draw();
+                game.switchState(finishState);
+                return;
+            }
 
-        // test pacman collision with each ghost
-        for (i = 0; i<4; i++) {
-            g = actors[i];
-            if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y) {
-                if (g.mode == GHOST_OUTSIDE) {
-                    // somebody is going to die
-                    if (!g.scared) {
-                        if (!pacman.invincible)
-                            game.switchState(deadState);
+            // test pacman collision with each ghost
+            for (i = 0; i<4; i++) {
+                g = actors[i];
+                if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y) {
+                    if (g.mode == GHOST_OUTSIDE) {
+                        // somebody is going to die
+                        if (!g.scared) {
+                            if (!pacman.invincible)
+                                game.switchState(deadState);
+                        }
+                        else if (energizer.isActive()) {
+                            energizer.addPoints();
+                            g.onEaten();
+                        }
+                        return;
                     }
-                    else if (energizer.isActive()) {
-                        energizer.addPoints();
-                        g.onEaten();
-                    }
-                    break;
                 }
             }
         }
+
+        for (i=0; i<5; i++)
+            actors[i].frames++;
     },
 };
 

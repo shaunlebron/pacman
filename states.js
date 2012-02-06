@@ -231,13 +231,16 @@ var playState = {
     update: function() {
         var i; // loop index
         var g; // loop ghost
+        var j;
+        var maxSteps = 2;
 
         // skip this frame if needed,
         // but update ghosts running home
         if (energizer.showingPoints()) {
-            for (i=0; i<4; i++)
-                if (actors[i].mode == GHOST_GOING_HOME || actors[i].mode == GHOST_ENTERING_HOME)
-                    actors[i].update();
+            for (j=0; j<maxSteps; j++)
+                for (i=0; i<4; i++)
+                    if (actors[i].mode == GHOST_GOING_HOME || actors[i].mode == GHOST_ENTERING_HOME)
+                        actors[i].update(j);
             energizer.updatePointsTimer();
             return;
         }
@@ -247,39 +250,46 @@ var playState = {
         ghostCommander.update();
         elroyTimer.update();
         fruit.update();
+        energizer.update();
+
 
         // update actors
-        for (i = 0; i<5; i++)
-            actors[i].update();
+        for (j=0; j<maxSteps; j++) {
+            for (i = 0; i<5; i++)
+                actors[i].update(j);
 
-        // test collision with fruit
-        fruit.testCollide();
+            // test collision with fruit
+            fruit.testCollide();
 
-        // finish level if all dots have been eaten
-        if (tileMap.allDotsEaten()) {
-            this.draw();
-            game.switchState(finishState);
-            return;
-        }
+            // finish level if all dots have been eaten
+            if (tileMap.allDotsEaten()) {
+                this.draw();
+                game.switchState(finishState);
+                return;
+            }
 
-        // test pacman collision with each ghost
-        for (i = 0; i<4; i++) {
-            g = actors[i];
-            if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y) {
-                if (g.mode == GHOST_OUTSIDE) {
-                    // somebody is going to die
-                    if (!g.scared) {
-                        if (!pacman.invincible)
-                            game.switchState(deadState);
+            // test pacman collision with each ghost
+            for (i = 0; i<4; i++) {
+                g = actors[i];
+                if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y) {
+                    if (g.mode == GHOST_OUTSIDE) {
+                        // somebody is going to die
+                        if (!g.scared) {
+                            if (!pacman.invincible)
+                                game.switchState(deadState);
+                        }
+                        else if (energizer.isActive()) {
+                            energizer.addPoints();
+                            g.onEaten();
+                        }
+                        return;
                     }
-                    else if (energizer.isActive()) {
-                        energizer.addPoints();
-                        g.onEaten();
-                    }
-                    break;
                 }
             }
         }
+
+        for (i=0; i<5; i++)
+            actors[i].frames++;
     },
 };
 

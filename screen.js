@@ -82,6 +82,7 @@ var screen = (function() {
         fieldset = makeFieldSet('Options');
         addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
         addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
+        addCheckbox(fieldset, 'speed hack', function(on) { pacman.speedHack = on; });
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////

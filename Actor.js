@@ -125,17 +125,15 @@ Actor.prototype.getStepSizeFromTable = (function(){
     };
 })();
 
-
 // updates the actor state
-Actor.prototype.update = function() {
+Actor.prototype.update = function(j) {
     // get number of steps to advance in this frame
     var numSteps = this.getNumSteps();
-    var i;
-    for (i=0; i<numSteps; i++) {
-        this.step();
-        this.steer();
-    }
-    this.frames++;
+    if (j >= numSteps) 
+        return;
+
+    this.step();
+    this.steer();
 };
 
 // retrieve four surrounding tiles and indicate whether they are open

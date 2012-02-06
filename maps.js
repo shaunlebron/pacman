@@ -1,9 +1,16 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // maps
 
-// available maps
+// current map
+var tileMap;
 var maps;
-var menuMap;
+
+var MAP_MENU = 0;
+var MAP_PACMAN = 1;
+var MAP_MSPACMAN1 = 2;
+var MAP_MSPACMAN2 = 3;
+var MAP_MSPACMAN3 = 4;
+var MAP_MSPACMAN4 = 5;
 
 // create maps
 (function() {
@@ -236,7 +243,7 @@ var menuMap;
         "|.||                    ||.|" +
         "|.|||| ||||| || ||||| ||||.|" +
         "|.|||| ||||| || ||||| ||||.|" +
-        "|......||.   ||   .||......|" +
+        "|......||....||....||......|" +
         "|||.||.||.||||||||.||.||.|||" +
         "|||.||.||.||||||||.||.||.|||" +
         "|o..||.......  .......||..o|" +
@@ -294,16 +301,7 @@ var menuMap;
     mapMsPacman4.onLoad = onLoad;
     mapMsPacman4.color = "#2121ff";
 
-    // create global list of maps
-    maps = [
-        mapPacman,
-        mapMsPacman1,
-        mapMsPacman2,
-        mapMsPacman3,
-        mapMsPacman4,
-    ];
-
-    menuMap = new TileMap(28, 36, (
+    var menuMap = new TileMap(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -342,11 +340,13 @@ var menuMap;
         "____________________________"));
 
     menuMap.onLoad = function() {
-        console.log('loading menu config');
+
+        var delay = 0;
+
         ghostCommander.reset();
         blinky.startDirEnum = DIR_LEFT;
         blinky.startPixel = {
-            x: 15*tileSize+midTile.x,
+            x: 15*tileSize+midTile.x - delay,
             y: 3*tileSize+midTile.y
         };
         blinky.cornerTile = {
@@ -358,7 +358,7 @@ var menuMap;
         pinky.startDirEnum = DIR_DOWN;
         pinky.startPixel = {
             x: 8*tileSize + midTile.x,
-            y: 7*tileSize + midTile.y,
+            y: 7*tileSize + midTile.y - delay*2,
         };
         pinky.cornerTile = {
             x: 2,
@@ -366,20 +366,9 @@ var menuMap;
         };
         pinky.startMode = GHOST_OUTSIDE;
 
-        inky.startDirEnum = DIR_UP;
-        inky.startPixel = {
-            x: 19*tileSize + midTile.x,
-            y: 10*tileSize + midTile.y,
-        };
-        inky.cornerTile = {
-            x: this.numCols-1,
-            y: this.numRows - 2,
-        };
-        inky.startMode = GHOST_OUTSIDE;
-
         clyde.startDirEnum = DIR_RIGHT;
         clyde.startPixel = {
-            x: 11*tileSize+midTile.x,
+            x: 11*tileSize+midTile.x - delay*3,
             y: 14*tileSize+midTile.y,
         };
         clyde.cornerTile = {
@@ -387,6 +376,18 @@ var menuMap;
             y: 14,
         };
         clyde.startMode = GHOST_OUTSIDE;
+
+        inky.startDirEnum = DIR_UP;
+        inky.startPixel = {
+            x: 19*tileSize + midTile.x,
+            y: 10*tileSize + midTile.y + delay*4,
+        };
+        inky.cornerTile = {
+            x: this.numCols-1,
+            y: this.numRows - 2,
+        };
+        inky.startMode = GHOST_OUTSIDE;
+
 
         pacman.startDirEnum = DIR_UP;
         pacman.startPixel = {
@@ -396,8 +397,13 @@ var menuMap;
     };
     menuMap.color = "#777";
 
+    maps = [
+        menuMap,
+        mapPacman,
+        mapMsPacman1,
+        mapMsPacman2,
+        mapMsPacman3,
+        mapMsPacman4
+    ];
 
 })();
-
-// current map defaults to first
-var tileMap = maps[0];

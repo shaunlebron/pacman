@@ -13,8 +13,11 @@ var screen = (function() {
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");
-        c.width = tileMap.widthPixels*scale;
-        c.height = tileMap.heightPixels*scale;
+
+        // use conventional pacman map size
+        c.width = 28*tileSize*scale;
+        c.height = 36*tileSize*scale;
+
         c.getContext("2d").scale(scale,scale);
         return c;
     };
@@ -94,16 +97,16 @@ var screen = (function() {
         var makeSwitchMap = function(map) {
             return function(on) {
                 if (on) {
-                    game.switchMap(map);
-                    game.switchState(newGameState);
+                    readyNewState.nextMap = map;
+                    game.switchState(readyNewState, 60);
                 }
             };
         };
-        addRadio(fieldset, 'map', 'Pac-Man',       makeSwitchMap(0),true);
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 1', makeSwitchMap(1));
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 2', makeSwitchMap(2));
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 3', makeSwitchMap(3));
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 4', makeSwitchMap(4));
+        addRadio(fieldset, 'map', 'Pac-Man',       makeSwitchMap(MAP_PACMAN),true);
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 1', makeSwitchMap(MAP_MSPACMAN1));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 2', makeSwitchMap(MAP_MSPACMAN2));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 3', makeSwitchMap(MAP_MSPACMAN3));
+        addRadio(fieldset, 'map', 'Ms. Pac-Man 4', makeSwitchMap(MAP_MSPACMAN4));
         form.appendChild(fieldset);
 
         divContainer.appendChild(form);

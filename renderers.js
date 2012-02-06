@@ -122,7 +122,7 @@ renderers.Common.prototype = {
         if (g.scared)
             color = energizer.isFlash() ? "#FFF" : "#00F";
         else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
-            color = "rgba(255,255,255,0.2)";
+            color = "rgba(255,255,255,0.3)";
         this.ctx.fillStyle = color;
         this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
     },

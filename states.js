@@ -1,34 +1,73 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// States
+// Fade state
+
+var fadeState = function (prevState, nextState, frameDuration) {
+    var frames;
+    return {
+        init: function() {
+            frames = 0;
+        },
+        draw: function() {
+            var t;
+            if (frames < frameDuration/2) {
+                t = frames/frameDuration*2;
+                if (prevState) {
+                    prevState.draw();
+                    screen.renderer.drawFadeIn(1-t);
+                }
+            }
+            else {
+                t = frames/frameDuration*2 - 1;
+                nextState.draw();
+                screen.renderer.drawFadeIn(t);
+            }
+        },
+        update: function() {
+            if (frames == frameDuration)
+                game.state = nextState;
+            else {
+                if (frames == frameDuration/2)
+                    nextState.init();
+                frames++;
+            }
+        },
+    }
+};
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Menu State
 
 var menuState = (function() {
     var frames;
     var fadeFrames = 120;
     return {
         init: function() {
-            tileMap = menuMap;
-            tileMap.onLoad();
+            game.switchMap(MAP_MENU);
             for (i=0; i<5; i++)
                 actors[i].reset();
             screen.renderer.drawMap();
             screen.onClick = function() {
-                game.switchMap(0);
-                game.switchState(newGameState);
+
+                // if we have already left this state by other means
+                // cancel this action
+                if (game.state != menuState) {
+                    screen.onClick = undefined;
+                    return;
+                }
+
+                newGameState.nextMap = MAP_PACMAN;
+                game.switchState(newGameState,60);
+                screen.onClick = undefined;
             };
             frames = 0;
         },
         draw: function() {
             screen.blitMap();
-            screen.renderer.drawMessage("pacman","#FFF");
+            screen.renderer.drawMessage("A Pac-Man Remake","#FFF");
             screen.renderer.drawActors();
-            if (frames < fadeFrames) {
-                screen.renderer.drawFadeIn(frames/fadeFrames);
-            }
         },
         update: function() {
             var i;
-            if (frames < fadeFrames)
-                frames++;
             for (i = 0; i<4; i++)
                 actors[i].update();
         },
@@ -44,6 +83,10 @@ var newGameState = (function() {
 
     return {
         init: function() {
+            if (this.nextMap != undefined) {
+                game.switchMap(this.nextMap);
+                this.nextMap = undefined;
+            }
             frames = 0;
             tileMap.resetCurrent();
             screen.renderer.drawMap();
@@ -103,6 +146,21 @@ var readyState =  (function(){
 var readyNewState = { 
     __proto__: readyState, 
     init: function() {
+        // kludge: redirect to new game state
+        //   if user clicks map without game being initialized
+        if (game.score == undefined) {
+            newGameState.nextMap = this.nextMap;
+            game.switchState(newGameState);
+            return;
+        }
+
+        if (this.nextMap != undefined) {
+            game.switchMap(this.nextMap);
+            this.nextMap = undefined;
+
+            tileMap.resetCurrent();
+            screen.renderer.drawMap();
+        }
         ghostCommander.reset();
         ghostReleaser.onNewLevel();
         fruit.reset();
@@ -312,7 +370,7 @@ var finishState = (function(){
             255: { 
                 init: function() {
                     game.level++;
-                    game.switchState(readyNewState);
+                    game.switchState(readyNewState,60);
                     tileMap.resetCurrent();
                     screen.renderer.drawMap();
                 }
@@ -328,7 +386,7 @@ var overState = {
     init: function() {
         screen.renderer.drawMessage("game over", "#F00");
         screen.onClick = function() {
-            game.switchState(newGameState);
+            game.switchState(menuState,60);
             screen.onClick = undefined;
         }
     },

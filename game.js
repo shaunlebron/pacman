@@ -9,7 +9,7 @@ var game = (function(){
     return {
         highScore:0,
         restart: function() {
-            this.switchState(menuState);
+            this.switchState(menuState, 60);
             this.resume();
         },
         pause: function() {
@@ -18,13 +18,13 @@ var game = (function(){
         resume: function() {
             interval = setInterval("game.tick()", framePeriod);
         },
-        switchMap: function(i) {
-            tileMap = maps[i];
+        switchMap: function(map) {
+            tileMap = maps[map];
             tileMap.onLoad();
         },
-        switchState: function(s) {
-            s.init();
-            this.state = s;
+        switchState: function(nextState,fadeDuration) {
+            this.state = (fadeDuration) ? fadeState(this.state,nextState,fadeDuration) : nextState;
+            this.state.init();
         },
         addScore: function(p) {
             this.score += p;

@@ -500,7 +500,7 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 1;
+    var scale = 2;
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");

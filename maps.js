@@ -305,6 +305,9 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________" +
         "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
         "________............________" +
         "________.|||||.||||.________" +
         "________.|||||.||||.________" +
@@ -334,9 +337,6 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________" +
         "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
         "____________________________"));
 
     menuMap.onLoad = function() {
@@ -347,7 +347,7 @@ var MAP_MSPACMAN4 = 5;
         blinky.startDirEnum = DIR_LEFT;
         blinky.startPixel = {
             x: 15*tileSize+midTile.x - delay,
-            y: 3*tileSize+midTile.y
+            y: 6*tileSize+midTile.y
         };
         blinky.cornerTile = {
             x: this.numCols-1-2,
@@ -358,7 +358,7 @@ var MAP_MSPACMAN4 = 5;
         pinky.startDirEnum = DIR_DOWN;
         pinky.startPixel = {
             x: 8*tileSize + midTile.x,
-            y: 7*tileSize + midTile.y - delay*2,
+            y: 10*tileSize + midTile.y - delay*2,
         };
         pinky.cornerTile = {
             x: 2,
@@ -369,7 +369,7 @@ var MAP_MSPACMAN4 = 5;
         clyde.startDirEnum = DIR_RIGHT;
         clyde.startPixel = {
             x: 11*tileSize+midTile.x - delay*3,
-            y: 14*tileSize+midTile.y,
+            y: 17*tileSize+midTile.y,
         };
         clyde.cornerTile = {
             x: 8,
@@ -380,7 +380,7 @@ var MAP_MSPACMAN4 = 5;
         inky.startDirEnum = DIR_UP;
         inky.startPixel = {
             x: 19*tileSize + midTile.x,
-            y: 10*tileSize + midTile.y + delay*4,
+            y: 13*tileSize + midTile.y + delay*4,
         };
         inky.cornerTile = {
             x: this.numCols-1,
@@ -392,7 +392,7 @@ var MAP_MSPACMAN4 = 5;
         pacman.startDirEnum = DIR_UP;
         pacman.startPixel = {
             x: tileSize*this.numCols/2,
-            y: 9*tileSize,
+            y: 12*tileSize,
         };
     };
     menuMap.color = "#777";

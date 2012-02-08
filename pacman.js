@@ -186,14 +186,29 @@ renderers.Common = function(ctx, bgCtx) {
 
 renderers.Common.prototype = {
 
-    // draw square centered at the given tile
-    drawCenterTileSq: function (ctx,tx,ty,w) {
-        this.drawCenterPixelSq(ctx, tx*tileSize+midTile.x, ty*tileSize+midTile.y,w);
+    drawNoGroutTile: function(ctx,x,y,w) {
+        var tileChar = tileMap.getTile(x,y);
+        this.drawCenterTileSq(ctx,x,y,tileSize,
+                tileMap.getTile(x+1,y) == tileChar,
+                tileMap.getTile(x,y+1) == tileChar,
+                tileMap.getTile(x+1,y+1) == tileChar);
+    },
+
+    // draw square centered at the given tile with optional "floating point grout" filling
+    drawCenterTileSq: function (ctx,tx,ty,w, rightGrout, downGrout, downRightGrout) {
+        this.drawCenterPixelSq(ctx, tx*tileSize+midTile.x, ty*tileSize+midTile.y,w,
+                rightGrout, downGrout, downRightGrout);
     },
 
     // draw square centered at the given pixel
-    drawCenterPixelSq: function (ctx,px,py,w) {
+    drawCenterPixelSq: function (ctx,px,py,w,rightGrout, downGrout, downRightGrout) {
         ctx.fillRect(px-w/2, py-w/2,w,w);
+
+        // fill "floating point grout" gaps between tiles
+        var gap = 1;
+        if (rightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w);
+        if (downGrout) ctx.fillRect(px-w/2, py-w/2,w,w+gap);
+        //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
     },
 
     toggleLevelFlash: function () {
@@ -220,7 +235,15 @@ renderers.Common.prototype = {
     // erase pellet from background
     erasePellet: function(x,y) {
         this.bgCtx.fillStyle = this.floorColor;
-        this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+        this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
+
+        // fill in adjacent floor tiles
+        if (tileMap.getTile(x+1,y)==' ') this.drawNoGroutTile(this.bgCtx,x+1,y,tileSize);
+        if (tileMap.getTile(x-1,y)==' ') this.drawNoGroutTile(this.bgCtx,x-1,y,tileSize);
+        if (tileMap.getTile(x,y+1)==' ') this.drawNoGroutTile(this.bgCtx,x,y+1,tileSize);
+        if (tileMap.getTile(x,y-1)==' ') this.drawNoGroutTile(this.bgCtx,x,y-1,tileSize);
+
+        // fill in adjacent wall tiles
     },
 
     // draw a center screen message (e.g. "start", "ready", "game over")
@@ -343,8 +366,8 @@ renderers.Simple.prototype = {
         for (y=0; y<tileMap.numRows; y++)
         for (x=0; x<tileMap.numCols; x++) {
             tile = tileMap.currentTiles[i++];
-            if (tile == ' ') 
-                this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+            if (tile == ' ')
+                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
         }
 
         // draw pellet tiles
@@ -354,7 +377,7 @@ renderers.Simple.prototype = {
         for (x=0; x<tileMap.numCols; x++) {
             tile = tileMap.currentTiles[i++];
             if (tile == '.')
-                this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
         }
     },
 
@@ -429,7 +452,7 @@ renderers.Arcade.prototype = {
         for (x=0; x<tileMap.numCols; x++) {
             tile = tileMap.currentTiles[i++];
             if (tile == '|')
-                this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
         }
 
         // draw floor tiles
@@ -439,7 +462,7 @@ renderers.Arcade.prototype = {
         for (x=0; x<tileMap.numCols; x++) {
             tile = tileMap.currentTiles[i++];
             if (tile == '_')
-                this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
             else if (tile != '|')
                 this.drawCenterTileSq(this.bgCtx,x,y,this.actorSize+4);
         }
@@ -466,7 +489,7 @@ renderers.Arcade.prototype = {
         this.ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
         this.ctx.textBaseline = "top";
         this.ctx.textAlign = "center";
-        this.ctx.fillText("high score", tileSize*tileMap.numCols/2, 3);
+        this.ctx.fillText("high score", tileSize*tileMap.numCols/2, 1.5);
         this.ctx.fillText(game.highScore, tileSize*tileMap.numCols/2, tileSize*1.5);
     },
 
@@ -500,7 +523,7 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 2;
+    var scale = 1.65;
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");
@@ -509,7 +532,8 @@ var screen = (function() {
         c.width = 28*tileSize*scale;
         c.height = 36*tileSize*scale;
 
-        c.getContext("2d").scale(scale,scale);
+        var ctx = c.getContext("2d");
+        ctx.scale(scale,scale);
         return c;
     };
 
@@ -1698,6 +1722,9 @@ var game = (function(){
 
     return {
         highScore:0,
+        score:0,
+        extraLives:0,
+        level:1,
         restart: function() {
             this.switchState(menuState, 60);
             this.resume();
@@ -1835,6 +1862,7 @@ var menuState = (function() {
         },
         draw: function() {
             screen.blitMap();
+            screen.renderer.drawScore();
             screen.renderer.drawMessage("A Pac-Man Remake","#FFF");
             screen.renderer.drawActors();
         },
@@ -1970,9 +1998,27 @@ var playState = {
         screen.renderer.drawFruit();
         screen.renderer.drawActors();
     },
+    isPacmanCollide: function() {
+        // test pacman's tile collision against each ghost
+        var i,g;
+        for (i = 0; i<4; i++) {
+            g = actors[i];
+            if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y && g.mode == GHOST_OUTSIDE) {
+                if (g.scared) { // eat ghost
+                    energizer.addPoints();
+                    g.onEaten();
+                }
+                else if (pacman.invincible) // pass through ghost
+                    continue;
+                else // killed by ghost
+                    game.switchState(deadState);
+                return true;
+            }
+        }
+        return false;
+    },
     update: function() {
         var i; // loop index
-        var g; // loop ghost
         var j;
         var maxSteps = 2;
 
@@ -1995,10 +2041,11 @@ var playState = {
         energizer.update();
 
 
-        // update actors
+        // update actors one step at a time
         for (j=0; j<maxSteps; j++) {
-            for (i = 0; i<5; i++)
-                actors[i].update(j);
+
+            // advance pacman
+            pacman.update(j);
 
             // test collision with fruit
             fruit.testCollide();
@@ -2010,26 +2057,15 @@ var playState = {
                 return;
             }
 
-            // test pacman collision with each ghost
-            for (i = 0; i<4; i++) {
-                g = actors[i];
-                if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y) {
-                    if (g.mode == GHOST_OUTSIDE) {
-                        // somebody is going to die
-                        if (!g.scared) {
-                            if (!pacman.invincible)
-                                game.switchState(deadState);
-                        }
-                        else if (energizer.isActive()) {
-                            energizer.addPoints();
-                            g.onEaten();
-                        }
-                        return;
-                    }
-                }
-            }
+            // test pacman collision before and after updating ghosts
+            // (redundant to prevent pass-throughs)
+            // (if collision happens, stop immediately.)
+            if (this.isPacmanCollide()) break;
+            for (i=0;i<4;i++) actors[i].update(j);
+            if (this.isPacmanCollide()) break;
         }
 
+        // update frame counts
         for (i=0; i<5; i++)
             actors[i].frames++;
     },
@@ -2489,6 +2525,9 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________" +
         "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
         "________............________" +
         "________.|||||.||||.________" +
         "________.|||||.||||.________" +
@@ -2518,9 +2557,6 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________" +
         "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
         "____________________________"));
 
     menuMap.onLoad = function() {
@@ -2531,7 +2567,7 @@ var MAP_MSPACMAN4 = 5;
         blinky.startDirEnum = DIR_LEFT;
         blinky.startPixel = {
             x: 15*tileSize+midTile.x - delay,
-            y: 3*tileSize+midTile.y
+            y: 6*tileSize+midTile.y
         };
         blinky.cornerTile = {
             x: this.numCols-1-2,
@@ -2542,7 +2578,7 @@ var MAP_MSPACMAN4 = 5;
         pinky.startDirEnum = DIR_DOWN;
         pinky.startPixel = {
             x: 8*tileSize + midTile.x,
-            y: 7*tileSize + midTile.y - delay*2,
+            y: 10*tileSize + midTile.y - delay*2,
         };
         pinky.cornerTile = {
             x: 2,
@@ -2553,7 +2589,7 @@ var MAP_MSPACMAN4 = 5;
         clyde.startDirEnum = DIR_RIGHT;
         clyde.startPixel = {
             x: 11*tileSize+midTile.x - delay*3,
-            y: 14*tileSize+midTile.y,
+            y: 17*tileSize+midTile.y,
         };
         clyde.cornerTile = {
             x: 8,
@@ -2564,7 +2600,7 @@ var MAP_MSPACMAN4 = 5;
         inky.startDirEnum = DIR_UP;
         inky.startPixel = {
             x: 19*tileSize + midTile.x,
-            y: 10*tileSize + midTile.y + delay*4,
+            y: 13*tileSize + midTile.y + delay*4,
         };
         inky.cornerTile = {
             x: this.numCols-1,
@@ -2576,7 +2612,7 @@ var MAP_MSPACMAN4 = 5;
         pacman.startDirEnum = DIR_UP;
         pacman.startPixel = {
             x: tileSize*this.numCols/2,
-            y: 9*tileSize,
+            y: 12*tileSize,
         };
     };
     menuMap.color = "#777";

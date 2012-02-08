@@ -20,14 +20,29 @@ renderers.Common = function(ctx, bgCtx) {
 
 renderers.Common.prototype = {
 
-    // draw square centered at the given tile
-    drawCenterTileSq: function (ctx,tx,ty,w) {
-        this.drawCenterPixelSq(ctx, tx*tileSize+midTile.x, ty*tileSize+midTile.y,w);
+    drawNoGroutTile: function(ctx,x,y,w) {
+        var tileChar = tileMap.getTile(x,y);
+        this.drawCenterTileSq(ctx,x,y,tileSize,
+                tileMap.getTile(x+1,y) == tileChar,
+                tileMap.getTile(x,y+1) == tileChar,
+                tileMap.getTile(x+1,y+1) == tileChar);
+    },
+
+    // draw square centered at the given tile with optional "floating point grout" filling
+    drawCenterTileSq: function (ctx,tx,ty,w, rightGrout, downGrout, downRightGrout) {
+        this.drawCenterPixelSq(ctx, tx*tileSize+midTile.x, ty*tileSize+midTile.y,w,
+                rightGrout, downGrout, downRightGrout);
     },
 
     // draw square centered at the given pixel
-    drawCenterPixelSq: function (ctx,px,py,w) {
+    drawCenterPixelSq: function (ctx,px,py,w,rightGrout, downGrout, downRightGrout) {
         ctx.fillRect(px-w/2, py-w/2,w,w);
+
+        // fill "floating point grout" gaps between tiles
+        var gap = 1;
+        if (rightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w);
+        if (downGrout) ctx.fillRect(px-w/2, py-w/2,w,w+gap);
+        //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
     },
 
     toggleLevelFlash: function () {
@@ -54,7 +69,15 @@ renderers.Common.prototype = {
     // erase pellet from background
     erasePellet: function(x,y) {
         this.bgCtx.fillStyle = this.floorColor;
-        this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+        this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
+
+        // fill in adjacent floor tiles
+        if (tileMap.getTile(x+1,y)==' ') this.drawNoGroutTile(this.bgCtx,x+1,y,tileSize);
+        if (tileMap.getTile(x-1,y)==' ') this.drawNoGroutTile(this.bgCtx,x-1,y,tileSize);
+        if (tileMap.getTile(x,y+1)==' ') this.drawNoGroutTile(this.bgCtx,x,y+1,tileSize);
+        if (tileMap.getTile(x,y-1)==' ') this.drawNoGroutTile(this.bgCtx,x,y-1,tileSize);
+
+        // fill in adjacent wall tiles
     },
 
     // draw a center screen message (e.g. "start", "ready", "game over")
@@ -177,8 +200,8 @@ renderers.Simple.prototype = {
         for (y=0; y<tileMap.numRows; y++)
         for (x=0; x<tileMap.numCols; x++) {
             tile = tileMap.currentTiles[i++];
-            if (tile == ' ') 
-                this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+            if (tile == ' ')
+                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
         }
 
         // draw pellet tiles
@@ -188,7 +211,7 @@ renderers.Simple.prototype = {
         for (x=0; x<tileMap.numCols; x++) {
             tile = tileMap.currentTiles[i++];
             if (tile == '.')
-                this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
         }
     },
 
@@ -263,7 +286,7 @@ renderers.Arcade.prototype = {
         for (x=0; x<tileMap.numCols; x++) {
             tile = tileMap.currentTiles[i++];
             if (tile == '|')
-                this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
         }
 
         // draw floor tiles
@@ -273,7 +296,7 @@ renderers.Arcade.prototype = {
         for (x=0; x<tileMap.numCols; x++) {
             tile = tileMap.currentTiles[i++];
             if (tile == '_')
-                this.drawCenterTileSq(this.bgCtx,x,y,tileSize);
+                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
             else if (tile != '|')
                 this.drawCenterTileSq(this.bgCtx,x,y,this.actorSize+4);
         }
@@ -300,7 +323,7 @@ renderers.Arcade.prototype = {
         this.ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
         this.ctx.textBaseline = "top";
         this.ctx.textAlign = "center";
-        this.ctx.fillText("high score", tileSize*tileMap.numCols/2, 3);
+        this.ctx.fillText("high score", tileSize*tileMap.numCols/2, 1.5);
         this.ctx.fillText(game.highScore, tileSize*tileMap.numCols/2, tileSize*1.5);
     },
 

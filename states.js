@@ -93,6 +93,7 @@ var menuState = (function() {
         },
         draw: function() {
             screen.blitMap();
+            screen.renderer.drawScore();
             screen.renderer.drawMessage("A Pac-Man Remake","#FFF");
             screen.renderer.drawActors();
         },
@@ -228,9 +229,27 @@ var playState = {
         screen.renderer.drawFruit();
         screen.renderer.drawActors();
     },
+    isPacmanCollide: function() {
+        // test pacman's tile collision against each ghost
+        var i,g;
+        for (i = 0; i<4; i++) {
+            g = actors[i];
+            if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y && g.mode == GHOST_OUTSIDE) {
+                if (g.scared) { // eat ghost
+                    energizer.addPoints();
+                    g.onEaten();
+                }
+                else if (pacman.invincible) // pass through ghost
+                    continue;
+                else // killed by ghost
+                    game.switchState(deadState);
+                return true;
+            }
+        }
+        return false;
+    },
     update: function() {
         var i; // loop index
-        var g; // loop ghost
         var j;
         var maxSteps = 2;
 
@@ -253,10 +272,11 @@ var playState = {
         energizer.update();
 
 
-        // update actors
+        // update actors one step at a time
         for (j=0; j<maxSteps; j++) {
-            for (i = 0; i<5; i++)
-                actors[i].update(j);
+
+            // advance pacman
+            pacman.update(j);
 
             // test collision with fruit
             fruit.testCollide();
@@ -268,26 +288,15 @@ var playState = {
                 return;
             }
 
-            // test pacman collision with each ghost
-            for (i = 0; i<4; i++) {
-                g = actors[i];
-                if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y) {
-                    if (g.mode == GHOST_OUTSIDE) {
-                        // somebody is going to die
-                        if (!g.scared) {
-                            if (!pacman.invincible)
-                                game.switchState(deadState);
-                        }
-                        else if (energizer.isActive()) {
-                            energizer.addPoints();
-                            g.onEaten();
-                        }
-                        return;
-                    }
-                }
-            }
+            // test pacman collision before and after updating ghosts
+            // (redundant to prevent pass-throughs)
+            // (if collision happens, stop immediately.)
+            if (this.isPacmanCollide()) break;
+            for (i=0;i<4;i++) actors[i].update(j);
+            if (this.isPacmanCollide()) break;
         }
 
+        // update frame counts
         for (i=0; i<5; i++)
             actors[i].frames++;
     },

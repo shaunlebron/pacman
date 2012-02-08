@@ -8,6 +8,9 @@ var game = (function(){
 
     return {
         highScore:0,
+        score:0,
+        extraLives:0,
+        level:1,
         restart: function() {
             this.switchState(menuState, 60);
             this.resume();

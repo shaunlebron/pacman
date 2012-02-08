@@ -180,7 +180,6 @@ Ghost.prototype.homeSteer = (function(){
 
 })();
 
-
 // determine direction
 Ghost.prototype.steer = function() {
 
@@ -208,8 +207,10 @@ Ghost.prototype.steer = function() {
     oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
 
     // only execute rest of the steering logic if we're pursuing a target tile
-    if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME)
+    if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME) {
+        this.targetting = false;
         return;
+    }
 
     // don't steer if we're not at the middle of the tile
     if (this.distToMid.x != 0 || this.distToMid.y != 0)
@@ -223,17 +224,20 @@ Ghost.prototype.steer = function() {
         dirEnum = Math.floor(Math.random()*5);
         while (!openTiles[dirEnum])
             dirEnum = (dirEnum+1)%4;
+        this.targetting = false;
     }
     else {
         // target ghost door
         if (this.mode == GHOST_GOING_HOME) {
             this.targetTile.x = tileMap.doorTile.x;
             this.targetTile.y = tileMap.doorTile.y;
+            this.targetting = 'door';
         }
         // target corner when patrolling
         else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
             this.targetTile.x = this.cornerTile.x;
             this.targetTile.y = this.cornerTile.y;
+            this.targetting = 'corner';
         }
         // use custom function for each ghost when in attack mode
         else

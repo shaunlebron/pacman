@@ -49,6 +49,14 @@ renderers.Common.prototype = {
         this.flashLevel = !this.flashLevel;
     },
 
+    drawTargets: function() {
+        var i;
+        this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        for (i=0;i<5;i++)
+            if (actors[i].isDrawTarget)
+                actors[i].drawTarget(this.ctx);
+    },
+
     // draw energizer items on foreground
     drawEnergizers: function() {
         this.ctx.fillStyle = this.energizerColor;

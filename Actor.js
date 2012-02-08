@@ -30,6 +30,7 @@ Actor.prototype.reset = function() {
     this.setDir(this.startDirEnum);
     this.setPos(this.startPixel.x, this.startPixel.y);
     this.frames = 0;
+    this.targetting = false;
 };
 
 // sets the position and updates its dependent variables

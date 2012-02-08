@@ -80,10 +80,10 @@ var screen = (function() {
 
         ///////////////////////////////////////////////////
         // options
-        fieldset = makeFieldSet('Options');
+        fieldset = makeFieldSet('Player');
         addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
         addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
-        addCheckbox(fieldset, 'speed hack', function(on) { pacman.speedHack = on; });
+        addCheckbox(fieldset, 'double speed', function(on) { pacman.doubleSpeed = on; });
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -98,6 +98,16 @@ var screen = (function() {
         };
         addRadio(fieldset, 'render', 'minimal',         makeSwitchRenderer(0), true);
         addRadio(fieldset, 'render', 'arcade (w.i.p.)', makeSwitchRenderer(1));
+        form.appendChild(fieldset);
+
+        ///////////////////////////////////////////////////
+        // targets
+        fieldset = makeFieldSet('Draw Target Sights');
+        addCheckbox(fieldset, 'blinky (red)', function(on) { blinky.isDrawTarget = on; });
+        addCheckbox(fieldset, 'pinky (pink)', function(on) { pinky.isDrawTarget = on; });
+        addCheckbox(fieldset, 'inky (cyan)', function(on) { inky.isDrawTarget = on; });
+        addCheckbox(fieldset, 'clyde (orange)', function(on) { clyde.isDrawTarget = on; });
+        addCheckbox(fieldset, 'pacman (yellow)', function(on) { pacman.isDrawTarget = on; });
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////

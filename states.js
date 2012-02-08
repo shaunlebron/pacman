@@ -219,6 +219,7 @@ var readyRestartState = {
 
 // state when playing the game
 var playState = {
+    drawSights: false,
     init: function() { },
     draw: function() {
         screen.blitMap();
@@ -228,6 +229,7 @@ var playState = {
         screen.renderer.drawScore();
         screen.renderer.drawFruit();
         screen.renderer.drawActors();
+        screen.renderer.drawTargets();
     },
     isPacmanCollide: function() {
         // test pacman's tile collision against each ghost

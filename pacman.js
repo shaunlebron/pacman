@@ -215,6 +215,14 @@ renderers.Common.prototype = {
         this.flashLevel = !this.flashLevel;
     },
 
+    drawTargets: function() {
+        var i;
+        this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        for (i=0;i<5;i++)
+            if (actors[i].isDrawTarget)
+                actors[i].drawTarget(this.ctx);
+    },
+
     // draw energizer items on foreground
     drawEnergizers: function() {
         this.ctx.fillStyle = this.energizerColor;
@@ -594,10 +602,10 @@ var screen = (function() {
 
         ///////////////////////////////////////////////////
         // options
-        fieldset = makeFieldSet('Options');
+        fieldset = makeFieldSet('Player');
         addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
         addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
-        addCheckbox(fieldset, 'speed hack', function(on) { pacman.speedHack = on; });
+        addCheckbox(fieldset, 'double speed', function(on) { pacman.doubleSpeed = on; });
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -612,6 +620,16 @@ var screen = (function() {
         };
         addRadio(fieldset, 'render', 'minimal',         makeSwitchRenderer(0), true);
         addRadio(fieldset, 'render', 'arcade (w.i.p.)', makeSwitchRenderer(1));
+        form.appendChild(fieldset);
+
+        ///////////////////////////////////////////////////
+        // targets
+        fieldset = makeFieldSet('Draw Target Sights');
+        addCheckbox(fieldset, 'blinky (red)', function(on) { blinky.isDrawTarget = on; });
+        addCheckbox(fieldset, 'pinky (pink)', function(on) { pinky.isDrawTarget = on; });
+        addCheckbox(fieldset, 'inky (cyan)', function(on) { inky.isDrawTarget = on; });
+        addCheckbox(fieldset, 'clyde (orange)', function(on) { clyde.isDrawTarget = on; });
+        addCheckbox(fieldset, 'pacman (yellow)', function(on) { pacman.isDrawTarget = on; });
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -728,6 +746,7 @@ Actor.prototype.reset = function() {
     this.setDir(this.startDirEnum);
     this.setPos(this.startPixel.x, this.startPixel.y);
     this.frames = 0;
+    this.targetting = false;
 };
 
 // sets the position and updates its dependent variables
@@ -1067,7 +1086,6 @@ Ghost.prototype.homeSteer = (function(){
 
 })();
 
-
 // determine direction
 Ghost.prototype.steer = function() {
 
@@ -1095,8 +1113,10 @@ Ghost.prototype.steer = function() {
     oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
 
     // only execute rest of the steering logic if we're pursuing a target tile
-    if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME)
+    if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME) {
+        this.targetting = false;
         return;
+    }
 
     // don't steer if we're not at the middle of the tile
     if (this.distToMid.x != 0 || this.distToMid.y != 0)
@@ -1110,17 +1130,20 @@ Ghost.prototype.steer = function() {
         dirEnum = Math.floor(Math.random()*5);
         while (!openTiles[dirEnum])
             dirEnum = (dirEnum+1)%4;
+        this.targetting = false;
     }
     else {
         // target ghost door
         if (this.mode == GHOST_GOING_HOME) {
             this.targetTile.x = tileMap.doorTile.x;
             this.targetTile.y = tileMap.doorTile.y;
+            this.targetting = 'door';
         }
         // target corner when patrolling
         else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
             this.targetTile.x = this.cornerTile.x;
             this.targetTile.y = this.cornerTile.y;
+            this.targetting = 'corner';
         }
         // use custom function for each ghost when in attack mode
         else
@@ -1181,7 +1204,7 @@ Player.prototype.setNextDir = function(nextDirEnum) {
 
 // gets the number of steps to move in this frame
 Player.prototype.getNumSteps = function() {
-    if (this.speedHack)
+    if (this.doubleSpeed)
         return 2;
 
     var pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
@@ -1293,51 +1316,6 @@ pacman.color = "#FFFF00";
 // order at which they appear in original arcade memory
 // (suggests drawing/update order)
 var actors = [blinky, pinky, inky, clyde, pacman];
-
-// targetting schemes
-
-blinky.setTarget = function() {
-    // directly target pacman
-    this.targetTile.x = pacman.tile.x;
-    this.targetTile.y = pacman.tile.y;
-};
-pinky.setTarget = function() {
-    // target four tiles ahead of pacman
-    this.targetTile.x = pacman.tile.x + 4*pacman.dir.x;
-    this.targetTile.y = pacman.tile.y + 4*pacman.dir.y;
-};
-inky.setTarget = function() {
-    // target twice the distance from blinky to two tiles ahead of pacman
-    var px = pacman.tile.x + 2*pacman.dir.x;
-    var py = pacman.tile.y + 2*pacman.dir.y;
-    this.targetTile.x = blinky.tile.x + 2*(px - blinky.tile.x);
-    this.targetTile.y = blinky.tile.y + 2*(py - blinky.tile.y);
-};
-clyde.setTarget = function() {
-    // target pacman if >=8 tiles away, otherwise go home
-    var dx = pacman.tile.x - this.tile.x;
-    var dy = pacman.tile.y - this.tile.y;
-    var dist = dx*dx+dy*dy;
-    if (dist >= 64) {
-        this.targetTile.x = pacman.tile.x;
-        this.targetTile.y = pacman.tile.y;
-    }
-    else {
-        this.targetTile.x = this.cornerTile.x;
-        this.targetTile.y = this.cornerTile.y;
-    }
-};
-pacman.setTarget = function() {
-    // target twice the distance from pinky to pacman or target pinky
-    if (blinky.mode == GHOST_GOING_HOME || blinky.scared) {
-        this.targetTile.x = pinky.tile.x;
-        this.targetTile.y = pinky.tile.y;
-    }
-    else {
-        this.targetTile.x = pinky.tile.x + 2*(pacman.tile.x-pinky.tile.x);
-        this.targetTile.y = pinky.tile.y + 2*(pacman.tile.y-pinky.tile.y);
-    }
-};
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander
 
@@ -1988,6 +1966,7 @@ var readyRestartState = {
 
 // state when playing the game
 var playState = {
+    drawSights: false,
     init: function() { },
     draw: function() {
         screen.blitMap();
@@ -1997,6 +1976,7 @@ var playState = {
         screen.renderer.drawScore();
         screen.renderer.drawFruit();
         screen.renderer.drawActors();
+        screen.renderer.drawTargets();
     },
     isPacmanCollide: function() {
         // test pacman's tile collision against each ghost

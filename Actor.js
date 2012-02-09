@@ -23,6 +23,7 @@ var Actor = function() {
 
     // current frame count
     this.frames = 0;        // frame count
+    this.steps = 0;
 };
 
 // reset to initial position and direction
@@ -30,6 +31,7 @@ Actor.prototype.reset = function() {
     this.setDir(this.startDirEnum);
     this.setPos(this.startPixel.x, this.startPixel.y);
     this.frames = 0;
+    this.steps = 0;
     this.targetting = false;
 };
 
@@ -133,7 +135,7 @@ Actor.prototype.update = function(j) {
     if (j >= numSteps) 
         return;
 
-    this.step();
+    this.steps += this.step();
     this.steer();
 };
 

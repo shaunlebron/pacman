@@ -30,11 +30,11 @@ var game = (function(){
             this.state.init();
         },
         addScore: function(p) {
+            if (this.score < 10000 && this.score+p >= 10000)
+                this.extraLives++;
             this.score += p;
             if (this.score > this.highScore)
                 this.highScore = this.score;
-            if (this.score == 10000)
-                this.extraLives++;
         },
         tick: (function(){
             var nextFrameTime = (new Date).getTime();

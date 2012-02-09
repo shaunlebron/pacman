@@ -74,6 +74,7 @@ Player.prototype.step = (function(){
         this.pixel[b] += sign(this.distToMid[b]);
 
         this.commitPos();
+        return stop ? 0 : 1;
     };
 })();
 

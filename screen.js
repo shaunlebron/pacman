@@ -96,8 +96,8 @@ var screen = (function() {
                 }
             };
         };
-        addRadio(fieldset, 'render', 'minimal',         makeSwitchRenderer(0), true);
-        addRadio(fieldset, 'render', 'arcade (w.i.p.)', makeSwitchRenderer(1));
+        addRadio(fieldset, 'render', 'minimal',         makeSwitchRenderer(0));
+        addRadio(fieldset, 'render', 'arcade', makeSwitchRenderer(1),true);
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -177,7 +177,7 @@ var screen = (function() {
             ];
 
             // set current renderer
-            this.renderer = this.renderers[0];
+            this.renderer = this.renderers[1];
         },
         switchRenderer: function(i) {
             this.renderer = this.renderers[i];

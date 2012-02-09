@@ -432,7 +432,7 @@ renderers.Arcade = function(ctx,bgCtx) {
     renderers.Common.call(this,ctx,bgCtx);
 
     this.messageRow = 20;
-    this.pelletSize = midTile.x;
+    this.pelletSize = 2;
     this.energizerSize = tileSize;
 
     this.backColor = "#000";
@@ -504,9 +504,18 @@ renderers.Arcade.prototype = {
     // draw the extra lives indicator
     drawExtraLives: function() {
         var i;
-        this.ctx.fillStyle = "rgba(255,255,0,0.6)";
-        for (i=0; i<game.extraLives; i++)
-            this.drawCenterPixelSq(this.ctx, (2*i+3)*tileSize, (tileMap.numRows-1)*tileSize,this.actorSize);
+        this.ctx.fillStyle = pacman.color;
+
+        this.ctx.save();
+        this.ctx.translate(3*tileSize, (tileMap.numRows-1)*tileSize);
+        this.ctx.beginPath();
+        for (i=0; i<game.extraLives; i++) {
+            addPacmanBody(this.ctx, DIR_RIGHT, 1);
+            this.ctx.translate(2*tileSize,0);
+        }
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.restore();
     },
 
     // draw the current level indicator
@@ -519,7 +528,223 @@ renderers.Arcade.prototype = {
             this.ctx.fillRect((tileMap.numCols-2)*tileSize - i*2*w, (tileMap.numRows-1)*tileSize-h/2, w, h);
     },
 
+    // draw ghost
+    drawGhost: function(g) {
+        if (g.mode == GHOST_EATEN)
+            return;
+        var color = g.color;
+        if (g.scared)
+            color = energizer.isFlash() ? "#FFF" : "#00F";
+        else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
+            color = "rgba(255,255,255,0)";
+
+        this.ctx.save();
+        this.ctx.fillStyle = color;
+        this.ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
+        this.ctx.beginPath();
+        addGhostHead(this.ctx);
+        if (Math.floor(g.steps/2) % 2 == 0)
+            addGhostFeet1(this.ctx);
+        else
+            addGhostFeet2(this.ctx);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        if (g.scared)
+            addScaredGhostFace(this.ctx, energizer.isFlash());
+        else
+            addGhostEyes(this.ctx,g.dirEnum);
+
+        this.ctx.restore();
+    },
+
+    // draw pacman
+    drawPacman: function(scale, opacity) {
+        if (scale == undefined) scale = 1;
+        if (opacity == undefined) opacity = 1;
+        this.ctx.save();
+        this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
+        this.ctx.beginPath();
+        addPacmanBody(this.ctx, pacman.dirEnum, Math.floor(pacman.steps/2)%4);
+        this.ctx.closePath();
+        this.ctx.fillStyle = "rgba(255,255,0,"+opacity+")"
+        this.ctx.fill();
+        this.ctx.restore();
+    },
+
+    // draw energizer items on foreground
+    drawEnergizers: function() {
+        this.ctx.fillStyle = this.energizerColor;
+        var e;
+        var i;
+        this.ctx.beginPath();
+        for (i=0; i<tileMap.numEnergizers; i++) {
+            e = tileMap.energizers[i];
+            if (tileMap.currentTiles[e.x+e.y*tileMap.numCols] == 'o') {
+                this.ctx.moveTo(e.x,e.y);
+                this.ctx.arc(e.x*tileSize+midTile.x,e.y*tileSize+midTile.y,this.energizerSize/2,0,Math.PI*2);
+            }
+        }
+        this.ctx.closePath();
+        this.ctx.fill();
+    },
+
 };
+
+var addGhostHead = (function() {
+
+    var coords = [
+        0,6,
+        1,3,
+        2,2,
+        3,1,
+        4,1,
+        5,0,
+        8,0,
+        9,1,
+        10,1,
+        11,2,
+        12,3,
+        13,6,
+    ];
+
+    return function(ctx) {
+        var i;
+        ctx.moveTo(coords[0],coords[1]);
+        for (i=2; i<coords.length; i+=2)
+            ctx.lineTo(coords[i],coords[i+1]);
+    };
+})();
+
+var addGhostFeet1 = (function(){
+    var coords = [
+        13,13,
+        11,11,
+        9,13,
+        8,13,
+        8,11,
+        5,11,
+        5,13,
+        4,13,
+        2,11,
+        0,13,
+    ];
+
+    return function(ctx) {
+        var i;
+        for (i=0; i<coords.length; i+=2)
+            ctx.lineTo(coords[i],coords[i+1]);
+    };
+
+})();
+
+var addGhostFeet2 = (function(){
+    var coords = [
+        13,12,
+        12,13,
+        11,13,
+        9,11,
+        7,13,
+        6,13,
+        4,11,
+        2,13,
+        1,13,
+        0,12,
+    ];
+
+    return function(ctx) {
+        var i;
+        for (i=0; i<coords.length; i+=2)
+            ctx.lineTo(coords[i],coords[i+1]);
+    };
+
+})();
+
+var addGhostEyes = (function(){
+    var eyeball = [
+        1,0,
+        2,0,
+        3,1,
+        3,3,
+        2,4,
+        1,4,
+        0,3,
+        0,1,
+    ];
+    var pupil = [
+        0,0,
+        1,0,
+        1,1,
+        0,1,
+    ];
+
+    return function(ctx,dirEnum) {
+        var i;
+
+        ctx.save();
+        ctx.translate(2,3);
+
+        if (dirEnum == DIR_LEFT) ctx.translate(-1,0);
+        else if (dirEnum == DIR_RIGHT) ctx.translate(1,0);
+        else if (dirEnum == DIR_UP) ctx.translate(0,-1);
+        else if (dirEnum == DIR_DOWN) ctx.translate(0,1);
+
+        ctx.fillStyle = "#FFF";
+        ctx.fillRect(1,0,2,5);
+        ctx.fillRect(0,1,4,3);
+        ctx.translate(6,0);
+        ctx.fillRect(1,0,2,5);
+        ctx.fillRect(0,1,4,3);
+
+        if (dirEnum == DIR_LEFT) ctx.translate(0,2);
+        else if (dirEnum == DIR_RIGHT) ctx.translate(2,2);
+        else if (dirEnum == DIR_UP) ctx.translate(1,0);
+        else if (dirEnum == DIR_DOWN) ctx.translate(1,3);
+
+        ctx.fillStyle = "#00F";
+        ctx.fillRect(0,0,2,2);
+        ctx.translate(-6,0);
+        ctx.fillRect(0,0,2,2);
+
+        ctx.restore();
+    };
+})();
+
+var addScaredGhostFace = (function(){
+
+    return function(ctx,flash) {
+        ctx.fillStyle = flash ? "#F00" : "#FF0";
+        ctx.fillRect(4,5,2,2);
+        ctx.fillRect(8,5,2,2);
+
+        ctx.fillRect(1,10,1,1);
+        ctx.fillRect(12,10,1,1);
+        ctx.fillRect(2,9,2,1);
+        ctx.fillRect(6,9,2,1);
+        ctx.fillRect(10,9,2,1);
+        ctx.fillRect(4,10,2,1);
+        ctx.fillRect(8,10,2,1);
+    };
+})();
+
+var addPacmanBody = (function(){
+    return function(ctx,dirEnum,frame) {
+        ctx.save();
+        if (frame == 3) frame = 1;
+
+        var a = Math.PI/2;
+        if (dirEnum == DIR_UP) ctx.rotate(3*a);
+        else if (dirEnum == DIR_RIGHT) ctx.rotate(0);
+        else if (dirEnum == DIR_DOWN) ctx.rotate(a);
+        else if (dirEnum == DIR_LEFT) ctx.rotate(2*a);
+
+        ctx.moveTo(-3,0);
+        a = frame*Math.PI/6;
+        ctx.arc(0,0,6,a,2*Math.PI-a);
+
+        ctx.restore();
+    };
+})();
 //////////////////////////////////////////////////////////////////////////////////////
 // Screen
 
@@ -618,8 +843,8 @@ var screen = (function() {
                 }
             };
         };
-        addRadio(fieldset, 'render', 'minimal',         makeSwitchRenderer(0), true);
-        addRadio(fieldset, 'render', 'arcade (w.i.p.)', makeSwitchRenderer(1));
+        addRadio(fieldset, 'render', 'minimal',         makeSwitchRenderer(0));
+        addRadio(fieldset, 'render', 'arcade', makeSwitchRenderer(1),true);
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -699,7 +924,7 @@ var screen = (function() {
             ];
 
             // set current renderer
-            this.renderer = this.renderers[0];
+            this.renderer = this.renderers[1];
         },
         switchRenderer: function(i) {
             this.renderer = this.renderers[i];
@@ -739,6 +964,7 @@ var Actor = function() {
 
     // current frame count
     this.frames = 0;        // frame count
+    this.steps = 0;
 };
 
 // reset to initial position and direction
@@ -746,6 +972,7 @@ Actor.prototype.reset = function() {
     this.setDir(this.startDirEnum);
     this.setPos(this.startPixel.x, this.startPixel.y);
     this.frames = 0;
+    this.steps = 0;
     this.targetting = false;
 };
 
@@ -849,7 +1076,7 @@ Actor.prototype.update = function(j) {
     if (j >= numSteps) 
         return;
 
-    this.step();
+    this.steps += this.step();
     this.steer();
 };
 
@@ -1010,6 +1237,7 @@ Ghost.prototype.onEaten = function() {
 // move forward one step
 Ghost.prototype.step = function() {
     this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
+    return 1;
 };
 
 // ghost home-specific path steering
@@ -1236,6 +1464,7 @@ Player.prototype.step = (function(){
         this.pixel[b] += sign(this.distToMid[b]);
 
         this.commitPos();
+        return stop ? 0 : 1;
     };
 })();
 
@@ -1872,11 +2101,11 @@ var game = (function(){
             this.state.init();
         },
         addScore: function(p) {
+            if (this.score < 10000 && this.score+p >= 10000)
+                this.extraLives++;
             this.score += p;
             if (this.score > this.highScore)
                 this.highScore = this.score;
-            if (this.score == 10000)
-                this.extraLives++;
         },
         tick: (function(){
             var nextFrameTime = (new Date).getTime();
@@ -1991,7 +2220,7 @@ var menuState = (function() {
         draw: function() {
             screen.blitMap();
             screen.renderer.drawScore();
-            screen.renderer.drawMessage("A Pac-Man Remake","#FFF");
+            screen.renderer.drawMessage("Pac-Man","#FFF");
             screen.renderer.drawActors();
         },
         update: function() {

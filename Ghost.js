@@ -104,6 +104,7 @@ Ghost.prototype.onEaten = function() {
 // move forward one step
 Ghost.prototype.step = function() {
     this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
+    return 1;
 };
 
 // ghost home-specific path steering

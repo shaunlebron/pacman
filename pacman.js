@@ -2221,7 +2221,7 @@ var menuState = (function() {
         draw: function() {
             screen.blitMap();
             screen.renderer.drawScore();
-            screen.renderer.drawMessage("Pac-Man","#FFF");
+            screen.renderer.drawMessage("Pac-Man","#FF0");
             screen.renderer.drawActors();
         },
         update: function() {
@@ -2888,18 +2888,18 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________" +
         "____________________________" +
-        "________............________" +
-        "________.|||||.||||.________" +
-        "________.|||||.||||.________" +
-        "________.||......||.________" +
-        "________.||.____.||.________" +
-        "________....____.||.________" +
-        "________.||.____....________" +
-        "________.||.____.||.________" +
-        "________.||......||.________" +
-        "________.||||.|||||.________" +
-        "________.||||.|||||.________" +
-        "________............________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "||||||||||||||||||||||||||||" +
+        "                            " +
+        "||||||||||||||||||||||||||||" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
+        "____________________________" +
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -2921,13 +2921,13 @@ var MAP_MSPACMAN4 = 5;
 
     menuMap.onLoad = function() {
 
-        var delay = 0;
+        var row = 12;
 
         ghostCommander.reset();
         blinky.startDirEnum = DIR_LEFT;
         blinky.startPixel = {
-            x: 15*tileSize+midTile.x - delay,
-            y: 6*tileSize+midTile.y
+            x: 19*tileSize,
+            y: row*tileSize+midTile.y
         };
         blinky.cornerTile = {
             x: this.numCols-1-2,
@@ -2935,10 +2935,10 @@ var MAP_MSPACMAN4 = 5;
         };
         blinky.startMode = GHOST_OUTSIDE;
 
-        pinky.startDirEnum = DIR_DOWN;
+        pinky.startDirEnum = DIR_LEFT;
         pinky.startPixel = {
-            x: 8*tileSize + midTile.x,
-            y: 10*tileSize + midTile.y - delay*2,
+            x: 21*tileSize,
+            y: row*tileSize + midTile.y,
         };
         pinky.cornerTile = {
             x: 2,
@@ -2946,10 +2946,10 @@ var MAP_MSPACMAN4 = 5;
         };
         pinky.startMode = GHOST_OUTSIDE;
 
-        clyde.startDirEnum = DIR_RIGHT;
+        clyde.startDirEnum = DIR_LEFT;
         clyde.startPixel = {
-            x: 11*tileSize+midTile.x - delay*3,
-            y: 17*tileSize+midTile.y,
+            x: 25*tileSize,
+            y: row*tileSize+midTile.y,
         };
         clyde.cornerTile = {
             x: 8,
@@ -2957,10 +2957,10 @@ var MAP_MSPACMAN4 = 5;
         };
         clyde.startMode = GHOST_OUTSIDE;
 
-        inky.startDirEnum = DIR_UP;
+        inky.startDirEnum = DIR_LEFT;
         inky.startPixel = {
-            x: 19*tileSize + midTile.x,
-            y: 13*tileSize + midTile.y + delay*4,
+            x: 23*tileSize,
+            y: row*tileSize + midTile.y,
         };
         inky.cornerTile = {
             x: this.numCols-1,
@@ -2968,12 +2968,9 @@ var MAP_MSPACMAN4 = 5;
         };
         inky.startMode = GHOST_OUTSIDE;
 
-
-        pacman.startDirEnum = DIR_UP;
-        pacman.startPixel = {
-            x: tileSize*this.numCols/2,
-            y: 12*tileSize,
-        };
+        pacman.startPixel = { 
+            x:14*tileSize+midTile.x, 
+            y:-26*tileSize+midTile.y }; // offscreen
     };
     menuMap.color = "#777";
 

@@ -94,7 +94,7 @@ var menuState = (function() {
         draw: function() {
             screen.blitMap();
             screen.renderer.drawScore();
-            screen.renderer.drawMessage("Pac-Man","#FFF");
+            screen.renderer.drawMessage("Pac-Man","#FF0");
             screen.renderer.drawActors();
         },
         update: function() {

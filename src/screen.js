@@ -9,7 +9,7 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 1.65;
+    var scale = 1;
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");

@@ -1,3 +1,4 @@
+(function(){
 //////////////////////////////////////////////////////////////////////////////////////
 // direction enums (in clockwise order)
 var DIR_UP = 0;
@@ -756,7 +757,7 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 1.65;
+    var scale = 1;
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");
@@ -2083,14 +2084,14 @@ var game = (function(){
         extraLives:0,
         level:1,
         restart: function() {
-            this.switchState(menuState, 60);
+            this.switchState(menuState);
             this.resume();
         },
         pause: function() {
             clearInterval(interval);
         },
         resume: function() {
-            interval = setInterval("game.tick()", framePeriod);
+            interval = setInterval(function(){game.tick();}, framePeriod);
         },
         switchMap: function(map) {
             tileMap = maps[map];
@@ -2995,3 +2996,4 @@ window.onload = function() {
     screen.create();
     game.restart();
 };
+})();

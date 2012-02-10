@@ -224,18 +224,6 @@ renderers.Common.prototype = {
                 actors[i].drawTarget(this.ctx);
     },
 
-    // draw energizer items on foreground
-    drawEnergizers: function() {
-        this.ctx.fillStyle = this.energizerColor;
-        var e;
-        var i;
-        for (i=0; i<tileMap.numEnergizers; i++) {
-            e = tileMap.energizers[i];
-            if (tileMap.currentTiles[e.x+e.y*tileMap.numCols] == 'o')
-                this.drawCenterTileSq(this.ctx,e.x,e.y,this.energizerSize);
-        }
-    },
-
     drawFadeIn: function(t) {
         this.ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
         this.ctx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
@@ -292,37 +280,6 @@ renderers.Common.prototype = {
             for (i=3; i>=0; i--) 
                 this.drawGhost(actors[i]);
         }
-    },
-
-    // draw pacman
-    drawPacman: function(scale, opacity) {
-        if (scale == undefined) scale = 1;
-        if (opacity == undefined) opacity = 1;
-        this.ctx.fillStyle = "rgba(255,255,0,"+opacity+")";
-        this.drawCenterPixelSq(this.ctx, pacman.pixel.x, pacman.pixel.y, this.actorSize*scale);
-    },
-
-    // draw dying pacman animation (with 0<=t<=1)
-    drawDyingPacman: function(t) {
-        this.drawPacman(1-t);
-    },
-
-    // draw exploding pacman animation (with 0<=t<=1)
-    drawExplodingPacman: function(t) {
-        this.drawPacman(t,1-t);
-    },
-
-    // draw ghost
-    drawGhost: function(g) {
-        if (g.mode == GHOST_EATEN)
-            return;
-        var color = g.color;
-        if (g.scared)
-            color = energizer.isFlash() ? "#FFF" : "#00F";
-        else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
-            color = "rgba(255,255,255,0.3)";
-        this.ctx.fillStyle = color;
-        this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
     },
 
     // draw fruit
@@ -423,6 +380,50 @@ renderers.Simple.prototype = {
             this.ctx.fillRect((tileMap.numCols-2)*tileSize - i*2*w, (tileMap.numRows-2)*tileSize+midTile.y-h/2, w, h);
     },
 
+    // draw energizer items on foreground
+    drawEnergizers: function() {
+        this.ctx.fillStyle = this.energizerColor;
+        var e;
+        var i;
+        for (i=0; i<tileMap.numEnergizers; i++) {
+            e = tileMap.energizers[i];
+            if (tileMap.currentTiles[e.x+e.y*tileMap.numCols] == 'o')
+                this.drawCenterTileSq(this.ctx,e.x,e.y,this.energizerSize);
+        }
+    },
+
+    // draw pacman
+    drawPacman: function(scale, opacity) {
+        if (scale == undefined) scale = 1;
+        if (opacity == undefined) opacity = 1;
+        this.ctx.fillStyle = "rgba(255,255,0,"+opacity+")";
+        this.drawCenterPixelSq(this.ctx, pacman.pixel.x, pacman.pixel.y, this.actorSize*scale);
+    },
+
+    // draw dying pacman animation (with 0<=t<=1)
+    drawDyingPacman: function(t) {
+        this.drawPacman(1-t);
+    },
+
+    // draw exploding pacman animation (with 0<=t<=1)
+    drawExplodingPacman: function(t) {
+        this.drawPacman(t,1-t);
+    },
+
+    // draw ghost
+    drawGhost: function(g) {
+        if (g.mode == GHOST_EATEN)
+            return;
+        var color = g.color;
+        if (g.scared)
+            color = energizer.isFlash() ? "#FFF" : "#00F";
+        else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
+            color = "rgba(255,255,255,0.3)";
+        this.ctx.fillStyle = color;
+        this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
+    },
+
+
 };
 
 
@@ -511,7 +512,7 @@ renderers.Arcade.prototype = {
         this.ctx.translate(3*tileSize, (tileMap.numRows-1)*tileSize);
         this.ctx.beginPath();
         for (i=0; i<game.extraLives; i++) {
-            addPacmanBody(this.ctx, DIR_RIGHT, 1);
+            addPacmanBody(this.ctx, DIR_RIGHT, Math.PI/6);
             this.ctx.translate(2*tileSize,0);
         }
         this.ctx.closePath();
@@ -560,15 +561,42 @@ renderers.Arcade.prototype = {
     },
 
     // draw pacman
-    drawPacman: function(scale, opacity) {
-        if (scale == undefined) scale = 1;
-        if (opacity == undefined) opacity = 1;
+    drawPacman: function() {
         this.ctx.save();
         this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
         this.ctx.beginPath();
-        addPacmanBody(this.ctx, pacman.dirEnum, Math.floor(pacman.steps/2)%4);
+        var frame = Math.floor(pacman.steps/2)%4;
+        if (frame == 3) frame = 1;
+        addPacmanBody(this.ctx, pacman.dirEnum, frame*Math.PI/6);
         this.ctx.closePath();
-        this.ctx.fillStyle = "rgba(255,255,0,"+opacity+")"
+        this.ctx.fillStyle = pacman.color;
+        this.ctx.fill();
+        this.ctx.restore();
+    },
+
+    // draw dying pacman animation (with 0<=t<=1)
+    drawDyingPacman: function(t) {
+        this.ctx.save();
+        this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
+        this.ctx.beginPath();
+        var frame = Math.floor(pacman.steps/2)%4;
+        if (frame == 3) frame = 1;
+        var a = frame*Math.PI/6;
+        addPacmanBody(this.ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
+        this.ctx.closePath();
+        this.ctx.fillStyle = pacman.color;
+        this.ctx.fill();
+        this.ctx.restore();
+    },
+
+    // draw exploding pacman animation (with 0<=t<=1)
+    drawExplodingPacman: function(t) {
+        this.ctx.save();
+        this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
+        this.ctx.beginPath();
+        addPacmanBody(this.ctx, pacman.dirEnum, 0, 0, t,-3);
+        this.ctx.closePath();
+        this.ctx.fillStyle = "rgba(255,255,0," + (1-t) + ")";
         this.ctx.fill();
         this.ctx.restore();
     },
@@ -661,91 +689,69 @@ var addGhostFeet2 = (function(){
 
 })();
 
-var addGhostEyes = (function(){
-    var eyeball = [
-        1,0,
-        2,0,
-        3,1,
-        3,3,
-        2,4,
-        1,4,
-        0,3,
-        0,1,
-    ];
-    var pupil = [
-        0,0,
-        1,0,
-        1,1,
-        0,1,
-    ];
+var addGhostEyes = function(ctx,dirEnum){
+    var i;
 
-    return function(ctx,dirEnum) {
-        var i;
+    ctx.save();
+    ctx.translate(2,3);
 
-        ctx.save();
-        ctx.translate(2,3);
+    if (dirEnum == DIR_LEFT) ctx.translate(-1,0);
+    else if (dirEnum == DIR_RIGHT) ctx.translate(1,0);
+    else if (dirEnum == DIR_UP) ctx.translate(0,-1);
+    else if (dirEnum == DIR_DOWN) ctx.translate(0,1);
 
-        if (dirEnum == DIR_LEFT) ctx.translate(-1,0);
-        else if (dirEnum == DIR_RIGHT) ctx.translate(1,0);
-        else if (dirEnum == DIR_UP) ctx.translate(0,-1);
-        else if (dirEnum == DIR_DOWN) ctx.translate(0,1);
+    ctx.fillStyle = "#FFF";
+    ctx.fillRect(1,0,2,5);
+    ctx.fillRect(0,1,4,3);
+    ctx.translate(6,0);
+    ctx.fillRect(1,0,2,5);
+    ctx.fillRect(0,1,4,3);
 
-        ctx.fillStyle = "#FFF";
-        ctx.fillRect(1,0,2,5);
-        ctx.fillRect(0,1,4,3);
-        ctx.translate(6,0);
-        ctx.fillRect(1,0,2,5);
-        ctx.fillRect(0,1,4,3);
+    if (dirEnum == DIR_LEFT) ctx.translate(0,2);
+    else if (dirEnum == DIR_RIGHT) ctx.translate(2,2);
+    else if (dirEnum == DIR_UP) ctx.translate(1,0);
+    else if (dirEnum == DIR_DOWN) ctx.translate(1,3);
 
-        if (dirEnum == DIR_LEFT) ctx.translate(0,2);
-        else if (dirEnum == DIR_RIGHT) ctx.translate(2,2);
-        else if (dirEnum == DIR_UP) ctx.translate(1,0);
-        else if (dirEnum == DIR_DOWN) ctx.translate(1,3);
+    ctx.fillStyle = "#00F";
+    ctx.fillRect(0,0,2,2);
+    ctx.translate(-6,0);
+    ctx.fillRect(0,0,2,2);
 
-        ctx.fillStyle = "#00F";
-        ctx.fillRect(0,0,2,2);
-        ctx.translate(-6,0);
-        ctx.fillRect(0,0,2,2);
+    ctx.restore();
+};
 
-        ctx.restore();
-    };
-})();
+var addScaredGhostFace = function(ctx,flash){
+    ctx.fillStyle = flash ? "#F00" : "#FF0";
+    ctx.fillRect(4,5,2,2);
+    ctx.fillRect(8,5,2,2);
 
-var addScaredGhostFace = (function(){
+    ctx.fillRect(1,10,1,1);
+    ctx.fillRect(12,10,1,1);
+    ctx.fillRect(2,9,2,1);
+    ctx.fillRect(6,9,2,1);
+    ctx.fillRect(10,9,2,1);
+    ctx.fillRect(4,10,2,1);
+    ctx.fillRect(8,10,2,1);
+};
 
-    return function(ctx,flash) {
-        ctx.fillStyle = flash ? "#F00" : "#FF0";
-        ctx.fillRect(4,5,2,2);
-        ctx.fillRect(8,5,2,2);
+var addPacmanBody = function(ctx,dirEnum,angle,mouthShift,scale,centerShift) {
+    if (mouthShift == undefined) mouthShift = 0;
+    if (centerShift == undefined) centerShift = 0;
+    if (scale == undefined) scale = 1;
 
-        ctx.fillRect(1,10,1,1);
-        ctx.fillRect(12,10,1,1);
-        ctx.fillRect(2,9,2,1);
-        ctx.fillRect(6,9,2,1);
-        ctx.fillRect(10,9,2,1);
-        ctx.fillRect(4,10,2,1);
-        ctx.fillRect(8,10,2,1);
-    };
-})();
+    ctx.save();
 
-var addPacmanBody = (function(){
-    return function(ctx,dirEnum,frame) {
-        ctx.save();
-        if (frame == 3) frame = 1;
+    var d90 = Math.PI/2;
+    if (dirEnum == DIR_UP) ctx.rotate(3*d90);
+    else if (dirEnum == DIR_RIGHT) ctx.rotate(0);
+    else if (dirEnum == DIR_DOWN) ctx.rotate(d90);
+    else if (dirEnum == DIR_LEFT) ctx.rotate(2*d90);
 
-        var a = Math.PI/2;
-        if (dirEnum == DIR_UP) ctx.rotate(3*a);
-        else if (dirEnum == DIR_RIGHT) ctx.rotate(0);
-        else if (dirEnum == DIR_DOWN) ctx.rotate(a);
-        else if (dirEnum == DIR_LEFT) ctx.rotate(2*a);
+    ctx.moveTo(-3+mouthShift,0);
+    ctx.arc(centerShift,0,6*scale,angle,2*Math.PI-angle);
 
-        ctx.moveTo(-3,0);
-        a = frame*Math.PI/6;
-        ctx.arc(0,0,6,a,2*Math.PI-a);
-
-        ctx.restore();
-    };
-})();
+    ctx.restore();
+};
 //////////////////////////////////////////////////////////////////////////////////////
 // Screen
 
@@ -945,12 +951,6 @@ var screen = (function() {
 // It provides everything for updating position and direction.
 
 // "Ghost" and "Player" inherit from this "Actor"
-
-// DEPENDENCIES:
-// direction utility
-// tileMap.teleport()
-// tileMap.isTunnelTile()
-// tileMap.getSurroundingTiles()
 
 // Actor constructor
 var Actor = function() {

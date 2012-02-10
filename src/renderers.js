@@ -57,18 +57,6 @@ renderers.Common.prototype = {
                 actors[i].drawTarget(this.ctx);
     },
 
-    // draw energizer items on foreground
-    drawEnergizers: function() {
-        this.ctx.fillStyle = this.energizerColor;
-        var e;
-        var i;
-        for (i=0; i<tileMap.numEnergizers; i++) {
-            e = tileMap.energizers[i];
-            if (tileMap.currentTiles[e.x+e.y*tileMap.numCols] == 'o')
-                this.drawCenterTileSq(this.ctx,e.x,e.y,this.energizerSize);
-        }
-    },
-
     drawFadeIn: function(t) {
         this.ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
         this.ctx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
@@ -125,37 +113,6 @@ renderers.Common.prototype = {
             for (i=3; i>=0; i--) 
                 this.drawGhost(actors[i]);
         }
-    },
-
-    // draw pacman
-    drawPacman: function(scale, opacity) {
-        if (scale == undefined) scale = 1;
-        if (opacity == undefined) opacity = 1;
-        this.ctx.fillStyle = "rgba(255,255,0,"+opacity+")";
-        this.drawCenterPixelSq(this.ctx, pacman.pixel.x, pacman.pixel.y, this.actorSize*scale);
-    },
-
-    // draw dying pacman animation (with 0<=t<=1)
-    drawDyingPacman: function(t) {
-        this.drawPacman(1-t);
-    },
-
-    // draw exploding pacman animation (with 0<=t<=1)
-    drawExplodingPacman: function(t) {
-        this.drawPacman(t,1-t);
-    },
-
-    // draw ghost
-    drawGhost: function(g) {
-        if (g.mode == GHOST_EATEN)
-            return;
-        var color = g.color;
-        if (g.scared)
-            color = energizer.isFlash() ? "#FFF" : "#00F";
-        else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
-            color = "rgba(255,255,255,0.3)";
-        this.ctx.fillStyle = color;
-        this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
     },
 
     // draw fruit
@@ -256,6 +213,50 @@ renderers.Simple.prototype = {
             this.ctx.fillRect((tileMap.numCols-2)*tileSize - i*2*w, (tileMap.numRows-2)*tileSize+midTile.y-h/2, w, h);
     },
 
+    // draw energizer items on foreground
+    drawEnergizers: function() {
+        this.ctx.fillStyle = this.energizerColor;
+        var e;
+        var i;
+        for (i=0; i<tileMap.numEnergizers; i++) {
+            e = tileMap.energizers[i];
+            if (tileMap.currentTiles[e.x+e.y*tileMap.numCols] == 'o')
+                this.drawCenterTileSq(this.ctx,e.x,e.y,this.energizerSize);
+        }
+    },
+
+    // draw pacman
+    drawPacman: function(scale, opacity) {
+        if (scale == undefined) scale = 1;
+        if (opacity == undefined) opacity = 1;
+        this.ctx.fillStyle = "rgba(255,255,0,"+opacity+")";
+        this.drawCenterPixelSq(this.ctx, pacman.pixel.x, pacman.pixel.y, this.actorSize*scale);
+    },
+
+    // draw dying pacman animation (with 0<=t<=1)
+    drawDyingPacman: function(t) {
+        this.drawPacman(1-t);
+    },
+
+    // draw exploding pacman animation (with 0<=t<=1)
+    drawExplodingPacman: function(t) {
+        this.drawPacman(t,1-t);
+    },
+
+    // draw ghost
+    drawGhost: function(g) {
+        if (g.mode == GHOST_EATEN)
+            return;
+        var color = g.color;
+        if (g.scared)
+            color = energizer.isFlash() ? "#FFF" : "#00F";
+        else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
+            color = "rgba(255,255,255,0.3)";
+        this.ctx.fillStyle = color;
+        this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
+    },
+
+
 };
 
 
@@ -344,7 +345,7 @@ renderers.Arcade.prototype = {
         this.ctx.translate(3*tileSize, (tileMap.numRows-1)*tileSize);
         this.ctx.beginPath();
         for (i=0; i<game.extraLives; i++) {
-            addPacmanBody(this.ctx, DIR_RIGHT, 1);
+            addPacmanBody(this.ctx, DIR_RIGHT, Math.PI/6);
             this.ctx.translate(2*tileSize,0);
         }
         this.ctx.closePath();
@@ -393,15 +394,42 @@ renderers.Arcade.prototype = {
     },
 
     // draw pacman
-    drawPacman: function(scale, opacity) {
-        if (scale == undefined) scale = 1;
-        if (opacity == undefined) opacity = 1;
+    drawPacman: function() {
         this.ctx.save();
         this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
         this.ctx.beginPath();
-        addPacmanBody(this.ctx, pacman.dirEnum, Math.floor(pacman.steps/2)%4);
+        var frame = Math.floor(pacman.steps/2)%4;
+        if (frame == 3) frame = 1;
+        addPacmanBody(this.ctx, pacman.dirEnum, frame*Math.PI/6);
         this.ctx.closePath();
-        this.ctx.fillStyle = "rgba(255,255,0,"+opacity+")"
+        this.ctx.fillStyle = pacman.color;
+        this.ctx.fill();
+        this.ctx.restore();
+    },
+
+    // draw dying pacman animation (with 0<=t<=1)
+    drawDyingPacman: function(t) {
+        this.ctx.save();
+        this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
+        this.ctx.beginPath();
+        var frame = Math.floor(pacman.steps/2)%4;
+        if (frame == 3) frame = 1;
+        var a = frame*Math.PI/6;
+        addPacmanBody(this.ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
+        this.ctx.closePath();
+        this.ctx.fillStyle = pacman.color;
+        this.ctx.fill();
+        this.ctx.restore();
+    },
+
+    // draw exploding pacman animation (with 0<=t<=1)
+    drawExplodingPacman: function(t) {
+        this.ctx.save();
+        this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
+        this.ctx.beginPath();
+        addPacmanBody(this.ctx, pacman.dirEnum, 0, 0, t,-3);
+        this.ctx.closePath();
+        this.ctx.fillStyle = "rgba(255,255,0," + (1-t) + ")";
         this.ctx.fill();
         this.ctx.restore();
     },

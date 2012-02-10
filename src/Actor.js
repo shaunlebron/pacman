@@ -4,12 +4,6 @@
 
 // "Ghost" and "Player" inherit from this "Actor"
 
-// DEPENDENCIES:
-// direction utility
-// tileMap.teleport()
-// tileMap.isTunnelTile()
-// tileMap.getSurroundingTiles()
-
 // Actor constructor
 var Actor = function() {
 

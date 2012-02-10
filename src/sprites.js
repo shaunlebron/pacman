@@ -18,9 +18,12 @@ var addGhostHead = (function() {
 
     return function(ctx) {
         var i;
+        ctx.save();
+        ctx.translate(0.5,0);
         ctx.moveTo(coords[0],coords[1]);
         for (i=2; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+        ctx.restore();
     };
 })();
 
@@ -40,8 +43,11 @@ var addGhostFeet1 = (function(){
 
     return function(ctx) {
         var i;
+        ctx.save();
+        ctx.translate(0.5,0.5);
         for (i=0; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+        ctx.restore();
     };
 
 })();
@@ -62,8 +68,11 @@ var addGhostFeet2 = (function(){
 
     return function(ctx) {
         var i;
+        ctx.save();
+        ctx.translate(0.5,0.5);
         for (i=0; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+        ctx.restore();
     };
 
 })();
@@ -127,7 +136,7 @@ var addPacmanBody = function(ctx,dirEnum,angle,mouthShift,scale,centerShift) {
     else if (dirEnum == DIR_LEFT) ctx.rotate(2*d90);
 
     ctx.moveTo(-3+mouthShift,0);
-    ctx.arc(centerShift,0,6*scale,angle,2*Math.PI-angle);
+    ctx.arc(centerShift,0,6.5*scale,angle,2*Math.PI-angle);
 
     ctx.restore();
 };

@@ -128,8 +128,9 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapPacman.onLoad = onLoad;
-    //mapPacman.color = "#00C";
-    mapPacman.color = "#47b897"; // from Pac-Man Plus
+    //mapPacman.wallColor = "#2121ff";
+    mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
+    mapPacman.pelletColor = "#ffb8ae";
     mapPacman.constrainGhostTurns = function(x,y,openTiles) {
         // prevent ghost from turning up at these tiles
         if ((x == 12 || x == 15) && (y == 14 || y == 26)) {
@@ -176,7 +177,8 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapMsPacman1.onLoad = onLoad;
-    mapMsPacman1.color = "#FFB8AE";
+    mapMsPacman1.wallColor = "#FFB8AE";
+    mapMsPacman1.pelletColor = "#dedeff";
 
     var mapMsPacman2 = new TileMap(28, 36, (
         "____________________________" +
@@ -217,7 +219,8 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapMsPacman2.onLoad = onLoad;
-    mapMsPacman2.color = "#47b8ff";
+    mapMsPacman2.wallColor = "#47b8ff";
+    mapMsPacman2.pelletColor = "#ffff00";
 
     var mapMsPacman3 = new TileMap(28, 36, (
         "____________________________" +
@@ -258,7 +261,8 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapMsPacman3.onLoad = onLoad;
-    mapMsPacman3.color = "#de9751";
+    mapMsPacman3.wallColor = "#de9751";
+    mapMsPacman3.pelletColor = "#ff0000";
 
     var mapMsPacman4 = new TileMap(28, 36, (
         "____________________________" +
@@ -299,7 +303,8 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapMsPacman4.onLoad = onLoad;
-    mapMsPacman4.color = "#2121ff";
+    mapMsPacman4.wallColor = "#2121ff";
+    mapMsPacman4.pelletColor = "#dedeff";
 
     var menuMap = new TileMap(28, 36, (
         "____________________________" +
@@ -392,7 +397,8 @@ var MAP_MSPACMAN4 = 5;
             x:14*tileSize+midTile.x, 
             y:-26*tileSize+midTile.y }; // offscreen
     };
-    menuMap.color = "#777";
+    menuMap.wallColor = "#777";
+    menuMap.pelletColor = "#FFF";
 
     maps = [
         menuMap,

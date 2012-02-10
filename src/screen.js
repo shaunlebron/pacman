@@ -9,17 +9,27 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 1;
+    var scale = 1.5;
+    var smoothScale = true;
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");
 
         // use conventional pacman map size
-        c.width = 28*tileSize*scale;
-        c.height = 36*tileSize*scale;
+        c.width = 28*tileSize;
+        c.height = 36*tileSize;
+        if (smoothScale) {
+            c.width *= scale;
+            c.height *= scale;
+        }
+        else {
+            c.style.width = c.width*scale;
+            c.style.height = c.height*scale;
+        }
 
         var ctx = c.getContext("2d");
-        ctx.scale(scale,scale);
+        if (smoothScale)
+            ctx.scale(scale,scale);
         return c;
     };
 
@@ -36,11 +46,12 @@ var screen = (function() {
             return fieldset;
         };
 
-        var addCheckbox = function(fieldset, caption, onChange) {
+        var addCheckbox = function(fieldset, caption, onChange, on) {
             id++;
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = 'check'+id;
+            checkbox.checked = on;
             checkbox.onchange = function() { onChange(checkbox.checked); };
             fieldset.appendChild(checkbox);
 
@@ -84,6 +95,20 @@ var screen = (function() {
         addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
         addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
         addCheckbox(fieldset, 'double speed', function(on) { pacman.doubleSpeed = on; });
+        form.appendChild(fieldset);
+
+        ///////////////////////////////////////////////////
+        // playback
+        var changeRate = function(n) {
+            game.pause();
+            game.setUpdatesPerSecond(n);
+            game.resume();
+        };
+        fieldset = makeFieldSet('Machine Speed');
+        addRadio(fieldset, 'playback', 'pause', function(on) { if(on) game.pause(); });
+        addRadio(fieldset, 'playback', 'quarter', function(on) { if(on) changeRate(15); });
+        addRadio(fieldset, 'playback', 'half', function(on) { if(on) changeRate(30); });
+        addRadio(fieldset, 'playback', 'normal', function(on) { if(on) changeRate(60); },true);
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -185,9 +210,9 @@ var screen = (function() {
         },
 
         blitMap: function() {
-            ctx.scale(1/scale,1/scale);
+            if (smoothScale) ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
-            ctx.scale(scale,scale);
+            if (smoothScale) ctx.scale(scale,scale);
         },
     };
 })();

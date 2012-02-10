@@ -5,12 +5,16 @@ var game = (function(){
 
     var interval; // used by setInterval and clearInterval to execute the game loop
     var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
+    var nextFrameTime;
 
     return {
         highScore:0,
         score:0,
         extraLives:0,
         level:1,
+        setUpdatesPerSecond: function(ups) {
+            framePeriod = 1000/ups;
+        },
         restart: function() {
             this.switchState(menuState);
             this.resume();
@@ -19,7 +23,8 @@ var game = (function(){
             clearInterval(interval);
         },
         resume: function() {
-            interval = setInterval(function(){game.tick();}, framePeriod);
+            nextFrameTime = (new Date).getTime();
+            interval = setInterval(function(){game.tick();}, 1000/60);
         },
         switchMap: function(map) {
             tileMap = maps[map];
@@ -37,7 +42,6 @@ var game = (function(){
                 this.highScore = this.score;
         },
         tick: (function(){
-            var nextFrameTime = (new Date).getTime();
             var maxFrameSkip = 5;
             return function() {
                 // call update for every frame period that has elapsed

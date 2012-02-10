@@ -181,6 +181,7 @@ renderers.Common = function(ctx, bgCtx) {
 
     this.energizerColor = "#FFF";
     this.pelletColor = "#888";
+    this.scaredGhostColor = "#2121ff";
 
     this.flashLevel = false;
 };
@@ -416,7 +417,7 @@ renderers.Simple.prototype = {
             return;
         var color = g.color;
         if (g.scared)
-            color = energizer.isFlash() ? "#FFF" : "#00F";
+            color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
         else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
             color = "rgba(255,255,255,0.3)";
         this.ctx.fillStyle = color;
@@ -456,7 +457,7 @@ renderers.Arcade.prototype = {
         var tile;
 
         // draw wall tiles
-        this.bgCtx.fillStyle = (this.flashLevel ? this.flashWallColor : tileMap.color);
+        this.bgCtx.fillStyle = (this.flashLevel ? this.flashWallColor : tileMap.wallColor);
         i=0;
         for (y=0; y<tileMap.numRows; y++)
         for (x=0; x<tileMap.numCols; x++) {
@@ -478,7 +479,7 @@ renderers.Arcade.prototype = {
         }
 
         // draw pellet tiles
-        this.bgCtx.fillStyle = this.pelletColor;
+        this.bgCtx.fillStyle = tileMap.pelletColor;
         i=0;
         for (y=0; y<tileMap.numRows; y++)
         for (x=0; x<tileMap.numCols; x++) {
@@ -536,7 +537,7 @@ renderers.Arcade.prototype = {
             return;
         var color = g.color;
         if (g.scared)
-            color = energizer.isFlash() ? "#FFF" : "#00F";
+            color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
         else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
             color = "rgba(255,255,255,0)";
 
@@ -545,7 +546,7 @@ renderers.Arcade.prototype = {
         this.ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
         this.ctx.beginPath();
         addGhostHead(this.ctx);
-        if (Math.floor(g.steps/2) % 2 == 0)
+        if (Math.floor(g.steps/5) % 2 == 0)
             addGhostFeet1(this.ctx);
         else
             addGhostFeet2(this.ctx);
@@ -639,9 +640,12 @@ var addGhostHead = (function() {
 
     return function(ctx) {
         var i;
+        ctx.save();
+        ctx.translate(0.5,0);
         ctx.moveTo(coords[0],coords[1]);
         for (i=2; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+        ctx.restore();
     };
 })();
 
@@ -661,8 +665,11 @@ var addGhostFeet1 = (function(){
 
     return function(ctx) {
         var i;
+        ctx.save();
+        ctx.translate(0.5,0.5);
         for (i=0; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+        ctx.restore();
     };
 
 })();
@@ -683,8 +690,11 @@ var addGhostFeet2 = (function(){
 
     return function(ctx) {
         var i;
+        ctx.save();
+        ctx.translate(0.5,0.5);
         for (i=0; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+        ctx.restore();
     };
 
 })();
@@ -748,7 +758,7 @@ var addPacmanBody = function(ctx,dirEnum,angle,mouthShift,scale,centerShift) {
     else if (dirEnum == DIR_LEFT) ctx.rotate(2*d90);
 
     ctx.moveTo(-3+mouthShift,0);
-    ctx.arc(centerShift,0,6*scale,angle,2*Math.PI-angle);
+    ctx.arc(centerShift,0,6.5*scale,angle,2*Math.PI-angle);
 
     ctx.restore();
 };
@@ -763,17 +773,27 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 1;
+    var scale = 1.5;
+    var smoothScale = true;
 
     var makeCanvas = function() {
         var c = document.createElement("canvas");
 
         // use conventional pacman map size
-        c.width = 28*tileSize*scale;
-        c.height = 36*tileSize*scale;
+        c.width = 28*tileSize;
+        c.height = 36*tileSize;
+        if (smoothScale) {
+            c.width *= scale;
+            c.height *= scale;
+        }
+        else {
+            c.style.width = c.width*scale;
+            c.style.height = c.height*scale;
+        }
 
         var ctx = c.getContext("2d");
-        ctx.scale(scale,scale);
+        if (smoothScale)
+            ctx.scale(scale,scale);
         return c;
     };
 
@@ -790,11 +810,12 @@ var screen = (function() {
             return fieldset;
         };
 
-        var addCheckbox = function(fieldset, caption, onChange) {
+        var addCheckbox = function(fieldset, caption, onChange, on) {
             id++;
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = 'check'+id;
+            checkbox.checked = on;
             checkbox.onchange = function() { onChange(checkbox.checked); };
             fieldset.appendChild(checkbox);
 
@@ -838,6 +859,20 @@ var screen = (function() {
         addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
         addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
         addCheckbox(fieldset, 'double speed', function(on) { pacman.doubleSpeed = on; });
+        form.appendChild(fieldset);
+
+        ///////////////////////////////////////////////////
+        // playback
+        var changeRate = function(n) {
+            game.pause();
+            game.setUpdatesPerSecond(n);
+            game.resume();
+        };
+        fieldset = makeFieldSet('Machine Speed');
+        addRadio(fieldset, 'playback', 'pause', function(on) { if(on) game.pause(); });
+        addRadio(fieldset, 'playback', 'quarter', function(on) { if(on) changeRate(15); });
+        addRadio(fieldset, 'playback', 'half', function(on) { if(on) changeRate(30); });
+        addRadio(fieldset, 'playback', 'normal', function(on) { if(on) changeRate(60); },true);
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -939,9 +974,9 @@ var screen = (function() {
         },
 
         blitMap: function() {
-            ctx.scale(1/scale,1/scale);
+            if (smoothScale) ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
-            ctx.scale(scale,scale);
+            if (smoothScale) ctx.scale(scale,scale);
         },
     };
 })();
@@ -2077,12 +2112,16 @@ var game = (function(){
 
     var interval; // used by setInterval and clearInterval to execute the game loop
     var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
+    var nextFrameTime;
 
     return {
         highScore:0,
         score:0,
         extraLives:0,
         level:1,
+        setUpdatesPerSecond: function(ups) {
+            framePeriod = 1000/ups;
+        },
         restart: function() {
             this.switchState(menuState);
             this.resume();
@@ -2091,7 +2130,8 @@ var game = (function(){
             clearInterval(interval);
         },
         resume: function() {
-            interval = setInterval(function(){game.tick();}, framePeriod);
+            nextFrameTime = (new Date).getTime();
+            interval = setInterval(function(){game.tick();}, 1000/60);
         },
         switchMap: function(map) {
             tileMap = maps[map];
@@ -2109,7 +2149,6 @@ var game = (function(){
                 this.highScore = this.score;
         },
         tick: (function(){
-            var nextFrameTime = (new Date).getTime();
             var maxFrameSkip = 5;
             return function() {
                 // call update for every frame period that has elapsed
@@ -2708,8 +2747,9 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapPacman.onLoad = onLoad;
-    //mapPacman.color = "#00C";
-    mapPacman.color = "#47b897"; // from Pac-Man Plus
+    //mapPacman.wallColor = "#2121ff";
+    mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
+    mapPacman.pelletColor = "#ffb8ae";
     mapPacman.constrainGhostTurns = function(x,y,openTiles) {
         // prevent ghost from turning up at these tiles
         if ((x == 12 || x == 15) && (y == 14 || y == 26)) {
@@ -2756,7 +2796,8 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapMsPacman1.onLoad = onLoad;
-    mapMsPacman1.color = "#FFB8AE";
+    mapMsPacman1.wallColor = "#FFB8AE";
+    mapMsPacman1.pelletColor = "#dedeff";
 
     var mapMsPacman2 = new TileMap(28, 36, (
         "____________________________" +
@@ -2797,7 +2838,8 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapMsPacman2.onLoad = onLoad;
-    mapMsPacman2.color = "#47b8ff";
+    mapMsPacman2.wallColor = "#47b8ff";
+    mapMsPacman2.pelletColor = "#ffff00";
 
     var mapMsPacman3 = new TileMap(28, 36, (
         "____________________________" +
@@ -2838,7 +2880,8 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapMsPacman3.onLoad = onLoad;
-    mapMsPacman3.color = "#de9751";
+    mapMsPacman3.wallColor = "#de9751";
+    mapMsPacman3.pelletColor = "#ff0000";
 
     var mapMsPacman4 = new TileMap(28, 36, (
         "____________________________" +
@@ -2879,7 +2922,8 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapMsPacman4.onLoad = onLoad;
-    mapMsPacman4.color = "#2121ff";
+    mapMsPacman4.wallColor = "#2121ff";
+    mapMsPacman4.pelletColor = "#dedeff";
 
     var menuMap = new TileMap(28, 36, (
         "____________________________" +
@@ -2972,7 +3016,8 @@ var MAP_MSPACMAN4 = 5;
             x:14*tileSize+midTile.x, 
             y:-26*tileSize+midTile.y }; // offscreen
     };
-    menuMap.color = "#777";
+    menuMap.wallColor = "#777";
+    menuMap.pelletColor = "#FFF";
 
     maps = [
         menuMap,

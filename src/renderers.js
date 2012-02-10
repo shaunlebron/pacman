@@ -14,6 +14,7 @@ renderers.Common = function(ctx, bgCtx) {
 
     this.energizerColor = "#FFF";
     this.pelletColor = "#888";
+    this.scaredGhostColor = "#2121ff";
 
     this.flashLevel = false;
 };
@@ -249,7 +250,7 @@ renderers.Simple.prototype = {
             return;
         var color = g.color;
         if (g.scared)
-            color = energizer.isFlash() ? "#FFF" : "#00F";
+            color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
         else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
             color = "rgba(255,255,255,0.3)";
         this.ctx.fillStyle = color;
@@ -289,7 +290,7 @@ renderers.Arcade.prototype = {
         var tile;
 
         // draw wall tiles
-        this.bgCtx.fillStyle = (this.flashLevel ? this.flashWallColor : tileMap.color);
+        this.bgCtx.fillStyle = (this.flashLevel ? this.flashWallColor : tileMap.wallColor);
         i=0;
         for (y=0; y<tileMap.numRows; y++)
         for (x=0; x<tileMap.numCols; x++) {
@@ -311,7 +312,7 @@ renderers.Arcade.prototype = {
         }
 
         // draw pellet tiles
-        this.bgCtx.fillStyle = this.pelletColor;
+        this.bgCtx.fillStyle = tileMap.pelletColor;
         i=0;
         for (y=0; y<tileMap.numRows; y++)
         for (x=0; x<tileMap.numCols; x++) {
@@ -369,7 +370,7 @@ renderers.Arcade.prototype = {
             return;
         var color = g.color;
         if (g.scared)
-            color = energizer.isFlash() ? "#FFF" : "#00F";
+            color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
         else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
             color = "rgba(255,255,255,0)";
 
@@ -378,7 +379,7 @@ renderers.Arcade.prototype = {
         this.ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
         this.ctx.beginPath();
         addGhostHead(this.ctx);
-        if (Math.floor(g.steps/2) % 2 == 0)
+        if (Math.floor(g.steps/5) % 2 == 0)
             addGhostFeet1(this.ctx);
         else
             addGhostFeet2(this.ctx);

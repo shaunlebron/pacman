@@ -7,17 +7,16 @@
 // Actor constructor
 var Actor = function() {
 
-    this.dir = {};
-    this.pixel = {};
-    this.tile = {};
-    this.tilePixel = {};
-    this.distToMid = {};
+    this.dir = {};          // facing direction vector
+    this.pixel = {};        // pixel position
+    this.tile = {};         // tile position
+    this.tilePixel = {};    // pixel location inside tile
+    this.distToMid = {};    // pixel distance to mid-tile
 
-    this.targetTile = {};
+    this.targetTile = {};   // tile position used for targeting
 
-    // current frame count
     this.frames = 0;        // frame count
-    this.steps = 0;
+    this.steps = 0;         // step count
 };
 
 // reset to initial position and direction

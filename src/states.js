@@ -1,28 +1,35 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Fade state
 
-var fadeNextState = function (prevState, nextState, frameDuration) {
+var fadeNextState = function (prevState, nextState, frameDuration, continueUpdate1, continueUpdate2) {
     var frames;
+    var inFirstState = function() { return frames < frameDuration/2; };
+    var getStateTime = function() { return inFirstState() ? frames/frameDuration*2 : frames/frameDuration*2-1; };
     return {
         init: function() {
             frames = 0;
         },
         draw: function() {
-            var t;
-            if (frames < frameDuration/2) {
-                t = frames/frameDuration*2;
+            var t = getStateTime();
+            if (inFirstState()) {
                 if (prevState) {
                     prevState.draw();
                     screen.renderer.drawFadeIn(1-t);
                 }
             }
             else {
-                t = frames/frameDuration*2 - 1;
                 nextState.draw();
                 screen.renderer.drawFadeIn(t);
             }
         },
         update: function() {
+            if (inFirstState()) {
+                if (continueUpdate1) prevState.update();
+            }
+            else {
+                if (continueUpdate2) nextState.update();
+            }
+
             if (frames == frameDuration)
                 game.state = nextState;
             else {
@@ -39,6 +46,7 @@ var fadeRendererState = function (currState, nextRenderer, frameDuration) {
     return {
         init: function() {
             frames = 0;
+            screen.onClick = undefined; // remove all click events from previous state
         },
         draw: function() {
             var t;
@@ -77,16 +85,8 @@ var menuState = (function() {
                 actors[i].reset();
             screen.renderer.drawMap();
             screen.onClick = function() {
-
-                // if we have already left this state by other means
-                // cancel this action
-                if (game.state != menuState) {
-                    screen.onClick = undefined;
-                    return;
-                }
-
                 newGameState.nextMap = MAP_PACMAN;
-                game.switchState(newGameState,60);
+                game.switchState(newGameState,60,true,false);
                 screen.onClick = undefined;
             };
             frames = 0;
@@ -439,15 +439,20 @@ var finishState = (function(){
 ////////////////////////////////////////////////////
 
 // display game over
-var overState = {
-    init: function() {
-        screen.renderer.drawMessage("game over", "#F00");
-        screen.onClick = function() {
-            game.switchState(menuState,60);
-            screen.onClick = undefined;
-        }
-    },
-    draw: function() {},
-    update: function() {},
-};
-
+var overState = (function() {
+    var frames;
+    return {
+        init: function() {
+            screen.renderer.drawMessage("game over", "#F00");
+            frames = 0;
+        },
+        draw: function() {},
+        update: function() {
+            if (frames == 120) {
+                game.switchState(menuState, 120,false,true);
+            }
+            else
+                frames++;
+        },
+    };
+})();

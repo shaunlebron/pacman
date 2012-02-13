@@ -30,8 +30,8 @@ var game = (function(){
             tileMap = maps[map];
             tileMap.onLoad();
         },
-        switchState: function(nextState,fadeDuration) {
-            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration) : nextState;
+        switchState: function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
+            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration, continueUpdate1, continueUpdate2) : nextState;
             this.state.init();
         },
         addScore: function(p) {

@@ -99,8 +99,12 @@ var menuState = (function() {
         },
         update: function() {
             var i;
+            for (j=0; j<2; j++) {
+                for (i = 0; i<4; i++)
+                    actors[i].update(j);
+            }
             for (i = 0; i<4; i++)
-                actors[i].update();
+                actors[i].frames++;
         },
     };
 })();
@@ -287,7 +291,7 @@ var playState = {
             if (tileMap.allDotsEaten()) {
                 this.draw();
                 game.switchState(finishState);
-                return;
+                break;
             }
 
             // test pacman collision before and after updating ghosts
@@ -357,10 +361,15 @@ var deadState = (function() {
         // freeze for a moment, then shrink and explode
         triggers: {
             0: {
-                init: function() { // pause
+                update: function() {
+                    var i;
+                    for (i=0; i<4; i++) 
+                        actors[i].frames++; // keep animating ghosts
+                },
+                draw: function() {
                     commonDraw();
                     screen.renderer.drawActors();
-                },
+                }
             },
             60: {
                 init: function() { // isolate pacman

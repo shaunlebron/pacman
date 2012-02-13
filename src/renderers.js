@@ -379,7 +379,7 @@ renderers.Arcade.prototype = {
         this.ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
         this.ctx.beginPath();
         addGhostHead(this.ctx);
-        if (Math.floor(g.steps/5) % 2 == 0)
+        if (Math.floor(g.frames/6) % 2 == 0)
             addGhostFeet1(this.ctx);
         else
             addGhostFeet2(this.ctx);

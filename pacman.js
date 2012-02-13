@@ -546,7 +546,7 @@ renderers.Arcade.prototype = {
         this.ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
         this.ctx.beginPath();
         addGhostHead(this.ctx);
-        if (Math.floor(g.steps/5) % 2 == 0)
+        if (Math.floor(g.frames/6) % 2 == 0)
             addGhostFeet1(this.ctx);
         else
             addGhostFeet2(this.ctx);
@@ -1215,7 +1215,9 @@ Ghost.prototype.getNumSteps = function() {
 
     var pattern = STEP_GHOST;
 
-    if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
+    if (game.state == menuState)
+        pattern = STEP_GHOST;
+    else if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
     else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME || tileMap.isTunnelTile(this.tile.x, this.tile.y))
         pattern = STEP_GHOST_TUNNEL;
@@ -2264,8 +2266,12 @@ var menuState = (function() {
         },
         update: function() {
             var i;
+            for (j=0; j<2; j++) {
+                for (i = 0; i<4; i++)
+                    actors[i].update(j);
+            }
             for (i = 0; i<4; i++)
-                actors[i].update();
+                actors[i].frames++;
         },
     };
 })();
@@ -2452,7 +2458,7 @@ var playState = {
             if (tileMap.allDotsEaten()) {
                 this.draw();
                 game.switchState(finishState);
-                return;
+                break;
             }
 
             // test pacman collision before and after updating ghosts
@@ -2522,10 +2528,15 @@ var deadState = (function() {
         // freeze for a moment, then shrink and explode
         triggers: {
             0: {
-                init: function() { // pause
+                update: function() {
+                    var i;
+                    for (i=0; i<4; i++) 
+                        actors[i].frames++; // keep animating ghosts
+                },
+                draw: function() {
                     commonDraw();
                     screen.renderer.drawActors();
-                },
+                }
             },
             60: {
                 init: function() { // isolate pacman

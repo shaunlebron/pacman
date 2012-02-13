@@ -47,7 +47,9 @@ Ghost.prototype.getNumSteps = function() {
 
     var pattern = STEP_GHOST;
 
-    if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
+    if (game.state == menuState)
+        pattern = STEP_GHOST;
+    else if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
     else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME || tileMap.isTunnelTile(this.tile.x, this.tile.y))
         pattern = STEP_GHOST_TUNNEL;

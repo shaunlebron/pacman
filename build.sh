@@ -1,6 +1,16 @@
 #!/bin/bash
 
+# build 'pacman.js' by concatenating from src/ directory and adding a header
 cat \
+    <(echo "// PAC-MAN") \
+    <(echo "// an accurate remake of the original arcade game") \
+    <(echo "") \
+    <(echo "// original by Namco") \
+    <(echo "// research from 'The Pacman Dossier' compiled by Jamey Pittman") \
+    <(echo "// remake by Shaun Williams") \
+    <(echo "") \
+    <(echo "// Project Page: http://github.com/shaunew/Pac-Man") \
+    <(echo "") \
     <(echo "(function(){") \
     src/TileMap.js \
     src/renderers.js \

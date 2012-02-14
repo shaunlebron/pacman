@@ -1,5 +1,17 @@
+// PAC-MAN
+// an accurate remake of the original arcade game
+
+// original by Namco
+// research from 'The Pacman Dossier' compiled by Jamey Pittman
+// remake by Shaun Williams
+
+// Project Page: http://github.com/shaunew/Pac-Man
+
 (function(){
 //////////////////////////////////////////////////////////////////////////////////////
+// Directions
+// (variables and utility functions for representing actor heading direction)
+
 // direction enums (in clockwise order)
 var DIR_UP = 0;
 var DIR_RIGHT = 1;
@@ -23,13 +35,16 @@ var setDirFromEnum = function(dir,dirEnum) {
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
-// size of a tile in play space (not necessarily draw space)
+// TileMap
+// (an ascii map of tiles representing a level maze)
+
+// size of a square tile in pixels
 var tileSize = 8;
 
 // the center pixel of a tile
 var midTile = {x:3, y:4};
 
-// Tile Map Constructor
+// constructor
 var TileMap = function(numCols, numRows, tiles) {
 
     // sizes
@@ -49,11 +64,11 @@ var TileMap = function(numCols, numRows, tiles) {
 
 // reset current tiles
 TileMap.prototype.resetCurrent = function() {
-    this.currentTiles = this.tiles.split("");
+    this.currentTiles = this.tiles.split(""); // create a mutable list copy of an immutable string
     this.dotsEaten = 0;
 };
 
-// count pellets and energizers
+// count pellets and store energizer locations
 TileMap.prototype.parseDots = function() {
 
     this.numDots = 0;
@@ -76,23 +91,29 @@ TileMap.prototype.parseDots = function() {
     }
 };
 
+// get remaining dots left
 TileMap.prototype.dotsLeft = function() {
     return this.numDots - this.dotsEaten;
 };
 
+// determine if all dots have been eaten
 TileMap.prototype.allDotsEaten = function() {
     return this.dotsLeft() == 0;
 };
 
-// parse tunnels
+// create a record of tunnel locations
 TileMap.prototype.parseTunnels = (function(){
     
+    // starting from x,y and increment x by dx...
+    // determine where the tunnel entrance begins
     var getTunnelEntrance = function(x,y,dx) {
         while (!this.isFloorTile(x,y-1) && !this.isFloorTile(x,y+1) && this.isFloorTile(x,y))
             x += dx;
         return x;
     };
 
+    // the number of margin tiles outside of the map on one side of a tunnel
+    // There are (2*marginTiles) tiles outside of the map per tunnel.
     var marginTiles = 2;
 
     return function() {
@@ -101,7 +122,7 @@ TileMap.prototype.parseTunnels = (function(){
         var i;
         var left,right;
         for (y=0;y<this.numRows;y++)
-            // walkable tiles at opposite horizontal ends of the map
+            // a map row is a tunnel if opposite ends are both walkable tiles
             if (this.isFloorTile(0,y) && this.isFloorTile(this.numCols-1,y))
                 this.tunnelRows[y] = {
                     'leftEntrance': getTunnelEntrance.call(this,0,y,1),
@@ -137,10 +158,12 @@ TileMap.prototype.getTile = function(x,y) {
         return ' ';
 };
 
+// determines if the given character is a walkable floor tile
 TileMap.prototype.isFloorTileChar = function(tile) {
     return tile==' ' || tile=='.' || tile=='o';
 };
 
+// determines if the given tile coordinate has a walkable floor tile
 TileMap.prototype.isFloorTile = function(x,y) {
     return this.isFloorTileChar(this.getTile(x,y));
 };
@@ -155,22 +178,31 @@ TileMap.prototype.getSurroundingTiles = function(tile) {
     ];
 };
 
+// returns if the given tile coordinate plus the given direction vector has a walkable floor tile
 TileMap.prototype.isNextTileFloor = function(tile,dir) {
     return this.isFloorTile(tile.x+dir.x,tile.y+dir.y);
 };
 
-// erase pellet from background
+// mark the dot at the given coordinate eaten
 TileMap.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
     this.currentTiles[x+y*this.numCols] = ' ';
     screen.renderer.erasePellet(x,y);
 };
+//////////////////////////////////////////////////////////////
+// Renderers
 
+// Draws everything in the game using swappable renderers
+// to enable to different front-end displays for Pac-Man.
+
+// list of available renderers
 var renderers = {};
 
 //////////////////////////////////////////////////////////////
 // Common Renderer
+// (attributes and functionality that are currently common to all renderers)
 
+// constructor
 renderers.Common = function(ctx, bgCtx) {
     this.ctx = ctx;
     this.bgCtx = bgCtx;
@@ -188,6 +220,10 @@ renderers.Common = function(ctx, bgCtx) {
 
 renderers.Common.prototype = {
 
+    // scaling the canvas can incur floating point roundoff errors
+    // which manifest as "grout" between tiles that are otherwise adjacent in integer-space
+    // This function extends the width and height of the tile if it is adjacent to equivalent tiles
+    // that are to the bottom or right of the given tile
     drawNoGroutTile: function(ctx,x,y,w) {
         var tileChar = tileMap.getTile(x,y);
         this.drawCenterTileSq(ctx,x,y,tileSize,
@@ -213,10 +249,12 @@ renderers.Common.prototype = {
         //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
     },
 
+    // this flag is used to flash the level upon its successful completion
     toggleLevelFlash: function () {
         this.flashLevel = !this.flashLevel;
     },
 
+    // draw the target visualizers for each actor
     drawTargets: function() {
         var i;
         this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
@@ -225,6 +263,7 @@ renderers.Common.prototype = {
                 actors[i].drawTarget(this.ctx);
     },
 
+    // draw a fade filter for 0<=t<=1
     drawFadeIn: function(t) {
         this.ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
         this.ctx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
@@ -241,7 +280,7 @@ renderers.Common.prototype = {
         if (tileMap.getTile(x,y+1)==' ') this.drawNoGroutTile(this.bgCtx,x,y+1,tileSize);
         if (tileMap.getTile(x,y-1)==' ') this.drawNoGroutTile(this.bgCtx,x,y-1,tileSize);
 
-        // fill in adjacent wall tiles
+        // fill in adjacent wall tiles?
     },
 
     // draw a center screen message (e.g. "start", "ready", "game over")
@@ -269,7 +308,7 @@ renderers.Common.prototype = {
         // draw such that pacman appears on top
         if (energizer.isActive()) {
             for (i=0; i<4; i++)
-                this.drawGhost(actors[i]);
+                this.drawGhost(ghosts[i]);
             if (!energizer.showingPoints())
                 this.drawPacman();
             else
@@ -279,7 +318,7 @@ renderers.Common.prototype = {
         else {
             this.drawPacman();
             for (i=3; i>=0; i--) 
-                this.drawGhost(actors[i]);
+                this.drawGhost(ghosts[i]);
         }
     },
 
@@ -301,9 +340,12 @@ renderers.Common.prototype = {
 
 //////////////////////////////////////////////////////////////
 // Simple Renderer
+// (render a minimal Pac-Man display using nothing but squares)
 
+// constructor
 renderers.Simple = function(ctx,bgCtx) {
 
+    // inherit attributes from Common Renderer
     renderers.Common.call(this,ctx,bgCtx);
 
     this.messageRow = 21.7;
@@ -315,6 +357,8 @@ renderers.Simple = function(ctx,bgCtx) {
 };
 
 renderers.Simple.prototype = {
+
+    // inherit functions from Common Renderer
     __proto__: renderers.Common.prototype,
 
     drawMap: function() {
@@ -424,14 +468,17 @@ renderers.Simple.prototype = {
         this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
     },
 
-
 };
 
 
 //////////////////////////////////////////////////////////////
 // Arcade Renderer
+// (render a display close to the original arcade)
 
+// constructor
 renderers.Arcade = function(ctx,bgCtx) {
+
+    // inherit attributes from Common Renderer
     renderers.Common.call(this,ctx,bgCtx);
 
     this.messageRow = 20;
@@ -444,6 +491,8 @@ renderers.Arcade = function(ctx,bgCtx) {
 };
 
 renderers.Arcade.prototype = {
+
+    // inherit functions from Common Renderer
     __proto__: renderers.Common.prototype,
 
     drawMap: function() {
@@ -542,17 +591,20 @@ renderers.Arcade.prototype = {
             color = "rgba(255,255,255,0)";
 
         this.ctx.save();
-        this.ctx.fillStyle = color;
         this.ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
+
+        // draw body
         this.ctx.beginPath();
         addGhostHead(this.ctx);
-        if (Math.floor(g.frames/6) % 2 == 0)
+        if (Math.floor(g.frames/6) % 2 == 0) // change animation frame every 6 ticks
             addGhostFeet1(this.ctx);
         else
             addGhostFeet2(this.ctx);
         this.ctx.closePath();
+        this.ctx.fillStyle = color;
         this.ctx.fill();
 
+        // draw face
         if (g.scared)
             addScaredGhostFace(this.ctx, energizer.isFlash());
         else
@@ -565,23 +617,28 @@ renderers.Arcade.prototype = {
     drawPacman: function() {
         this.ctx.save();
         this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
+
         this.ctx.beginPath();
-        var frame = Math.floor(pacman.steps/2)%4;
-        if (frame == 3) frame = 1;
+        var frame = Math.floor(pacman.steps/2)%4; // change animation frame every 2 steps
+        if (frame == 3) 
+            frame = 1;
         addPacmanBody(this.ctx, pacman.dirEnum, frame*Math.PI/6);
         this.ctx.closePath();
         this.ctx.fillStyle = pacman.color;
         this.ctx.fill();
+
         this.ctx.restore();
     },
 
     // draw dying pacman animation (with 0<=t<=1)
+    // open mouth all the way while shifting corner of mouth forward
     drawDyingPacman: function(t) {
         this.ctx.save();
         this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
         this.ctx.beginPath();
         var frame = Math.floor(pacman.steps/2)%4;
-        if (frame == 3) frame = 1;
+        if (frame == 3) 
+            frame = 1;
         var a = frame*Math.PI/6;
         addPacmanBody(this.ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
         this.ctx.closePath();
@@ -604,7 +661,6 @@ renderers.Arcade.prototype = {
 
     // draw energizer items on foreground
     drawEnergizers: function() {
-        this.ctx.fillStyle = this.energizerColor;
         var e;
         var i;
         this.ctx.beginPath();
@@ -616,13 +672,20 @@ renderers.Arcade.prototype = {
             }
         }
         this.ctx.closePath();
+        this.ctx.fillStyle = this.energizerColor;
         this.ctx.fill();
     },
 
 };
+//////////////////////////////////////////////////////////////////////////////////////
+// Sprites
+// (sprites are created using canvas paths)
 
+// add top of the ghost head to the current canvas path
 var addGhostHead = (function() {
 
+    // pixel coordinates for the top of the head
+    // on the original arcade ghost sprite
     var coords = [
         0,6,
         1,3,
@@ -641,15 +704,25 @@ var addGhostHead = (function() {
     return function(ctx) {
         var i;
         ctx.save();
+
+        // translate by half a pixel to the right
+        // to try to force centering
         ctx.translate(0.5,0);
+
+        // draw lines between pixel coordinates
         ctx.moveTo(coords[0],coords[1]);
         for (i=2; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+
         ctx.restore();
     };
 })();
 
+// add first ghost animation frame feet to the current canvas path
 var addGhostFeet1 = (function(){
+
+    // pixel coordinates for the first feet animation
+    // on the original arcade ghost sprite
     var coords = [
         13,13,
         11,11,
@@ -666,15 +739,26 @@ var addGhostFeet1 = (function(){
     return function(ctx) {
         var i;
         ctx.save();
+
+        // translate half a pixel right and down
+        // to try to force centering and proper height
         ctx.translate(0.5,0.5);
+
+        // continue previous path (assuming ghost head)
+        // by drawing lines to each of the pixel coordinates
         for (i=0; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+
         ctx.restore();
     };
 
 })();
 
+// add second ghost animation frame feet to the current canvas path
 var addGhostFeet2 = (function(){
+
+    // pixel coordinates for the second feet animation
+    // on the original arcade ghost sprite
     var coords = [
         13,12,
         12,13,
@@ -691,50 +775,66 @@ var addGhostFeet2 = (function(){
     return function(ctx) {
         var i;
         ctx.save();
+
+        // translate half a pixel right and down
+        // to try to force centering and proper height
         ctx.translate(0.5,0.5);
+
+        // continue previous path (assuming ghost head)
+        // by drawing lines to each of the pixel coordinates
         for (i=0; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
+
         ctx.restore();
     };
 
 })();
 
+// draw regular ghost eyes
 var addGhostEyes = function(ctx,dirEnum){
     var i;
 
     ctx.save();
     ctx.translate(2,3);
 
+    // translate eye balls to correct position
     if (dirEnum == DIR_LEFT) ctx.translate(-1,0);
     else if (dirEnum == DIR_RIGHT) ctx.translate(1,0);
     else if (dirEnum == DIR_UP) ctx.translate(0,-1);
     else if (dirEnum == DIR_DOWN) ctx.translate(0,1);
 
+    // draw eye balls
     ctx.fillStyle = "#FFF";
-    ctx.fillRect(1,0,2,5);
+    ctx.fillRect(1,0,2,5); // left
     ctx.fillRect(0,1,4,3);
     ctx.translate(6,0);
-    ctx.fillRect(1,0,2,5);
+    ctx.fillRect(1,0,2,5); // right
     ctx.fillRect(0,1,4,3);
 
+    // translate pupils to correct position
     if (dirEnum == DIR_LEFT) ctx.translate(0,2);
     else if (dirEnum == DIR_RIGHT) ctx.translate(2,2);
     else if (dirEnum == DIR_UP) ctx.translate(1,0);
     else if (dirEnum == DIR_DOWN) ctx.translate(1,3);
 
+    // draw pupils
     ctx.fillStyle = "#00F";
-    ctx.fillRect(0,0,2,2);
+    ctx.fillRect(0,0,2,2); // right
     ctx.translate(-6,0);
-    ctx.fillRect(0,0,2,2);
+    ctx.fillRect(0,0,2,2); // left
 
     ctx.restore();
 };
 
+// draw scared ghost face
 var addScaredGhostFace = function(ctx,flash){
     ctx.fillStyle = flash ? "#F00" : "#FF0";
+
+    // eyes
     ctx.fillRect(4,5,2,2);
     ctx.fillRect(8,5,2,2);
 
+    // mouth
     ctx.fillRect(1,10,1,1);
     ctx.fillRect(12,10,1,1);
     ctx.fillRect(2,9,2,1);
@@ -744,26 +844,33 @@ var addScaredGhostFace = function(ctx,flash){
     ctx.fillRect(8,10,2,1);
 };
 
+// draw pacman body
 var addPacmanBody = function(ctx,dirEnum,angle,mouthShift,scale,centerShift) {
+
     if (mouthShift == undefined) mouthShift = 0;
     if (centerShift == undefined) centerShift = 0;
     if (scale == undefined) scale = 1;
 
     ctx.save();
 
+    // rotate to current heading direction
     var d90 = Math.PI/2;
     if (dirEnum == DIR_UP) ctx.rotate(3*d90);
     else if (dirEnum == DIR_RIGHT) ctx.rotate(0);
     else if (dirEnum == DIR_DOWN) ctx.rotate(d90);
     else if (dirEnum == DIR_LEFT) ctx.rotate(2*d90);
 
+    // plant corner of mouth
     ctx.moveTo(-3+mouthShift,0);
+
+    // draw head outline
     ctx.arc(centerShift,0,6.5*scale,angle,2*Math.PI-angle);
 
     ctx.restore();
 };
 //////////////////////////////////////////////////////////////////////////////////////
 // Screen
+// (controls the display and input)
 
 var screen = (function() {
 
@@ -773,35 +880,42 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 1.5;
-    var smoothScale = true;
+    var scale = 1.5;        // scale everything by this amount
+    var smoothScale = true; // smooth is a vector scale rather than a pixel scale
 
+    // creates a canvas
     var makeCanvas = function() {
         var c = document.createElement("canvas");
 
         // use conventional pacman map size
         c.width = 28*tileSize;
         c.height = 36*tileSize;
+
+        // scale 'direct' width and height properties for smooth vector scaling
         if (smoothScale) {
             c.width *= scale;
             c.height *= scale;
         }
+        // scale 'style' width and height properties for pixel stretch scaling
         else {
             c.style.width = c.width*scale;
             c.style.height = c.height*scale;
         }
 
+        // transform to scale
         var ctx = c.getContext("2d");
         if (smoothScale)
             ctx.scale(scale,scale);
         return c;
     };
 
+    // add interative options to tune the game
     var addControls = function() {
 
         // used for making html elements with unique id's
         var id = 0;
 
+        // create a form field group with the given title caption
         var makeFieldSet = function(title) {
             var fieldset = document.createElement('fieldset');
             var legend = document.createElement('legend');
@@ -810,6 +924,7 @@ var screen = (function() {
             return fieldset;
         };
 
+        // add a checkbox
         var addCheckbox = function(fieldset, caption, onChange, on) {
             id++;
             var checkbox = document.createElement('input');
@@ -827,7 +942,7 @@ var screen = (function() {
             fieldset.appendChild(document.createElement('br'));
         };
 
-
+        // add a radio button
         var addRadio = function(fieldset, group, caption, onChange,on) {
             id++;
             var radio = document.createElement('input');
@@ -846,15 +961,15 @@ var screen = (function() {
             fieldset.appendChild(document.createElement('br'));
         };
 
-
+        // create form for our controls
         var form = document.createElement('form');
         form.style.width = 200;
         form.style.cssFloat = "left";
 
-        var fieldset;
+        var fieldset; // var to receive the constructed field sets
 
         ///////////////////////////////////////////////////
-        // options
+        // options group
         fieldset = makeFieldSet('Player');
         addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
         addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
@@ -862,7 +977,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // playback
+        // machine speed group
         var changeRate = function(n) {
             game.pause();
             game.setUpdatesPerSecond(n);
@@ -876,7 +991,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // renderers
+        // renderers group
         fieldset = makeFieldSet('Renderer');
         var makeSwitchRenderer = function(renderer) {
             return function(on) {
@@ -890,7 +1005,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // targets
+        // draw target sights group
         fieldset = makeFieldSet('Draw Target Sights');
         addCheckbox(fieldset, 'blinky (red)', function(on) { blinky.isDrawTarget = on; });
         addCheckbox(fieldset, 'pinky (pink)', function(on) { pinky.isDrawTarget = on; });
@@ -900,7 +1015,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // maps
+        // maps group
         fieldset = makeFieldSet('Maps');
         var makeSwitchMap = function(map) {
             return function(on) {
@@ -917,8 +1032,10 @@ var screen = (function() {
         addRadio(fieldset, 'map', 'Ms. Pac-Man 4', makeSwitchMap(MAP_MSPACMAN4));
         form.appendChild(fieldset);
 
+        // add control from to our div
         divContainer.appendChild(form);
 
+        // create an element to stop the floating layout
         var br = document.createElement('br');
         br.style.clear = "both";
         divContainer.appendChild(br);
@@ -929,24 +1046,29 @@ var screen = (function() {
         document.onkeydown = function(e) {
             var key = (e||window.event).keyCode;
             switch (key) {
-                case 37: pacman.setNextDir(DIR_LEFT); break; // left
-                case 38: pacman.setNextDir(DIR_UP); break; // up
-                case 39: pacman.setNextDir(DIR_RIGHT); break; // right
-                case 40: pacman.setNextDir(DIR_DOWN); break;// down
+                // steer pac-man
+                case 37: pacman.setNextDir(DIR_LEFT); break;
+                case 38: pacman.setNextDir(DIR_UP); break;
+                case 39: pacman.setNextDir(DIR_RIGHT); break;
+                case 40: pacman.setNextDir(DIR_DOWN); break;
                 default: return;
             }
+            // prevent default action for arrow keys
+            // (don't scroll page with arrow keys)
             e.preventDefault();
         };
     };
 
     return {
         create: function() {
+            // create foreground and background canvases
             canvas = makeCanvas();
             bgCanvas = makeCanvas();
             ctx = canvas.getContext("2d");
             bgCtx = bgCanvas.getContext("2d");
             canvas.style.cssFloat = "left";
 
+            // add canvas and controls to our div
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
             addControls();
@@ -968,11 +1090,14 @@ var screen = (function() {
             // set current renderer
             this.renderer = this.renderers[1];
         },
+
+        // switch to the given renderer index
         switchRenderer: function(i) {
             this.renderer = this.renderers[i];
             this.renderer.drawMap();
         },
 
+        // copy background canvas to the foreground canvas
         blitMap: function() {
             if (smoothScale) ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
@@ -1106,12 +1231,16 @@ Actor.prototype.getStepSizeFromTable = (function(){
 
 // updates the actor state
 Actor.prototype.update = function(j) {
+
     // get number of steps to advance in this frame
     var numSteps = this.getNumSteps();
     if (j >= numSteps) 
         return;
 
+    // request to advance one step, and increment count if step taken
     this.steps += this.step();
+
+    // update head direction
     this.steer();
 };
 
@@ -1145,6 +1274,7 @@ Actor.prototype.getOpenSurroundTiles = function() {
     return openTiles;
 };
 
+// return the direction of the open, surrounding tile closest to our target
 Actor.prototype.getTurnClosestToTarget = function(openTiles) {
 
     var dx,dy,dist;                      // variables used for euclidean distance
@@ -1168,10 +1298,6 @@ Actor.prototype.getTurnClosestToTarget = function(openTiles) {
 };
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
-
-// DEPENDENCIES:
-// 1. tileMap
-// 2. game
 
 // modes representing the ghosts' current command
 var GHOST_CMD_CHASE = 0;
@@ -1428,12 +1554,6 @@ Ghost.prototype.steer = function() {
 //////////////////////////////////////////////////////////////////////////////////////
 // Player is the controllable character (Pac-Man)
 
-
-// DEPENDENCIES:
-// 1. energizer
-// 2. playEvents
-// 3. game
-
 // Player constructor
 var Player = function() {
 
@@ -1452,7 +1572,6 @@ Player.prototype.__proto__ = Actor.prototype;
 // reset the state of the player on new level or level restart
 Player.prototype.reset = function() {
 
-    energizer.reset();
     this.setNextDir(DIR_LEFT);
 
     this.eatPauseFramesLeft = 0;   // current # of frames left to pause after eating
@@ -1582,10 +1701,14 @@ pacman.color = "#FFFF00";
 // order at which they appear in original arcade memory
 // (suggests drawing/update order)
 var actors = [blinky, pinky, inky, clyde, pacman];
-// targetting schemes
+var ghosts = [blinky, pinky, inky, clyde];
+/////////////////////////////////////////////////////////////////
+// Targetting
+// (a definition for each actor's targetting algorithm and a draw function to visualize it)
 
 (function() {
 
+// the size of the square rendered over a target tile (just half a tile)
 var targetSize = midTile.y;
 
 /////////////////////////////////////////////////////////////////
@@ -1607,6 +1730,7 @@ blinky.drawTarget = function(ctx) {
 
 /////////////////////////////////////////////////////////////////
 // pinky targets four tiles ahead of pacman
+
 pinky.setTarget = function() {
     this.targetTile.x = pacman.tile.x + 4*pacman.dir.x;
     this.targetTile.y = pacman.tile.y + 4*pacman.dir.y;
@@ -1633,6 +1757,7 @@ pinky.drawTarget = function(ctx) {
 
 /////////////////////////////////////////////////////////////////
 // inky targets twice the distance from blinky to two tiles ahead of pacman
+
 inky.setTarget = function() {
     var px = pacman.tile.x + 2*pacman.dir.x;
     var py = pacman.tile.y + 2*pacman.dir.y;
@@ -1663,6 +1788,7 @@ inky.drawTarget = function(ctx) {
 
 /////////////////////////////////////////////////////////////////
 // clyde targets pacman if >=8 tiles away, otherwise targets home
+
 clyde.setTarget = function() {
     var dx = pacman.tile.x - this.tile.x;
     var dy = pacman.tile.y - this.tile.y;
@@ -1696,6 +1822,7 @@ clyde.drawTarget = function(ctx) {
 
 /////////////////////////////////////////////////////////////////
 // pacman targets twice the distance from pinky to pacman or target pinky
+
 pacman.setTarget = function() {
     if (blinky.mode == GHOST_GOING_HOME || blinky.scared) {
         this.targetTile.x = pinky.tile.x;
@@ -1739,7 +1866,7 @@ pacman.drawTarget = function(ctx) {
 
 var ghostCommander = (function() {
 
-    // get new ghost command from frame count
+    // determine if there is to be a new command issued at the given time
     var getNewCommand = (function(){
         var t;
         var times = [{},{},{}];
@@ -1780,24 +1907,24 @@ var ghostCommander = (function() {
         };
     })();
 
-    var count;   // current frame
+    var frame;   // current frame
     var command; // last command given to ghosts
 
     return {
         reset: function() { 
             command = GHOST_CMD_SCATTER;
-            count = 0;
+            frame = 0;
         },
         update: function() {
             var newCmd;
             if (!energizer.isActive()) {
-                newCmd = getNewCommand(count);
+                newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     command = newCmd;
                     for (i=0; i<4; i++)
-                        actors[i].reverse();
+                        ghosts[i].reverse();
                 }
-                count++;
+                frame++;
             }
         },
         getCommand: function() {
@@ -1815,14 +1942,13 @@ var ghostReleaser = (function(){
     var MODE_PERSONAL = 0;
     var MODE_GLOBAL = 1;
 
+    // ghost enumerations
     var PINKY = 1;
     var INKY = 2;
     var CLYDE = 3;
 
     // this is how many frames it will take to release a ghost after pacman stops eating
-    var getTimeoutLimit = function() {
-        return (game.level < 5) ? 4*60 : 3*60;
-    };
+    var getTimeoutLimit = function() { return (game.level < 5) ? 4*60 : 3*60; };
 
     // dot limits used in personal mode to release ghost after # of dots have been eaten
     var personalDotLimit = {};
@@ -1840,8 +1966,8 @@ var ghostReleaser = (function(){
     globalDotLimit[INKY] = 17;
     globalDotLimit[CLYDE] = 32;
 
-    var mode;
-    var framesSinceLastDot;
+    var framesSinceLastDot; // frames elapsed since last dot was eaten
+    var mode;               // personal or global dot counter mode
     var ghostCounts = {};   // personal dot counts for each ghost
     var globalCount;        // global dot count
 
@@ -1868,7 +1994,7 @@ var ghostReleaser = (function(){
             }
             else {
                 for (i=1;i<4;i++) {
-                    if (actors[i].mode == GHOST_PACING_HOME) {
+                    if (ghosts[i].mode == GHOST_PACING_HOME) {
                         ghostCounts[i]++;
                         break;
                     }
@@ -1882,7 +2008,7 @@ var ghostReleaser = (function(){
             // use personal dot counter
             if (mode == MODE_PERSONAL) {
                 for (i=1;i<4;i++) {
-                    g = actors[i];
+                    g = ghosts[i];
                     if (g.mode == GHOST_PACING_HOME) {
                         if (ghostCounts[i] >= personalDotLimit[i]()) {
                             g.leaveHome();
@@ -1914,7 +2040,7 @@ var ghostReleaser = (function(){
             if (framesSinceLastDot > getTimeoutLimit()) {
                 framesSinceLastDot = 0;
                 for (i=1;i<4;i++) {
-                    g = actors[i];
+                    g = ghosts[i];
                     if (g.mode == GHOST_PACING_HOME) {
                         g.leaveHome();
                         break;
@@ -1933,6 +2059,7 @@ var ghostReleaser = (function(){
 
 var elroyTimer = (function(){
 
+    // get the number of dots left that should trigger elroy stage #1 or #2
     var getDotsLeftLimit = (function(){
         var dotsLeft = [
             [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120], // elroy1
@@ -1944,6 +2071,7 @@ var elroyTimer = (function(){
         };
     })();
 
+    // when level restarts, blinky must wait for clyde to leave home before resuming elroy mode
     var waitForClyde;
 
     return {
@@ -1956,6 +2084,7 @@ var elroyTimer = (function(){
         update: function() {
             var dotsLeft = tileMap.dotsLeft();
 
+            // stop waiting for clyde when clyde leaves home
             if (waitForClyde && clyde.mode != GHOST_PACING_HOME)
                 waitForClyde = false;
 
@@ -1974,15 +2103,15 @@ var elroyTimer = (function(){
 //////////////////////////////////////////////////////////////////////////////////////
 // Energizer
 
-// handle how long the energizer lasts
-// handle how long the points will display after eating a ghost
+// This handles how long the energizer lasts as well as how long the
+// points will display after eating a ghost.
 
 var energizer = (function() {
 
     // how many seconds to display points when ghost is eaten
     var pointsDuration = 1;
 
-    // how long to stay energized
+    // how long to stay energized based on current level
     var getDuration = (function(){
         var seconds = [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
         return function() {
@@ -1991,7 +2120,7 @@ var energizer = (function() {
         };
     })();
 
-    // how many ghost flashes happen near the end of frightened mode
+    // how many ghost flashes happen near the end of frightened mode based on current level
     var getFlashes = (function(){
         var flashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
         return function() {
@@ -2003,8 +2132,8 @@ var energizer = (function() {
     // "The ghosts change colors every 14 game cycles when they start 'flashing'" -Jamey Pittman
     var flashInterval = 14;
 
-    var count;  // how many frames energizer has been active
-    var active; // is energizer active
+    var count;  // how long in frames energizer has been active
+    var active; // indicates if energizer is currently active
     var points; // points that the last eaten ghost was worth
     var pointsFramesLeft; // number of frames left to display points earned from eating ghost
 
@@ -2015,7 +2144,7 @@ var energizer = (function() {
             points = 100;
             pointsFramesLeft = 0;
             for (i=0; i<4; i++)
-                actors[i].scared = false;
+                ghosts[i].scared = false;
         },
         update: function() {
             var i;
@@ -2031,7 +2160,7 @@ var energizer = (function() {
             count = 0;
             points = 100;
             for (i=0; i<4; i++) 
-                actors[i].onEnergized();
+                ghosts[i].onEnergized();
         },
         isActive: function() { return active; },
         isFlash: function() { 
@@ -2055,8 +2184,6 @@ var energizer = (function() {
 
 var fruit = (function(){
 
-    // get number of points a fruit is worth at current level
-
     var dotLimit1 = 70; // first fruit will appear when this number of dots are eaten
     var dotLimit2 = 170; // second fruit will appear when this number of dots are eaten
 
@@ -2067,7 +2194,11 @@ var fruit = (function(){
     var scoreFramesLeft; // frames left until the picked-up fruit score is off the screen
 
     return {
-        pixel: {x:0, y:0},
+        pixel: {x:0, y:0}, // pixel location
+        setPosition: function(px,py) {
+            this.pixel.x = px;
+            this.pixel.y = py;
+        },
         reset: function() {
             framesLeft = 0;
             scoreFramesLeft = 0;
@@ -2091,10 +2222,7 @@ var fruit = (function(){
                 scoreFramesLeft = scoreDuration*60;
             }
         },
-        setPosition: function(px,py) {
-            this.pixel.x = px;
-            this.pixel.y = py;
-        },
+        // get number of points a fruit is worth based on the current level
         getPoints: (function() {
             var points = [100,300,500,500,700,700,1000,1000,2000,2000,3000,3000,5000];
             return function() {
@@ -2116,10 +2244,23 @@ var game = (function(){
     var nextFrameTime;
 
     return {
+
+        // scoring
         highScore:0,
         score:0,
-        extraLives:0,
+        addScore: function(p) {
+            if (this.score < 10000 && this.score+p >= 10000)
+                this.extraLives++;
+            this.score += p;
+            if (this.score > this.highScore)
+                this.highScore = this.score;
+        },
+
+        // current level and lives left
         level:1,
+        extraLives:0,
+
+        // scheduling
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
         },
@@ -2133,21 +2274,6 @@ var game = (function(){
         resume: function() {
             nextFrameTime = (new Date).getTime();
             interval = setInterval(function(){game.tick();}, 1000/60);
-        },
-        switchMap: function(map) {
-            tileMap = maps[map];
-            tileMap.onLoad();
-        },
-        switchState: function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
-            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration, continueUpdate1, continueUpdate2) : nextState;
-            this.state.init();
-        },
-        addScore: function(p) {
-            if (this.score < 10000 && this.score+p >= 10000)
-                this.extraLives++;
-            this.score += p;
-            if (this.score > this.highScore)
-                this.highScore = this.score;
         },
         tick: (function(){
             var maxFrameSkip = 5;
@@ -2163,11 +2289,32 @@ var game = (function(){
                 this.state.draw();
             };
         })(),
+
+        // switches to another game state
+        switchState: function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
+            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration, continueUpdate1, continueUpdate2) : nextState;
+            this.state.init();
+        },
+
+        // switches to another map
+        switchMap: function(map) {
+            tileMap = maps[map];
+            tileMap.onLoad();
+        },
+
     };
 })();
 //////////////////////////////////////////////////////////////////////////////////////
+// States
+// (main loops for each state of the game)
+// game.state is set to any of these states, each containing an init(), draw(), and update()
+
+//////////////////////////////////////////////////////////////////////////////////////
 // Fade state
 
+// Creates a state that will fade from a given state to another in the given amount of time.
+// if continueUpdate1 is true, then prevState.update will be called while fading out
+// if continueUpdate2 is true, then nextState.update will be called while fading in
 var fadeNextState = function (prevState, nextState, frameDuration, continueUpdate1, continueUpdate2) {
     var frames;
     var inFirstState = function() { return frames < frameDuration/2; };
@@ -2175,6 +2322,7 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
     return {
         init: function() {
             frames = 0;
+            screen.onClick = undefined; // remove all click events from previous state
         },
         draw: function() {
             var t = getStateTime();
@@ -2198,7 +2346,7 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
             }
 
             if (frames == frameDuration)
-                game.state = nextState;
+                game.state = nextState; // hand over state
             else {
                 if (frames == frameDuration/2)
                     nextState.init();
@@ -2208,12 +2356,15 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
     }
 };
 
+//////////////////////////////////////////////////////////////////////////////////////
+// Fade Renderer state
+
+// creates a state that will pause the current state and fade to the given renderer in a given amount of time
 var fadeRendererState = function (currState, nextRenderer, frameDuration) {
     var frames;
     return {
         init: function() {
             frames = 0;
-            screen.onClick = undefined; // remove all click events from previous state
         },
         draw: function() {
             var t;
@@ -2229,7 +2380,7 @@ var fadeRendererState = function (currState, nextRenderer, frameDuration) {
         },
         update: function() {
             if (frames == frameDuration)
-                game.state = currState;
+                game.state = currState; // hand over state
             else {
                 if (frames == frameDuration/2)
                     screen.switchRenderer(nextRenderer);
@@ -2241,44 +2392,41 @@ var fadeRendererState = function (currState, nextRenderer, frameDuration) {
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Menu State
+// (the home title screen state)
 
-var menuState = (function() {
-    var frames;
-    var fadeFrames = 120;
-    return {
-        init: function() {
-            game.switchMap(MAP_MENU);
-            for (i=0; i<5; i++)
-                actors[i].reset();
-            screen.renderer.drawMap();
-            screen.onClick = function() {
-                newGameState.nextMap = MAP_PACMAN;
-                game.switchState(newGameState,60,true,false);
-                screen.onClick = undefined;
-            };
-            frames = 0;
-        },
-        draw: function() {
-            screen.blitMap();
-            screen.renderer.drawScore();
-            screen.renderer.drawMessage("Pac-Man","#FF0");
-            screen.renderer.drawActors();
-        },
-        update: function() {
-            var i;
-            for (j=0; j<2; j++) {
-                for (i = 0; i<4; i++)
-                    actors[i].update(j);
-            }
+var menuState = {
+    init: function() {
+        game.switchMap(MAP_MENU);
+        for (i=0; i<5; i++)
+            actors[i].reset();
+        screen.renderer.drawMap();
+        screen.onClick = function() {
+            newGameState.nextMap = MAP_PACMAN;
+            game.switchState(newGameState,60,true,false);
+            screen.onClick = undefined;
+        };
+    },
+    draw: function() {
+        screen.blitMap();
+        screen.renderer.drawScore();
+        screen.renderer.drawMessage("Pac-Man","#FF0");
+        screen.renderer.drawActors();
+    },
+    update: function() {
+        var i,j;
+        for (j=0; j<2; j++) {
             for (i = 0; i<4; i++)
-                actors[i].frames++;
-        },
-    };
-})();
+                ghosts[i].update(j);
+        }
+        for (i = 0; i<4; i++)
+            ghosts[i].frames++;
+    },
+};
 
 ////////////////////////////////////////////////////
+// New Game state
+// (state when first starting a new game)
 
-// state when first starting the game
 var newGameState = (function() {
     var frames;
     var duration = 2;
@@ -2316,8 +2464,9 @@ var newGameState = (function() {
 })();
 
 ////////////////////////////////////////////////////
+// Ready state
+// (state when map is displayed and pausing before play)
 
-// common ready state when about to play
 var readyState =  (function(){
     var frames;
     var duration = 2;
@@ -2327,6 +2476,9 @@ var readyState =  (function(){
             var i;
             for (i=0; i<5; i++)
                 actors[i].reset();
+            ghostCommander.reset();
+            fruit.reset();
+            energizer.reset();
             frames = 0;
         },
         draw: function() {
@@ -2343,54 +2495,54 @@ var readyState =  (function(){
 })();
 
 ////////////////////////////////////////////////////
+// Ready New Level state
+// (ready state when pausing before new level)
 
-// ready state for new level
 var readyNewState = { 
-    __proto__: readyState, 
-    init: function() {
-        // kludge: redirect to new game state
-        //   if user clicks map without game being initialized
-        if (game.score == undefined) {
-            newGameState.nextMap = this.nextMap;
-            game.switchState(newGameState);
-            return;
-        }
 
+    // inherit functions from readyState
+    __proto__: readyState, 
+
+    init: function() {
+        // switch to next map if given
         if (this.nextMap != undefined) {
             game.switchMap(this.nextMap);
             this.nextMap = undefined;
-
             tileMap.resetCurrent();
             screen.renderer.drawMap();
         }
-        ghostCommander.reset();
         ghostReleaser.onNewLevel();
-        fruit.reset();
         elroyTimer.onNewLevel();
+
+        // inherit attributes from readyState
         readyState.init.call(this);
     },
 };
 
 ////////////////////////////////////////////////////
+// Ready Restart Level state
+// (ready state when pausing before restarted level)
 
-// ready state for restarting level
 var readyRestartState = { 
+
+    // inherit functions from readyState
     __proto__: readyState, 
+
     init: function() {
         game.extraLives--;
-        ghostCommander.reset();
         ghostReleaser.onRestartLevel();
-        fruit.reset();
         elroyTimer.onRestartLevel();
+
+        // inherit attributes from readyState
         readyState.init.call(this);
     },
 };
 
 ////////////////////////////////////////////////////
+// Play state
+// (state when playing the game)
 
-// state when playing the game
 var playState = {
-    drawSights: false,
     init: function() { },
     draw: function() {
         screen.blitMap();
@@ -2402,11 +2554,13 @@ var playState = {
         screen.renderer.drawActors();
         screen.renderer.drawTargets();
     },
+
+    // handles collision between pac-man and ghosts
+    // returns true if collision happened
     isPacmanCollide: function() {
-        // test pacman's tile collision against each ghost
         var i,g;
         for (i = 0; i<4; i++) {
-            g = actors[i];
+            g = ghosts[i];
             if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y && g.mode == GHOST_OUTSIDE) {
                 if (g.scared) { // eat ghost
                     energizer.addPoints();
@@ -2422,8 +2576,7 @@ var playState = {
         return false;
     },
     update: function() {
-        var i; // loop index
-        var j;
+        var i,j; // loop index
         var maxSteps = 2;
 
         // skip this frame if needed,
@@ -2431,8 +2584,8 @@ var playState = {
         if (energizer.showingPoints()) {
             for (j=0; j<maxSteps; j++)
                 for (i=0; i<4; i++)
-                    if (actors[i].mode == GHOST_GOING_HOME || actors[i].mode == GHOST_ENTERING_HOME)
-                        actors[i].update(j);
+                    if (ghosts[i].mode == GHOST_GOING_HOME || ghosts[i].mode == GHOST_ENTERING_HOME)
+                        ghosts[i].update(j);
             energizer.updatePointsTimer();
             return;
         }
@@ -2443,7 +2596,6 @@ var playState = {
         elroyTimer.update();
         fruit.update();
         energizer.update();
-
 
         // update actors one step at a time
         for (j=0; j<maxSteps; j++) {
@@ -2476,17 +2628,22 @@ var playState = {
 };
 
 ////////////////////////////////////////////////////
+// Script state
+// (a state that triggers functions at certain times)
 
-// state when playing the game
 var scriptState = {
     init: function() {
-        this.frames = 0;
-        this.triggerFrame = 0;
+        this.frames = 0;        // frames since state began
+        this.triggerFrame = 0;  // frames since last trigger
 
-        this.drawFunc = undefined;
-        this.updateFunc = undefined;
+        this.drawFunc = undefined;   // current draw function
+        this.updateFunc = undefined; // current update function
     },
     update: function() {
+
+        // if trigger is found for current time,
+        // call its init() function
+        // and store its draw() and update() functions
         var trigger = this.triggers[this.frames];
         if (trigger) {
             if (trigger.init) trigger.init();
@@ -2495,6 +2652,7 @@ var scriptState = {
             this.triggerFrame = 0;
         }
 
+        // call the last trigger's update function
         if (this.updateFunc) 
             this.updateFunc(this.triggerFrame);
 
@@ -2502,16 +2660,19 @@ var scriptState = {
         this.triggerFrame++;
     },
     draw: function() {
+        // call the last trigger's draw function
         if (this.drawFunc) 
             this.drawFunc(this.triggerFrame);
     },
 };
 
 ////////////////////////////////////////////////////
+// Dead state
+// (state when player has lost a life)
 
-// state when dying
 var deadState = (function() {
     
+    // this state will always have these drawn
     var commonDraw = function() {
         screen.blitMap();
         screen.renderer.drawEnergizers();
@@ -2522,12 +2683,13 @@ var deadState = (function() {
     };
 
     return {
+
         // inherit script state functions
         __proto__: scriptState,
 
-        // freeze for a moment, then shrink and explode
+        // script functions for each time
         triggers: {
-            0: {
+            0: { // freeze
                 update: function() {
                     var i;
                     for (i=0; i<4; i++) 
@@ -2569,9 +2731,12 @@ var deadState = (function() {
 })();
 
 ////////////////////////////////////////////////////
+// Finish state
+// (state when player has completed a level)
 
 var finishState = (function(){
 
+    // this state will always have these drawn
     var commonDraw = function() {
         screen.renderer.drawMap();
         screen.blitMap();
@@ -2583,23 +2748,28 @@ var finishState = (function(){
         screen.renderer.drawPacman();
     };
     
-    var flashFloor = function() {
+    // flash the floor and draw
+    var flashFloorAndDraw = function() {
         screen.renderer.toggleLevelFlash();
         commonDraw();
     };
 
     return {
+
+        // inherit script state functions
         __proto__: scriptState,
+
+        // script functions for each time
         triggers: {
             60: { init: commonDraw },
-            120: { init: flashFloor },
-            135: { init: flashFloor },
-            150: { init: flashFloor },
-            165: { init: flashFloor },
-            180: { init: flashFloor },
-            195: { init: flashFloor },
-            210: { init: flashFloor },
-            225: { init: flashFloor },
+            120: { init: flashFloorAndDraw },
+            135: { init: flashFloorAndDraw },
+            150: { init: flashFloorAndDraw },
+            165: { init: flashFloorAndDraw },
+            180: { init: flashFloorAndDraw },
+            195: { init: flashFloorAndDraw },
+            210: { init: flashFloorAndDraw },
+            225: { init: flashFloorAndDraw },
             255: { 
                 init: function() {
                     game.level++;
@@ -2613,8 +2783,9 @@ var finishState = (function(){
 })();
 
 ////////////////////////////////////////////////////
+// Game Over state
+// (state when player has lost last life)
 
-// display game over
 var overState = (function() {
     var frames;
     return {
@@ -2633,12 +2804,15 @@ var overState = (function() {
     };
 })();
 //////////////////////////////////////////////////////////////////////////////////////
-// maps
+// Maps
+
+// Definitions of playable maps along with respective actor configurations
 
 // current map
 var tileMap;
 var maps;
 
+// enumerations for each map
 var MAP_MENU = 0;
 var MAP_PACMAN = 1;
 var MAP_MSPACMAN1 = 2;
@@ -2648,6 +2822,7 @@ var MAP_MSPACMAN4 = 5;
 
 // create maps
 (function() {
+
     // default onLoad function for TileMaps
     // contains potentially map-specific locations
     var onLoad = function() {
@@ -2722,7 +2897,7 @@ var MAP_MSPACMAN4 = 5;
         };
     };
 
-
+    // Original Pac-Man map
     var mapPacman = new TileMap(28, 36, (
         "____________________________" +
         "____________________________" +
@@ -2762,7 +2937,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapPacman.onLoad = onLoad;
-    //mapPacman.wallColor = "#2121ff";
+    //mapPacman.wallColor = "#2121ff"; // from original
     mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
     mapPacman.pelletColor = "#ffb8ae";
     mapPacman.constrainGhostTurns = function(x,y,openTiles) {
@@ -2771,6 +2946,8 @@ var MAP_MSPACMAN4 = 5;
             openTiles[DIR_UP] = false;
         }
     };
+
+    // Ms. Pac-Man map 1
 
     var mapMsPacman1 = new TileMap(28, 36, (
         "____________________________" +
@@ -2814,6 +2991,8 @@ var MAP_MSPACMAN4 = 5;
     mapMsPacman1.wallColor = "#FFB8AE";
     mapMsPacman1.pelletColor = "#dedeff";
 
+    // Ms. Pac-Man map 2
+
     var mapMsPacman2 = new TileMap(28, 36, (
         "____________________________" +
         "____________________________" +
@@ -2855,6 +3034,8 @@ var MAP_MSPACMAN4 = 5;
     mapMsPacman2.onLoad = onLoad;
     mapMsPacman2.wallColor = "#47b8ff";
     mapMsPacman2.pelletColor = "#ffff00";
+
+    // Ms. Pac-Man map 3
 
     var mapMsPacman3 = new TileMap(28, 36, (
         "____________________________" +
@@ -2898,6 +3079,8 @@ var MAP_MSPACMAN4 = 5;
     mapMsPacman3.wallColor = "#de9751";
     mapMsPacman3.pelletColor = "#ff0000";
 
+    // Ms. Pac-Man map 4
+
     var mapMsPacman4 = new TileMap(28, 36, (
         "____________________________" +
         "____________________________" +
@@ -2939,6 +3122,8 @@ var MAP_MSPACMAN4 = 5;
     mapMsPacman4.onLoad = onLoad;
     mapMsPacman4.wallColor = "#2121ff";
     mapMsPacman4.pelletColor = "#dedeff";
+
+    // Menu Map
 
     var menuMap = new TileMap(28, 36, (
         "____________________________" +
@@ -3034,6 +3219,7 @@ var MAP_MSPACMAN4 = 5;
     menuMap.wallColor = "#777";
     menuMap.pelletColor = "#FFF";
 
+    // create list of maps
     maps = [
         menuMap,
         mapPacman,
@@ -3045,10 +3231,8 @@ var MAP_MSPACMAN4 = 5;
 
 })();
 //////////////////////////////////////////////////////////////////////////////////////
-// Pac-Man
-// Thanks to Jamey Pittman for "The Pac-Man Dossier"
+// Entry Point
 
-//////////////////////////////////////////////////////////////////////////////////////
 window.onload = function() {
     screen.create();
     game.restart();

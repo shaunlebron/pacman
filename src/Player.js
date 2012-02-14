@@ -1,12 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Player is the controllable character (Pac-Man)
 
-
-// DEPENDENCIES:
-// 1. energizer
-// 2. playEvents
-// 3. game
-
 // Player constructor
 var Player = function() {
 
@@ -25,7 +19,6 @@ Player.prototype.__proto__ = Actor.prototype;
 // reset the state of the player on new level or level restart
 Player.prototype.reset = function() {
 
-    energizer.reset();
     this.setNextDir(DIR_LEFT);
 
     this.eatPauseFramesLeft = 0;   // current # of frames left to pause after eating

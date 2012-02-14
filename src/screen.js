@@ -1,5 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Screen
+// (controls the display and input)
 
 var screen = (function() {
 
@@ -9,43 +10,52 @@ var screen = (function() {
     var bgCanvas, bgCtx;
 
     // drawing scale
-    var scale = 1.5;
-    var smoothScale = true;
+    var scale = 1.5;        // scale everything by this amount
+    var smoothScale = true; // smooth is a vector scale rather than a pixel scale
 
+    // creates a canvas
     var makeCanvas = function() {
         var c = document.createElement("canvas");
 
         // use conventional pacman map size
         c.width = 28*tileSize;
         c.height = 36*tileSize;
+
+        // scale 'direct' width and height properties for smooth vector scaling
         if (smoothScale) {
             c.width *= scale;
             c.height *= scale;
         }
+        // scale 'style' width and height properties for pixel stretch scaling
         else {
             c.style.width = c.width*scale;
             c.style.height = c.height*scale;
         }
 
+        // transform to scale
         var ctx = c.getContext("2d");
         if (smoothScale)
             ctx.scale(scale,scale);
         return c;
     };
 
+    // add interative options to tune the game
     var addControls = function() {
 
         // used for making html elements with unique id's
         var id = 0;
 
+        // create a form field group with the given title caption
         var makeFieldSet = function(title) {
             var fieldset = document.createElement('fieldset');
+            fieldset.width = 200;
             var legend = document.createElement('legend');
             legend.appendChild(document.createTextNode(title));
             fieldset.appendChild(legend);
             return fieldset;
         };
 
+        // add a checkbox
         var addCheckbox = function(fieldset, caption, onChange, on) {
             id++;
             var checkbox = document.createElement('input');
@@ -63,7 +73,7 @@ var screen = (function() {
             fieldset.appendChild(document.createElement('br'));
         };
 
-
+        // add a radio button
         var addRadio = function(fieldset, group, caption, onChange,on) {
             id++;
             var radio = document.createElement('input');
@@ -82,15 +92,15 @@ var screen = (function() {
             fieldset.appendChild(document.createElement('br'));
         };
 
-
+        ///////////////////////////////////////////////////
+        // create form for our controls
         var form = document.createElement('form');
-        form.style.width = 200;
         form.style.cssFloat = "left";
 
-        var fieldset;
+        var fieldset; // var to receive the constructed field sets
 
         ///////////////////////////////////////////////////
-        // options
+        // options group
         fieldset = makeFieldSet('Player');
         addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
         addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
@@ -98,7 +108,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // playback
+        // machine speed group
         var changeRate = function(n) {
             game.pause();
             game.setUpdatesPerSecond(n);
@@ -112,7 +122,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // renderers
+        // renderers group
         fieldset = makeFieldSet('Renderer');
         var makeSwitchRenderer = function(renderer) {
             return function(on) {
@@ -126,7 +136,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // targets
+        // draw target sights group
         fieldset = makeFieldSet('Draw Target Sights');
         addCheckbox(fieldset, 'blinky (red)', function(on) { blinky.isDrawTarget = on; });
         addCheckbox(fieldset, 'pinky (pink)', function(on) { pinky.isDrawTarget = on; });
@@ -136,7 +146,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // maps
+        // maps group
         fieldset = makeFieldSet('Maps');
         var makeSwitchMap = function(map) {
             return function(on) {
@@ -153,8 +163,10 @@ var screen = (function() {
         addRadio(fieldset, 'map', 'Ms. Pac-Man 4', makeSwitchMap(MAP_MSPACMAN4));
         form.appendChild(fieldset);
 
+        // add control from to our div
         divContainer.appendChild(form);
 
+        // create an element to stop the floating layout
         var br = document.createElement('br');
         br.style.clear = "both";
         divContainer.appendChild(br);
@@ -165,24 +177,29 @@ var screen = (function() {
         document.onkeydown = function(e) {
             var key = (e||window.event).keyCode;
             switch (key) {
-                case 37: pacman.setNextDir(DIR_LEFT); break; // left
-                case 38: pacman.setNextDir(DIR_UP); break; // up
-                case 39: pacman.setNextDir(DIR_RIGHT); break; // right
-                case 40: pacman.setNextDir(DIR_DOWN); break;// down
+                // steer pac-man
+                case 37: pacman.setNextDir(DIR_LEFT); break;
+                case 38: pacman.setNextDir(DIR_UP); break;
+                case 39: pacman.setNextDir(DIR_RIGHT); break;
+                case 40: pacman.setNextDir(DIR_DOWN); break;
                 default: return;
             }
+            // prevent default action for arrow keys
+            // (don't scroll page with arrow keys)
             e.preventDefault();
         };
     };
 
     return {
         create: function() {
+            // create foreground and background canvases
             canvas = makeCanvas();
             bgCanvas = makeCanvas();
             ctx = canvas.getContext("2d");
             bgCtx = bgCanvas.getContext("2d");
             canvas.style.cssFloat = "left";
 
+            // add canvas and controls to our div
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
             addControls();
@@ -204,11 +221,14 @@ var screen = (function() {
             // set current renderer
             this.renderer = this.renderers[1];
         },
+
+        // switch to the given renderer index
         switchRenderer: function(i) {
             this.renderer = this.renderers[i];
             this.renderer.drawMap();
         },
 
+        // copy background canvas to the foreground canvas
         blitMap: function() {
             if (smoothScale) ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);

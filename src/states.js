@@ -1,6 +1,14 @@
 //////////////////////////////////////////////////////////////////////////////////////
+// States
+// (main loops for each state of the game)
+// game.state is set to any of these states, each containing an init(), draw(), and update()
+
+//////////////////////////////////////////////////////////////////////////////////////
 // Fade state
 
+// Creates a state that will fade from a given state to another in the given amount of time.
+// if continueUpdate1 is true, then prevState.update will be called while fading out
+// if continueUpdate2 is true, then nextState.update will be called while fading in
 var fadeNextState = function (prevState, nextState, frameDuration, continueUpdate1, continueUpdate2) {
     var frames;
     var inFirstState = function() { return frames < frameDuration/2; };
@@ -8,6 +16,7 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
     return {
         init: function() {
             frames = 0;
+            screen.onClick = undefined; // remove all click events from previous state
         },
         draw: function() {
             var t = getStateTime();
@@ -31,7 +40,7 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
             }
 
             if (frames == frameDuration)
-                game.state = nextState;
+                game.state = nextState; // hand over state
             else {
                 if (frames == frameDuration/2)
                     nextState.init();
@@ -41,12 +50,15 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
     }
 };
 
+//////////////////////////////////////////////////////////////////////////////////////
+// Fade Renderer state
+
+// creates a state that will pause the current state and fade to the given renderer in a given amount of time
 var fadeRendererState = function (currState, nextRenderer, frameDuration) {
     var frames;
     return {
         init: function() {
             frames = 0;
-            screen.onClick = undefined; // remove all click events from previous state
         },
         draw: function() {
             var t;
@@ -62,7 +74,7 @@ var fadeRendererState = function (currState, nextRenderer, frameDuration) {
         },
         update: function() {
             if (frames == frameDuration)
-                game.state = currState;
+                game.state = currState; // hand over state
             else {
                 if (frames == frameDuration/2)
                     screen.switchRenderer(nextRenderer);
@@ -74,44 +86,41 @@ var fadeRendererState = function (currState, nextRenderer, frameDuration) {
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Menu State
+// (the home title screen state)
 
-var menuState = (function() {
-    var frames;
-    var fadeFrames = 120;
-    return {
-        init: function() {
-            game.switchMap(MAP_MENU);
-            for (i=0; i<5; i++)
-                actors[i].reset();
-            screen.renderer.drawMap();
-            screen.onClick = function() {
-                newGameState.nextMap = MAP_PACMAN;
-                game.switchState(newGameState,60,true,false);
-                screen.onClick = undefined;
-            };
-            frames = 0;
-        },
-        draw: function() {
-            screen.blitMap();
-            screen.renderer.drawScore();
-            screen.renderer.drawMessage("Pac-Man","#FF0");
-            screen.renderer.drawActors();
-        },
-        update: function() {
-            var i;
-            for (j=0; j<2; j++) {
-                for (i = 0; i<4; i++)
-                    actors[i].update(j);
-            }
+var menuState = {
+    init: function() {
+        game.switchMap(MAP_MENU);
+        for (i=0; i<5; i++)
+            actors[i].reset();
+        screen.renderer.drawMap();
+        screen.onClick = function() {
+            newGameState.nextMap = MAP_PACMAN;
+            game.switchState(newGameState,60,true,false);
+            screen.onClick = undefined;
+        };
+    },
+    draw: function() {
+        screen.blitMap();
+        screen.renderer.drawScore();
+        screen.renderer.drawMessage("Pac-Man","#FF0");
+        screen.renderer.drawActors();
+    },
+    update: function() {
+        var i,j;
+        for (j=0; j<2; j++) {
             for (i = 0; i<4; i++)
-                actors[i].frames++;
-        },
-    };
-})();
+                ghosts[i].update(j);
+        }
+        for (i = 0; i<4; i++)
+            ghosts[i].frames++;
+    },
+};
 
 ////////////////////////////////////////////////////
+// New Game state
+// (state when first starting a new game)
 
-// state when first starting the game
 var newGameState = (function() {
     var frames;
     var duration = 2;
@@ -149,8 +158,9 @@ var newGameState = (function() {
 })();
 
 ////////////////////////////////////////////////////
+// Ready state
+// (state when map is displayed and pausing before play)
 
-// common ready state when about to play
 var readyState =  (function(){
     var frames;
     var duration = 2;
@@ -160,6 +170,9 @@ var readyState =  (function(){
             var i;
             for (i=0; i<5; i++)
                 actors[i].reset();
+            ghostCommander.reset();
+            fruit.reset();
+            energizer.reset();
             frames = 0;
         },
         draw: function() {
@@ -176,54 +189,54 @@ var readyState =  (function(){
 })();
 
 ////////////////////////////////////////////////////
+// Ready New Level state
+// (ready state when pausing before new level)
 
-// ready state for new level
 var readyNewState = { 
-    __proto__: readyState, 
-    init: function() {
-        // kludge: redirect to new game state
-        //   if user clicks map without game being initialized
-        if (game.score == undefined) {
-            newGameState.nextMap = this.nextMap;
-            game.switchState(newGameState);
-            return;
-        }
 
+    // inherit functions from readyState
+    __proto__: readyState, 
+
+    init: function() {
+        // switch to next map if given
         if (this.nextMap != undefined) {
             game.switchMap(this.nextMap);
             this.nextMap = undefined;
-
             tileMap.resetCurrent();
             screen.renderer.drawMap();
         }
-        ghostCommander.reset();
         ghostReleaser.onNewLevel();
-        fruit.reset();
         elroyTimer.onNewLevel();
+
+        // inherit attributes from readyState
         readyState.init.call(this);
     },
 };
 
 ////////////////////////////////////////////////////
+// Ready Restart Level state
+// (ready state when pausing before restarted level)
 
-// ready state for restarting level
 var readyRestartState = { 
+
+    // inherit functions from readyState
     __proto__: readyState, 
+
     init: function() {
         game.extraLives--;
-        ghostCommander.reset();
         ghostReleaser.onRestartLevel();
-        fruit.reset();
         elroyTimer.onRestartLevel();
+
+        // inherit attributes from readyState
         readyState.init.call(this);
     },
 };
 
 ////////////////////////////////////////////////////
+// Play state
+// (state when playing the game)
 
-// state when playing the game
 var playState = {
-    drawSights: false,
     init: function() { },
     draw: function() {
         screen.blitMap();
@@ -235,11 +248,13 @@ var playState = {
         screen.renderer.drawActors();
         screen.renderer.drawTargets();
     },
+
+    // handles collision between pac-man and ghosts
+    // returns true if collision happened
     isPacmanCollide: function() {
-        // test pacman's tile collision against each ghost
         var i,g;
         for (i = 0; i<4; i++) {
-            g = actors[i];
+            g = ghosts[i];
             if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y && g.mode == GHOST_OUTSIDE) {
                 if (g.scared) { // eat ghost
                     energizer.addPoints();
@@ -255,8 +270,7 @@ var playState = {
         return false;
     },
     update: function() {
-        var i; // loop index
-        var j;
+        var i,j; // loop index
         var maxSteps = 2;
 
         // skip this frame if needed,
@@ -264,8 +278,8 @@ var playState = {
         if (energizer.showingPoints()) {
             for (j=0; j<maxSteps; j++)
                 for (i=0; i<4; i++)
-                    if (actors[i].mode == GHOST_GOING_HOME || actors[i].mode == GHOST_ENTERING_HOME)
-                        actors[i].update(j);
+                    if (ghosts[i].mode == GHOST_GOING_HOME || ghosts[i].mode == GHOST_ENTERING_HOME)
+                        ghosts[i].update(j);
             energizer.updatePointsTimer();
             return;
         }
@@ -276,7 +290,6 @@ var playState = {
         elroyTimer.update();
         fruit.update();
         energizer.update();
-
 
         // update actors one step at a time
         for (j=0; j<maxSteps; j++) {
@@ -309,17 +322,22 @@ var playState = {
 };
 
 ////////////////////////////////////////////////////
+// Script state
+// (a state that triggers functions at certain times)
 
-// state when playing the game
 var scriptState = {
     init: function() {
-        this.frames = 0;
-        this.triggerFrame = 0;
+        this.frames = 0;        // frames since state began
+        this.triggerFrame = 0;  // frames since last trigger
 
-        this.drawFunc = undefined;
-        this.updateFunc = undefined;
+        this.drawFunc = undefined;   // current draw function
+        this.updateFunc = undefined; // current update function
     },
     update: function() {
+
+        // if trigger is found for current time,
+        // call its init() function
+        // and store its draw() and update() functions
         var trigger = this.triggers[this.frames];
         if (trigger) {
             if (trigger.init) trigger.init();
@@ -328,6 +346,7 @@ var scriptState = {
             this.triggerFrame = 0;
         }
 
+        // call the last trigger's update function
         if (this.updateFunc) 
             this.updateFunc(this.triggerFrame);
 
@@ -335,16 +354,19 @@ var scriptState = {
         this.triggerFrame++;
     },
     draw: function() {
+        // call the last trigger's draw function
         if (this.drawFunc) 
             this.drawFunc(this.triggerFrame);
     },
 };
 
 ////////////////////////////////////////////////////
+// Dead state
+// (state when player has lost a life)
 
-// state when dying
 var deadState = (function() {
     
+    // this state will always have these drawn
     var commonDraw = function() {
         screen.blitMap();
         screen.renderer.drawEnergizers();
@@ -355,12 +377,13 @@ var deadState = (function() {
     };
 
     return {
+
         // inherit script state functions
         __proto__: scriptState,
 
-        // freeze for a moment, then shrink and explode
+        // script functions for each time
         triggers: {
-            0: {
+            0: { // freeze
                 update: function() {
                     var i;
                     for (i=0; i<4; i++) 
@@ -402,9 +425,12 @@ var deadState = (function() {
 })();
 
 ////////////////////////////////////////////////////
+// Finish state
+// (state when player has completed a level)
 
 var finishState = (function(){
 
+    // this state will always have these drawn
     var commonDraw = function() {
         screen.renderer.drawMap();
         screen.blitMap();
@@ -416,23 +442,28 @@ var finishState = (function(){
         screen.renderer.drawPacman();
     };
     
-    var flashFloor = function() {
+    // flash the floor and draw
+    var flashFloorAndDraw = function() {
         screen.renderer.toggleLevelFlash();
         commonDraw();
     };
 
     return {
+
+        // inherit script state functions
         __proto__: scriptState,
+
+        // script functions for each time
         triggers: {
             60: { init: commonDraw },
-            120: { init: flashFloor },
-            135: { init: flashFloor },
-            150: { init: flashFloor },
-            165: { init: flashFloor },
-            180: { init: flashFloor },
-            195: { init: flashFloor },
-            210: { init: flashFloor },
-            225: { init: flashFloor },
+            120: { init: flashFloorAndDraw },
+            135: { init: flashFloorAndDraw },
+            150: { init: flashFloorAndDraw },
+            165: { init: flashFloorAndDraw },
+            180: { init: flashFloorAndDraw },
+            195: { init: flashFloorAndDraw },
+            210: { init: flashFloorAndDraw },
+            225: { init: flashFloorAndDraw },
             255: { 
                 init: function() {
                     game.level++;
@@ -446,8 +477,9 @@ var finishState = (function(){
 })();
 
 ////////////////////////////////////////////////////
+// Game Over state
+// (state when player has lost last life)
 
-// display game over
 var overState = (function() {
     var frames;
     return {

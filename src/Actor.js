@@ -123,12 +123,16 @@ Actor.prototype.getStepSizeFromTable = (function(){
 
 // updates the actor state
 Actor.prototype.update = function(j) {
+
     // get number of steps to advance in this frame
     var numSteps = this.getNumSteps();
     if (j >= numSteps) 
         return;
 
+    // request to advance one step, and increment count if step taken
     this.steps += this.step();
+
+    // update head direction
     this.steer();
 };
 
@@ -162,6 +166,7 @@ Actor.prototype.getOpenSurroundTiles = function() {
     return openTiles;
 };
 
+// return the direction of the open, surrounding tile closest to our target
 Actor.prototype.getTurnClosestToTarget = function(openTiles) {
 
     var dx,dy,dist;                      // variables used for euclidean distance

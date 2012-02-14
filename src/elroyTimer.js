@@ -5,6 +5,7 @@
 
 var elroyTimer = (function(){
 
+    // get the number of dots left that should trigger elroy stage #1 or #2
     var getDotsLeftLimit = (function(){
         var dotsLeft = [
             [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120], // elroy1
@@ -16,6 +17,7 @@ var elroyTimer = (function(){
         };
     })();
 
+    // when level restarts, blinky must wait for clyde to leave home before resuming elroy mode
     var waitForClyde;
 
     return {
@@ -28,6 +30,7 @@ var elroyTimer = (function(){
         update: function() {
             var dotsLeft = tileMap.dotsLeft();
 
+            // stop waiting for clyde when clyde leaves home
             if (waitForClyde && clyde.mode != GHOST_PACING_HOME)
                 waitForClyde = false;
 

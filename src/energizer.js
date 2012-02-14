@@ -1,15 +1,15 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Energizer
 
-// handle how long the energizer lasts
-// handle how long the points will display after eating a ghost
+// This handles how long the energizer lasts as well as how long the
+// points will display after eating a ghost.
 
 var energizer = (function() {
 
     // how many seconds to display points when ghost is eaten
     var pointsDuration = 1;
 
-    // how long to stay energized
+    // how long to stay energized based on current level
     var getDuration = (function(){
         var seconds = [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
         return function() {
@@ -18,7 +18,7 @@ var energizer = (function() {
         };
     })();
 
-    // how many ghost flashes happen near the end of frightened mode
+    // how many ghost flashes happen near the end of frightened mode based on current level
     var getFlashes = (function(){
         var flashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
         return function() {
@@ -30,8 +30,8 @@ var energizer = (function() {
     // "The ghosts change colors every 14 game cycles when they start 'flashing'" -Jamey Pittman
     var flashInterval = 14;
 
-    var count;  // how many frames energizer has been active
-    var active; // is energizer active
+    var count;  // how long in frames energizer has been active
+    var active; // indicates if energizer is currently active
     var points; // points that the last eaten ghost was worth
     var pointsFramesLeft; // number of frames left to display points earned from eating ghost
 
@@ -42,7 +42,7 @@ var energizer = (function() {
             points = 100;
             pointsFramesLeft = 0;
             for (i=0; i<4; i++)
-                actors[i].scared = false;
+                ghosts[i].scared = false;
         },
         update: function() {
             var i;
@@ -58,7 +58,7 @@ var energizer = (function() {
             count = 0;
             points = 100;
             for (i=0; i<4; i++) 
-                actors[i].onEnergized();
+                ghosts[i].onEnergized();
         },
         isActive: function() { return active; },
         isFlash: function() { 

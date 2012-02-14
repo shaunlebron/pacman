@@ -1,7 +1,10 @@
-// targetting schemes
+/////////////////////////////////////////////////////////////////
+// Targetting
+// (a definition for each actor's targetting algorithm and a draw function to visualize it)
 
 (function() {
 
+// the size of the square rendered over a target tile (just half a tile)
 var targetSize = midTile.y;
 
 /////////////////////////////////////////////////////////////////
@@ -23,6 +26,7 @@ blinky.drawTarget = function(ctx) {
 
 /////////////////////////////////////////////////////////////////
 // pinky targets four tiles ahead of pacman
+
 pinky.setTarget = function() {
     this.targetTile.x = pacman.tile.x + 4*pacman.dir.x;
     this.targetTile.y = pacman.tile.y + 4*pacman.dir.y;
@@ -49,6 +53,7 @@ pinky.drawTarget = function(ctx) {
 
 /////////////////////////////////////////////////////////////////
 // inky targets twice the distance from blinky to two tiles ahead of pacman
+
 inky.setTarget = function() {
     var px = pacman.tile.x + 2*pacman.dir.x;
     var py = pacman.tile.y + 2*pacman.dir.y;
@@ -79,6 +84,7 @@ inky.drawTarget = function(ctx) {
 
 /////////////////////////////////////////////////////////////////
 // clyde targets pacman if >=8 tiles away, otherwise targets home
+
 clyde.setTarget = function() {
     var dx = pacman.tile.x - this.tile.x;
     var dy = pacman.tile.y - this.tile.y;
@@ -112,6 +118,7 @@ clyde.drawTarget = function(ctx) {
 
 /////////////////////////////////////////////////////////////////
 // pacman targets twice the distance from pinky to pacman or target pinky
+
 pacman.setTarget = function() {
     if (blinky.mode == GHOST_GOING_HOME || blinky.scared) {
         this.targetTile.x = pinky.tile.x;

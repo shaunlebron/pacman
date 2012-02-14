@@ -5,27 +5,16 @@ This is an accurate re-implementation of the original Pac-Man arcade game.
 
 [Click here to play the current version](http://shaunew.github.com/Pac-Man)
 
+![Preview](http://shaunew.github.com/Pac-Man/preview.png)
 
 Features
 --------
 
-- accurate to the original arcade game
-    - same coordinate space
-    - same movement physics
-    - same ghost behavior and timers
-    - same energizer timers
-    - same update rate at 60Hz
-- extra controls
-    - visualizing actor targets
-    - machine speed adjusting
-    - autoplay
-    - cheats (invincible, double speed chip)
-- dynamics maps
-    - ascii-based definitions
-    - included maps from Pac-Man and Ms. Pac-Man
-- renderer modes
-    - minimal (squares)
-    - arcade (original)
+- same coordinate space, movement physics, ghost behavior, timers, and update rate as the original arcade game
+- extra sandbox controls for visualizing ghost behavior, slowing down the game, and other adjustments
+- included maps from Pac-Man and Ms. Pac-Man
+- easy to create custom ascii-based level maze maps
+- separate rendering themes
 
 Code
 ----

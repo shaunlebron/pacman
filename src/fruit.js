@@ -3,8 +3,6 @@
 
 var fruit = (function(){
 
-    // get number of points a fruit is worth at current level
-
     var dotLimit1 = 70; // first fruit will appear when this number of dots are eaten
     var dotLimit2 = 170; // second fruit will appear when this number of dots are eaten
 
@@ -15,7 +13,11 @@ var fruit = (function(){
     var scoreFramesLeft; // frames left until the picked-up fruit score is off the screen
 
     return {
-        pixel: {x:0, y:0},
+        pixel: {x:0, y:0}, // pixel location
+        setPosition: function(px,py) {
+            this.pixel.x = px;
+            this.pixel.y = py;
+        },
         reset: function() {
             framesLeft = 0;
             scoreFramesLeft = 0;
@@ -39,10 +41,7 @@ var fruit = (function(){
                 scoreFramesLeft = scoreDuration*60;
             }
         },
-        setPosition: function(px,py) {
-            this.pixel.x = px;
-            this.pixel.y = py;
-        },
+        // get number of points a fruit is worth based on the current level
         getPoints: (function() {
             var points = [100,300,500,500,700,700,1000,1000,2000,2000,3000,3000,5000];
             return function() {

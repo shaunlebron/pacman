@@ -1,9 +1,17 @@
+//////////////////////////////////////////////////////////////
+// Renderers
 
+// Draws everything in the game using swappable renderers
+// to enable to different front-end displays for Pac-Man.
+
+// list of available renderers
 var renderers = {};
 
 //////////////////////////////////////////////////////////////
 // Common Renderer
+// (attributes and functionality that are currently common to all renderers)
 
+// constructor
 renderers.Common = function(ctx, bgCtx) {
     this.ctx = ctx;
     this.bgCtx = bgCtx;
@@ -21,6 +29,10 @@ renderers.Common = function(ctx, bgCtx) {
 
 renderers.Common.prototype = {
 
+    // scaling the canvas can incur floating point roundoff errors
+    // which manifest as "grout" between tiles that are otherwise adjacent in integer-space
+    // This function extends the width and height of the tile if it is adjacent to equivalent tiles
+    // that are to the bottom or right of the given tile
     drawNoGroutTile: function(ctx,x,y,w) {
         var tileChar = tileMap.getTile(x,y);
         this.drawCenterTileSq(ctx,x,y,tileSize,
@@ -46,10 +58,12 @@ renderers.Common.prototype = {
         //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
     },
 
+    // this flag is used to flash the level upon its successful completion
     toggleLevelFlash: function () {
         this.flashLevel = !this.flashLevel;
     },
 
+    // draw the target visualizers for each actor
     drawTargets: function() {
         var i;
         this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
@@ -58,6 +72,7 @@ renderers.Common.prototype = {
                 actors[i].drawTarget(this.ctx);
     },
 
+    // draw a fade filter for 0<=t<=1
     drawFadeIn: function(t) {
         this.ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
         this.ctx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
@@ -74,7 +89,7 @@ renderers.Common.prototype = {
         if (tileMap.getTile(x,y+1)==' ') this.drawNoGroutTile(this.bgCtx,x,y+1,tileSize);
         if (tileMap.getTile(x,y-1)==' ') this.drawNoGroutTile(this.bgCtx,x,y-1,tileSize);
 
-        // fill in adjacent wall tiles
+        // fill in adjacent wall tiles?
     },
 
     // draw a center screen message (e.g. "start", "ready", "game over")
@@ -102,7 +117,7 @@ renderers.Common.prototype = {
         // draw such that pacman appears on top
         if (energizer.isActive()) {
             for (i=0; i<4; i++)
-                this.drawGhost(actors[i]);
+                this.drawGhost(ghosts[i]);
             if (!energizer.showingPoints())
                 this.drawPacman();
             else
@@ -112,7 +127,7 @@ renderers.Common.prototype = {
         else {
             this.drawPacman();
             for (i=3; i>=0; i--) 
-                this.drawGhost(actors[i]);
+                this.drawGhost(ghosts[i]);
         }
     },
 
@@ -134,9 +149,12 @@ renderers.Common.prototype = {
 
 //////////////////////////////////////////////////////////////
 // Simple Renderer
+// (render a minimal Pac-Man display using nothing but squares)
 
+// constructor
 renderers.Simple = function(ctx,bgCtx) {
 
+    // inherit attributes from Common Renderer
     renderers.Common.call(this,ctx,bgCtx);
 
     this.messageRow = 21.7;
@@ -148,6 +166,8 @@ renderers.Simple = function(ctx,bgCtx) {
 };
 
 renderers.Simple.prototype = {
+
+    // inherit functions from Common Renderer
     __proto__: renderers.Common.prototype,
 
     drawMap: function() {
@@ -257,14 +277,17 @@ renderers.Simple.prototype = {
         this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
     },
 
-
 };
 
 
 //////////////////////////////////////////////////////////////
 // Arcade Renderer
+// (render a display close to the original arcade)
 
+// constructor
 renderers.Arcade = function(ctx,bgCtx) {
+
+    // inherit attributes from Common Renderer
     renderers.Common.call(this,ctx,bgCtx);
 
     this.messageRow = 20;
@@ -277,6 +300,8 @@ renderers.Arcade = function(ctx,bgCtx) {
 };
 
 renderers.Arcade.prototype = {
+
+    // inherit functions from Common Renderer
     __proto__: renderers.Common.prototype,
 
     drawMap: function() {
@@ -375,17 +400,20 @@ renderers.Arcade.prototype = {
             color = "rgba(255,255,255,0)";
 
         this.ctx.save();
-        this.ctx.fillStyle = color;
         this.ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
+
+        // draw body
         this.ctx.beginPath();
         addGhostHead(this.ctx);
-        if (Math.floor(g.frames/6) % 2 == 0)
+        if (Math.floor(g.frames/6) % 2 == 0) // change animation frame every 6 ticks
             addGhostFeet1(this.ctx);
         else
             addGhostFeet2(this.ctx);
         this.ctx.closePath();
+        this.ctx.fillStyle = color;
         this.ctx.fill();
 
+        // draw face
         if (g.scared)
             addScaredGhostFace(this.ctx, energizer.isFlash());
         else
@@ -398,23 +426,28 @@ renderers.Arcade.prototype = {
     drawPacman: function() {
         this.ctx.save();
         this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
+
         this.ctx.beginPath();
-        var frame = Math.floor(pacman.steps/2)%4;
-        if (frame == 3) frame = 1;
+        var frame = Math.floor(pacman.steps/2)%4; // change animation frame every 2 steps
+        if (frame == 3) 
+            frame = 1;
         addPacmanBody(this.ctx, pacman.dirEnum, frame*Math.PI/6);
         this.ctx.closePath();
         this.ctx.fillStyle = pacman.color;
         this.ctx.fill();
+
         this.ctx.restore();
     },
 
     // draw dying pacman animation (with 0<=t<=1)
+    // open mouth all the way while shifting corner of mouth forward
     drawDyingPacman: function(t) {
         this.ctx.save();
         this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
         this.ctx.beginPath();
         var frame = Math.floor(pacman.steps/2)%4;
-        if (frame == 3) frame = 1;
+        if (frame == 3) 
+            frame = 1;
         var a = frame*Math.PI/6;
         addPacmanBody(this.ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
         this.ctx.closePath();
@@ -437,7 +470,6 @@ renderers.Arcade.prototype = {
 
     // draw energizer items on foreground
     drawEnergizers: function() {
-        this.ctx.fillStyle = this.energizerColor;
         var e;
         var i;
         this.ctx.beginPath();
@@ -449,6 +481,7 @@ renderers.Arcade.prototype = {
             }
         }
         this.ctx.closePath();
+        this.ctx.fillStyle = this.energizerColor;
         this.ctx.fill();
     },
 

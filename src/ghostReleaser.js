@@ -8,14 +8,13 @@ var ghostReleaser = (function(){
     var MODE_PERSONAL = 0;
     var MODE_GLOBAL = 1;
 
+    // ghost enumerations
     var PINKY = 1;
     var INKY = 2;
     var CLYDE = 3;
 
     // this is how many frames it will take to release a ghost after pacman stops eating
-    var getTimeoutLimit = function() {
-        return (game.level < 5) ? 4*60 : 3*60;
-    };
+    var getTimeoutLimit = function() { return (game.level < 5) ? 4*60 : 3*60; };
 
     // dot limits used in personal mode to release ghost after # of dots have been eaten
     var personalDotLimit = {};
@@ -33,8 +32,8 @@ var ghostReleaser = (function(){
     globalDotLimit[INKY] = 17;
     globalDotLimit[CLYDE] = 32;
 
-    var mode;
-    var framesSinceLastDot;
+    var framesSinceLastDot; // frames elapsed since last dot was eaten
+    var mode;               // personal or global dot counter mode
     var ghostCounts = {};   // personal dot counts for each ghost
     var globalCount;        // global dot count
 
@@ -61,7 +60,7 @@ var ghostReleaser = (function(){
             }
             else {
                 for (i=1;i<4;i++) {
-                    if (actors[i].mode == GHOST_PACING_HOME) {
+                    if (ghosts[i].mode == GHOST_PACING_HOME) {
                         ghostCounts[i]++;
                         break;
                     }
@@ -75,7 +74,7 @@ var ghostReleaser = (function(){
             // use personal dot counter
             if (mode == MODE_PERSONAL) {
                 for (i=1;i<4;i++) {
-                    g = actors[i];
+                    g = ghosts[i];
                     if (g.mode == GHOST_PACING_HOME) {
                         if (ghostCounts[i] >= personalDotLimit[i]()) {
                             g.leaveHome();
@@ -107,7 +106,7 @@ var ghostReleaser = (function(){
             if (framesSinceLastDot > getTimeoutLimit()) {
                 framesSinceLastDot = 0;
                 for (i=1;i<4;i++) {
-                    g = actors[i];
+                    g = ghosts[i];
                     if (g.mode == GHOST_PACING_HOME) {
                         g.leaveHome();
                         break;

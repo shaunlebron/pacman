@@ -5,7 +5,7 @@
 
 var ghostCommander = (function() {
 
-    // get new ghost command from frame count
+    // determine if there is to be a new command issued at the given time
     var getNewCommand = (function(){
         var t;
         var times = [{},{},{}];
@@ -46,24 +46,24 @@ var ghostCommander = (function() {
         };
     })();
 
-    var count;   // current frame
+    var frame;   // current frame
     var command; // last command given to ghosts
 
     return {
         reset: function() { 
             command = GHOST_CMD_SCATTER;
-            count = 0;
+            frame = 0;
         },
         update: function() {
             var newCmd;
             if (!energizer.isActive()) {
-                newCmd = getNewCommand(count);
+                newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     command = newCmd;
                     for (i=0; i<4; i++)
-                        actors[i].reverse();
+                        ghosts[i].reverse();
                 }
-                count++;
+                frame++;
             }
         },
         getCommand: function() {

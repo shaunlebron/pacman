@@ -8,10 +8,23 @@ var game = (function(){
     var nextFrameTime;
 
     return {
+
+        // scoring
         highScore:0,
         score:0,
-        extraLives:0,
+        addScore: function(p) {
+            if (this.score < 10000 && this.score+p >= 10000)
+                this.extraLives++;
+            this.score += p;
+            if (this.score > this.highScore)
+                this.highScore = this.score;
+        },
+
+        // current level and lives left
         level:1,
+        extraLives:0,
+
+        // scheduling
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
         },
@@ -25,21 +38,6 @@ var game = (function(){
         resume: function() {
             nextFrameTime = (new Date).getTime();
             interval = setInterval(function(){game.tick();}, 1000/60);
-        },
-        switchMap: function(map) {
-            tileMap = maps[map];
-            tileMap.onLoad();
-        },
-        switchState: function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
-            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration, continueUpdate1, continueUpdate2) : nextState;
-            this.state.init();
-        },
-        addScore: function(p) {
-            if (this.score < 10000 && this.score+p >= 10000)
-                this.extraLives++;
-            this.score += p;
-            if (this.score > this.highScore)
-                this.highScore = this.score;
         },
         tick: (function(){
             var maxFrameSkip = 5;
@@ -55,5 +53,18 @@ var game = (function(){
                 this.state.draw();
             };
         })(),
+
+        // switches to another game state
+        switchState: function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
+            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration, continueUpdate1, continueUpdate2) : nextState;
+            this.state.init();
+        },
+
+        // switches to another map
+        switchMap: function(map) {
+            tileMap = maps[map];
+            tileMap.onLoad();
+        },
+
     };
 })();

@@ -1,10 +1,13 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// maps
+// Maps
+
+// Definitions of playable maps along with respective actor configurations
 
 // current map
 var tileMap;
 var maps;
 
+// enumerations for each map
 var MAP_MENU = 0;
 var MAP_PACMAN = 1;
 var MAP_MSPACMAN1 = 2;
@@ -14,6 +17,7 @@ var MAP_MSPACMAN4 = 5;
 
 // create maps
 (function() {
+
     // default onLoad function for TileMaps
     // contains potentially map-specific locations
     var onLoad = function() {
@@ -88,7 +92,7 @@ var MAP_MSPACMAN4 = 5;
         };
     };
 
-
+    // Original Pac-Man map
     var mapPacman = new TileMap(28, 36, (
         "____________________________" +
         "____________________________" +
@@ -128,7 +132,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________"));
 
     mapPacman.onLoad = onLoad;
-    //mapPacman.wallColor = "#2121ff";
+    //mapPacman.wallColor = "#2121ff"; // from original
     mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
     mapPacman.pelletColor = "#ffb8ae";
     mapPacman.constrainGhostTurns = function(x,y,openTiles) {
@@ -137,6 +141,8 @@ var MAP_MSPACMAN4 = 5;
             openTiles[DIR_UP] = false;
         }
     };
+
+    // Ms. Pac-Man map 1
 
     var mapMsPacman1 = new TileMap(28, 36, (
         "____________________________" +
@@ -180,6 +186,8 @@ var MAP_MSPACMAN4 = 5;
     mapMsPacman1.wallColor = "#FFB8AE";
     mapMsPacman1.pelletColor = "#dedeff";
 
+    // Ms. Pac-Man map 2
+
     var mapMsPacman2 = new TileMap(28, 36, (
         "____________________________" +
         "____________________________" +
@@ -221,6 +229,8 @@ var MAP_MSPACMAN4 = 5;
     mapMsPacman2.onLoad = onLoad;
     mapMsPacman2.wallColor = "#47b8ff";
     mapMsPacman2.pelletColor = "#ffff00";
+
+    // Ms. Pac-Man map 3
 
     var mapMsPacman3 = new TileMap(28, 36, (
         "____________________________" +
@@ -264,6 +274,8 @@ var MAP_MSPACMAN4 = 5;
     mapMsPacman3.wallColor = "#de9751";
     mapMsPacman3.pelletColor = "#ff0000";
 
+    // Ms. Pac-Man map 4
+
     var mapMsPacman4 = new TileMap(28, 36, (
         "____________________________" +
         "____________________________" +
@@ -305,6 +317,8 @@ var MAP_MSPACMAN4 = 5;
     mapMsPacman4.onLoad = onLoad;
     mapMsPacman4.wallColor = "#2121ff";
     mapMsPacman4.pelletColor = "#dedeff";
+
+    // Menu Map
 
     var menuMap = new TileMap(28, 36, (
         "____________________________" +
@@ -400,6 +414,7 @@ var MAP_MSPACMAN4 = 5;
     menuMap.wallColor = "#777";
     menuMap.pelletColor = "#FFF";
 
+    // create list of maps
     maps = [
         menuMap,
         mapPacman,

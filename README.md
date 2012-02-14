@@ -1,11 +1,17 @@
 Pac-Man
 =======
 
-This is an accurate re-implementation of the original Pac-Man arcade game.
-
-[Click here to play the current version](http://shaunew.github.com/Pac-Man)
+An accurate remake of the original Pac-Man arcade game.
 
 ![Preview](https://github.com/shaunew/Pac-Man/raw/gh-pages/preview.png)
+
+Description
+-----------
+Pac-Man is implemented using plain Javascript and HTML Canvas.  It is intended to accurately recreate the original game mechanics and to provide additional tools for visualizing the ghosts' behavior.
+
+Play
+----
+[Click here to play the current version](http://shaunew.github.com/Pac-Man)
 
 Features
 --------
@@ -16,13 +22,12 @@ Features
 - easy to create custom ascii-based level maze maps
 - separate rendering themes
 
-Code
-----
-- implemented in Javascript using HTML Canvas
-- all javascript source files are located in the `src/` directory
-- `build.sh` file concatenates all the source files into a closure in `pacman.js` in the top directory
-- `debug.htm` displays the game by including the `src/*.js` files
-- `index.htm` displays the game by including the `pacman.js` file only.
+Navigating the Repository
+-------------------------
+- all javascript source files are located in the "src/" directory
+- "build.sh" file concatenates all the source files into a closure in "pacman.js" in the top directory
+- "debug.htm" displays the game by using the "src/*.js" files
+- "index.htm" displays the game by using the "pacman.js" file only.
 
 Future
 ------

@@ -5,7 +5,7 @@ This is an accurate re-implementation of the original Pac-Man arcade game.
 
 [Click here to play the current version](http://shaunew.github.com/Pac-Man)
 
-![Preview](http://shaunew.github.com/Pac-Man/preview.png)
+![Preview](https://github.com/shaunew/Pac-Man/raw/gh-pages/preview.png)
 
 Features
 --------

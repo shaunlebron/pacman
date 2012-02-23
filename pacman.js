@@ -912,12 +912,17 @@ var screen = (function() {
     // add interative options to tune the game
     var addControls = function() {
 
+        var controlDiv = document.getElementById("pacman-controls");
+        if (!controlDiv)
+            return;
+
         // used for making html elements with unique id's
         var id = 0;
 
         // create a form field group with the given title caption
         var makeFieldSet = function(title) {
             var fieldset = document.createElement('fieldset');
+            fieldset.width = 200;
             var legend = document.createElement('legend');
             legend.appendChild(document.createTextNode(title));
             fieldset.appendChild(legend);
@@ -961,10 +966,9 @@ var screen = (function() {
             fieldset.appendChild(document.createElement('br'));
         };
 
+        ///////////////////////////////////////////////////
         // create form for our controls
         var form = document.createElement('form');
-        form.style.width = 200;
-        form.style.cssFloat = "left";
 
         var fieldset; // var to receive the constructed field sets
 
@@ -1033,12 +1037,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         // add control from to our div
-        divContainer.appendChild(form);
-
-        // create an element to stop the floating layout
-        var br = document.createElement('br');
-        br.style.clear = "both";
-        divContainer.appendChild(br);
+        controlDiv.appendChild(form);
     };
 
     var addInput = function() {
@@ -1066,7 +1065,6 @@ var screen = (function() {
             bgCanvas = makeCanvas();
             ctx = canvas.getContext("2d");
             bgCtx = bgCanvas.getContext("2d");
-            canvas.style.cssFloat = "left";
 
             // add canvas and controls to our div
             divContainer = document.getElementById('pacman');
@@ -2796,7 +2794,7 @@ var overState = (function() {
         draw: function() {},
         update: function() {
             if (frames == 120) {
-                game.switchState(menuState, 120,false,true);
+                game.switchState(menuState);
             }
             else
                 frames++;

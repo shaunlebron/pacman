@@ -42,6 +42,10 @@ var screen = (function() {
     // add interative options to tune the game
     var addControls = function() {
 
+        var controlDiv = document.getElementById("pacman-controls");
+        if (!controlDiv)
+            return;
+
         // used for making html elements with unique id's
         var id = 0;
 
@@ -95,7 +99,6 @@ var screen = (function() {
         ///////////////////////////////////////////////////
         // create form for our controls
         var form = document.createElement('form');
-        form.style.cssFloat = "left";
 
         var fieldset; // var to receive the constructed field sets
 
@@ -164,12 +167,7 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         // add control from to our div
-        divContainer.appendChild(form);
-
-        // create an element to stop the floating layout
-        var br = document.createElement('br');
-        br.style.clear = "both";
-        divContainer.appendChild(br);
+        controlDiv.appendChild(form);
     };
 
     var addInput = function() {
@@ -197,7 +195,6 @@ var screen = (function() {
             bgCanvas = makeCanvas();
             ctx = canvas.getContext("2d");
             bgCtx = bgCanvas.getContext("2d");
-            canvas.style.cssFloat = "left";
 
             // add canvas and controls to our div
             divContainer = document.getElementById('pacman');

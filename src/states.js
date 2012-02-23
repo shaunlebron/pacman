@@ -490,7 +490,7 @@ var overState = (function() {
         draw: function() {},
         update: function() {
             if (frames == 120) {
-                game.switchState(menuState, 120,false,true);
+                game.switchState(menuState);
             }
             else
                 frames++;

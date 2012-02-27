@@ -92,6 +92,16 @@ var MAP_MSPACMAN4 = 5;
         };
     };
 
+    var onLoadPacman = function() {
+        onLoad.call(this);
+        ghostBehaviorMode = GHOST_BEHAVIOR_PACMAN;
+    };
+
+    var onLoadMsPacman = function() {
+        onLoad.call(this);
+        ghostBehaviorMode = GHOST_BEHAVIOR_MSPACMAN;
+    };
+
     // Original Pac-Man map
     var mapPacman = new TileMap(28, 36, (
         "____________________________" +
@@ -131,7 +141,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapPacman.onLoad = onLoad;
+    mapPacman.onLoad = onLoadPacman;
     //mapPacman.wallColor = "#2121ff"; // from original
     mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
     mapPacman.pelletColor = "#ffb8ae";
@@ -182,7 +192,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapMsPacman1.onLoad = onLoad;
+    mapMsPacman1.onLoad = onLoadMsPacman;
     mapMsPacman1.wallColor = "#FFB8AE";
     mapMsPacman1.pelletColor = "#dedeff";
 
@@ -226,7 +236,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapMsPacman2.onLoad = onLoad;
+    mapMsPacman2.onLoad = onLoadMsPacman;
     mapMsPacman2.wallColor = "#47b8ff";
     mapMsPacman2.pelletColor = "#ffff00";
 
@@ -270,7 +280,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapMsPacman3.onLoad = onLoad;
+    mapMsPacman3.onLoad = onLoadMsPacman;
     mapMsPacman3.wallColor = "#de9751";
     mapMsPacman3.pelletColor = "#ff0000";
 
@@ -314,7 +324,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapMsPacman4.onLoad = onLoad;
+    mapMsPacman4.onLoad = onLoadMsPacman;
     mapMsPacman4.wallColor = "#2121ff";
     mapMsPacman4.pelletColor = "#dedeff";
 

@@ -1,6 +1,11 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
 
+// ghost behaviors in Ms.Pac-Man and Pac-Man are slightly different.
+var GHOST_BEHAVIOR_PACMAN = 0;
+var GHOST_BEHAVIOR_MSPACMAN = 1;
+var ghostBehaviorMode;
+
 // modes representing the ghosts' current command
 var GHOST_CMD_CHASE = 0;
 var GHOST_CMD_SCATTER = 1;
@@ -175,6 +180,14 @@ Ghost.prototype.homeSteer = (function(){
 
 })();
 
+// special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
+Ghost.prototype.isScatterBrain = function() {
+    return (
+        ghostBehaviorMode == GHOST_BEHAVIOR_MSPACMAN && 
+        ghostCommander.getCommand() == GHOST_CMD_SCATTER &&
+        (this == blinky || this == pinky));
+};
+
 // determine direction
 Ghost.prototype.steer = function() {
 
@@ -182,6 +195,7 @@ Ghost.prototype.steer = function() {
     var dirEnum;                         // final direction to update to
     var openTiles;                       // list of four booleans indicating which surrounding tiles are open
     var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
+    var actor;                           // actor whose corner we will target
 
     // reverse direction if commanded
     if (this.sigReverse && this.mode == GHOST_OUTSIDE) {
@@ -214,9 +228,9 @@ Ghost.prototype.steer = function() {
     // get surrounding tiles and their open indication
     openTiles = this.getOpenSurroundTiles();
 
-    // random turn if scared
-    if (this.scared || (ghostCommander.getCommand() == GHOST_CMD_SCATTER && this.randomScatter)) {
-        dirEnum = Math.floor(Math.random()*5);
+    if (this.scared) {
+        // choose a random turn
+        dirEnum = Math.floor(Math.random()*4);
         while (!openTiles[dirEnum])
             dirEnum = (dirEnum+1)%4;
         this.targetting = false;
@@ -228,10 +242,13 @@ Ghost.prototype.steer = function() {
             this.targetTile.y = tileMap.doorTile.y;
             this.targetting = 'door';
         }
-        // target corner when patrolling
+        // target corner when scattering
         else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
-            this.targetTile.x = this.cornerTile.x;
-            this.targetTile.y = this.cornerTile.y;
+
+            actor = this.isScatterBrain() ? actors[Math.floor(Math.random()*4)] : this;
+
+            this.targetTile.x = actor.cornerTile.x;
+            this.targetTile.y = actor.cornerTile.y;
             this.targetting = 'corner';
         }
         // use custom function for each ghost when in attack mode

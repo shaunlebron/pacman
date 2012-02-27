@@ -1297,6 +1297,11 @@ Actor.prototype.getTurnClosestToTarget = function(openTiles) {
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
 
+// ghost behaviors in Ms.Pac-Man and Pac-Man are slightly different.
+var GHOST_BEHAVIOR_PACMAN = 0;
+var GHOST_BEHAVIOR_MSPACMAN = 1;
+var ghostBehaviorMode;
+
 // modes representing the ghosts' current command
 var GHOST_CMD_CHASE = 0;
 var GHOST_CMD_SCATTER = 1;
@@ -1471,6 +1476,14 @@ Ghost.prototype.homeSteer = (function(){
 
 })();
 
+// special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
+Ghost.prototype.isScatterBrain = function() {
+    return (
+        ghostBehaviorMode == GHOST_BEHAVIOR_MSPACMAN && 
+        ghostCommander.getCommand() == GHOST_CMD_SCATTER &&
+        (this == blinky || this == pinky));
+};
+
 // determine direction
 Ghost.prototype.steer = function() {
 
@@ -1478,6 +1491,7 @@ Ghost.prototype.steer = function() {
     var dirEnum;                         // final direction to update to
     var openTiles;                       // list of four booleans indicating which surrounding tiles are open
     var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
+    var actor;                           // actor whose corner we will target
 
     // reverse direction if commanded
     if (this.sigReverse && this.mode == GHOST_OUTSIDE) {
@@ -1510,9 +1524,9 @@ Ghost.prototype.steer = function() {
     // get surrounding tiles and their open indication
     openTiles = this.getOpenSurroundTiles();
 
-    // random turn if scared
-    if (this.scared || (ghostCommander.getCommand() == GHOST_CMD_SCATTER && this.randomScatter)) {
-        dirEnum = Math.floor(Math.random()*5);
+    if (this.scared) {
+        // choose a random turn
+        dirEnum = Math.floor(Math.random()*4);
         while (!openTiles[dirEnum])
             dirEnum = (dirEnum+1)%4;
         this.targetting = false;
@@ -1524,10 +1538,13 @@ Ghost.prototype.steer = function() {
             this.targetTile.y = tileMap.doorTile.y;
             this.targetting = 'door';
         }
-        // target corner when patrolling
+        // target corner when scattering
         else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
-            this.targetTile.x = this.cornerTile.x;
-            this.targetTile.y = this.cornerTile.y;
+
+            actor = this.isScatterBrain() ? actors[Math.floor(Math.random()*4)] : this;
+
+            this.targetTile.x = actor.cornerTile.x;
+            this.targetTile.y = actor.cornerTile.y;
             this.targetting = 'corner';
         }
         // use custom function for each ghost when in attack mode
@@ -1914,7 +1931,9 @@ var ghostCommander = (function() {
             if (!energizer.isActive()) {
                 newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
-                    command = newCmd;
+                    // new command is always "chase" when in Ms. Pac-Man mode
+                    command = (ghostBehaviorMode == GHOST_BEHAVIOR_MSPACMAN) ? GHOST_CMD_CHASE : newCmd;
+
                     for (i=0; i<4; i++)
                         ghosts[i].reverse();
                 }
@@ -2896,6 +2915,16 @@ var MAP_MSPACMAN4 = 5;
         };
     };
 
+    var onLoadPacman = function() {
+        onLoad.call(this);
+        ghostBehaviorMode = GHOST_BEHAVIOR_PACMAN;
+    };
+
+    var onLoadMsPacman = function() {
+        onLoad.call(this);
+        ghostBehaviorMode = GHOST_BEHAVIOR_MSPACMAN;
+    };
+
     // Original Pac-Man map
     var mapPacman = new TileMap(28, 36, (
         "____________________________" +
@@ -2935,7 +2964,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapPacman.onLoad = onLoad;
+    mapPacman.onLoad = onLoadPacman;
     //mapPacman.wallColor = "#2121ff"; // from original
     mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
     mapPacman.pelletColor = "#ffb8ae";
@@ -2986,7 +3015,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapMsPacman1.onLoad = onLoad;
+    mapMsPacman1.onLoad = onLoadMsPacman;
     mapMsPacman1.wallColor = "#FFB8AE";
     mapMsPacman1.pelletColor = "#dedeff";
 
@@ -3030,7 +3059,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapMsPacman2.onLoad = onLoad;
+    mapMsPacman2.onLoad = onLoadMsPacman;
     mapMsPacman2.wallColor = "#47b8ff";
     mapMsPacman2.pelletColor = "#ffff00";
 
@@ -3074,7 +3103,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapMsPacman3.onLoad = onLoad;
+    mapMsPacman3.onLoad = onLoadMsPacman;
     mapMsPacman3.wallColor = "#de9751";
     mapMsPacman3.pelletColor = "#ff0000";
 
@@ -3118,7 +3147,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
-    mapMsPacman4.onLoad = onLoad;
+    mapMsPacman4.onLoad = onLoadMsPacman;
     mapMsPacman4.wallColor = "#2121ff";
     mapMsPacman4.pelletColor = "#dedeff";
 

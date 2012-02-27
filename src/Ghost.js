@@ -111,10 +111,6 @@ Ghost.prototype.homeSteer = (function(){
     // steering functions to execute for each mode
     var steerFuncs = {};
 
-    steerFuncs[GHOST_EATEN] = function() {
-        this.mode = GHOST_GOING_HOME;
-    };
-
     steerFuncs[GHOST_GOING_HOME] = function() {
         // at the doormat
         if (this.tile.x == tileMap.doorTile.x && this.tile.y == tileMap.doorTile.y)

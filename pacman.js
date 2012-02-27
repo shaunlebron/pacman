@@ -1407,10 +1407,6 @@ Ghost.prototype.homeSteer = (function(){
     // steering functions to execute for each mode
     var steerFuncs = {};
 
-    steerFuncs[GHOST_EATEN] = function() {
-        this.mode = GHOST_GOING_HOME;
-    };
-
     steerFuncs[GHOST_GOING_HOME] = function() {
         // at the doormat
         if (this.tile.x == tileMap.doorTile.x && this.tile.y == tileMap.doorTile.y)
@@ -2586,6 +2582,11 @@ var playState = {
                         ghosts[i].update(j);
             energizer.updatePointsTimer();
             return;
+        }
+        else { // make ghosts go home immediately after points disappear
+            for (i=0; i<4; i++)
+                if (ghosts[i].mode == GHOST_EATEN)
+                    ghosts[i].mode = GHOST_GOING_HOME;
         }
 
         // update counters

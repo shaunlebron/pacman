@@ -283,6 +283,11 @@ var playState = {
             energizer.updatePointsTimer();
             return;
         }
+        else { // make ghosts go home immediately after points disappear
+            for (i=0; i<4; i++)
+                if (ghosts[i].mode == GHOST_EATEN)
+                    ghosts[i].mode = GHOST_GOING_HOME;
+        }
 
         // update counters
         ghostReleaser.update();

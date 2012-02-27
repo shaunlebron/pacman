@@ -1,6 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Game
 
+var GAME_PACMAN = 0;
+var GAME_MSPACMAN = 1;
+
 var game = (function(){
 
     var interval; // used by setInterval and clearInterval to execute the game loop
@@ -8,6 +11,8 @@ var game = (function(){
     var nextFrameTime;
 
     return {
+
+        mode:GAME_PACMAN,
 
         // scoring
         highScore:0,

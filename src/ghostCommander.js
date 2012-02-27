@@ -60,7 +60,7 @@ var ghostCommander = (function() {
                 newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     // new command is always "chase" when in Ms. Pac-Man mode
-                    command = (ghostBehaviorMode == GHOST_BEHAVIOR_MSPACMAN) ? GHOST_CMD_CHASE : newCmd;
+                    command = (game.mode == GAME_MSPACMAN) ? GHOST_CMD_CHASE : newCmd;
 
                     for (i=0; i<4; i++)
                         ghosts[i].reverse();

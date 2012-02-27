@@ -1,11 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
 
-// ghost behaviors in Ms.Pac-Man and Pac-Man are slightly different.
-var GHOST_BEHAVIOR_PACMAN = 0;
-var GHOST_BEHAVIOR_MSPACMAN = 1;
-var ghostBehaviorMode;
-
 // modes representing the ghosts' current command
 var GHOST_CMD_CHASE = 0;
 var GHOST_CMD_SCATTER = 1;
@@ -43,6 +38,15 @@ Ghost.prototype.reset = function() {
     Actor.prototype.reset.apply(this);
 };
 
+// indicates if we slow down in the tunnel
+Ghost.prototype.isSlowInTunnel = function() {
+    // special case for Ms. Pac-Man (slow down only for the first three levels)
+    if (game.mode == GAME_MSPACMAN)
+        return game.level <= 3;
+    else
+        return true;
+};
+
 // gets the number of steps to move in this frame
 Ghost.prototype.getNumSteps = function() {
 
@@ -52,7 +56,9 @@ Ghost.prototype.getNumSteps = function() {
         pattern = STEP_GHOST;
     else if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
-    else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME || tileMap.isTunnelTile(this.tile.x, this.tile.y))
+    else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME)
+        pattern = STEP_GHOST_TUNNEL;
+    else if (tileMap.isTunnelTile(this.tile.x, this.tile.y) && this.isSlowInTunnel())
         pattern = STEP_GHOST_TUNNEL;
     else if (this.scared)
         pattern = STEP_GHOST_FRIGHT;
@@ -183,7 +189,7 @@ Ghost.prototype.homeSteer = (function(){
 // special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
 Ghost.prototype.isScatterBrain = function() {
     return (
-        ghostBehaviorMode == GHOST_BEHAVIOR_MSPACMAN && 
+        game.mode == GAME_MSPACMAN && 
         ghostCommander.getCommand() == GHOST_CMD_SCATTER &&
         (this == blinky || this == pinky));
 };

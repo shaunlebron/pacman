@@ -94,12 +94,12 @@ var MAP_MSPACMAN4 = 5;
 
     var onLoadPacman = function() {
         onLoad.call(this);
-        ghostBehaviorMode = GHOST_BEHAVIOR_PACMAN;
+        game.mode = GAME_PACMAN;
     };
 
     var onLoadMsPacman = function() {
         onLoad.call(this);
-        ghostBehaviorMode = GHOST_BEHAVIOR_MSPACMAN;
+        game.mode = GAME_MSPACMAN;
     };
 
     // Original Pac-Man map

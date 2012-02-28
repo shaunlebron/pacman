@@ -1,0 +1,23 @@
+canvas {
+    border:10px solid black;
+}
+#pacman-controls {
+    float:left;
+    margin:5px;
+}
+form {
+    margin: 3px;
+}
+legend {
+}
+fieldset {
+    margin-top: 3px;
+    border:1px solid #333;
+}
+label {
+    font-size:0.9em;
+    color: #333;
+}
+#links {
+    margin:5px;
+}

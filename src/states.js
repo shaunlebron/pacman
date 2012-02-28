@@ -102,8 +102,9 @@ var menuState = {
     },
     draw: function() {
         screen.blitMap();
-        screen.renderer.drawScore();
-        screen.renderer.drawMessage("Pac-Man","#FF0");
+        if (game.score != 0 && game.highScore != 0)
+            screen.renderer.drawScore();
+        screen.renderer.drawMessage("click to play","#FF0");
         screen.renderer.drawActors();
     },
     update: function() {

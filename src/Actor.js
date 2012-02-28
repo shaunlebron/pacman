@@ -181,6 +181,7 @@ getTurnClosestToTarget = function(tile,targetTile,openTiles) {
 };
 
 // draw a predicted path for the actor if it continues pursuing current target
+var actorPathLength = 16;
 Actor.prototype.drawPath = function(ctx) {
     if (!this.targetting) return;
     ctx.strokeStyle = this.pathColor;
@@ -198,9 +199,6 @@ Actor.prototype.drawPath = function(ctx) {
     ctx.moveTo(
             tile.x*tileSize+midTile.x+this.pathCenter.x,
             tile.y*tileSize+midTile.y+this.pathCenter.y);
-
-    // maximum number of tiles to travel
-    var numTiles = 40;
 
     // distance from center of the tile of current tile
     // (negative distance means we have not yet reached center)
@@ -220,7 +218,7 @@ Actor.prototype.drawPath = function(ctx) {
                 tile.y*tileSize+midTile.y+this.pathCenter.y);
     }
 
-    for (i=0; i<numTiles ;i++) {
+    for (i=0; i<actorPathLength ;i++) {
 
         // predict the next direction to turn at current tile
         openTiles = getOpenSurroundTiles(tile, dirEnum);
@@ -230,19 +228,35 @@ Actor.prototype.drawPath = function(ctx) {
         setDirFromEnum(dir,dirEnum);
 
         // if the next tile is our target
-        // move to target tile and draw a line to its center and exit function
+        // move to target tile and draw a line to its center then exit function
         if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
             tile.x += dir.x;
             tile.y += dir.y;
-            ctx.lineTo(
-                    tile.x*tileSize+midTile.x+this.pathCenter.x,
-                    tile.y*tileSize+midTile.y+this.pathCenter.y);
+
+            // end of the path
+            var px = tile.x*tileSize+midTile.x+this.pathCenter.x;
+            var py = tile.y*tileSize+midTile.y+this.pathCenter.y;
+
+            // draw an arrow head
+            ctx.lineTo(px,py);
+            var s = 3;
+            if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
+                ctx.lineTo(px-s*dir.x,py+s*dir.x);
+                ctx.moveTo(px,py);
+                ctx.lineTo(px-s*dir.x,py-s*dir.x);
+            }
+            else {
+                ctx.lineTo(px+s*dir.y,py-s*dir.y);
+                ctx.moveTo(px,py);
+                ctx.lineTo(px-s*dir.y,py-s*dir.y);
+            }
             ctx.stroke();
+
             return;
         }
 
         // exit loop without drawing the next tile if we meet our travel limit
-        if (i == numTiles-1)
+        if (i == actorPathLength-1)
             break;
 
         // move to next tile and draw a line to its center if we have more tiles to go
@@ -265,10 +279,26 @@ Actor.prototype.drawPath = function(ctx) {
         tile.y += dir.y;
     }
 
-    // draw last path line by adding offset from the center of the initial tile
-    ctx.lineTo(
-            tile.x*tileSize+midTile.x+this.pathCenter.x+dist*dir.x,
-            tile.y*tileSize+midTile.y+this.pathCenter.y+dist*dir.y);
+
+    // get the path endpoint by adding offset from the center of the initial tile
+    // (this creates a smoothly moving path head)
+    var px = tile.x*tileSize+midTile.x+this.pathCenter.x+dist*dir.x;
+    var py = tile.y*tileSize+midTile.y+this.pathCenter.y+dist*dir.y;
+
+    // draw an arrow head
+    ctx.lineTo(px,py);
+    var s = 3;
+    if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
+        ctx.lineTo(px-s*dir.x,py+s*dir.x);
+        ctx.moveTo(px,py);
+        ctx.lineTo(px-s*dir.x,py-s*dir.x);
+    }
+    else {
+        ctx.lineTo(px+s*dir.y,py-s*dir.y);
+        ctx.moveTo(px,py);
+        ctx.lineTo(px-s*dir.y,py-s*dir.y);
+    }
+
 
     ctx.stroke();
 };

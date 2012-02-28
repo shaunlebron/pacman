@@ -52,7 +52,6 @@ var screen = (function() {
         // create a form field group with the given title caption
         var makeFieldSet = function(title) {
             var fieldset = document.createElement('fieldset');
-            fieldset.width = 200;
             var legend = document.createElement('legend');
             legend.appendChild(document.createTextNode(title));
             fieldset.appendChild(legend);
@@ -60,7 +59,7 @@ var screen = (function() {
         };
 
         // add a checkbox
-        var addCheckbox = function(fieldset, caption, onChange, on) {
+        var addCheckbox = function(fieldset, caption, onChange, on, outline, sameline) {
             id++;
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -69,16 +68,23 @@ var screen = (function() {
             checkbox.onchange = function() { onChange(checkbox.checked); };
             fieldset.appendChild(checkbox);
 
-            label = document.createElement('label');
-            label.htmlFor = 'check'+id;
-            label.appendChild(document.createTextNode(caption));
-            fieldset.appendChild(label);
+            if (caption) {
+                label = document.createElement('label');
+                label.htmlFor = 'check'+id;
+                label.appendChild(document.createTextNode(caption));
+                fieldset.appendChild(label);
+            }
 
-            fieldset.appendChild(document.createElement('br'));
+            if (outline) {
+                checkbox.style.outline = outline;
+                checkbox.style.margin = "5px";
+            }
+            if (!sameline)
+                fieldset.appendChild(document.createElement('br'));
         };
 
         // add a radio button
-        var addRadio = function(fieldset, group, caption, onChange,on) {
+        var addRadio = function(fieldset, group, caption, onChange, on, sameline) {
             id++;
             var radio = document.createElement('input');
             radio.type = 'radio';
@@ -88,11 +94,51 @@ var screen = (function() {
             radio.onchange = function() { onChange(radio.checked); };
             fieldset.appendChild(radio);
 
-            label = document.createElement('label');
-            label.htmlFor = 'radio'+id;
-            label.appendChild(document.createTextNode(caption));
-            fieldset.appendChild(label);
+            if (caption) {
+                label = document.createElement('label');
+                label.htmlFor = 'radio'+id;
+                label.appendChild(document.createTextNode(caption));
+                fieldset.appendChild(label);
+            }
 
+            if (!sameline)
+                fieldset.appendChild(document.createElement('br'));
+        };
+
+        var makeLabel = function(caption) {
+            var label;
+            label = document.createElement('label');
+            label.style.padding = "3px";
+            label.appendChild(document.createTextNode(caption));
+            return label;
+        };
+
+        var addSlider = function(fieldset, suffix, value, min, max, step, onChange) {
+            id++;
+            var slider = document.createElement('input');
+            slider.type = 'range';
+            slider.id = 'range'+id;
+            slider.value = value;
+            slider.min = min;
+            slider.max = max;
+            slider.step = step;
+            fieldset.appendChild(slider);
+            fieldset.appendChild(document.createElement('br'));
+            /*
+            var div = document.createElement('div');
+            div.innerHTML = '<input id="range' + id +'" type="range" value="' + value + '" min="' + min + '" max="' + max + '" step="' + step + '">';
+            fieldset.appendChild(div);
+            */
+
+            var label;
+
+            label = makeLabel(''+value+suffix);
+            slider.onchange = function() {
+                if (onChange)
+                    onChange(this.value);
+                label.innerHTML = ''+this.value+suffix;
+            };
+            fieldset.appendChild(label);
             fieldset.appendChild(document.createElement('br'));
         };
 
@@ -118,10 +164,12 @@ var screen = (function() {
             game.resume();
         };
         fieldset = makeFieldSet('Machine Speed');
-        addRadio(fieldset, 'playback', 'pause', function(on) { if(on) game.pause(); });
-        addRadio(fieldset, 'playback', 'quarter', function(on) { if(on) changeRate(15); });
-        addRadio(fieldset, 'playback', 'half', function(on) { if(on) changeRate(30); });
-        addRadio(fieldset, 'playback', 'normal', function(on) { if(on) changeRate(60); },true);
+        addSlider(fieldset, '%', 100, 0, 200, 20, function(value) {
+            if (value == 0)
+                game.pause();
+            else
+                changeRate(60*value/100);
+        });
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
@@ -134,28 +182,35 @@ var screen = (function() {
                 }
             };
         };
-        addRadio(fieldset, 'render', 'minimal',         makeSwitchRenderer(0));
+        addRadio(fieldset, 'render', 'minimal', makeSwitchRenderer(0), false, true);
         addRadio(fieldset, 'render', 'arcade', makeSwitchRenderer(1),true);
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
         // draw actor targets group
-        fieldset = makeFieldSet('Show Logic');
-        addCheckbox(fieldset, 'blinky (red)', function(on) { blinky.isDrawTarget = on; });
-        addCheckbox(fieldset, 'pinky (pink)', function(on) { pinky.isDrawTarget = on; });
-        addCheckbox(fieldset, 'inky (cyan)', function(on) { inky.isDrawTarget = on; });
-        addCheckbox(fieldset, 'clyde (orange)', function(on) { clyde.isDrawTarget = on; });
-        addCheckbox(fieldset, 'pacman (yellow)', function(on) { pacman.isDrawTarget = on; });
-        form.appendChild(fieldset);
+        fieldset = makeFieldSet('Behavior');
+        addCheckbox(fieldset, '', function(on) { blinky.isDrawTarget = on; }, false, '4px solid ' + blinky.color, true);
+        addCheckbox(fieldset, '', function(on) { pinky.isDrawTarget = on; },  false, '4px solid ' + pinky.color, true);
+        addCheckbox(fieldset, '', function(on) { inky.isDrawTarget = on; },   false, '4px solid ' + inky.color, true);
+        addCheckbox(fieldset, '', function(on) { clyde.isDrawTarget = on; },  false, '4px solid ' + clyde.color, true);
+        addCheckbox(fieldset, '', function(on) { pacman.isDrawTarget = on; }, false, '4px solid ' + pacman.color, true);
+        fieldset.appendChild(makeLabel('Logic '));
 
-        ///////////////////////////////////////////////////
-        // draw actor paths group
-        fieldset = makeFieldSet('Predict Paths');
-        addCheckbox(fieldset, 'blinky (red)', function(on) { blinky.isDrawPath = on; });
-        addCheckbox(fieldset, 'pinky (pink)', function(on) { pinky.isDrawPath = on; });
-        addCheckbox(fieldset, 'inky (cyan)', function(on) { inky.isDrawPath = on; });
-        addCheckbox(fieldset, 'clyde (orange)', function(on) { clyde.isDrawPath = on; });
-        addCheckbox(fieldset, 'pacman (yellow)', function(on) { pacman.isDrawPath = on; });
+        fieldset.appendChild(document.createElement('br'));
+
+        addCheckbox(fieldset, '', function(on) { blinky.isDrawPath = on; }, false, '4px solid ' + blinky.color, true);
+        addCheckbox(fieldset, '', function(on) { pinky.isDrawPath = on; },  false, '4px solid ' + pinky.color, true);
+        addCheckbox(fieldset, '', function(on) { inky.isDrawPath = on; },   false, '4px solid ' + inky.color, true);
+        addCheckbox(fieldset, '', function(on) { clyde.isDrawPath = on; },  false, '4px solid ' + clyde.color, true);
+        addCheckbox(fieldset, '', function(on) { pacman.isDrawPath = on; }, false, '4px solid ' + pacman.color, true);
+        fieldset.appendChild(makeLabel('Path '));
+
+        fieldset.appendChild(document.createElement('br'));
+
+        addSlider(fieldset, ' tile path', actorPathLength, 8, 64, 8, function(value) {
+            actorPathLength = value;
+        });
+
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////

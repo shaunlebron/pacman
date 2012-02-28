@@ -137,37 +137,28 @@ Actor.prototype.update = function(j) {
 };
 
 // retrieve four surrounding tiles and indicate whether they are open
-Actor.prototype.getOpenSurroundTiles = function() {
+getOpenSurroundTiles = function(tile,dirEnum) {
 
     // get open passages
-    var surroundTiles = tileMap.getSurroundingTiles(this.tile);
-    var openTiles = {};
+    var openTiles = tileMap.getOpenTiles(tile).slice();
     var numOpenTiles = 0;
-    var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
     var i;
     for (i=0; i<4; i++)
-        if (openTiles[i] = tileMap.isFloorTileChar(surroundTiles[i]))
+        if (openTiles[i])
             numOpenTiles++;
 
     // By design, no mazes should have dead ends,
     // but allow player to turn around if and only if it's necessary.
     // Only close the passage behind the player if there are other openings.
-    if (numOpenTiles > 1) {
+    var oppDirEnum = (dirEnum+2)%4; // current opposite direction enum
+    if (numOpenTiles > 1)
         openTiles[oppDirEnum] = false;
-    }
-    // somehow we got stuck
-    else if (numOpenTiles == 0) {
-        this.dir.x = 0;
-        this.dir.y = 0;
-        console.log(this.name,'got stuck');
-        return;
-    }
 
     return openTiles;
 };
 
 // return the direction of the open, surrounding tile closest to our target
-Actor.prototype.getTurnClosestToTarget = function(openTiles) {
+getTurnClosestToTarget = function(tile,targetTile,openTiles) {
 
     var dx,dy,dist;                      // variables used for euclidean distance
     var minDist = Infinity;              // variable used for finding minimum distance path
@@ -177,8 +168,8 @@ Actor.prototype.getTurnClosestToTarget = function(openTiles) {
     for (i=0; i<4; i++) {
         if (openTiles[i]) {
             setDirFromEnum(dir,i);
-            dx = dir.x + this.tile.x - this.targetTile.x;
-            dy = dir.y + this.tile.y - this.targetTile.y;
+            dx = dir.x + tile.x - targetTile.x;
+            dy = dir.y + tile.y - targetTile.y;
             dist = dx*dx+dy*dy;
             if (dist < minDist) {
                 minDist = dist;
@@ -187,4 +178,97 @@ Actor.prototype.getTurnClosestToTarget = function(openTiles) {
         }
     }
     return dirEnum;
+};
+
+// draw a predicted path for the actor if it continues pursuing current target
+Actor.prototype.drawPath = function(ctx) {
+    if (!this.targetting) return;
+    ctx.strokeStyle = this.pathColor;
+    var i,j;
+
+    // current state of the predicted path
+    var tile = { x: this.tile.x, y: this.tile.y};
+    var target = this.targetTile;
+    var dir = { x: this.dir.x, y: this.dir.y };
+    var dirEnum = this.dirEnum;
+    var openTiles;
+
+    // set initial path to center of current tile
+    ctx.beginPath();
+    ctx.moveTo(
+            tile.x*tileSize+midTile.x+this.pathCenter.x,
+            tile.y*tileSize+midTile.y+this.pathCenter.y);
+
+    // maximum number of tiles to travel
+    var numTiles = 40;
+
+    // distance from center of the tile of current tile
+    // (negative distance means we have not yet reached center)
+    var dist = 0;
+    if (dirEnum == DIR_UP)         dist = midTile.y - this.tilePixel.y;
+    else if (dirEnum == DIR_DOWN)  dist = this.tilePixel.y - midTile.y;
+    else if (dirEnum == DIR_LEFT)  dist = midTile.x - this.tilePixel.x;
+    else if (dirEnum == DIR_RIGHT) dist = this.tilePixel.x - midTile.x;
+
+    // if we are past the center of the tile, then we already know which direction to head for the next tile
+    // so increment to next tile and draw a line to it
+    if (dist >= 0) {
+        tile.x += dir.x;
+        tile.y += dir.y;
+        ctx.lineTo(
+                tile.x*tileSize+midTile.x+this.pathCenter.x,
+                tile.y*tileSize+midTile.y+this.pathCenter.y);
+    }
+
+    for (i=0; i<numTiles ;i++) {
+
+        // predict the next direction to turn at current tile
+        openTiles = getOpenSurroundTiles(tile, dirEnum);
+        if (this != pacman && tileMap.constrainGhostTurns)
+            tileMap.constrainGhostTurns(tile, openTiles);
+        dirEnum = getTurnClosestToTarget(tile, target, openTiles);
+        setDirFromEnum(dir,dirEnum);
+
+        // if the next tile is our target
+        // move to target tile and draw a line to its center and exit function
+        if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
+            tile.x += dir.x;
+            tile.y += dir.y;
+            ctx.lineTo(
+                    tile.x*tileSize+midTile.x+this.pathCenter.x,
+                    tile.y*tileSize+midTile.y+this.pathCenter.y);
+            ctx.stroke();
+            return;
+        }
+
+        // exit loop without drawing the next tile if we meet our travel limit
+        if (i == numTiles-1)
+            break;
+
+        // move to next tile and draw a line to its center if we have more tiles to go
+        tile.x += dir.x;
+        tile.y += dir.y;
+        ctx.lineTo(
+                tile.x*tileSize+midTile.x+this.pathCenter.x,
+                tile.y*tileSize+midTile.y+this.pathCenter.y);
+    }
+
+    // Here we know that we never reached the target tile.
+    // So we finish drawing the path from the center of the previous tile to the
+    // the center of the next tile plus the offset from the center of the initial tile.
+    // This basically creates a smooth moving path that doesn't snap to the center of the tile.
+
+    if (dist < 0) {
+        // move to last tile, so we can jump back using the negative direction
+        // (remember, we jump ahead one tile if dist>=0, so we jump ahead here to compensate)
+        tile.x += dir.x;
+        tile.y += dir.y;
+    }
+
+    // draw last path line by adding offset from the center of the initial tile
+    ctx.lineTo(
+            tile.x*tileSize+midTile.x+this.pathCenter.x+dist*dir.x,
+            tile.y*tileSize+midTile.y+this.pathCenter.y+dist*dir.y);
+
+    ctx.stroke();
 };

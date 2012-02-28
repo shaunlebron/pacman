@@ -50,12 +50,22 @@ var TileMap = function(numCols, numRows, tiles) {
     this.resetCurrent();
     this.parseDots();
     this.parseTunnels();
+    this.parseIntersections();
 };
 
 // reset current tiles
 TileMap.prototype.resetCurrent = function() {
     this.currentTiles = this.tiles.split(""); // create a mutable list copy of an immutable string
     this.dotsEaten = 0;
+};
+
+TileMap.prototype.parseIntersections = function() {
+    this.intersections = [];
+    var i = 0;
+    var x,y;
+    for (y=0; y<this.numRows; y++) for (x=0; x<this.numCols; x++) {
+        this.intersections[i++] = this.getOpenTiles({x:x,y:y});
+    }
 };
 
 // count pellets and store energizer locations
@@ -160,12 +170,20 @@ TileMap.prototype.isFloorTile = function(x,y) {
 
 // get a list of the four surrounding tiles
 TileMap.prototype.getSurroundingTiles = function(tile) {
-    return [
-        this.getTile(tile.x, tile.y-1), // DIR_UP
-        this.getTile(tile.x+1, tile.y), // DIR_RIGHT
-        this.getTile(tile.x, tile.y+1), // DIR_DOWN
-        this.getTile(tile.x-1, tile.y)  // DIR_LEFT
-    ];
+    var result = [];
+    result[DIR_UP] = this.getTile(tile.x, tile.y-1);
+    result[DIR_RIGHT] = this.getTile(tile.x+1, tile.y);
+    result[DIR_DOWN] = this.getTile(tile.x, tile.y+1);
+    result[DIR_LEFT] = this.getTile(tile.x-1, tile.y);
+    return result;
+};
+
+TileMap.prototype.getOpenTiles = function(tile) {
+    var surroundTiles = this.getSurroundingTiles(tile);
+    var i;
+    for (i=0; i<4; i++)
+        surroundTiles[i] = this.isFloorTileChar(surroundTiles[i]);
+    return surroundTiles;
 };
 
 // returns if the given tile coordinate plus the given direction vector has a walkable floor tile

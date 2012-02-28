@@ -145,9 +145,9 @@ var MAP_MSPACMAN4 = 5;
     //mapPacman.wallColor = "#2121ff"; // from original
     mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
     mapPacman.pelletColor = "#ffb8ae";
-    mapPacman.constrainGhostTurns = function(x,y,openTiles) {
+    mapPacman.constrainGhostTurns = function(tile,openTiles) {
         // prevent ghost from turning up at these tiles
-        if ((x == 12 || x == 15) && (y == 14 || y == 26)) {
+        if ((tile.x == 12 || tile.x == 15) && (tile.y == 14 || tile.y == 26)) {
             openTiles[DIR_UP] = false;
         }
     };

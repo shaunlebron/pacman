@@ -100,8 +100,10 @@ Ghost.prototype.onEnergized = function() {
         this.reverse();
 
     // only scare me if not already going home
-    if (this.mode != GHOST_GOING_HOME && this.mode != GHOST_ENTERING_HOME)
+    if (this.mode != GHOST_GOING_HOME && this.mode != GHOST_ENTERING_HOME) {
         this.scared = true;
+        this.targetting = undefined;
+    }
 };
 
 // function called when this ghost gets eaten
@@ -232,7 +234,7 @@ Ghost.prototype.steer = function() {
         return;
 
     // get surrounding tiles and their open indication
-    openTiles = this.getOpenSurroundTiles();
+    openTiles = getOpenSurroundTiles(this.tile, this.dirEnum);
 
     if (this.scared) {
         // choose a random turn
@@ -263,12 +265,13 @@ Ghost.prototype.steer = function() {
 
         // edit openTiles to reflect the current map's special contraints
         if (tileMap.constrainGhostTurns)
-            tileMap.constrainGhostTurns(this.tile.x, this.tile.y, openTiles);
+            tileMap.constrainGhostTurns(this.tile, openTiles);
 
         // choose direction that minimizes distance to target
-        dirEnum = this.getTurnClosestToTarget(openTiles);
+        dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
     }
 
     // commit the direction
     this.setDir(dirEnum);
 };
+

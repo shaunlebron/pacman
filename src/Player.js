@@ -80,10 +80,12 @@ Player.prototype.steer = function() {
             return;
 
         // make turn that is closest to target
-        var openTiles = this.getOpenSurroundTiles();
+        var openTiles = getOpenSurroundTiles(this.tile, this.dirEnum);
         this.setTarget();
-        this.setNextDir(this.getTurnClosestToTarget(openTiles));
+        this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
     }
+    else
+        this.targetting = undefined;
 
     // head in the desired direction if possible
     if (tileMap.isNextTileFloor(this.tile, this.nextDir))

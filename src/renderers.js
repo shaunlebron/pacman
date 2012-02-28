@@ -72,6 +72,13 @@ renderers.Common.prototype = {
                 actors[i].drawTarget(this.ctx);
     },
 
+    drawPaths: function() {
+        var i;
+        for (i=0;i<5;i++)
+            if (actors[i].isDrawPath)
+                actors[i].drawPath(this.ctx);
+    },
+
     // draw a fade filter for 0<=t<=1
     drawFadeIn: function(t) {
         this.ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";

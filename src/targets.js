@@ -7,6 +7,13 @@
 // the size of the square rendered over a target tile (just half a tile)
 var targetSize = midTile.y;
 
+// when drawing paths, use these offsets so they don't completely overlap each other
+pacman.pathCenter = { x:0, y:0};
+blinky.pathCenter = { x:-2, y:-2 };
+pinky.pathCenter = { x:-1, y:-1 };
+inky.pathCenter = { x:1, y:1 };
+clyde.pathCenter = { x:2, y:2 };
+
 /////////////////////////////////////////////////////////////////
 // blinky directly targets pacman
 

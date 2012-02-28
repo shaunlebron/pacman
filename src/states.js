@@ -245,6 +245,7 @@ var playState = {
         screen.renderer.drawLevelIcons();
         screen.renderer.drawScore();
         screen.renderer.drawFruit();
+        screen.renderer.drawPaths();
         screen.renderer.drawActors();
         screen.renderer.drawTargets();
     },

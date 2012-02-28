@@ -139,13 +139,23 @@ var screen = (function() {
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////
-        // draw target sights group
-        fieldset = makeFieldSet('Draw Target Sights');
+        // draw actor targets group
+        fieldset = makeFieldSet('Show Logic');
         addCheckbox(fieldset, 'blinky (red)', function(on) { blinky.isDrawTarget = on; });
         addCheckbox(fieldset, 'pinky (pink)', function(on) { pinky.isDrawTarget = on; });
         addCheckbox(fieldset, 'inky (cyan)', function(on) { inky.isDrawTarget = on; });
         addCheckbox(fieldset, 'clyde (orange)', function(on) { clyde.isDrawTarget = on; });
         addCheckbox(fieldset, 'pacman (yellow)', function(on) { pacman.isDrawTarget = on; });
+        form.appendChild(fieldset);
+
+        ///////////////////////////////////////////////////
+        // draw actor paths group
+        fieldset = makeFieldSet('Predict Paths');
+        addCheckbox(fieldset, 'blinky (red)', function(on) { blinky.isDrawPath = on; });
+        addCheckbox(fieldset, 'pinky (pink)', function(on) { pinky.isDrawPath = on; });
+        addCheckbox(fieldset, 'inky (cyan)', function(on) { inky.isDrawPath = on; });
+        addCheckbox(fieldset, 'clyde (orange)', function(on) { clyde.isDrawPath = on; });
+        addCheckbox(fieldset, 'pacman (yellow)', function(on) { pacman.isDrawPath = on; });
         form.appendChild(fieldset);
 
         ///////////////////////////////////////////////////

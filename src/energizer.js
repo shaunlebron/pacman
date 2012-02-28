@@ -57,7 +57,7 @@ var energizer = (function() {
             active = true;
             count = 0;
             points = 100;
-            for (i=0; i<4; i++) 
+            for (i=0; i<4; i++)
                 ghosts[i].onEnergized();
         },
         isActive: function() { return active; },

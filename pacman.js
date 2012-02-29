@@ -220,6 +220,9 @@ var renderers = {};
 // Common Renderer
 // (attributes and functionality that are currently common to all renderers)
 
+// FIXME: place this somewhere
+var actorPathLength = 16;
+
 // constructor
 renderers.Common = function(ctx, bgCtx) {
     this.ctx = ctx;
@@ -276,6 +279,10 @@ renderers.Common.prototype = {
     drawTargets: function() {
         var i;
         this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        this.ctx.lineWidth = "2.0";
+        this.ctx.lineWidth = "2.0";
+        this.ctx.lineCap = "round";
+        this.ctx.lineJoin = "round";
         for (i=0;i<5;i++)
             if (actors[i].isDrawTarget)
                 actors[i].drawTarget(this.ctx);
@@ -285,7 +292,126 @@ renderers.Common.prototype = {
         var i;
         for (i=0;i<5;i++)
             if (actors[i].isDrawPath)
-                actors[i].drawPath(this.ctx);
+                this.drawPath(actors[i]);
+    },
+
+    // draw a predicted path for the actor if it continues pursuing current target
+    drawPath: function(actor) {
+        if (!actor.targetting) return;
+
+        // current state of the predicted path
+        var tile = { x: actor.tile.x, y: actor.tile.y};
+        var target = actor.targetTile;
+        var dir = { x: actor.dir.x, y: actor.dir.y };
+        var dirEnum = actor.dirEnum;
+        var openTiles;
+
+        // if we are past the center of the tile, then we already know which direction to head for the next tile
+        // so increment to next tile
+        if ((dirEnum == DIR_UP && actor.tilePixel.y <= midTile.y) ||
+            (dirEnum == DIR_DOWN && actor.tilePixel.y >= midTile.y) ||
+            (dirEnum == DIR_LEFT && actor.tilePixel.x <= midTile.x) ||
+            (dirEnum == DIR_RIGHT & actor.tilePixel.x >= midTile.x)) {
+            tile.x += dir.x;
+            tile.y += dir.y;
+        }
+        
+        // dist keeps track of how far we're going along this path
+        // we will stop at maxDist
+        // distLeft determines how long the last line should be
+        var dist = Math.abs(tile.x*tileSize+midTile.x - actor.pixel.x + tile.y*tileSize+midTile.y - actor.pixel.y);
+        var maxDist = actorPathLength*tileSize;
+        var distLeft;
+        
+        // add the first line
+        this.ctx.strokeStyle = actor.pathColor;
+        this.ctx.lineWidth = "2.0";
+        this.ctx.lineCap = "round";
+        this.ctx.lineJoin = "round";
+        this.ctx.beginPath();
+        this.ctx.moveTo(
+                actor.pixel.x+actor.pathCenter.x,
+                actor.pixel.y+actor.pathCenter.y);
+        this.ctx.lineTo(
+                tile.x*tileSize+midTile.x+actor.pathCenter.x,
+                tile.y*tileSize+midTile.y+actor.pathCenter.y);
+
+        while (tile.x!=target.x || tile.y!=target.y) {
+
+            // predict the next direction to turn at current tile
+            openTiles = getOpenSurroundTiles(tile, dirEnum);
+            if (actor != pacman && tileMap.constrainGhostTurns)
+                tileMap.constrainGhostTurns(tile, openTiles);
+            dirEnum = getTurnClosestToTarget(tile, target, openTiles);
+            setDirFromEnum(dir,dirEnum);
+            
+            // if the next tile is our target, determine how mush distance is left and break loop
+            if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
+            
+                distLeft = tileSize;
+                
+                // use pixel positions rather than tile positions for the target when possible
+                // (for aesthetics)
+                if (actor.targetting=='pinky') {
+                    if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+                        distLeft = Math.abs(tile.y*tileSize + midTile.y - pinky.pixel.y);
+                    else
+                        distLeft = Math.abs(tile.x*tileSize + midTile.x - pinky.pixel.x);
+                }
+                else if (actor.targetting=='pacman') {
+                    if (actor == blinky || actor == clyde) {
+                        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+                            distLeft = Math.abs(tile.y*tileSize + midTile.y - pacman.pixel.y);
+                        else
+                            distLeft = Math.abs(tile.x*tileSize + midTile.x - pacman.pixel.x);
+                    }
+                    else if (actor == pinky) {
+                        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+                            distLeft = Math.abs(tile.y*tileSize + midTile.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
+                        else
+                            distLeft = Math.abs(tile.x*tileSize + midTile.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
+                    }
+                }
+                if (dist + distLeft > maxDist)
+                    distLeft = maxDist - dist;
+                break;
+            }
+            
+            // exit if we're going past the max distance
+            if (dist + tileSize > maxDist) {
+                distLeft = maxDist - dist;
+                break;
+            }
+
+            // move to next tile and add a line to its center
+            tile.x += dir.x;
+            tile.y += dir.y;
+            dist += tileSize;
+            this.ctx.lineTo(
+                    tile.x*tileSize+midTile.x+actor.pathCenter.x,
+                    tile.y*tileSize+midTile.y+actor.pathCenter.y);
+        }
+
+        // calculate final endpoint
+        var px = tile.x*tileSize+midTile.x+actor.pathCenter.x+distLeft*dir.x;
+        var py = tile.y*tileSize+midTile.y+actor.pathCenter.y+distLeft*dir.y;
+
+        // add an arrow head
+        this.ctx.lineTo(px,py);
+        var s = 3;
+        if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
+            this.ctx.lineTo(px-s*dir.x,py+s*dir.x);
+            this.ctx.moveTo(px,py);
+            this.ctx.lineTo(px-s*dir.x,py-s*dir.x);
+        }
+        else {
+            this.ctx.lineTo(px+s*dir.y,py-s*dir.y);
+            this.ctx.moveTo(px,py);
+            this.ctx.lineTo(px-s*dir.y,py-s*dir.y);
+        }
+
+        // draw path    
+        this.ctx.stroke();
     },
 
     // draw a fade filter for 0<=t<=1
@@ -1374,123 +1500,6 @@ getTurnClosestToTarget = function(tile,targetTile,openTiles) {
         }
     }
     return dirEnum;
-};
-
-// draw a predicted path for the actor if it continues pursuing current target
-var actorPathLength = 16;
-Actor.prototype.drawPath = function(ctx) {
-    if (!this.targetting) return;
-
-    // current state of the predicted path
-    var tile = { x: this.tile.x, y: this.tile.y};
-    var target = this.targetTile;
-    var dir = { x: this.dir.x, y: this.dir.y };
-    var dirEnum = this.dirEnum;
-    var openTiles;
-
-    // if we are past the center of the tile, then we already know which direction to head for the next tile
-    // so increment to next tile
-    if ((dirEnum == DIR_UP && this.tilePixel.y <= midTile.y) ||
-        (dirEnum == DIR_DOWN && this.tilePixel.y >= midTile.y) ||
-        (dirEnum == DIR_LEFT && this.tilePixel.x <= midTile.x) ||
-        (dirEnum == DIR_RIGHT & this.tilePixel.x >= midTile.x)) {
-        tile.x += dir.x;
-        tile.y += dir.y;
-    }
-    
-    // dist keeps track of how far we're going along this path
-    // we will stop at maxDist
-    // distLeft determines how long the last line should be
-    var dist = Math.abs(tile.x*tileSize+midTile.x - this.pixel.x + tile.y*tileSize+midTile.y - this.pixel.y);
-    var maxDist = actorPathLength*tileSize;
-    var distLeft;
-    
-    // add the first line
-    ctx.strokeStyle = this.pathColor;
-    ctx.beginPath();
-    ctx.moveTo(
-            this.pixel.x+this.pathCenter.x,
-            this.pixel.y+this.pathCenter.y);
-    ctx.lineTo(
-            tile.x*tileSize+midTile.x+this.pathCenter.x,
-            tile.y*tileSize+midTile.y+this.pathCenter.y);
-
-    while (tile.x!=target.x || tile.y!=target.y) {
-
-        // predict the next direction to turn at current tile
-        openTiles = getOpenSurroundTiles(tile, dirEnum);
-        if (this != pacman && tileMap.constrainGhostTurns)
-            tileMap.constrainGhostTurns(tile, openTiles);
-        dirEnum = getTurnClosestToTarget(tile, target, openTiles);
-        setDirFromEnum(dir,dirEnum);
-        
-        // if the next tile is our target, determine how mush distance is left and break loop
-        if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
-        
-            distLeft = tileSize;
-            
-            // use pixel positions rather than tile positions for the target when possible
-            // (for aesthetics)
-            if (this.targetting=='pinky') {
-                if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-                    distLeft = Math.abs(tile.y*tileSize + midTile.y - pinky.pixel.y);
-                else
-                    distLeft = Math.abs(tile.x*tileSize + midTile.x - pinky.pixel.x);
-            }
-            else if (this.targetting=='pacman') {
-                if (this == blinky || this == clyde) {
-                    if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-                        distLeft = Math.abs(tile.y*tileSize + midTile.y - pacman.pixel.y);
-                    else
-                        distLeft = Math.abs(tile.x*tileSize + midTile.x - pacman.pixel.x);
-                }
-                else if (this == pinky) {
-                    if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-                        distLeft = Math.abs(tile.y*tileSize + midTile.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
-                    else
-                        distLeft = Math.abs(tile.x*tileSize + midTile.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
-                }
-            }
-            if (dist + distLeft > maxDist)
-                distLeft = maxDist - dist;
-            break;
-        }
-        
-        // exit if we're going past the max distance
-        if (dist + tileSize > maxDist) {
-            distLeft = maxDist - dist;
-            break;
-        }
-
-        // move to next tile and add a line to its center
-        tile.x += dir.x;
-        tile.y += dir.y;
-        dist += tileSize;
-        ctx.lineTo(
-                tile.x*tileSize+midTile.x+this.pathCenter.x,
-                tile.y*tileSize+midTile.y+this.pathCenter.y);
-    }
-
-    // calculate final endpoint
-    var px = tile.x*tileSize+midTile.x+this.pathCenter.x+distLeft*dir.x;
-    var py = tile.y*tileSize+midTile.y+this.pathCenter.y+distLeft*dir.y;
-
-    // add an arrow head
-    ctx.lineTo(px,py);
-    var s = 3;
-    if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
-        ctx.lineTo(px-s*dir.x,py+s*dir.x);
-        ctx.moveTo(px,py);
-        ctx.lineTo(px-s*dir.x,py-s*dir.x);
-    }
-    else {
-        ctx.lineTo(px+s*dir.y,py-s*dir.y);
-        ctx.moveTo(px,py);
-        ctx.lineTo(px-s*dir.y,py-s*dir.y);
-    }
-
-    // draw path    
-    ctx.stroke();
 };
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class

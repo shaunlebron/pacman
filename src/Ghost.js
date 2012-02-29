@@ -126,7 +126,8 @@ Ghost.prototype.homeSteer = (function(){
 
     steerFuncs[GHOST_GOING_HOME] = function() {
         // at the doormat
-        if (this.tile.x == tileMap.doorTile.x && this.tile.y == tileMap.doorTile.y)
+        if (this.tile.x == tileMap.doorTile.x && this.tile.y == tileMap.doorTile.y) {
+            this.targetting = false;
             // walk to the door, or go through if already there
             if (this.pixel.x == tileMap.doorPixel.x) {
                 this.mode = GHOST_ENTERING_HOME;
@@ -134,6 +135,7 @@ Ghost.prototype.homeSteer = (function(){
             }
             else
                 this.setDir(DIR_RIGHT);
+        }
     };
 
     steerFuncs[GHOST_ENTERING_HOME] = function() {
@@ -199,7 +201,6 @@ Ghost.prototype.isScatterBrain = function() {
 // determine direction
 Ghost.prototype.steer = function() {
 
-    var i;                               // loop counter
     var dirEnum;                         // final direction to update to
     var openTiles;                       // list of four booleans indicating which surrounding tiles are open
     var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
@@ -248,7 +249,6 @@ Ghost.prototype.steer = function() {
         if (this.mode == GHOST_GOING_HOME) {
             this.targetTile.x = tileMap.doorTile.x;
             this.targetTile.y = tileMap.doorTile.y;
-            this.targetting = 'door';
         }
         // target corner when scattering
         else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {

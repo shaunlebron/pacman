@@ -184,8 +184,6 @@ getTurnClosestToTarget = function(tile,targetTile,openTiles) {
 var actorPathLength = 16;
 Actor.prototype.drawPath = function(ctx) {
     if (!this.targetting) return;
-    ctx.strokeStyle = this.pathColor;
-    var i,j;
 
     // current state of the predicted path
     var tile = { x: this.tile.x, y: this.tile.y};
@@ -194,31 +192,34 @@ Actor.prototype.drawPath = function(ctx) {
     var dirEnum = this.dirEnum;
     var openTiles;
 
-    // set initial path to center of current tile
+    // if we are past the center of the tile, then we already know which direction to head for the next tile
+    // so increment to next tile
+    if ((dirEnum == DIR_UP && this.tilePixel.y <= midTile.y) ||
+        (dirEnum == DIR_DOWN && this.tilePixel.y >= midTile.y) ||
+        (dirEnum == DIR_LEFT && this.tilePixel.x <= midTile.x) ||
+        (dirEnum == DIR_RIGHT & this.tilePixel.x >= midTile.x)) {
+        tile.x += dir.x;
+        tile.y += dir.y;
+    }
+    
+    // dist keeps track of how far we're going along this path
+    // we will stop at maxDist
+    // distLeft determines how long the last line should be
+    var dist = Math.abs(tile.x*tileSize+midTile.x - this.pixel.x + tile.y*tileSize+midTile.y - this.pixel.y);
+    var maxDist = actorPathLength*tileSize;
+    var distLeft;
+    
+    // add the first line
+    ctx.strokeStyle = this.pathColor;
     ctx.beginPath();
     ctx.moveTo(
+            this.pixel.x+this.pathCenter.x,
+            this.pixel.y+this.pathCenter.y);
+    ctx.lineTo(
             tile.x*tileSize+midTile.x+this.pathCenter.x,
             tile.y*tileSize+midTile.y+this.pathCenter.y);
 
-    // distance from center of the tile of current tile
-    // (negative distance means we have not yet reached center)
-    var dist = 0;
-    if (dirEnum == DIR_UP)         dist = midTile.y - this.tilePixel.y;
-    else if (dirEnum == DIR_DOWN)  dist = this.tilePixel.y - midTile.y;
-    else if (dirEnum == DIR_LEFT)  dist = midTile.x - this.tilePixel.x;
-    else if (dirEnum == DIR_RIGHT) dist = this.tilePixel.x - midTile.x;
-
-    // if we are past the center of the tile, then we already know which direction to head for the next tile
-    // so increment to next tile and draw a line to it
-    if (dist >= 0) {
-        tile.x += dir.x;
-        tile.y += dir.y;
-        ctx.lineTo(
-                tile.x*tileSize+midTile.x+this.pathCenter.x,
-                tile.y*tileSize+midTile.y+this.pathCenter.y);
-    }
-
-    for (i=0; i<actorPathLength ;i++) {
+    while (tile.x!=target.x || tile.y!=target.y) {
 
         // predict the next direction to turn at current tile
         openTiles = getOpenSurroundTiles(tile, dirEnum);
@@ -226,66 +227,53 @@ Actor.prototype.drawPath = function(ctx) {
             tileMap.constrainGhostTurns(tile, openTiles);
         dirEnum = getTurnClosestToTarget(tile, target, openTiles);
         setDirFromEnum(dir,dirEnum);
-
-        // if the next tile is our target
-        // move to target tile and draw a line to its center then exit function
+        
+        // if the next tile is our target, determine how mush distance is left and break loop
         if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
-            tile.x += dir.x;
-            tile.y += dir.y;
-
-            // end of the path
-            var px = tile.x*tileSize+midTile.x+this.pathCenter.x;
-            var py = tile.y*tileSize+midTile.y+this.pathCenter.y;
-
-            // draw an arrow head
-            ctx.lineTo(px,py);
-            var s = 3;
-            if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
-                ctx.lineTo(px-s*dir.x,py+s*dir.x);
-                ctx.moveTo(px,py);
-                ctx.lineTo(px-s*dir.x,py-s*dir.x);
+        
+            distLeft = tileSize;
+            
+            // use pixel positions rather than tile positions for the target when possible
+            // (for aesthetics)
+            if (this.targetting=='pacman') {
+                if (this == blinky || this == clyde) {
+                    if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+                        distLeft = Math.abs(tile.y*tileSize + midTile.y - pacman.pixel.y);
+                    else
+                        distLeft = Math.abs(tile.x*tileSize + midTile.x - pacman.pixel.x);
+                }
+                else if (this == pinky) {
+                    if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+                        distLeft = Math.abs(tile.y*tileSize + midTile.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
+                    else
+                        distLeft = Math.abs(tile.x*tileSize + midTile.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
+                }
             }
-            else {
-                ctx.lineTo(px+s*dir.y,py-s*dir.y);
-                ctx.moveTo(px,py);
-                ctx.lineTo(px-s*dir.y,py-s*dir.y);
-            }
-            ctx.stroke();
-
-            return;
+            if (dist + distLeft > maxDist)
+                distLeft = maxDist - dist;
+            break;
+        }
+        
+        // exit if we're going past the max distance
+        if (dist + tileSize > maxDist) {
+            distLeft = maxDist - dist;
+            break;
         }
 
-        // exit loop without drawing the next tile if we meet our travel limit
-        if (i == actorPathLength-1)
-            break;
-
-        // move to next tile and draw a line to its center if we have more tiles to go
+        // move to next tile and add a line to its center
         tile.x += dir.x;
         tile.y += dir.y;
+        dist += tileSize;
         ctx.lineTo(
                 tile.x*tileSize+midTile.x+this.pathCenter.x,
                 tile.y*tileSize+midTile.y+this.pathCenter.y);
     }
 
-    // Here we know that we never reached the target tile.
-    // So we finish drawing the path from the center of the previous tile to the
-    // the center of the next tile plus the offset from the center of the initial tile.
-    // This basically creates a smooth moving path that doesn't snap to the center of the tile.
+    // calculate final endpoint
+    var px = tile.x*tileSize+midTile.x+this.pathCenter.x+distLeft*dir.x;
+    var py = tile.y*tileSize+midTile.y+this.pathCenter.y+distLeft*dir.y;
 
-    if (dist < 0) {
-        // move to last tile, so we can jump back using the negative direction
-        // (remember, we jump ahead one tile if dist>=0, so we jump ahead here to compensate)
-        tile.x += dir.x;
-        tile.y += dir.y;
-    }
-
-
-    // get the path endpoint by adding offset from the center of the initial tile
-    // (this creates a smoothly moving path head)
-    var px = tile.x*tileSize+midTile.x+this.pathCenter.x+dist*dir.x;
-    var py = tile.y*tileSize+midTile.y+this.pathCenter.y+dist*dir.y;
-
-    // draw an arrow head
+    // add an arrow head
     ctx.lineTo(px,py);
     var s = 3;
     if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
@@ -299,6 +287,6 @@ Actor.prototype.drawPath = function(ctx) {
         ctx.lineTo(px-s*dir.y,py-s*dir.y);
     }
 
-
+    // draw path    
     ctx.stroke();
 };

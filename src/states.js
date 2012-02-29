@@ -287,8 +287,10 @@ var playState = {
         }
         else { // make ghosts go home immediately after points disappear
             for (i=0; i<4; i++)
-                if (ghosts[i].mode == GHOST_EATEN)
+                if (ghosts[i].mode == GHOST_EATEN) {
                     ghosts[i].mode = GHOST_GOING_HOME;
+                    ghosts[i].targetting = 'door';
+                }
         }
 
         // update counters

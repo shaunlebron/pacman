@@ -220,9 +220,6 @@ var renderers = {};
 // Common Renderer
 // (attributes and functionality that are currently common to all renderers)
 
-// FIXME: place this somewhere
-var actorPathLength = 16;
-
 // constructor
 renderers.Common = function(ctx, bgCtx) {
     this.ctx = ctx;
@@ -280,7 +277,6 @@ renderers.Common.prototype = {
         var i;
         this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
         this.ctx.lineWidth = "2.0";
-        this.ctx.lineWidth = "2.0";
         this.ctx.lineCap = "round";
         this.ctx.lineJoin = "round";
         for (i=0;i<5;i++)
@@ -306,8 +302,12 @@ renderers.Common.prototype = {
         var dirEnum = actor.dirEnum;
         var openTiles;
 
-        // if we are past the center of the tile, then we already know which direction to head for the next tile
-        // so increment to next tile
+        // exit if we're already on the target
+        if (tile.x == target.x && tile.y == target.y) {
+            return;
+        }
+
+        // if we are past the center of the tile, we cannot turn here anymore, so jump to next tile
         if ((dirEnum == DIR_UP && actor.tilePixel.y <= midTile.y) ||
             (dirEnum == DIR_DOWN && actor.tilePixel.y >= midTile.y) ||
             (dirEnum == DIR_LEFT && actor.tilePixel.x <= midTile.x) ||
@@ -316,8 +316,7 @@ renderers.Common.prototype = {
             tile.y += dir.y;
         }
         
-        // dist keeps track of how far we're going along this path
-        // we will stop at maxDist
+        // dist keeps track of how far we're going along this path, stopping at maxDist
         // distLeft determines how long the last line should be
         var dist = Math.abs(tile.x*tileSize+midTile.x - actor.pixel.x + tile.y*tileSize+midTile.y - actor.pixel.y);
         var maxDist = actorPathLength*tileSize;
@@ -336,9 +335,9 @@ renderers.Common.prototype = {
                 tile.x*tileSize+midTile.x+actor.pathCenter.x,
                 tile.y*tileSize+midTile.y+actor.pathCenter.y);
 
-        while (tile.x!=target.x || tile.y!=target.y) {
+        while (!(tile.x == target.x && tile.y == target.y)) {
 
-            // predict the next direction to turn at current tile
+            // predict next turn from current tile
             openTiles = getOpenSurroundTiles(tile, dirEnum);
             if (actor != pacman && tileMap.constrainGhostTurns)
                 tileMap.constrainGhostTurns(tile, openTiles);
@@ -348,32 +347,12 @@ renderers.Common.prototype = {
             // if the next tile is our target, determine how mush distance is left and break loop
             if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
             
-                distLeft = tileSize;
-                
-                // use pixel positions rather than tile positions for the target when possible
-                // (for aesthetics)
-                if (actor.targetting=='pinky') {
-                    if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-                        distLeft = Math.abs(tile.y*tileSize + midTile.y - pinky.pixel.y);
-                    else
-                        distLeft = Math.abs(tile.x*tileSize + midTile.x - pinky.pixel.x);
-                }
-                else if (actor.targetting=='pacman') {
-                    if (actor == blinky || actor == clyde) {
-                        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-                            distLeft = Math.abs(tile.y*tileSize + midTile.y - pacman.pixel.y);
-                        else
-                            distLeft = Math.abs(tile.x*tileSize + midTile.x - pacman.pixel.x);
-                    }
-                    else if (actor == pinky) {
-                        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-                            distLeft = Math.abs(tile.y*tileSize + midTile.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
-                        else
-                            distLeft = Math.abs(tile.x*tileSize + midTile.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
-                    }
-                }
-                if (dist + distLeft > maxDist)
-                    distLeft = maxDist - dist;
+                // adjust the distance left to create a smoothly interpolated path end
+                distLeft = actor.getPathDistLeft(tile, dir, dirEnum);
+
+                // cap distance left
+                distLeft = Math.min(maxDist-dist, distLeft);
+
                 break;
             }
             
@@ -1940,6 +1919,9 @@ var ghosts = [blinky, pinky, inky, clyde];
 // Targetting
 // (a definition for each actor's targetting algorithm and a draw function to visualize it)
 
+// the tile length of the path drawn toward the target
+var actorPathLength = 16;
+
 (function() {
 
 // the size of the square rendered over a target tile (just half a tile)
@@ -1968,6 +1950,16 @@ blinky.drawTarget = function(ctx) {
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
+blinky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'pacman') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pacman.pixel.y);
+        else
+            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pacman.pixel.x);
+    }
+    return distLeft;
+};
 
 /////////////////////////////////////////////////////////////////
 // pinky targets four tiles ahead of pacman
@@ -1994,6 +1986,16 @@ pinky.drawTarget = function(ctx) {
     }
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+};
+pinky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'pacman') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
+        else
+            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
+    }
+    return distLeft;
 };
 
 /////////////////////////////////////////////////////////////////
@@ -2025,6 +2027,13 @@ inky.drawTarget = function(ctx) {
     }
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+};
+inky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'pacman') {
+        // TODO: intersect the line drawn in drawTarget to return the furthest intersection point with the line from prevTile to dir
+    }
+    return distLeft;
 };
 
 /////////////////////////////////////////////////////////////////
@@ -2058,6 +2067,16 @@ clyde.drawTarget = function(ctx) {
     }
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+};
+clyde.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'pacman') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pacman.pixel.y);
+        else
+            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pacman.pixel.x);
+    }
+    return distLeft;
 };
 
 
@@ -2097,6 +2116,19 @@ pacman.drawTarget = function(ctx) {
         screen.renderer.drawCenterPixelSq(ctx, pinky.pixel.x, pinky.pixel.y, targetSize);
     };
 
+};
+pacman.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'chase') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pinky.pixel.y);
+        else
+            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pinky.pixel.x);
+    }
+    else { // 'flee'
+        // TODO: intersect the line drawn in drawTarget to return the furthest intersection point with the line from prevTile to dir
+    }
+    return distLeft;
 };
 
 })();

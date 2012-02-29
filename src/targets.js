@@ -2,6 +2,9 @@
 // Targetting
 // (a definition for each actor's targetting algorithm and a draw function to visualize it)
 
+// the tile length of the path drawn toward the target
+var actorPathLength = 16;
+
 (function() {
 
 // the size of the square rendered over a target tile (just half a tile)
@@ -30,6 +33,16 @@ blinky.drawTarget = function(ctx) {
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
+blinky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'pacman') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pacman.pixel.y);
+        else
+            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pacman.pixel.x);
+    }
+    return distLeft;
+};
 
 /////////////////////////////////////////////////////////////////
 // pinky targets four tiles ahead of pacman
@@ -56,6 +69,16 @@ pinky.drawTarget = function(ctx) {
     }
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+};
+pinky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'pacman') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
+        else
+            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
+    }
+    return distLeft;
 };
 
 /////////////////////////////////////////////////////////////////
@@ -87,6 +110,13 @@ inky.drawTarget = function(ctx) {
     }
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+};
+inky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'pacman') {
+        // TODO: intersect the line drawn in drawTarget to return the furthest intersection point with the line from prevTile to dir
+    }
+    return distLeft;
 };
 
 /////////////////////////////////////////////////////////////////
@@ -120,6 +150,16 @@ clyde.drawTarget = function(ctx) {
     }
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+};
+clyde.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'pacman') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pacman.pixel.y);
+        else
+            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pacman.pixel.x);
+    }
+    return distLeft;
 };
 
 
@@ -159,6 +199,19 @@ pacman.drawTarget = function(ctx) {
         screen.renderer.drawCenterPixelSq(ctx, pinky.pixel.x, pinky.pixel.y, targetSize);
     };
 
+};
+pacman.getPathDistLeft = function(prevTile, dir, dirEnum) {
+    var distLeft = tileSize;
+    if (this.targetting == 'chase') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pinky.pixel.y);
+        else
+            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pinky.pixel.x);
+    }
+    else { // 'flee'
+        // TODO: intersect the line drawn in drawTarget to return the furthest intersection point with the line from prevTile to dir
+    }
+    return distLeft;
 };
 
 })();

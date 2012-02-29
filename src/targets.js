@@ -130,7 +130,7 @@ pacman.setTarget = function() {
     if (blinky.mode == GHOST_GOING_HOME || blinky.scared) {
         this.targetTile.x = pinky.tile.x;
         this.targetTile.y = pinky.tile.y;
-        this.targetting = 'chase';
+        this.targetting = 'pinky';
     }
     else {
         this.targetTile.x = pinky.tile.x + 2*(pacman.tile.x-pinky.tile.x);

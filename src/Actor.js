@@ -235,7 +235,13 @@ Actor.prototype.drawPath = function(ctx) {
             
             // use pixel positions rather than tile positions for the target when possible
             // (for aesthetics)
-            if (this.targetting=='pacman') {
+            if (this.targetting=='pinky') {
+                if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+                    distLeft = Math.abs(tile.y*tileSize + midTile.y - pinky.pixel.y);
+                else
+                    distLeft = Math.abs(tile.x*tileSize + midTile.x - pinky.pixel.x);
+            }
+            else if (this.targetting=='pacman') {
                 if (this == blinky || this == clyde) {
                     if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
                         distLeft = Math.abs(tile.y*tileSize + midTile.y - pacman.pixel.y);

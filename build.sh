@@ -1,37 +1,62 @@
 #!/bin/bash
 
-# build 'pacman.js' by concatenating from src/ directory and adding a header
-cat \
-    <(echo "// PAC-MAN") \
-    <(echo "// an accurate remake of the original arcade game") \
-    <(echo "") \
-    <(echo "// original by Namco") \
-    <(echo "// research from 'The Pacman Dossier' compiled by Jamey Pittman") \
-    <(echo "// remake by Shaun Williams") \
-    <(echo "") \
-    <(echo "// Project Page: http://github.com/shaunew/Pac-Man") \
-    <(echo "") \
-    <(echo "(function(){") \
-    src/TileMap.js \
-    src/renderers.js \
-    src/sprites.js \
-    src/screen.js \
-    src/Actor.js \
-    src/Ghost.js \
-    src/Player.js \
-    src/actors.js \
-    src/targets.js \
-    src/ghostCommander.js \
-    src/ghostReleaser.js \
-    src/elroyTimer.js \
-    src/energizer.js \
-    src/fruit.js \
-    src/game.js \
-    src/states.js \
-    src/maps.js \
-    src/main.js \
-    <(echo "})();") \
-    > pacman.js
+# 1. build 'pacman.js' by concatenating files specified in js_order
+# 2. update time stamp in index.htm
+# 3. build debug.htm with individual script includes
 
+output="pacman.js"
+debug_includes="\n"
+
+# write header
+echo "
+// PAC-MAN
+// an accurate remake of the original arcade game
+
+// original by Namco
+// research from 'The Pacman Dossier' compiled by Jamey Pittman
+// remake by Shaun Williams
+
+// Project Page: http://github.com/shaunew/Pac-Man
+
+(function(){
+" > $output
+
+for file in \
+TileMap.js \
+renderers.js  \
+sprites.js \
+screen.js \
+Actor.js \
+Ghost.js \
+Player.js \
+actors.js \
+targets.js \
+ghostCommander.js \
+ghostReleaser.js \
+elroyTimer.js \
+energizer.js \
+fruit.js \
+game.js \
+states.js \
+maps.js \
+main.js
+do
+    # points firebug to correct file (or so I hoped)
+    # if JSOPTION_ATLINE is set, this should work in firefox (but I don't know how to set it)
+    echo "//@line 1 \"src/$file\"" >> $output 
+
+    # concatenate file to output
+    cat src/$file >> $output
+
+    # add this file to debug includes
+    debug_includes="$debug_includes<script src=\"src/$file\"></script>\n"
+done
+
+# end anonymous function wrapper
+echo "})();" >> $output
+
+# update time stamp
 sed -i "s/last updated:[^<]*/last updated: $(date)/" index.htm
-sed -i "s/last updated:[^<]*/last updated: $(date)/" debug.htm
+
+# build debug.htm from index.htm adding debug includes
+sed "s:.*$output.*:$debug_includes:" index.htm > debug.htm

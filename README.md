@@ -3,7 +3,7 @@ Pac-Man
 
 An accurate remake of the original Pac-Man arcade game.
 
-![Preview](https://github.com/shaunew/Pac-Man/raw/gh-pages/preview.png)
+<img src="https://github.com/shaunew/Pac-Man/raw/gh-pages/shots/preview.png" width="100%"/>
 
 Description
 -----------
@@ -25,15 +25,9 @@ Features
 Navigating the Repository
 -------------------------
 - all javascript source files are located in the "src/" directory
-- "build.sh" file concatenates all the source files into a closure in "pacman.js" in the top directory
+- "build.sh" file concatenates all the source files into "pacman.js" in the top directory
 - "debug.htm" displays the game by using the "src/*.js" files
 - "index.htm" displays the game by using the "pacman.js" file only.
-
-Future
-------
-
-- allow live editing of ghost targetting functions
-- allow A.I. agent to control Pac-Man
 
 Thanks
 ------

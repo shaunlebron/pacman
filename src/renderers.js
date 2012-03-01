@@ -67,7 +67,7 @@ renderers.Common.prototype = {
     drawTargets: function() {
         var i;
         this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        this.ctx.lineWidth = "2.0";
+        this.ctx.lineWidth = "1.5";
         this.ctx.lineCap = "round";
         this.ctx.lineJoin = "round";
         for (i=0;i<5;i++)

@@ -1,3 +1,4 @@
+
 // PAC-MAN
 // an accurate remake of the original arcade game
 
@@ -8,6 +9,8 @@
 // Project Page: http://github.com/shaunew/Pac-Man
 
 (function(){
+
+//@line 1 "src/TileMap.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Directions
 // (variables and utility functions for representing actor heading direction)
@@ -207,6 +210,7 @@ TileMap.prototype.onDotEat = function(x,y) {
     this.currentTiles[x+y*this.numCols] = ' ';
     screen.renderer.erasePellet(x,y);
 };
+//@line 1 "src/renderers.js"
 //////////////////////////////////////////////////////////////
 // Renderers
 
@@ -276,7 +280,7 @@ renderers.Common.prototype = {
     drawTargets: function() {
         var i;
         this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        this.ctx.lineWidth = "2.0";
+        this.ctx.lineWidth = "1.5";
         this.ctx.lineCap = "round";
         this.ctx.lineJoin = "round";
         for (i=0;i<5;i++)
@@ -814,6 +818,7 @@ renderers.Arcade.prototype = {
     },
 
 };
+//@line 1 "src/sprites.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Sprites
 // (sprites are created using canvas paths)
@@ -1005,6 +1010,7 @@ var addPacmanBody = function(ctx,dirEnum,angle,mouthShift,scale,centerShift) {
 
     ctx.restore();
 };
+//@line 1 "src/screen.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Screen
 // (controls the display and input)
@@ -1299,6 +1305,7 @@ var screen = (function() {
     };
 })();
 
+//@line 1 "src/Actor.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // The actor class defines common data functions for the ghosts and pacman
 // It provides everything for updating position and direction.
@@ -1480,6 +1487,7 @@ getTurnClosestToTarget = function(tile,targetTile,openTiles) {
     }
     return dirEnum;
 };
+//@line 1 "src/Ghost.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
 
@@ -1757,6 +1765,7 @@ Ghost.prototype.steer = function() {
     this.setDir(dirEnum);
 };
 
+//@line 1 "src/Player.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Player is the controllable character (Pac-Man)
 
@@ -1883,6 +1892,7 @@ Player.prototype.update = function(j) {
             energizer.activate();
     }
 };
+//@line 1 "src/actors.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // create all the actors
 
@@ -1915,6 +1925,7 @@ pacman.pathColor = "rgba(255,255,0,0.8)";
 // (suggests drawing/update order)
 var actors = [blinky, pinky, inky, clyde, pacman];
 var ghosts = [blinky, pinky, inky, clyde];
+//@line 1 "src/targets.js"
 /////////////////////////////////////////////////////////////////
 // Targetting
 // (a definition for each actor's targetting algorithm and a draw function to visualize it)
@@ -2154,6 +2165,7 @@ pacman.getPathDistLeft = function(fromPixel, dirEnum) {
 };
 
 })();
+//@line 1 "src/ghostCommander.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander
 
@@ -2229,6 +2241,7 @@ var ghostCommander = (function() {
         },
     };
 })();
+//@line 1 "src/ghostReleaser.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Releaser
 
@@ -2349,6 +2362,7 @@ var ghostReleaser = (function(){
         },
     };
 })();
+//@line 1 "src/elroyTimer.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Elroy Timer
 
@@ -2397,6 +2411,7 @@ var elroyTimer = (function(){
         },
     };
 })();
+//@line 1 "src/energizer.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Energizer
 
@@ -2476,6 +2491,7 @@ var energizer = (function() {
         updatePointsTimer: function() { if (pointsFramesLeft > 0) pointsFramesLeft--; },
     };
 })();
+//@line 1 "src/fruit.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Fruit
 
@@ -2531,6 +2547,7 @@ var fruit = (function(){
     };
 
 })();
+//@line 1 "src/game.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Game
 
@@ -2609,6 +2626,7 @@ var game = (function(){
 
     };
 })();
+//@line 1 "src/states.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // States
 // (main loops for each state of the game)
@@ -3117,6 +3135,7 @@ var overState = (function() {
         },
     };
 })();
+//@line 1 "src/maps.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Maps
 
@@ -3554,6 +3573,7 @@ var MAP_MSPACMAN4 = 5;
     ];
 
 })();
+//@line 1 "src/main.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Entry Point
 

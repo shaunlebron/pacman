@@ -1165,17 +1165,9 @@ var screen = (function() {
 
         ///////////////////////////////////////////////////
         // machine speed group
-        var changeRate = function(n) {
-            game.pause();
-            game.setUpdatesPerSecond(n);
-            game.resume();
-        };
         fieldset = makeFieldSet('Machine Speed');
         addSlider(fieldset, '%', 100, 0, 200, 5, function(value) {
-            if (value == 0)
-                game.pause();
-            else
-                changeRate(60*value/100);
+            game.setUpdatesPerSecond(60*value/100);
         });
         form.appendChild(fieldset);
 
@@ -1185,7 +1177,8 @@ var screen = (function() {
         var makeSwitchRenderer = function(renderer) {
             return function(on) {
                 if (on) {
-                    game.switchState(fadeRendererState(game.state, renderer, 24));
+                    screen.switchRenderer(renderer);
+                    //game.switchState(fadeRendererState(game.state, renderer, 24));
                 }
             };
         };
@@ -2572,6 +2565,7 @@ var game = (function(){
         // scheduling
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
+            nextFrameTime = (new Date).getTime();
         },
         restart: function() {
             this.switchState(menuState);
@@ -2589,10 +2583,12 @@ var game = (function(){
             return function() {
                 // call update for every frame period that has elapsed
                 var frames = 0;
-                while (frames < maxFrameSkip && (new Date).getTime() > nextFrameTime) {
-                    this.state.update();
-                    nextFrameTime += framePeriod;
-                    frames++;
+                if (framePeriod != Infinity) {
+                    while (frames < maxFrameSkip && (new Date).getTime() > nextFrameTime) {
+                        this.state.update();
+                        nextFrameTime += framePeriod;
+                        frames++;
+                    }
                 }
                 // draw after updates are caught up
                 this.state.draw();

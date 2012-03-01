@@ -32,6 +32,7 @@ var game = (function(){
         // scheduling
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
+            nextFrameTime = (new Date).getTime();
         },
         restart: function() {
             this.switchState(menuState);
@@ -49,10 +50,12 @@ var game = (function(){
             return function() {
                 // call update for every frame period that has elapsed
                 var frames = 0;
-                while (frames < maxFrameSkip && (new Date).getTime() > nextFrameTime) {
-                    this.state.update();
-                    nextFrameTime += framePeriod;
-                    frames++;
+                if (framePeriod != Infinity) {
+                    while (frames < maxFrameSkip && (new Date).getTime() > nextFrameTime) {
+                        this.state.update();
+                        nextFrameTime += framePeriod;
+                        frames++;
+                    }
                 }
                 // draw after updates are caught up
                 this.state.draw();

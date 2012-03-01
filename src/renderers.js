@@ -106,6 +106,7 @@ renderers.Common.prototype = {
             tile.x += dir.x;
             tile.y += dir.y;
         }
+        var pixel = { x:tile.x*tileSize+midTile.x, y:tile.y*tileSize+midTile.y };
         
         // dist keeps track of how far we're going along this path, stopping at maxDist
         // distLeft determines how long the last line should be
@@ -123,10 +124,14 @@ renderers.Common.prototype = {
                 actor.pixel.x+actor.pathCenter.x,
                 actor.pixel.y+actor.pathCenter.y);
         this.ctx.lineTo(
-                tile.x*tileSize+midTile.x+actor.pathCenter.x,
-                tile.y*tileSize+midTile.y+actor.pathCenter.y);
+                pixel.x+actor.pathCenter.x,
+                pixel.y+actor.pathCenter.y);
 
-        while (!(tile.x == target.x && tile.y == target.y)) {
+        if (tile.x == target.x && tile.y == target.y) {
+            // adjust the distance left to create a smoothly interpolated path end
+            distLeft = actor.getPathDistLeft(pixel, dirEnum);
+        }
+        else while (true) {
 
             // predict next turn from current tile
             openTiles = getOpenSurroundTiles(tile, dirEnum);
@@ -139,7 +144,7 @@ renderers.Common.prototype = {
             if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
             
                 // adjust the distance left to create a smoothly interpolated path end
-                distLeft = actor.getPathDistLeft(tile, dir, dirEnum);
+                distLeft = actor.getPathDistLeft(pixel, dirEnum);
 
                 // cap distance left
                 distLeft = Math.min(maxDist-dist, distLeft);
@@ -156,6 +161,8 @@ renderers.Common.prototype = {
             // move to next tile and add a line to its center
             tile.x += dir.x;
             tile.y += dir.y;
+            pixel.x += tileSize*dir.x;
+            pixel.y += tileSize*dir.y;
             dist += tileSize;
             this.ctx.lineTo(
                     tile.x*tileSize+midTile.x+actor.pathCenter.x,
@@ -163,8 +170,8 @@ renderers.Common.prototype = {
         }
 
         // calculate final endpoint
-        var px = tile.x*tileSize+midTile.x+actor.pathCenter.x+distLeft*dir.x;
-        var py = tile.y*tileSize+midTile.y+actor.pathCenter.y+distLeft*dir.y;
+        var px = pixel.x+actor.pathCenter.x+distLeft*dir.x;
+        var py = pixel.y+actor.pathCenter.y+distLeft*dir.y;
 
         // add an arrow head
         this.ctx.lineTo(px,py);

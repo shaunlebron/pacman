@@ -315,6 +315,7 @@ renderers.Common.prototype = {
             tile.x += dir.x;
             tile.y += dir.y;
         }
+        var pixel = { x:tile.x*tileSize+midTile.x, y:tile.y*tileSize+midTile.y };
         
         // dist keeps track of how far we're going along this path, stopping at maxDist
         // distLeft determines how long the last line should be
@@ -332,10 +333,14 @@ renderers.Common.prototype = {
                 actor.pixel.x+actor.pathCenter.x,
                 actor.pixel.y+actor.pathCenter.y);
         this.ctx.lineTo(
-                tile.x*tileSize+midTile.x+actor.pathCenter.x,
-                tile.y*tileSize+midTile.y+actor.pathCenter.y);
+                pixel.x+actor.pathCenter.x,
+                pixel.y+actor.pathCenter.y);
 
-        while (!(tile.x == target.x && tile.y == target.y)) {
+        if (tile.x == target.x && tile.y == target.y) {
+            // adjust the distance left to create a smoothly interpolated path end
+            distLeft = actor.getPathDistLeft(pixel, dirEnum);
+        }
+        else while (true) {
 
             // predict next turn from current tile
             openTiles = getOpenSurroundTiles(tile, dirEnum);
@@ -348,7 +353,7 @@ renderers.Common.prototype = {
             if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
             
                 // adjust the distance left to create a smoothly interpolated path end
-                distLeft = actor.getPathDistLeft(tile, dir, dirEnum);
+                distLeft = actor.getPathDistLeft(pixel, dirEnum);
 
                 // cap distance left
                 distLeft = Math.min(maxDist-dist, distLeft);
@@ -365,6 +370,8 @@ renderers.Common.prototype = {
             // move to next tile and add a line to its center
             tile.x += dir.x;
             tile.y += dir.y;
+            pixel.x += tileSize*dir.x;
+            pixel.y += tileSize*dir.y;
             dist += tileSize;
             this.ctx.lineTo(
                     tile.x*tileSize+midTile.x+actor.pathCenter.x,
@@ -372,8 +379,8 @@ renderers.Common.prototype = {
         }
 
         // calculate final endpoint
-        var px = tile.x*tileSize+midTile.x+actor.pathCenter.x+distLeft*dir.x;
-        var py = tile.y*tileSize+midTile.y+actor.pathCenter.y+distLeft*dir.y;
+        var px = pixel.x+actor.pathCenter.x+distLeft*dir.x;
+        var py = pixel.y+actor.pathCenter.y+distLeft*dir.y;
 
         // add an arrow head
         this.ctx.lineTo(px,py);
@@ -1950,13 +1957,13 @@ blinky.drawTarget = function(ctx) {
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
-blinky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+blinky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
     if (this.targetting == 'pacman') {
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pacman.pixel.y);
+            distLeft = Math.abs(fromPixel.y - pacman.pixel.y);
         else
-            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pacman.pixel.x);
+            distLeft = Math.abs(fromPixel.x - pacman.pixel.x);
     }
     return distLeft;
 };
@@ -1987,51 +1994,65 @@ pinky.drawTarget = function(ctx) {
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
-pinky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+pinky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
     if (this.targetting == 'pacman') {
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
+            distLeft = Math.abs(fromPixel.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
         else
-            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
+            distLeft = Math.abs(fromPixel.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
     }
     return distLeft;
 };
 
 /////////////////////////////////////////////////////////////////
 // inky targets twice the distance from blinky to two tiles ahead of pacman
-
-inky.setTarget = function() {
+inky.getTargetTile = function() {
     var px = pacman.tile.x + 2*pacman.dir.x;
     var py = pacman.tile.y + 2*pacman.dir.y;
-    this.targetTile.x = blinky.tile.x + 2*(px - blinky.tile.x);
-    this.targetTile.y = blinky.tile.y + 2*(py - blinky.tile.y);
+    return {
+        x : blinky.tile.x + 2*(px - blinky.tile.x),
+        y : blinky.tile.y + 2*(py - blinky.tile.y),
+    };
+};
+inky.getTargetPixel = function() {
+    var px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
+    var py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
+    return {
+        x : blinky.pixel.x + 2*(px-blinky.pixel.x),
+        y : blinky.pixel.y + 2*(py-blinky.pixel.y),
+    };
+};
+inky.setTarget = function() {
+    this.targetTile = this.getTargetTile();
     this.targetting = 'pacman';
 };
 inky.drawTarget = function(ctx) {
     if (!this.targetting) return;
     ctx.fillStyle = this.color;
-
-    var px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
-    var py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
-    px = blinky.pixel.x + 2*(px-blinky.pixel.x);
-    py = blinky.pixel.y + 2*(py-blinky.pixel.y);
+    var pixel;
 
     if (this.targetting == 'pacman') {
+        pixel = this.getTargetPixel();
         ctx.beginPath();
         ctx.moveTo(blinky.pixel.x, blinky.pixel.y);
-        ctx.lineTo(px, py);
+        ctx.lineTo(pixel.x, pixel.y);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, px,py, targetSize);
+        screen.renderer.drawCenterPixelSq(ctx, pixel.x, pixel.y, targetSize);
     }
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
-inky.getPathDistLeft = function(prevTile, dir, dirEnum) {
+inky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
+    var toPixel;
     if (this.targetting == 'pacman') {
-        // TODO: intersect the line drawn in drawTarget to return the furthest intersection point with the line from prevTile to dir
+        toPixel = this.getTargetPixel();
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(toPixel.y - fromPixel.y);
+        else
+            distLeft = Math.abs(toPixel.x - fromPixel.x);
     }
     return distLeft;
 };
@@ -2068,13 +2089,13 @@ clyde.drawTarget = function(ctx) {
     else
         screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
-clyde.getPathDistLeft = function(prevTile, dir, dirEnum) {
+clyde.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
     if (this.targetting == 'pacman') {
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pacman.pixel.y);
+            distLeft = Math.abs(fromPixel.y - pacman.pixel.y);
         else
-            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pacman.pixel.x);
+            distLeft = Math.abs(fromPixel.x - pacman.pixel.x);
     }
     return distLeft;
 };
@@ -2117,16 +2138,24 @@ pacman.drawTarget = function(ctx) {
     };
 
 };
-pacman.getPathDistLeft = function(prevTile, dir, dirEnum) {
+pacman.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
-    if (this.targetting == 'chase') {
+    var px,py;
+    if (this.targetting == 'pinky') {
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(prevTile.y*tileSize + midTile.y - pinky.pixel.y);
+            distLeft = Math.abs(fromPixel.y - pinky.pixel.y);
         else
-            distLeft = Math.abs(prevTile.x*tileSize + midTile.x - pinky.pixel.x);
+            distLeft = Math.abs(fromPixel.x - pinky.pixel.x);
     }
     else { // 'flee'
-        // TODO: intersect the line drawn in drawTarget to return the furthest intersection point with the line from prevTile to dir
+        px = pacman.pixel.x - pinky.pixel.x;
+        py = pacman.pixel.y - pinky.pixel.y;
+        px = pinky.pixel.x + 2*px;
+        py = pinky.pixel.y + 2*py;
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(py - fromPixel.y);
+        else
+            distLeft = Math.abs(px - fromPixel.x);
     }
     return distLeft;
 };

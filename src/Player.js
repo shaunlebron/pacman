@@ -120,7 +120,7 @@ Player.prototype.update = function(j) {
         fruit.onDotEat();
         game.addScore((t=='.') ? 10 : 50);
 
-        if (!tileMap.allDotsEaten() && t=='o')
+        if (t=='o')
             energizer.activate();
     }
 };

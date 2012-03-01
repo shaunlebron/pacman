@@ -1171,7 +1171,7 @@ var screen = (function() {
             game.resume();
         };
         fieldset = makeFieldSet('Machine Speed');
-        addSlider(fieldset, '%', 100, 0, 200, 20, function(value) {
+        addSlider(fieldset, '%', 100, 0, 200, 5, function(value) {
             if (value == 0)
                 game.pause();
             else
@@ -1214,7 +1214,7 @@ var screen = (function() {
 
         fieldset.appendChild(document.createElement('br'));
 
-        addSlider(fieldset, ' tile path', actorPathLength, 8, 64, 8, function(value) {
+        addSlider(fieldset, ' tile path', actorPathLength, 1, 50, 1, function(value) {
             actorPathLength = value;
         });
 

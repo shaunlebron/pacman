@@ -32,3 +32,6 @@ cat \
     src/main.js \
     <(echo "})();") \
     > pacman.js
+
+sed -i "s/last updated:[^<]*/last updated: $(date)/" index.htm
+sed -i "s/last updated:[^<]*/last updated: $(date)/" debug.htm

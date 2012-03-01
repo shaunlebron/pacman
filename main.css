@@ -21,3 +21,7 @@ label {
 #links {
     margin:5px;
 }
+#date {
+    font-style: italic;
+    font-size:0.8em;
+}

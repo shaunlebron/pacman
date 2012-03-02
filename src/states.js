@@ -79,7 +79,7 @@ var menuState = {
         renderer.blitMap();
         if (score != 0 && highScore != 0)
             renderer.drawScore();
-        renderer.drawMessage("click to play","#FF0");
+        renderer.drawMessage("Pac-Man","#FF0");
         renderer.drawActors();
     },
     update: function() {

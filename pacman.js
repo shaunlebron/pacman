@@ -1199,6 +1199,12 @@ var gui = (function() {
             fieldset.appendChild(document.createElement('br'));
         };
 
+        var makeDropDownOption = function(caption) {
+            var option = document.createElement('option');
+            option.appendChild(document.createTextNode(caption));
+            return option;
+        };
+
         return function() {
             var controlDiv = document.getElementById("pacman-controls");
             if (!controlDiv)
@@ -1257,19 +1263,14 @@ var gui = (function() {
 
             // maps group
             fieldset = makeFieldSet('Maps');
-            var makeSwitchMap = function(i) {
-                return function(on) {
-                    if (on) {
-                        readyNewState.nextMap = i;
-                        switchState(readyNewState, 60);
-                    }
-                };
+            var mapDropDown = document.createElement('select');
+            for (i=1; i<map_list.length; i++)
+                mapDropDown.appendChild(makeDropDownOption(map_list[i].name));
+            mapDropDown.onchange = function() {
+                readyNewState.nextMap = mapDropDown.selectedIndex+1;
+                switchState(readyNewState, 60);
             };
-            var m;
-            for (i=1; i<map_list.length; i++) {
-                m = map_list[i];
-                addRadio(fieldset, 'map', m.name, makeSwitchMap(i), m == map);
-            }
+            fieldset.appendChild(mapDropDown);
             form.appendChild(fieldset);
 
             // add control from to our div
@@ -2536,6 +2537,7 @@ var executive = (function(){
     var interval; // used by setInterval and clearInterval to execute the game loop
     var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
     var nextFrameTime;
+    var running = false;
 
     return {
 
@@ -2544,13 +2546,23 @@ var executive = (function(){
             framePeriod = 1000/ups;
             nextFrameTime = (new Date).getTime();
         },
+        init: function() {
+            var that = this;
+            window.addEventListener('focus', function() {that.start();});
+            window.addEventListener('blur', function() {that.stop();});
+            this.start();
+        },
         start: function() {
+            if (running) return;
             nextFrameTime = (new Date).getTime();
             var that = this;
             interval = setInterval(function(){that.tick();}, 1000/60);
+            running = true;
         },
         stop: function() {
+            if (!running) return;
             clearInterval(interval);
+            running = false;
         },
         tick: (function(){
             var maxFrameSkip = 5;
@@ -2582,7 +2594,7 @@ var state;
 
 // switches to another game state
 var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
-    state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration,continueUpdate1, continueUpdate2) : nextState;
+    state = (fadeDuration) ? fadeNextState(state,nextState,fadeDuration,continueUpdate1, continueUpdate2) : nextState;
     state.init();
 };
 
@@ -2634,40 +2646,6 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
-// Fade Renderer state
-
-// creates a state that will pause the current state and fade to the given renderer in a given amount of time
-var fadeRendererState = function (currState, nextRenderer, frameDuration) {
-    var frames;
-    return {
-        init: function() {
-            frames = 0;
-        },
-        draw: function() {
-            var t;
-            currState.draw();
-            if (frames < frameDuration/2) {
-                t = frames/frameDuration*2;
-                renderer.drawFadeIn(1-t);
-            }
-            else {
-                t = frames/frameDuration*2 - 1;
-                renderer.drawFadeIn(t);
-            }
-        },
-        update: function() {
-            if (frames == frameDuration)
-                state = currState; // hand over state
-            else {
-                if (frames == frameDuration/2)
-                    switchRenderer(nextRenderer);
-                frames++;
-            }
-        },
-    }
-};
-
-//////////////////////////////////////////////////////////////////////////////////////
 // Menu State
 // (the home title screen state)
 
@@ -2687,7 +2665,7 @@ var menuState = {
         renderer.blitMap();
         if (score != 0 && highScore != 0)
             renderer.drawScore();
-        renderer.drawMessage("click to play","#FF0");
+        renderer.drawMessage("Pac-Man","#FF0");
         renderer.drawActors();
     },
     update: function() {
@@ -3539,6 +3517,6 @@ var switchMap = function(i) {
 window.onload = function() {
     gui.create();
     switchState(menuState);
-    executive.start();
+    executive.init();
 };
 })();

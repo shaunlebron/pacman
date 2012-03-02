@@ -101,6 +101,12 @@ var gui = (function() {
             fieldset.appendChild(document.createElement('br'));
         };
 
+        var makeDropDownOption = function(caption) {
+            var option = document.createElement('option');
+            option.appendChild(document.createTextNode(caption));
+            return option;
+        };
+
         return function() {
             var controlDiv = document.getElementById("pacman-controls");
             if (!controlDiv)
@@ -159,19 +165,14 @@ var gui = (function() {
 
             // maps group
             fieldset = makeFieldSet('Maps');
-            var makeSwitchMap = function(i) {
-                return function(on) {
-                    if (on) {
-                        readyNewState.nextMap = i;
-                        switchState(readyNewState, 60);
-                    }
-                };
+            var mapDropDown = document.createElement('select');
+            for (i=1; i<map_list.length; i++)
+                mapDropDown.appendChild(makeDropDownOption(map_list[i].name));
+            mapDropDown.onchange = function() {
+                readyNewState.nextMap = mapDropDown.selectedIndex+1;
+                switchState(readyNewState, 60);
             };
-            var m;
-            for (i=1; i<map_list.length; i++) {
-                m = map_list[i];
-                addRadio(fieldset, 'map', m.name, makeSwitchMap(i), m == map);
-            }
+            fieldset.appendChild(mapDropDown);
             form.appendChild(fieldset);
 
             // add control from to our div

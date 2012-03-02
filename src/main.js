@@ -4,5 +4,5 @@
 window.onload = function() {
     gui.create();
     switchState(menuState);
-    executive.start();
+    executive.init();
 };

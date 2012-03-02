@@ -1,9 +1,15 @@
+body {
+    margin:0;
+}
 canvas {
     border:10px solid black;
 }
 #pacman-controls {
+    margin:0;
     float:left;
-    margin:5px;
+    height:100%;
+}
+#pacman {
 }
 form {
     margin: 3px;
@@ -12,16 +18,20 @@ legend {
 }
 fieldset {
     margin-top: 3px;
-    border:1px solid #333;
+    border:1px solid #CCC;
 }
 label {
     font-size:0.9em;
     color: #333;
 }
 #links {
-    margin:5px;
 }
 #date {
-    font-style: italic;
+    position:absolute;
+    right:0;
+    bottom:0;
     font-size:0.8em;
+    color:#999;
+    margin:5px;
+    text-align:right;
 }

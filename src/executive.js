@@ -3,6 +3,7 @@ var executive = (function(){
     var interval; // used by setInterval and clearInterval to execute the game loop
     var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
     var nextFrameTime;
+    var running = false;
 
     return {
 
@@ -11,13 +12,23 @@ var executive = (function(){
             framePeriod = 1000/ups;
             nextFrameTime = (new Date).getTime();
         },
+        init: function() {
+            var that = this;
+            window.addEventListener('focus', function() {that.start();});
+            window.addEventListener('blur', function() {that.stop();});
+            this.start();
+        },
         start: function() {
+            if (running) return;
             nextFrameTime = (new Date).getTime();
             var that = this;
             interval = setInterval(function(){that.tick();}, 1000/60);
+            running = true;
         },
         stop: function() {
+            if (!running) return;
             clearInterval(interval);
+            running = false;
         },
         tick: (function(){
             var maxFrameSkip = 5;

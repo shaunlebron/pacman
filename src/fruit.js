@@ -29,14 +29,14 @@ var fruit = (function(){
                 scoreFramesLeft--;
         },
         onDotEat: function() {
-            if (tileMap.dotsEaten == dotLimit1 || tileMap.dotsEaten == dotLimit2)
+            if (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2)
                 framesLeft = 60*duration;
         },
         isPresent: function() { return framesLeft > 0; },
         isScorePresent: function() { return scoreFramesLeft > 0; },
         testCollide: function() {
             if (framesLeft > 0 && pacman.pixel.y == this.pixel.y && Math.abs(pacman.pixel.x - this.pixel.x) <= midTile.x) {
-                game.addScore(this.getPoints());
+                addScore(this.getPoints());
                 framesLeft = 0;
                 scoreFramesLeft = scoreDuration*60;
             }
@@ -45,7 +45,7 @@ var fruit = (function(){
         getPoints: (function() {
             var points = [100,300,500,500,700,700,1000,1000,2000,2000,3000,3000,5000];
             return function() {
-                var i = game.level;
+                var i = level;
                 if (i > 13) i = 13;
                 return points[i-1];
             };

@@ -1,6 +1,7 @@
 /////////////////////////////////////////////////////////////////
 // Targetting
 // (a definition for each actor's targetting algorithm and a draw function to visualize it)
+// (getPathDistLeft is used to obtain a smoothly interpolated path endpoint)
 
 // the tile length of the path drawn toward the target
 var actorPathLength = 16;
@@ -29,9 +30,9 @@ blinky.drawTarget = function(ctx) {
     if (!this.targetting) return;
     ctx.fillStyle = this.color;
     if (this.targetting == 'pacman')
-        screen.renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
+        renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
     else
-        screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+        renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
 blinky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -65,10 +66,10 @@ pinky.drawTarget = function(ctx) {
         ctx.lineTo(px, py);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, px,py, targetSize);
+        renderer.drawCenterPixelSq(ctx, px,py, targetSize);
     }
     else
-        screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+        renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
 pinky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -115,10 +116,10 @@ inky.drawTarget = function(ctx) {
         ctx.lineTo(pixel.x, pixel.y);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, pixel.x, pixel.y, targetSize);
+        renderer.drawCenterPixelSq(ctx, pixel.x, pixel.y, targetSize);
     }
     else
-        screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+        renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
 inky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -160,10 +161,10 @@ clyde.drawTarget = function(ctx) {
         ctx.arc(pacman.pixel.x, pacman.pixel.y, tileSize*8,0, 2*Math.PI);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
+        renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
     }
     else
-        screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+        renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
 clyde.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -207,10 +208,10 @@ pacman.drawTarget = function(ctx) {
         ctx.lineTo(px,py);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, px, py, targetSize);
+        renderer.drawCenterPixelSq(ctx, px, py, targetSize);
     }
     else {
-        screen.renderer.drawCenterPixelSq(ctx, pinky.pixel.x, pinky.pixel.y, targetSize);
+        renderer.drawCenterPixelSq(ctx, pinky.pixel.x, pinky.pixel.y, targetSize);
     };
 
 };

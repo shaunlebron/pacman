@@ -39,7 +39,7 @@ Player.prototype.getNumSteps = function() {
         return 2;
 
     var pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
-    return this.getStepSizeFromTable(game.level, pattern);
+    return this.getStepSizeFromTable(level, pattern);
 };
 
 // move forward one step
@@ -59,7 +59,7 @@ Player.prototype.step = (function(){
         var b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
 
         // Don't proceed past the middle of a tile if facing a wall
-        var stop = this.distToMid[a] == 0 && !tileMap.isNextTileFloor(this.tile, this.dir);
+        var stop = this.distToMid[a] == 0 && !isNextTileFloor(this.tile, this.dir);
         if (!stop)
             this.pixel[a] += this.dir[a];
 
@@ -80,7 +80,7 @@ Player.prototype.steer = function() {
             return;
 
         // make turn that is closest to target
-        var openTiles = getOpenSurroundTiles(this.tile, this.dirEnum);
+        var openTiles = getOpenTiles(this.tile, this.dirEnum);
         this.setTarget();
         this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
     }
@@ -88,7 +88,7 @@ Player.prototype.steer = function() {
         this.targetting = undefined;
 
     // head in the desired direction if possible
-    if (tileMap.isNextTileFloor(this.tile, this.nextDir))
+    if (isNextTileFloor(this.tile, this.nextDir))
         this.setDir(this.nextDirEnum);
 };
 
@@ -111,14 +111,14 @@ Player.prototype.update = function(j) {
     Actor.prototype.update.call(this,j);
 
     // eat something
-    var t = tileMap.getTile(this.tile.x, this.tile.y);
+    var t = map.getTile(this.tile.x, this.tile.y);
     if (t == '.' || t == 'o') {
         this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
 
-        tileMap.onDotEat(this.tile.x, this.tile.y);
+        map.onDotEat(this.tile.x, this.tile.y);
         ghostReleaser.onDotEat();
         fruit.onDotEat();
-        game.addScore((t=='.') ? 10 : 50);
+        addScore((t=='.') ? 10 : 50);
 
         if (t=='o')
             energizer.activate();

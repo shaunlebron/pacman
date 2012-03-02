@@ -1,10 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
 
-// modes representing the ghosts' current command
-var GHOST_CMD_CHASE = 0;
-var GHOST_CMD_SCATTER = 1;
-
 // modes representing the ghost's current state
 var GHOST_OUTSIDE = 0;
 var GHOST_EATEN = 1;
@@ -41,8 +37,8 @@ Ghost.prototype.reset = function() {
 // indicates if we slow down in the tunnel
 Ghost.prototype.isSlowInTunnel = function() {
     // special case for Ms. Pac-Man (slow down only for the first three levels)
-    if (game.mode == GAME_MSPACMAN)
-        return game.level <= 3;
+    if (gameMode == GAME_MSPACMAN)
+        return level <= 3;
     else
         return true;
 };
@@ -52,13 +48,13 @@ Ghost.prototype.getNumSteps = function() {
 
     var pattern = STEP_GHOST;
 
-    if (game.state == menuState)
+    if (state == menuState)
         pattern = STEP_GHOST;
     else if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
     else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME)
         pattern = STEP_GHOST_TUNNEL;
-    else if (tileMap.isTunnelTile(this.tile.x, this.tile.y) && this.isSlowInTunnel())
+    else if (map.isTunnelTile(this.tile.x, this.tile.y) && this.isSlowInTunnel())
         pattern = STEP_GHOST_TUNNEL;
     else if (this.scared)
         pattern = STEP_GHOST_FRIGHT;
@@ -67,7 +63,7 @@ Ghost.prototype.getNumSteps = function() {
     else if (this.elroy == 2)
         pattern = STEP_ELROY2;
 
-    return this.getStepSizeFromTable(game.level ? game.level : 1, pattern);
+    return this.getStepSizeFromTable(level ? level : 1, pattern);
 };
 
 // signal ghost to reverse direction after leaving current tile
@@ -126,10 +122,10 @@ Ghost.prototype.homeSteer = (function(){
 
     steerFuncs[GHOST_GOING_HOME] = function() {
         // at the doormat
-        if (this.tile.x == tileMap.doorTile.x && this.tile.y == tileMap.doorTile.y) {
+        if (this.tile.x == map.doorTile.x && this.tile.y == map.doorTile.y) {
             this.targetting = false;
             // walk to the door, or go through if already there
-            if (this.pixel.x == tileMap.doorPixel.x) {
+            if (this.pixel.x == map.doorPixel.x) {
                 this.mode = GHOST_ENTERING_HOME;
                 this.setDir(DIR_DOWN);
             }
@@ -139,7 +135,7 @@ Ghost.prototype.homeSteer = (function(){
     };
 
     steerFuncs[GHOST_ENTERING_HOME] = function() {
-        if (this.pixel.y == tileMap.homeBottomPixel)
+        if (this.pixel.y == map.homeBottomPixel)
             // revive if reached its seat
             if (this.pixel.x == this.startPixel.x) {
                 this.setDir(DIR_UP);
@@ -155,24 +151,24 @@ Ghost.prototype.homeSteer = (function(){
         if (this.sigLeaveHome) {
             this.sigLeaveHome = false;
             this.mode = GHOST_LEAVING_HOME;
-            if (this.pixel.x == tileMap.doorPixel.x)
+            if (this.pixel.x == map.doorPixel.x)
                 this.setDir(DIR_UP);
             else
-                this.setDir(this.pixel.x < tileMap.doorPixel.x ? DIR_RIGHT : DIR_LEFT);
+                this.setDir(this.pixel.x < map.doorPixel.x ? DIR_RIGHT : DIR_LEFT);
         }
         // pace back and forth
         else {
-            if (this.pixel.y == tileMap.homeTopPixel)
+            if (this.pixel.y == map.homeTopPixel)
                 this.setDir(DIR_DOWN);
-            else if (this.pixel.y == tileMap.homeBottomPixel)
+            else if (this.pixel.y == map.homeBottomPixel)
                 this.setDir(DIR_UP);
         }
     };
 
     steerFuncs[GHOST_LEAVING_HOME] = function() {
-        if (this.pixel.x == tileMap.doorPixel.x)
+        if (this.pixel.x == map.doorPixel.x)
             // reached door
-            if (this.pixel.y == tileMap.doorPixel.y) {
+            if (this.pixel.y == map.doorPixel.y) {
                 this.mode = GHOST_OUTSIDE;
                 this.setDir(DIR_LEFT); // always turn left at door?
             }
@@ -193,7 +189,7 @@ Ghost.prototype.homeSteer = (function(){
 // special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
 Ghost.prototype.isScatterBrain = function() {
     return (
-        game.mode == GAME_MSPACMAN && 
+        gameMode == GAME_MSPACMAN && 
         ghostCommander.getCommand() == GHOST_CMD_SCATTER &&
         (this == blinky || this == pinky));
 };
@@ -235,7 +231,7 @@ Ghost.prototype.steer = function() {
         return;
 
     // get surrounding tiles and their open indication
-    openTiles = getOpenSurroundTiles(this.tile, this.dirEnum);
+    openTiles = getOpenTiles(this.tile, this.dirEnum);
 
     if (this.scared) {
         // choose a random turn
@@ -247,8 +243,8 @@ Ghost.prototype.steer = function() {
     else {
         // target ghost door
         if (this.mode == GHOST_GOING_HOME) {
-            this.targetTile.x = tileMap.doorTile.x;
-            this.targetTile.y = tileMap.doorTile.y;
+            this.targetTile.x = map.doorTile.x;
+            this.targetTile.y = map.doorTile.y;
         }
         // target corner when scattering
         else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
@@ -264,8 +260,8 @@ Ghost.prototype.steer = function() {
             this.setTarget();
 
         // edit openTiles to reflect the current map's special contraints
-        if (tileMap.constrainGhostTurns)
-            tileMap.constrainGhostTurns(this.tile, openTiles);
+        if (map.constrainGhostTurns)
+            map.constrainGhostTurns(this.tile, openTiles);
 
         // choose direction that minimizes distance to target
         dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);

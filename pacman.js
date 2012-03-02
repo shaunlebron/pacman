@@ -10,7 +10,7 @@
 
 (function(){
 
-//@line 1 "src/TileMap.js"
+//@line 1 "src/direction.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Directions
 // (variables and utility functions for representing actor heading direction)
@@ -37,8 +37,67 @@ var setDirFromEnum = function(dir,dirEnum) {
     else if (dirEnum == DIR_LEFT) { dir.x = -1; dir.y = 0; }
 };
 
+// return the direction of the open, surrounding tile closest to our target
+var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
+
+    var dx,dy,dist;                      // variables used for euclidean distance
+    var minDist = Infinity;              // variable used for finding minimum distance path
+    var dir = {};
+    var dirEnum = 0;
+    var i;
+    for (i=0; i<4; i++) {
+        if (openTiles[i]) {
+            setDirFromEnum(dir,i);
+            dx = dir.x + tile.x - targetTile.x;
+            dy = dir.y + tile.y - targetTile.y;
+            dist = dx*dx+dy*dy;
+            if (dist < minDist) {
+                minDist = dist;
+                dirEnum = i;
+            }
+        }
+    }
+    return dirEnum;
+};
+
+// retrieve four surrounding tiles and indicate whether they are open
+var getOpenTiles = function(tile,dirEnum) {
+
+    // get open passages
+    var openTiles = {};
+    openTiles[DIR_UP] =    map.isFloorTile(tile.x, tile.y-1);
+    openTiles[DIR_RIGHT] = map.isFloorTile(tile.x+1, tile.y);
+    openTiles[DIR_DOWN] =  map.isFloorTile(tile.x, tile.y+1);
+    openTiles[DIR_LEFT] =  map.isFloorTile(tile.x-1, tile.y);
+
+    var numOpenTiles = 0;
+    var i;
+    if (dirEnum != undefined) {
+
+        // count number of open tiles
+        for (i=0; i<4; i++)
+            if (openTiles[i])
+                numOpenTiles++;
+
+        // By design, no mazes should have dead ends,
+        // but allow player to turn around if and only if it's necessary.
+        // Only close the passage behind the player if there are other openings.
+        var oppDirEnum = (dirEnum+2)%4; // current opposite direction enum
+        if (numOpenTiles > 1)
+            openTiles[oppDirEnum] = false;
+    }
+
+    return openTiles;
+};
+
+// returns if the given tile coordinate plus the given direction vector has a walkable floor tile
+var isNextTileFloor = function(tile,dir) {
+    return map.isFloorTile(tile.x+dir.x,tile.y+dir.y);
+};
+
+//@line 1 "src/Map.js"
 //////////////////////////////////////////////////////////////////////////////////////
-// TileMap
+// Map
 // (an ascii map of tiles representing a level maze)
 
 // size of a square tile in pixels
@@ -48,7 +107,7 @@ var tileSize = 8;
 var midTile = {x:3, y:4};
 
 // constructor
-var TileMap = function(numCols, numRows, tiles) {
+var Map = function(numCols, numRows, tiles) {
 
     // sizes
     this.numCols = numCols;
@@ -63,26 +122,16 @@ var TileMap = function(numCols, numRows, tiles) {
     this.resetCurrent();
     this.parseDots();
     this.parseTunnels();
-    this.parseIntersections();
 };
 
 // reset current tiles
-TileMap.prototype.resetCurrent = function() {
+Map.prototype.resetCurrent = function() {
     this.currentTiles = this.tiles.split(""); // create a mutable list copy of an immutable string
     this.dotsEaten = 0;
 };
 
-TileMap.prototype.parseIntersections = function() {
-    this.intersections = [];
-    var i = 0;
-    var x,y;
-    for (y=0; y<this.numRows; y++) for (x=0; x<this.numCols; x++) {
-        this.intersections[i++] = this.getOpenTiles({x:x,y:y});
-    }
-};
-
 // count pellets and store energizer locations
-TileMap.prototype.parseDots = function() {
+Map.prototype.parseDots = function() {
 
     this.numDots = 0;
     this.numEnergizers = 0;
@@ -105,17 +154,17 @@ TileMap.prototype.parseDots = function() {
 };
 
 // get remaining dots left
-TileMap.prototype.dotsLeft = function() {
+Map.prototype.dotsLeft = function() {
     return this.numDots - this.dotsEaten;
 };
 
 // determine if all dots have been eaten
-TileMap.prototype.allDotsEaten = function() {
+Map.prototype.allDotsEaten = function() {
     return this.dotsLeft() == 0;
 };
 
 // create a record of tunnel locations
-TileMap.prototype.parseTunnels = (function(){
+Map.prototype.parseTunnels = (function(){
     
     // starting from x,y and increment x by dx...
     // determine where the tunnel entrance begins
@@ -147,7 +196,7 @@ TileMap.prototype.parseTunnels = (function(){
 })();
 
 // teleport actor to other side of tunnel if necessary
-TileMap.prototype.teleport = function(actor){
+Map.prototype.teleport = function(actor){
     var i;
     var t = this.tunnelRows[actor.tile.y];
     if (t) {
@@ -157,14 +206,14 @@ TileMap.prototype.teleport = function(actor){
 };
 
 // define which tiles are inside the tunnel
-TileMap.prototype.isTunnelTile = function(x,y) {
+Map.prototype.isTunnelTile = function(x,y) {
     var tunnel = this.tunnelRows[y];
     return tunnel && (x < tunnel.leftEntrance || x > tunnel.rightEntrance);
 };
 
 // retrieves tile character at given coordinate
 // extended to include offscreen tunnel space
-TileMap.prototype.getTile = function(x,y) {
+Map.prototype.getTile = function(x,y) {
     if (x>=0 && x<this.numCols && y>=0 && y<this.numRows) 
         return this.currentTiles[x+y*this.numCols];
     if (this.isTunnelTile(x,y))
@@ -172,43 +221,20 @@ TileMap.prototype.getTile = function(x,y) {
 };
 
 // determines if the given character is a walkable floor tile
-TileMap.prototype.isFloorTileChar = function(tile) {
+Map.prototype.isFloorTileChar = function(tile) {
     return tile==' ' || tile=='.' || tile=='o';
 };
 
 // determines if the given tile coordinate has a walkable floor tile
-TileMap.prototype.isFloorTile = function(x,y) {
+Map.prototype.isFloorTile = function(x,y) {
     return this.isFloorTileChar(this.getTile(x,y));
 };
 
-// get a list of the four surrounding tiles
-TileMap.prototype.getSurroundingTiles = function(tile) {
-    var result = [];
-    result[DIR_UP] = this.getTile(tile.x, tile.y-1);
-    result[DIR_RIGHT] = this.getTile(tile.x+1, tile.y);
-    result[DIR_DOWN] = this.getTile(tile.x, tile.y+1);
-    result[DIR_LEFT] = this.getTile(tile.x-1, tile.y);
-    return result;
-};
-
-TileMap.prototype.getOpenTiles = function(tile) {
-    var surroundTiles = this.getSurroundingTiles(tile);
-    var i;
-    for (i=0; i<4; i++)
-        surroundTiles[i] = this.isFloorTileChar(surroundTiles[i]);
-    return surroundTiles;
-};
-
-// returns if the given tile coordinate plus the given direction vector has a walkable floor tile
-TileMap.prototype.isNextTileFloor = function(tile,dir) {
-    return this.isFloorTile(tile.x+dir.x,tile.y+dir.y);
-};
-
 // mark the dot at the given coordinate eaten
-TileMap.prototype.onDotEat = function(x,y) {
+Map.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
     this.currentTiles[x+y*this.numCols] = ' ';
-    screen.renderer.erasePellet(x,y);
+    renderer.erasePellet(x,y);
 };
 //@line 1 "src/renderers.js"
 //////////////////////////////////////////////////////////////
@@ -218,606 +244,665 @@ TileMap.prototype.onDotEat = function(x,y) {
 // to enable to different front-end displays for Pac-Man.
 
 // list of available renderers
-var renderers = {};
+var renderer_list;
 
-//////////////////////////////////////////////////////////////
-// Common Renderer
-// (attributes and functionality that are currently common to all renderers)
+// current renderer
+var renderer;
 
-// constructor
-renderers.Common = function(ctx, bgCtx) {
-    this.ctx = ctx;
-    this.bgCtx = bgCtx;
+// all rendering will be shown on this canvas
+var canvas;
 
-    this.actorSize = (tileSize-1)*2;
-    this.energizerSize = tileSize+2;
-    this.pointsEarnedTextSize = tileSize;
-
-    this.energizerColor = "#FFF";
-    this.pelletColor = "#888";
-    this.scaredGhostColor = "#2121ff";
-
-    this.flashLevel = false;
+// switch to the given renderer index
+var switchRenderer = function(i) {
+    renderer = renderer_list[i];
+    renderer.drawMap();
 };
 
-renderers.Common.prototype = {
+(function(){
 
-    // scaling the canvas can incur floating point roundoff errors
-    // which manifest as "grout" between tiles that are otherwise adjacent in integer-space
-    // This function extends the width and height of the tile if it is adjacent to equivalent tiles
-    // that are to the bottom or right of the given tile
-    drawNoGroutTile: function(ctx,x,y,w) {
-        var tileChar = tileMap.getTile(x,y);
-        this.drawCenterTileSq(ctx,x,y,tileSize,
-                tileMap.getTile(x+1,y) == tileChar,
-                tileMap.getTile(x,y+1) == tileChar,
-                tileMap.getTile(x+1,y+1) == tileChar);
-    },
+    var bgCanvas;
+    var ctx, bgCtx;
 
-    // draw square centered at the given tile with optional "floating point grout" filling
-    drawCenterTileSq: function (ctx,tx,ty,w, rightGrout, downGrout, downRightGrout) {
-        this.drawCenterPixelSq(ctx, tx*tileSize+midTile.x, ty*tileSize+midTile.y,w,
-                rightGrout, downGrout, downRightGrout);
-    },
+    // drawing scale
+    var scale = 1.5;        // scale everything by this amount
 
-    // draw square centered at the given pixel
-    drawCenterPixelSq: function (ctx,px,py,w,rightGrout, downGrout, downRightGrout) {
-        ctx.fillRect(px-w/2, py-w/2,w,w);
+    // creates a canvas
+    var makeCanvas = function() {
+        var c = document.createElement("canvas");
 
-        // fill "floating point grout" gaps between tiles
-        var gap = 1;
-        if (rightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w);
-        if (downGrout) ctx.fillRect(px-w/2, py-w/2,w,w+gap);
-        //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
-    },
+        // use conventional pacman map size
+        c.width = 28*tileSize * scale;
+        c.height = 36*tileSize * scale;
 
-    // this flag is used to flash the level upon its successful completion
-    toggleLevelFlash: function () {
-        this.flashLevel = !this.flashLevel;
-    },
+        // transform to scale
+        var ctx = c.getContext("2d");
+        ctx.scale(scale,scale);
+        return c;
+    };
 
-    // draw the target visualizers for each actor
-    drawTargets: function() {
-        var i;
-        this.ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        this.ctx.lineWidth = "1.5";
-        this.ctx.lineCap = "round";
-        this.ctx.lineJoin = "round";
-        for (i=0;i<5;i++)
-            if (actors[i].isDrawTarget)
-                actors[i].drawTarget(this.ctx);
-    },
+    // create foreground and background canvases
+    canvas = makeCanvas();
+    bgCanvas = makeCanvas();
+    ctx = canvas.getContext("2d");
+    bgCtx = bgCanvas.getContext("2d");
 
-    drawPaths: function() {
-        var i;
-        for (i=0;i<5;i++)
-            if (actors[i].isDrawPath)
-                this.drawPath(actors[i]);
-    },
+    //////////////////////////////////////////////////////////////
+    // Common Renderer
+    // (attributes and functionality that are currently common to all renderers)
 
-    // draw a predicted path for the actor if it continues pursuing current target
-    drawPath: function(actor) {
-        if (!actor.targetting) return;
+    // constructor
+    var CommonRenderer = function() {
+        this.actorSize = (tileSize-1)*2;
+        this.energizerSize = tileSize+2;
+        this.pointsEarnedTextSize = tileSize;
 
-        // current state of the predicted path
-        var tile = { x: actor.tile.x, y: actor.tile.y};
-        var target = actor.targetTile;
-        var dir = { x: actor.dir.x, y: actor.dir.y };
-        var dirEnum = actor.dirEnum;
-        var openTiles;
+        this.energizerColor = "#FFF";
+        this.pelletColor = "#888";
+        this.scaredGhostColor = "#2121ff";
 
-        // exit if we're already on the target
-        if (tile.x == target.x && tile.y == target.y) {
-            return;
-        }
+        this.flashLevel = false;
+    };
 
-        // if we are past the center of the tile, we cannot turn here anymore, so jump to next tile
-        if ((dirEnum == DIR_UP && actor.tilePixel.y <= midTile.y) ||
-            (dirEnum == DIR_DOWN && actor.tilePixel.y >= midTile.y) ||
-            (dirEnum == DIR_LEFT && actor.tilePixel.x <= midTile.x) ||
-            (dirEnum == DIR_RIGHT & actor.tilePixel.x >= midTile.x)) {
-            tile.x += dir.x;
-            tile.y += dir.y;
-        }
-        var pixel = { x:tile.x*tileSize+midTile.x, y:tile.y*tileSize+midTile.y };
-        
-        // dist keeps track of how far we're going along this path, stopping at maxDist
-        // distLeft determines how long the last line should be
-        var dist = Math.abs(tile.x*tileSize+midTile.x - actor.pixel.x + tile.y*tileSize+midTile.y - actor.pixel.y);
-        var maxDist = actorPathLength*tileSize;
-        var distLeft;
-        
-        // add the first line
-        this.ctx.strokeStyle = actor.pathColor;
-        this.ctx.lineWidth = "2.0";
-        this.ctx.lineCap = "round";
-        this.ctx.lineJoin = "round";
-        this.ctx.beginPath();
-        this.ctx.moveTo(
-                actor.pixel.x+actor.pathCenter.x,
-                actor.pixel.y+actor.pathCenter.y);
-        this.ctx.lineTo(
-                pixel.x+actor.pathCenter.x,
-                pixel.y+actor.pathCenter.y);
+    CommonRenderer.prototype = {
 
-        if (tile.x == target.x && tile.y == target.y) {
-            // adjust the distance left to create a smoothly interpolated path end
-            distLeft = actor.getPathDistLeft(pixel, dirEnum);
-        }
-        else while (true) {
+        // copy background canvas to the foreground canvas
+        blitMap: function() {
+            ctx.scale(1/scale,1/scale);
+            ctx.drawImage(bgCanvas,0,0);
+            ctx.scale(scale,scale);
+        },
 
-            // predict next turn from current tile
-            openTiles = getOpenSurroundTiles(tile, dirEnum);
-            if (actor != pacman && tileMap.constrainGhostTurns)
-                tileMap.constrainGhostTurns(tile, openTiles);
-            dirEnum = getTurnClosestToTarget(tile, target, openTiles);
-            setDirFromEnum(dir,dirEnum);
+        // scaling the canvas can incur floating point roundoff errors
+        // which manifest as "grout" between tiles that are otherwise adjacent in integer-space
+        // This function extends the width and height of the tile if it is adjacent to equivalent tiles
+        // that are to the bottom or right of the given tile
+        drawNoGroutTile: function(ctx,x,y,w) {
+            var tileChar = map.getTile(x,y);
+            this.drawCenterTileSq(ctx,x,y,tileSize,
+                    map.getTile(x+1,y) == tileChar,
+                    map.getTile(x,y+1) == tileChar,
+                    map.getTile(x+1,y+1) == tileChar);
+        },
+
+        // draw square centered at the given tile with optional "floating point grout" filling
+        drawCenterTileSq: function (ctx,tx,ty,w, rightGrout, downGrout, downRightGrout) {
+            this.drawCenterPixelSq(ctx, tx*tileSize+midTile.x, ty*tileSize+midTile.y,w,
+                    rightGrout, downGrout, downRightGrout);
+        },
+
+        // draw square centered at the given pixel
+        drawCenterPixelSq: function (ctx,px,py,w,rightGrout, downGrout, downRightGrout) {
+            ctx.fillRect(px-w/2, py-w/2,w,w);
+
+            // fill "floating point grout" gaps between tiles
+            var gap = 1;
+            if (rightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w);
+            if (downGrout) ctx.fillRect(px-w/2, py-w/2,w,w+gap);
+            //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
+        },
+
+        // this flag is used to flash the level upon its successful completion
+        toggleLevelFlash: function () {
+            this.flashLevel = !this.flashLevel;
+        },
+
+        // draw the target visualizers for each actor
+        drawTargets: function() {
+            var i;
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = "1.5";
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            for (i=0;i<5;i++)
+                if (actors[i].isDrawTarget)
+                    actors[i].drawTarget(ctx);
+        },
+
+        drawPaths: function() {
+            var i;
+            for (i=0;i<5;i++)
+                if (actors[i].isDrawPath)
+                    this.drawPath(actors[i]);
+        },
+
+        // draw a predicted path for the actor if it continues pursuing current target
+        drawPath: function(actor) {
+            if (!actor.targetting) return;
+
+            // current state of the predicted path
+            var tile = { x: actor.tile.x, y: actor.tile.y};
+            var target = actor.targetTile;
+            var dir = { x: actor.dir.x, y: actor.dir.y };
+            var dirEnum = actor.dirEnum;
+            var openTiles;
+
+            // exit if we're already on the target
+            if (tile.x == target.x && tile.y == target.y) {
+                return;
+            }
+
+            // if we are past the center of the tile, we cannot turn here anymore, so jump to next tile
+            if ((dirEnum == DIR_UP && actor.tilePixel.y <= midTile.y) ||
+                (dirEnum == DIR_DOWN && actor.tilePixel.y >= midTile.y) ||
+                (dirEnum == DIR_LEFT && actor.tilePixel.x <= midTile.x) ||
+                (dirEnum == DIR_RIGHT & actor.tilePixel.x >= midTile.x)) {
+                tile.x += dir.x;
+                tile.y += dir.y;
+            }
+            var pixel = { x:tile.x*tileSize+midTile.x, y:tile.y*tileSize+midTile.y };
             
-            // if the next tile is our target, determine how mush distance is left and break loop
-            if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
+            // dist keeps track of how far we're going along this path, stopping at maxDist
+            // distLeft determines how long the last line should be
+            var dist = Math.abs(tile.x*tileSize+midTile.x - actor.pixel.x + tile.y*tileSize+midTile.y - actor.pixel.y);
+            var maxDist = actorPathLength*tileSize;
+            var distLeft;
             
+            // add the first line
+            ctx.strokeStyle = actor.pathColor;
+            ctx.lineWidth = "2.0";
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.beginPath();
+            ctx.moveTo(
+                    actor.pixel.x+actor.pathCenter.x,
+                    actor.pixel.y+actor.pathCenter.y);
+            ctx.lineTo(
+                    pixel.x+actor.pathCenter.x,
+                    pixel.y+actor.pathCenter.y);
+
+            if (tile.x == target.x && tile.y == target.y) {
                 // adjust the distance left to create a smoothly interpolated path end
                 distLeft = actor.getPathDistLeft(pixel, dirEnum);
-
-                // cap distance left
-                distLeft = Math.min(maxDist-dist, distLeft);
-
-                break;
             }
-            
-            // exit if we're going past the max distance
-            if (dist + tileSize > maxDist) {
-                distLeft = maxDist - dist;
-                break;
+            else while (true) {
+
+                // predict next turn from current tile
+                openTiles = getOpenTiles(tile, dirEnum);
+                if (actor != pacman && map.constrainGhostTurns)
+                    map.constrainGhostTurns(tile, openTiles);
+                dirEnum = getTurnClosestToTarget(tile, target, openTiles);
+                setDirFromEnum(dir,dirEnum);
+                
+                // if the next tile is our target, determine how mush distance is left and break loop
+                if (tile.x+dir.x == target.x && tile.y+dir.y == target.y) {
+                
+                    // adjust the distance left to create a smoothly interpolated path end
+                    distLeft = actor.getPathDistLeft(pixel, dirEnum);
+
+                    // cap distance left
+                    distLeft = Math.min(maxDist-dist, distLeft);
+
+                    break;
+                }
+                
+                // exit if we're going past the max distance
+                if (dist + tileSize > maxDist) {
+                    distLeft = maxDist - dist;
+                    break;
+                }
+
+                // move to next tile and add a line to its center
+                tile.x += dir.x;
+                tile.y += dir.y;
+                pixel.x += tileSize*dir.x;
+                pixel.y += tileSize*dir.y;
+                dist += tileSize;
+                ctx.lineTo(
+                        tile.x*tileSize+midTile.x+actor.pathCenter.x,
+                        tile.y*tileSize+midTile.y+actor.pathCenter.y);
             }
 
-            // move to next tile and add a line to its center
-            tile.x += dir.x;
-            tile.y += dir.y;
-            pixel.x += tileSize*dir.x;
-            pixel.y += tileSize*dir.y;
-            dist += tileSize;
-            this.ctx.lineTo(
-                    tile.x*tileSize+midTile.x+actor.pathCenter.x,
-                    tile.y*tileSize+midTile.y+actor.pathCenter.y);
-        }
+            // calculate final endpoint
+            var px = pixel.x+actor.pathCenter.x+distLeft*dir.x;
+            var py = pixel.y+actor.pathCenter.y+distLeft*dir.y;
 
-        // calculate final endpoint
-        var px = pixel.x+actor.pathCenter.x+distLeft*dir.x;
-        var py = pixel.y+actor.pathCenter.y+distLeft*dir.y;
+            // add an arrow head
+            ctx.lineTo(px,py);
+            var s = 3;
+            if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
+                ctx.lineTo(px-s*dir.x,py+s*dir.x);
+                ctx.moveTo(px,py);
+                ctx.lineTo(px-s*dir.x,py-s*dir.x);
+            }
+            else {
+                ctx.lineTo(px+s*dir.y,py-s*dir.y);
+                ctx.moveTo(px,py);
+                ctx.lineTo(px-s*dir.y,py-s*dir.y);
+            }
 
-        // add an arrow head
-        this.ctx.lineTo(px,py);
-        var s = 3;
-        if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
-            this.ctx.lineTo(px-s*dir.x,py+s*dir.x);
-            this.ctx.moveTo(px,py);
-            this.ctx.lineTo(px-s*dir.x,py-s*dir.x);
-        }
-        else {
-            this.ctx.lineTo(px+s*dir.y,py-s*dir.y);
-            this.ctx.moveTo(px,py);
-            this.ctx.lineTo(px-s*dir.y,py-s*dir.y);
-        }
+            // draw path    
+            ctx.stroke();
+        },
 
-        // draw path    
-        this.ctx.stroke();
-    },
+        // draw a fade filter for 0<=t<=1
+        drawFadeIn: function(t) {
+            ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
+            ctx.fillRect(0,0,map.widthPixels, map.heightPixels);
+        },
 
-    // draw a fade filter for 0<=t<=1
-    drawFadeIn: function(t) {
-        this.ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
-        this.ctx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
-    },
+        // erase pellet from background
+        erasePellet: function(x,y) {
+            bgCtx.fillStyle = this.floorColor;
+            this.drawNoGroutTile(bgCtx,x,y,tileSize);
 
-    // erase pellet from background
-    erasePellet: function(x,y) {
-        this.bgCtx.fillStyle = this.floorColor;
-        this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
+            // fill in adjacent floor tiles
+            if (map.getTile(x+1,y)==' ') this.drawNoGroutTile(bgCtx,x+1,y,tileSize);
+            if (map.getTile(x-1,y)==' ') this.drawNoGroutTile(bgCtx,x-1,y,tileSize);
+            if (map.getTile(x,y+1)==' ') this.drawNoGroutTile(bgCtx,x,y+1,tileSize);
+            if (map.getTile(x,y-1)==' ') this.drawNoGroutTile(bgCtx,x,y-1,tileSize);
 
-        // fill in adjacent floor tiles
-        if (tileMap.getTile(x+1,y)==' ') this.drawNoGroutTile(this.bgCtx,x+1,y,tileSize);
-        if (tileMap.getTile(x-1,y)==' ') this.drawNoGroutTile(this.bgCtx,x-1,y,tileSize);
-        if (tileMap.getTile(x,y+1)==' ') this.drawNoGroutTile(this.bgCtx,x,y+1,tileSize);
-        if (tileMap.getTile(x,y-1)==' ') this.drawNoGroutTile(this.bgCtx,x,y-1,tileSize);
+            // fill in adjacent wall tiles?
+        },
 
-        // fill in adjacent wall tiles?
-    },
+        // draw a center screen message (e.g. "start", "ready", "game over")
+        drawMessage: function(text, color) {
+            ctx.font = "bold " + 2*tileSize + "px sans-serif";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.fillStyle = color;
+            ctx.fillText(text, map.numCols*tileSize/2, this.messageRow*tileSize+midTile.y);
+        },
 
-    // draw a center screen message (e.g. "start", "ready", "game over")
-    drawMessage: function(text, color) {
-        this.ctx.font = "bold " + 2*tileSize + "px sans-serif";
-        this.ctx.textBaseline = "middle";
-        this.ctx.textAlign = "center";
-        this.ctx.fillStyle = color;
-        this.ctx.fillText(text, tileMap.numCols*tileSize/2, this.messageRow*tileSize+midTile.y);
-    },
+        // draw the points earned from the most recently eaten ghost
+        drawEatenPoints: function() {
+            var text = energizer.getPoints();
+            ctx.font = this.pointsEarnedTextSize + "px sans-serif";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#0FF";
+            ctx.fillText(text, pacman.pixel.x, pacman.pixel.y);
+        },
 
-    // draw the points earned from the most recently eaten ghost
-    drawEatenPoints: function() {
-        var text = energizer.getPoints();
-        this.ctx.font = this.pointsEarnedTextSize + "px sans-serif";
-        this.ctx.textBaseline = "middle";
-        this.ctx.textAlign = "center";
-        this.ctx.fillStyle = "#0FF";
-        this.ctx.fillText(text, pacman.pixel.x, pacman.pixel.y);
-    },
-
-    // draw each actor (ghosts and pacman)
-    drawActors: function() {
-        var i;
-        // draw such that pacman appears on top
-        if (energizer.isActive()) {
-            for (i=0; i<4; i++)
-                this.drawGhost(ghosts[i]);
-            if (!energizer.showingPoints())
+        // draw each actor (ghosts and pacman)
+        drawActors: function() {
+            var i;
+            // draw such that pacman appears on top
+            if (energizer.isActive()) {
+                for (i=0; i<4; i++)
+                    this.drawGhost(ghosts[i]);
+                if (!energizer.showingPoints())
+                    this.drawPacman();
+                else
+                    this.drawEatenPoints();
+            }
+            // draw such that pacman appears on bottom
+            else {
                 this.drawPacman();
-            else
-                this.drawEatenPoints();
-        }
-        // draw such that pacman appears on bottom
-        else {
-            this.drawPacman();
-            for (i=3; i>=0; i--) 
-                this.drawGhost(ghosts[i]);
-        }
-    },
-
-    // draw fruit
-    drawFruit: function() {
-        if (fruit.isPresent()) {
-            this.ctx.fillStyle = "#0F0";
-            this.drawCenterPixelSq(this.ctx, fruit.pixel.x, fruit.pixel.y, tileSize+2);
-        }
-        else if (fruit.isScorePresent()) {
-            this.ctx.font = this.pointsEarnedTextSize + "px sans-serif";
-            this.ctx.textBaseline = "middle";
-            this.ctx.textAlign = "center";
-            this.ctx.fillStyle = "#FFF";
-            this.ctx.fillText(fruit.getPoints(), fruit.pixel.x, fruit.pixel.y);
-        }
-    },
-};
-
-//////////////////////////////////////////////////////////////
-// Simple Renderer
-// (render a minimal Pac-Man display using nothing but squares)
-
-// constructor
-renderers.Simple = function(ctx,bgCtx) {
-
-    // inherit attributes from Common Renderer
-    renderers.Common.call(this,ctx,bgCtx);
-
-    this.messageRow = 21.7;
-    this.pointsEarnedTextSize = 1.5*tileSize;
-
-    this.backColor = "#222";
-    this.floorColor = "#444";
-    this.flashFloorColor = "#999";
-};
-
-renderers.Simple.prototype = {
-
-    // inherit functions from Common Renderer
-    __proto__: renderers.Common.prototype,
-
-    drawMap: function() {
-
-        // fill background
-        this.bgCtx.fillStyle = this.backColor;
-        this.bgCtx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
-
-        var x,y;
-        var i;
-        var tile;
-
-        // draw floor tiles
-        this.bgCtx.fillStyle = (this.flashLevel ? this.flashFloorColor : this.floorColor);
-        i=0;
-        for (y=0; y<tileMap.numRows; y++)
-        for (x=0; x<tileMap.numCols; x++) {
-            tile = tileMap.currentTiles[i++];
-            if (tile == ' ')
-                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
-        }
-
-        // draw pellet tiles
-        this.bgCtx.fillStyle = this.pelletColor;
-        i=0;
-        for (y=0; y<tileMap.numRows; y++)
-        for (x=0; x<tileMap.numCols; x++) {
-            tile = tileMap.currentTiles[i++];
-            if (tile == '.')
-                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
-        }
-    },
-
-    // draw the current score and high score
-    drawScore: function() {
-        this.ctx.font = 1.5*tileSize + "px sans-serif";
-        this.ctx.textBaseline = "top";
-        this.ctx.textAlign = "left";
-        this.ctx.fillStyle = "#FFF";
-        this.ctx.fillText(game.score, tileSize, tileSize*2);
-
-        this.ctx.font = "bold " + 1.5*tileSize + "px sans-serif";
-        this.ctx.textBaseline = "top";
-        this.ctx.textAlign = "center";
-        this.ctx.fillText("high score", tileSize*tileMap.numCols/2, 3);
-        this.ctx.fillText(game.highScore, tileSize*tileMap.numCols/2, tileSize*2);
-    },
-
-    // draw the extra lives indicator
-    drawExtraLives: function() {
-        var i;
-        this.ctx.fillStyle = "rgba(255,255,0,0.6)";
-        for (i=0; i<game.extraLives; i++)
-            this.drawCenterPixelSq(this.ctx, (2*i+3)*tileSize, (tileMap.numRows-2)*tileSize+midTile.y,this.actorSize);
-    },
-
-    // draw the current level indicator
-    drawLevelIcons: function() {
-        var i;
-        this.ctx.fillStyle = "rgba(255,255,255,0.5)";
-        var w = 2;
-        var h = this.actorSize;
-        for (i=0; i<game.level; i++)
-            this.ctx.fillRect((tileMap.numCols-2)*tileSize - i*2*w, (tileMap.numRows-2)*tileSize+midTile.y-h/2, w, h);
-    },
-
-    // draw energizer items on foreground
-    drawEnergizers: function() {
-        this.ctx.fillStyle = this.energizerColor;
-        var e;
-        var i;
-        for (i=0; i<tileMap.numEnergizers; i++) {
-            e = tileMap.energizers[i];
-            if (tileMap.currentTiles[e.x+e.y*tileMap.numCols] == 'o')
-                this.drawCenterTileSq(this.ctx,e.x,e.y,this.energizerSize);
-        }
-    },
-
-    // draw pacman
-    drawPacman: function(scale, opacity) {
-        if (scale == undefined) scale = 1;
-        if (opacity == undefined) opacity = 1;
-        this.ctx.fillStyle = "rgba(255,255,0,"+opacity+")";
-        this.drawCenterPixelSq(this.ctx, pacman.pixel.x, pacman.pixel.y, this.actorSize*scale);
-    },
-
-    // draw dying pacman animation (with 0<=t<=1)
-    drawDyingPacman: function(t) {
-        this.drawPacman(1-t);
-    },
-
-    // draw exploding pacman animation (with 0<=t<=1)
-    drawExplodingPacman: function(t) {
-        this.drawPacman(t,1-t);
-    },
-
-    // draw ghost
-    drawGhost: function(g) {
-        if (g.mode == GHOST_EATEN)
-            return;
-        var color = g.color;
-        if (g.scared)
-            color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
-        else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
-            color = "rgba(255,255,255,0.3)";
-        this.ctx.fillStyle = color;
-        this.drawCenterPixelSq(this.ctx, g.pixel.x, g.pixel.y, this.actorSize);
-    },
-
-};
-
-
-//////////////////////////////////////////////////////////////
-// Arcade Renderer
-// (render a display close to the original arcade)
-
-// constructor
-renderers.Arcade = function(ctx,bgCtx) {
-
-    // inherit attributes from Common Renderer
-    renderers.Common.call(this,ctx,bgCtx);
-
-    this.messageRow = 20;
-    this.pelletSize = 2;
-    this.energizerSize = tileSize;
-
-    this.backColor = "#000";
-    this.floorColor = "#000";
-    this.flashWallColor = "#FFF";
-};
-
-renderers.Arcade.prototype = {
-
-    // inherit functions from Common Renderer
-    __proto__: renderers.Common.prototype,
-
-    drawMap: function() {
-
-        // fill background
-        this.bgCtx.fillStyle = this.backColor;
-        this.bgCtx.fillRect(0,0,tileMap.widthPixels, tileMap.heightPixels);
-
-        var x,y;
-        var i;
-        var tile;
-
-        // draw wall tiles
-        this.bgCtx.fillStyle = (this.flashLevel ? this.flashWallColor : tileMap.wallColor);
-        i=0;
-        for (y=0; y<tileMap.numRows; y++)
-        for (x=0; x<tileMap.numCols; x++) {
-            tile = tileMap.currentTiles[i++];
-            if (tile == '|')
-                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
-        }
-
-        // draw floor tiles
-        this.bgCtx.fillStyle = this.floorColor;
-        i=0;
-        for (y=0; y<tileMap.numRows; y++)
-        for (x=0; x<tileMap.numCols; x++) {
-            tile = tileMap.currentTiles[i++];
-            if (tile == '_')
-                this.drawNoGroutTile(this.bgCtx,x,y,tileSize);
-            else if (tile != '|')
-                this.drawCenterTileSq(this.bgCtx,x,y,this.actorSize+4);
-        }
-
-        // draw pellet tiles
-        this.bgCtx.fillStyle = tileMap.pelletColor;
-        i=0;
-        for (y=0; y<tileMap.numRows; y++)
-        for (x=0; x<tileMap.numCols; x++) {
-            tile = tileMap.currentTiles[i++];
-            if (tile == '.')
-                this.drawCenterTileSq(this.bgCtx,x,y,this.pelletSize);
-        }
-    },
-
-    // draw the current score and high score
-    drawScore: function() {
-        this.ctx.font = 1.25*tileSize + "px sans-serif";
-        this.ctx.textBaseline = "top";
-        this.ctx.textAlign = "left";
-        this.ctx.fillStyle = "#FFF";
-        this.ctx.fillText(game.score, tileSize, tileSize*1.5);
-
-        this.ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
-        this.ctx.textBaseline = "top";
-        this.ctx.textAlign = "center";
-        this.ctx.fillText("high score", tileSize*tileMap.numCols/2, 1.5);
-        this.ctx.fillText(game.highScore, tileSize*tileMap.numCols/2, tileSize*1.5);
-    },
-
-    // draw the extra lives indicator
-    drawExtraLives: function() {
-        var i;
-        this.ctx.fillStyle = pacman.color;
-
-        this.ctx.save();
-        this.ctx.translate(3*tileSize, (tileMap.numRows-1)*tileSize);
-        this.ctx.beginPath();
-        for (i=0; i<game.extraLives; i++) {
-            addPacmanBody(this.ctx, DIR_RIGHT, Math.PI/6);
-            this.ctx.translate(2*tileSize,0);
-        }
-        this.ctx.closePath();
-        this.ctx.fill();
-        this.ctx.restore();
-    },
-
-    // draw the current level indicator
-    drawLevelIcons: function() {
-        var i;
-        this.ctx.fillStyle = "rgba(255,255,255,0.5)";
-        var w = 2;
-        var h = this.actorSize;
-        for (i=0; i<game.level; i++)
-            this.ctx.fillRect((tileMap.numCols-2)*tileSize - i*2*w, (tileMap.numRows-1)*tileSize-h/2, w, h);
-    },
-
-    // draw ghost
-    drawGhost: function(g) {
-        if (g.mode == GHOST_EATEN)
-            return;
-        var color = g.color;
-        if (g.scared)
-            color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
-        else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
-            color = "rgba(255,255,255,0)";
-
-        this.ctx.save();
-        this.ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
-
-        // draw body
-        this.ctx.beginPath();
-        addGhostHead(this.ctx);
-        if (Math.floor(g.frames/6) % 2 == 0) // change animation frame every 6 ticks
-            addGhostFeet1(this.ctx);
-        else
-            addGhostFeet2(this.ctx);
-        this.ctx.closePath();
-        this.ctx.fillStyle = color;
-        this.ctx.fill();
-
-        // draw face
-        if (g.scared)
-            addScaredGhostFace(this.ctx, energizer.isFlash());
-        else
-            addGhostEyes(this.ctx,g.dirEnum);
-
-        this.ctx.restore();
-    },
-
-    // draw pacman
-    drawPacman: function() {
-        this.ctx.save();
-        this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
-
-        this.ctx.beginPath();
-        var frame = Math.floor(pacman.steps/2)%4; // change animation frame every 2 steps
-        if (frame == 3) 
-            frame = 1;
-        addPacmanBody(this.ctx, pacman.dirEnum, frame*Math.PI/6);
-        this.ctx.closePath();
-        this.ctx.fillStyle = pacman.color;
-        this.ctx.fill();
-
-        this.ctx.restore();
-    },
-
-    // draw dying pacman animation (with 0<=t<=1)
-    // open mouth all the way while shifting corner of mouth forward
-    drawDyingPacman: function(t) {
-        this.ctx.save();
-        this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
-        this.ctx.beginPath();
-        var frame = Math.floor(pacman.steps/2)%4;
-        if (frame == 3) 
-            frame = 1;
-        var a = frame*Math.PI/6;
-        addPacmanBody(this.ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
-        this.ctx.closePath();
-        this.ctx.fillStyle = pacman.color;
-        this.ctx.fill();
-        this.ctx.restore();
-    },
-
-    // draw exploding pacman animation (with 0<=t<=1)
-    drawExplodingPacman: function(t) {
-        this.ctx.save();
-        this.ctx.translate(pacman.pixel.x, pacman.pixel.y);
-        this.ctx.beginPath();
-        addPacmanBody(this.ctx, pacman.dirEnum, 0, 0, t,-3);
-        this.ctx.closePath();
-        this.ctx.fillStyle = "rgba(255,255,0," + (1-t) + ")";
-        this.ctx.fill();
-        this.ctx.restore();
-    },
-
-    // draw energizer items on foreground
-    drawEnergizers: function() {
-        var e;
-        var i;
-        this.ctx.beginPath();
-        for (i=0; i<tileMap.numEnergizers; i++) {
-            e = tileMap.energizers[i];
-            if (tileMap.currentTiles[e.x+e.y*tileMap.numCols] == 'o') {
-                this.ctx.moveTo(e.x,e.y);
-                this.ctx.arc(e.x*tileSize+midTile.x,e.y*tileSize+midTile.y,this.energizerSize/2,0,Math.PI*2);
+                for (i=3; i>=0; i--) 
+                    this.drawGhost(ghosts[i]);
             }
-        }
-        this.ctx.closePath();
-        this.ctx.fillStyle = this.energizerColor;
-        this.ctx.fill();
-    },
+        },
 
-};
+        // draw fruit
+        drawFruit: function() {
+            if (fruit.isPresent()) {
+                ctx.fillStyle = "#0F0";
+                this.drawCenterPixelSq(ctx, fruit.pixel.x, fruit.pixel.y, tileSize+2);
+            }
+            else if (fruit.isScorePresent()) {
+                ctx.font = this.pointsEarnedTextSize + "px sans-serif";
+                ctx.textBaseline = "middle";
+                ctx.textAlign = "center";
+                ctx.fillStyle = "#FFF";
+                ctx.fillText(fruit.getPoints(), fruit.pixel.x, fruit.pixel.y);
+            }
+        },
+    };
+
+    //////////////////////////////////////////////////////////////
+    // Simple Renderer
+    // (render a minimal Pac-Man display using nothing but squares)
+
+    // constructor
+    var SimpleRenderer = function() {
+
+        // inherit attributes from Common Renderer
+        CommonRenderer.call(this,ctx,bgCtx);
+
+        this.messageRow = 21.7;
+        this.pointsEarnedTextSize = 1.5*tileSize;
+
+        this.backColor = "#222";
+        this.floorColor = "#444";
+        this.flashFloorColor = "#999";
+
+        this.name = "Minimal";
+    };
+
+    SimpleRenderer.prototype = {
+
+        // inherit functions from Common Renderer
+        __proto__: CommonRenderer.prototype,
+
+        drawMap: function() {
+
+            // fill background
+            bgCtx.fillStyle = this.backColor;
+            bgCtx.fillRect(0,0,map.widthPixels, map.heightPixels);
+
+            var x,y;
+            var i;
+            var tile;
+
+            // draw floor tiles
+            bgCtx.fillStyle = (this.flashLevel ? this.flashFloorColor : this.floorColor);
+            i=0;
+            for (y=0; y<map.numRows; y++)
+            for (x=0; x<map.numCols; x++) {
+                tile = map.currentTiles[i++];
+                if (tile == ' ')
+                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
+            }
+
+            // draw pellet tiles
+            bgCtx.fillStyle = this.pelletColor;
+            i=0;
+            for (y=0; y<map.numRows; y++)
+            for (x=0; x<map.numCols; x++) {
+                tile = map.currentTiles[i++];
+                if (tile == '.')
+                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
+            }
+        },
+
+        // draw the current score and high score
+        drawScore: function() {
+            ctx.font = 1.5*tileSize + "px sans-serif";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#FFF";
+            ctx.fillText(score, tileSize, tileSize*2);
+
+            ctx.font = "bold " + 1.5*tileSize + "px sans-serif";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "center";
+            ctx.fillText("high score", tileSize*map.numCols/2, 3);
+            ctx.fillText(highScore, tileSize*map.numCols/2, tileSize*2);
+        },
+
+        // draw the extra lives indicator
+        drawExtraLives: function() {
+            var i;
+            ctx.fillStyle = "rgba(255,255,0,0.6)";
+            for (i=0; i<extraLives; i++)
+                this.drawCenterPixelSq(ctx, (2*i+3)*tileSize, (map.numRows-2)*tileSize+midTile.y,this.actorSize);
+        },
+
+        // draw the current level indicator
+        drawLevelIcons: function() {
+            var i;
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            var w = 2;
+            var h = this.actorSize;
+            for (i=0; i<level; i++)
+                ctx.fillRect((map.numCols-2)*tileSize - i*2*w, (map.numRows-2)*tileSize+midTile.y-h/2, w, h);
+        },
+
+        // draw energizer items on foreground
+        drawEnergizers: function() {
+            ctx.fillStyle = this.energizerColor;
+            var e;
+            var i;
+            for (i=0; i<map.numEnergizers; i++) {
+                e = map.energizers[i];
+                if (map.currentTiles[e.x+e.y*map.numCols] == 'o')
+                    this.drawCenterTileSq(ctx,e.x,e.y,this.energizerSize);
+            }
+        },
+
+        // draw pacman
+        drawPacman: function(scale, opacity) {
+            if (scale == undefined) scale = 1;
+            if (opacity == undefined) opacity = 1;
+            ctx.fillStyle = "rgba(255,255,0,"+opacity+")";
+            this.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, this.actorSize*scale);
+        },
+
+        // draw dying pacman animation (with 0<=t<=1)
+        drawDyingPacman: function(t) {
+            this.drawPacman(1-t);
+        },
+
+        // draw exploding pacman animation (with 0<=t<=1)
+        drawExplodingPacman: function(t) {
+            this.drawPacman(t,1-t);
+        },
+
+        // draw ghost
+        drawGhost: function(g) {
+            if (g.mode == GHOST_EATEN)
+                return;
+            var color = g.color;
+            if (g.scared)
+                color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
+            else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
+                color = "rgba(255,255,255,0.3)";
+            ctx.fillStyle = color;
+            this.drawCenterPixelSq(ctx, g.pixel.x, g.pixel.y, this.actorSize);
+        },
+
+    };
+
+
+    //////////////////////////////////////////////////////////////
+    // Arcade Renderer
+    // (render a display close to the original arcade)
+
+    // constructor
+    var ArcadeRenderer = function(ctx,bgCtx) {
+
+        // inherit attributes from Common Renderer
+        CommonRenderer.call(this,ctx,bgCtx);
+
+        this.messageRow = 20;
+        this.pelletSize = 2;
+        this.energizerSize = tileSize;
+
+        this.backColor = "#000";
+        this.floorColor = "#000";
+        this.flashWallColor = "#FFF";
+
+        this.name = "Arcade";
+    };
+
+    ArcadeRenderer.prototype = {
+
+        // inherit functions from Common Renderer
+        __proto__: CommonRenderer.prototype,
+
+        drawMap: function() {
+
+            // fill background
+            bgCtx.fillStyle = this.backColor;
+            bgCtx.fillRect(0,0,map.widthPixels, map.heightPixels);
+
+            var x,y;
+            var i;
+            var tile;
+
+            // draw wall tiles
+            bgCtx.fillStyle = (this.flashLevel ? this.flashWallColor : map.wallColor);
+            i=0;
+            for (y=0; y<map.numRows; y++)
+            for (x=0; x<map.numCols; x++) {
+                tile = map.currentTiles[i++];
+                if (tile == '|')
+                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
+            }
+
+            // draw floor tiles
+            bgCtx.fillStyle = this.floorColor;
+            i=0;
+            for (y=0; y<map.numRows; y++)
+            for (x=0; x<map.numCols; x++) {
+                tile = map.currentTiles[i++];
+                if (tile == '_')
+                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
+                else if (tile != '|')
+                    this.drawCenterTileSq(bgCtx,x,y,this.actorSize+4);
+            }
+
+            // draw pellet tiles
+            bgCtx.fillStyle = map.pelletColor;
+            i=0;
+            for (y=0; y<map.numRows; y++)
+            for (x=0; x<map.numCols; x++) {
+                tile = map.currentTiles[i++];
+                if (tile == '.')
+                    this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
+            }
+        },
+
+        // draw the current score and high score
+        drawScore: function() {
+            ctx.font = 1.25*tileSize + "px sans-serif";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#FFF";
+            ctx.fillText(score, tileSize, tileSize*1.5);
+
+            ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "center";
+            ctx.fillText("high score", tileSize*map.numCols/2, 1.5);
+            ctx.fillText(highScore, tileSize*map.numCols/2, tileSize*1.5);
+        },
+
+        // draw the extra lives indicator
+        drawExtraLives: function() {
+            var i;
+            ctx.fillStyle = pacman.color;
+
+            ctx.save();
+            ctx.translate(3*tileSize, (map.numRows-1)*tileSize);
+            ctx.beginPath();
+            for (i=0; i<extraLives; i++) {
+                addPacmanBody(ctx, DIR_RIGHT, Math.PI/6);
+                ctx.translate(2*tileSize,0);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        },
+
+        // draw the current level indicator
+        drawLevelIcons: function() {
+            var i;
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            var w = 2;
+            var h = this.actorSize;
+            for (i=0; i<level; i++)
+                ctx.fillRect((map.numCols-2)*tileSize - i*2*w, (map.numRows-1)*tileSize-h/2, w, h);
+        },
+
+        // draw ghost
+        drawGhost: function(g) {
+            if (g.mode == GHOST_EATEN)
+                return;
+            var color = g.color;
+            if (g.scared)
+                color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
+            else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
+                color = "rgba(255,255,255,0)";
+
+            ctx.save();
+            ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
+
+            // draw body
+            ctx.beginPath();
+            addGhostHead(ctx);
+            if (Math.floor(g.frames/6) % 2 == 0) // change animation frame every 6 ticks
+                addGhostFeet1(ctx);
+            else
+                addGhostFeet2(ctx);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            // draw face
+            if (g.scared)
+                addScaredGhostFace(ctx, energizer.isFlash());
+            else
+                addGhostEyes(ctx,g.dirEnum);
+
+            ctx.restore();
+        },
+
+        // draw pacman
+        drawPacman: function() {
+            ctx.save();
+            ctx.translate(pacman.pixel.x, pacman.pixel.y);
+
+            ctx.beginPath();
+            var frame = Math.floor(pacman.steps/2)%4; // change animation frame every 2 steps
+            if (frame == 3) 
+                frame = 1;
+            addPacmanBody(ctx, pacman.dirEnum, frame*Math.PI/6);
+            ctx.closePath();
+            ctx.fillStyle = pacman.color;
+            ctx.fill();
+
+            ctx.restore();
+        },
+
+        // draw dying pacman animation (with 0<=t<=1)
+        // open mouth all the way while shifting corner of mouth forward
+        drawDyingPacman: function(t) {
+            ctx.save();
+            ctx.translate(pacman.pixel.x, pacman.pixel.y);
+            ctx.beginPath();
+            var frame = Math.floor(pacman.steps/2)%4;
+            if (frame == 3) 
+                frame = 1;
+            var a = frame*Math.PI/6;
+            addPacmanBody(ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
+            ctx.closePath();
+            ctx.fillStyle = pacman.color;
+            ctx.fill();
+            ctx.restore();
+        },
+
+        // draw exploding pacman animation (with 0<=t<=1)
+        drawExplodingPacman: function(t) {
+            ctx.save();
+            ctx.translate(pacman.pixel.x, pacman.pixel.y);
+            ctx.beginPath();
+            addPacmanBody(ctx, pacman.dirEnum, 0, 0, t,-3);
+            ctx.closePath();
+            ctx.fillStyle = "rgba(255,255,0," + (1-t) + ")";
+            ctx.fill();
+            ctx.restore();
+        },
+
+        // draw energizer items on foreground
+        drawEnergizers: function() {
+            var e;
+            var i;
+            ctx.beginPath();
+            for (i=0; i<map.numEnergizers; i++) {
+                e = map.energizers[i];
+                if (map.currentTiles[e.x+e.y*map.numCols] == 'o') {
+                    ctx.moveTo(e.x,e.y);
+                    ctx.arc(e.x*tileSize+midTile.x,e.y*tileSize+midTile.y,this.energizerSize/2,0,Math.PI*2);
+                }
+            }
+            ctx.closePath();
+            ctx.fillStyle = this.energizerColor;
+            ctx.fill();
+        },
+
+    };
+
+    //
+    // Create list of available renderers
+    //
+    renderer_list = [
+        new SimpleRenderer(),
+        new ArcadeRenderer(),
+    ];
+    renderer = renderer_list[1];
+
+})();
 //@line 1 "src/sprites.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Sprites
@@ -1010,54 +1095,18 @@ var addPacmanBody = function(ctx,dirEnum,angle,mouthShift,scale,centerShift) {
 
     ctx.restore();
 };
-//@line 1 "src/screen.js"
+//@line 1 "src/gui.js"
 //////////////////////////////////////////////////////////////////////////////////////
-// Screen
+// GUI
 // (controls the display and input)
 
-var screen = (function() {
+var gui = (function() {
 
     // html elements
     var divContainer;
-    var canvas, ctx;
-    var bgCanvas, bgCtx;
-
-    // drawing scale
-    var scale = 1.5;        // scale everything by this amount
-    var smoothScale = true; // smooth is a vector scale rather than a pixel scale
-
-    // creates a canvas
-    var makeCanvas = function() {
-        var c = document.createElement("canvas");
-
-        // use conventional pacman map size
-        c.width = 28*tileSize;
-        c.height = 36*tileSize;
-
-        // scale 'direct' width and height properties for smooth vector scaling
-        if (smoothScale) {
-            c.width *= scale;
-            c.height *= scale;
-        }
-        // scale 'style' width and height properties for pixel stretch scaling
-        else {
-            c.style.width = c.width*scale;
-            c.style.height = c.height*scale;
-        }
-
-        // transform to scale
-        var ctx = c.getContext("2d");
-        if (smoothScale)
-            ctx.scale(scale,scale);
-        return c;
-    };
 
     // add interative options to tune the game
-    var addControls = function() {
-
-        var controlDiv = document.getElementById("pacman-controls");
-        if (!controlDiv)
-            return;
+    var addControls = (function() {
 
         // used for making html elements with unique id's
         var id = 0;
@@ -1118,6 +1167,7 @@ var screen = (function() {
                 fieldset.appendChild(document.createElement('br'));
         };
 
+        // create a text label
         var makeLabel = function(caption) {
             var label;
             label = document.createElement('label');
@@ -1126,6 +1176,7 @@ var screen = (function() {
             return label;
         };
 
+        // add a range slider
         var addSlider = function(fieldset, suffix, value, min, max, step, onChange) {
             id++;
             var slider = document.createElement('input');
@@ -1137,15 +1188,8 @@ var screen = (function() {
             slider.step = step;
             fieldset.appendChild(slider);
             fieldset.appendChild(document.createElement('br'));
-            /*
-            var div = document.createElement('div');
-            div.innerHTML = '<input id="range' + id +'" type="range" value="' + value + '" min="' + min + '" max="' + max + '" step="' + step + '">';
-            fieldset.appendChild(div);
-            */
 
-            var label;
-
-            label = makeLabel(''+value+suffix);
+            var label = makeLabel(''+value+suffix);
             slider.onchange = function() {
                 if (onChange)
                     onChange(this.value);
@@ -1155,91 +1199,83 @@ var screen = (function() {
             fieldset.appendChild(document.createElement('br'));
         };
 
-        ///////////////////////////////////////////////////
-        // create form for our controls
-        var form = document.createElement('form');
+        return function() {
+            var controlDiv = document.getElementById("pacman-controls");
+            if (!controlDiv)
+                return;
 
-        var fieldset; // var to receive the constructed field sets
+            // create form for our controls
+            var form = document.createElement('form');
 
-        ///////////////////////////////////////////////////
-        // options group
-        fieldset = makeFieldSet('Player');
-        addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; });
-        addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; });
-        addCheckbox(fieldset, 'double speed', function(on) { pacman.doubleSpeed = on; });
-        form.appendChild(fieldset);
+            // options group
+            var fieldset = makeFieldSet('Player');
+            addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; }, pacman.ai);
+            addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; }, pacman.invincible);
+            addCheckbox(fieldset, 'double speed', function(on) { pacman.doubleSpeed = on; }, pacman.doubleSpeed);
+            form.appendChild(fieldset);
 
-        ///////////////////////////////////////////////////
-        // machine speed group
-        fieldset = makeFieldSet('Machine Speed');
-        addSlider(fieldset, '%', 100, 0, 200, 5, function(value) {
-            game.setUpdatesPerSecond(60*value/100);
-        });
-        form.appendChild(fieldset);
+            // machine speed group
+            fieldset = makeFieldSet('Machine Speed');
+            addSlider(fieldset, '%', 100, 0, 200, 5, function(value) { executive.setUpdatesPerSecond(60*value/100); });
+            form.appendChild(fieldset);
 
-        ///////////////////////////////////////////////////
-        // renderers group
-        fieldset = makeFieldSet('Renderer');
-        var makeSwitchRenderer = function(renderer) {
-            return function(on) {
-                if (on) {
-                    screen.switchRenderer(renderer);
-                    //game.switchState(fadeRendererState(game.state, renderer, 24));
-                }
+            // renderers group
+            fieldset = makeFieldSet('Renderer');
+            var makeSwitchRenderer = function(i) { return function(on) { if (on) switchRenderer(i); }; };
+            var i,r;
+            for (i=0; i<renderer_list.length; i++) {
+                r = renderer_list[i];
+                addRadio(fieldset, 'render', r.name, makeSwitchRenderer(i), r == renderer, true);
+            }
+            form.appendChild(fieldset);
+
+            // draw actor behavior
+            fieldset = makeFieldSet('Behavior');
+
+            // logic
+            var makeToggleTarget = function(a) { return function(on) { a.isDrawTarget = on; }; };
+            var a;
+            for (i=0; i<actors.length; i++) {
+                a = actors[i];
+                addCheckbox(fieldset, '', makeToggleTarget(a), a.isDrawTarget, '4px solid ' + a.color, true);
+            }
+            fieldset.appendChild(makeLabel('Logic '));
+            fieldset.appendChild(document.createElement('br'));
+
+            // path
+            var makeTogglePath = function(a) { return function(on) { a.isDrawPath = on; }; };
+            for (i=0; i<actors.length; i++) {
+                a = actors[i];
+                addCheckbox(fieldset, '', makeTogglePath(a), a.isDrawPath, '4px solid ' + a.color, true);
+            }
+            fieldset.appendChild(makeLabel('Path '));
+            fieldset.appendChild(document.createElement('br'));
+
+            // path length
+            addSlider(fieldset, ' tile path', actorPathLength, 1, 50, 1, function(x) { actorPathLength = x; });
+            form.appendChild(fieldset);
+
+            // maps group
+            fieldset = makeFieldSet('Maps');
+            var makeSwitchMap = function(i) {
+                return function(on) {
+                    if (on) {
+                        readyNewState.nextMap = i;
+                        switchState(readyNewState, 60);
+                    }
+                };
             };
+            var m;
+            for (i=1; i<map_list.length; i++) {
+                m = map_list[i];
+                addRadio(fieldset, 'map', m.name, makeSwitchMap(i), m == map);
+            }
+            form.appendChild(fieldset);
+
+            // add control from to our div
+            controlDiv.appendChild(form);
         };
-        addRadio(fieldset, 'render', 'minimal', makeSwitchRenderer(0), false, true);
-        addRadio(fieldset, 'render', 'arcade', makeSwitchRenderer(1),true);
-        form.appendChild(fieldset);
-
-        ///////////////////////////////////////////////////
-        // draw actor targets group
-        fieldset = makeFieldSet('Behavior');
-        addCheckbox(fieldset, '', function(on) { blinky.isDrawTarget = on; }, false, '4px solid ' + blinky.color, true);
-        addCheckbox(fieldset, '', function(on) { pinky.isDrawTarget = on; },  false, '4px solid ' + pinky.color, true);
-        addCheckbox(fieldset, '', function(on) { inky.isDrawTarget = on; },   false, '4px solid ' + inky.color, true);
-        addCheckbox(fieldset, '', function(on) { clyde.isDrawTarget = on; },  false, '4px solid ' + clyde.color, true);
-        addCheckbox(fieldset, '', function(on) { pacman.isDrawTarget = on; }, false, '4px solid ' + pacman.color, true);
-        fieldset.appendChild(makeLabel('Logic '));
-
-        fieldset.appendChild(document.createElement('br'));
-
-        addCheckbox(fieldset, '', function(on) { blinky.isDrawPath = on; }, false, '4px solid ' + blinky.color, true);
-        addCheckbox(fieldset, '', function(on) { pinky.isDrawPath = on; },  false, '4px solid ' + pinky.color, true);
-        addCheckbox(fieldset, '', function(on) { inky.isDrawPath = on; },   false, '4px solid ' + inky.color, true);
-        addCheckbox(fieldset, '', function(on) { clyde.isDrawPath = on; },  false, '4px solid ' + clyde.color, true);
-        addCheckbox(fieldset, '', function(on) { pacman.isDrawPath = on; }, false, '4px solid ' + pacman.color, true);
-        fieldset.appendChild(makeLabel('Path '));
-
-        fieldset.appendChild(document.createElement('br'));
-
-        addSlider(fieldset, ' tile path', actorPathLength, 1, 50, 1, function(value) {
-            actorPathLength = value;
-        });
-
-        form.appendChild(fieldset);
-
-        ///////////////////////////////////////////////////
-        // maps group
-        fieldset = makeFieldSet('Maps');
-        var makeSwitchMap = function(map) {
-            return function(on) {
-                if (on) {
-                    readyNewState.nextMap = map;
-                    game.switchState(readyNewState, 60);
-                }
-            };
-        };
-        addRadio(fieldset, 'map', 'Pac-Man',       makeSwitchMap(MAP_PACMAN),true);
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 1', makeSwitchMap(MAP_MSPACMAN1));
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 2', makeSwitchMap(MAP_MSPACMAN2));
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 3', makeSwitchMap(MAP_MSPACMAN3));
-        addRadio(fieldset, 'map', 'Ms. Pac-Man 4', makeSwitchMap(MAP_MSPACMAN4));
-        form.appendChild(fieldset);
-
-        // add control from to our div
-        controlDiv.appendChild(form);
-    };
+    })();
 
     var addInput = function() {
         // handle key press event
@@ -1261,46 +1297,12 @@ var screen = (function() {
 
     return {
         create: function() {
-            // create foreground and background canvases
-            canvas = makeCanvas();
-            bgCanvas = makeCanvas();
-            ctx = canvas.getContext("2d");
-            bgCtx = bgCanvas.getContext("2d");
 
             // add canvas and controls to our div
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
             addControls();
             addInput();
-
-            // add our screen.onClick event to canvas
-            var that = this;
-            canvas.onmousedown = function() {
-                if (that.onClick)
-                    that.onClick();
-            };
-
-            // create renderers
-            this.renderers = [
-                new renderers.Simple(ctx, bgCtx),
-                new renderers.Arcade(ctx, bgCtx),
-            ];
-
-            // set current renderer
-            this.renderer = this.renderers[1];
-        },
-
-        // switch to the given renderer index
-        switchRenderer: function(i) {
-            this.renderer = this.renderers[i];
-            this.renderer.drawMap();
-        },
-
-        // copy background canvas to the foreground canvas
-        blitMap: function() {
-            if (smoothScale) ctx.scale(1/scale,1/scale);
-            ctx.drawImage(bgCanvas,0,0);
-            if (smoothScale) ctx.scale(scale,scale);
         },
     };
 })();
@@ -1347,7 +1349,7 @@ Actor.prototype.setPos = function(px,py) {
 Actor.prototype.commitPos = function() {
 
     // use map-specific tunnel teleport
-    tileMap.teleport(this);
+    map.teleport(this);
 
     this.tile.x = Math.floor(this.pixel.x / tileSize);
     this.tile.y = Math.floor(this.pixel.y / tileSize);
@@ -1443,57 +1445,9 @@ Actor.prototype.update = function(j) {
     // update head direction
     this.steer();
 };
-
-// retrieve four surrounding tiles and indicate whether they are open
-getOpenSurroundTiles = function(tile,dirEnum) {
-
-    // get open passages
-    var openTiles = tileMap.getOpenTiles(tile).slice();
-    var numOpenTiles = 0;
-    var i;
-    for (i=0; i<4; i++)
-        if (openTiles[i])
-            numOpenTiles++;
-
-    // By design, no mazes should have dead ends,
-    // but allow player to turn around if and only if it's necessary.
-    // Only close the passage behind the player if there are other openings.
-    var oppDirEnum = (dirEnum+2)%4; // current opposite direction enum
-    if (numOpenTiles > 1)
-        openTiles[oppDirEnum] = false;
-
-    return openTiles;
-};
-
-// return the direction of the open, surrounding tile closest to our target
-getTurnClosestToTarget = function(tile,targetTile,openTiles) {
-
-    var dx,dy,dist;                      // variables used for euclidean distance
-    var minDist = Infinity;              // variable used for finding minimum distance path
-    var dir = {};
-    var dirEnum = 0;
-    var i;
-    for (i=0; i<4; i++) {
-        if (openTiles[i]) {
-            setDirFromEnum(dir,i);
-            dx = dir.x + tile.x - targetTile.x;
-            dy = dir.y + tile.y - targetTile.y;
-            dist = dx*dx+dy*dy;
-            if (dist < minDist) {
-                minDist = dist;
-                dirEnum = i;
-            }
-        }
-    }
-    return dirEnum;
-};
 //@line 1 "src/Ghost.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
-
-// modes representing the ghosts' current command
-var GHOST_CMD_CHASE = 0;
-var GHOST_CMD_SCATTER = 1;
 
 // modes representing the ghost's current state
 var GHOST_OUTSIDE = 0;
@@ -1531,8 +1485,8 @@ Ghost.prototype.reset = function() {
 // indicates if we slow down in the tunnel
 Ghost.prototype.isSlowInTunnel = function() {
     // special case for Ms. Pac-Man (slow down only for the first three levels)
-    if (game.mode == GAME_MSPACMAN)
-        return game.level <= 3;
+    if (gameMode == GAME_MSPACMAN)
+        return level <= 3;
     else
         return true;
 };
@@ -1542,13 +1496,13 @@ Ghost.prototype.getNumSteps = function() {
 
     var pattern = STEP_GHOST;
 
-    if (game.state == menuState)
+    if (state == menuState)
         pattern = STEP_GHOST;
     else if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
     else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME)
         pattern = STEP_GHOST_TUNNEL;
-    else if (tileMap.isTunnelTile(this.tile.x, this.tile.y) && this.isSlowInTunnel())
+    else if (map.isTunnelTile(this.tile.x, this.tile.y) && this.isSlowInTunnel())
         pattern = STEP_GHOST_TUNNEL;
     else if (this.scared)
         pattern = STEP_GHOST_FRIGHT;
@@ -1557,7 +1511,7 @@ Ghost.prototype.getNumSteps = function() {
     else if (this.elroy == 2)
         pattern = STEP_ELROY2;
 
-    return this.getStepSizeFromTable(game.level ? game.level : 1, pattern);
+    return this.getStepSizeFromTable(level ? level : 1, pattern);
 };
 
 // signal ghost to reverse direction after leaving current tile
@@ -1616,10 +1570,10 @@ Ghost.prototype.homeSteer = (function(){
 
     steerFuncs[GHOST_GOING_HOME] = function() {
         // at the doormat
-        if (this.tile.x == tileMap.doorTile.x && this.tile.y == tileMap.doorTile.y) {
+        if (this.tile.x == map.doorTile.x && this.tile.y == map.doorTile.y) {
             this.targetting = false;
             // walk to the door, or go through if already there
-            if (this.pixel.x == tileMap.doorPixel.x) {
+            if (this.pixel.x == map.doorPixel.x) {
                 this.mode = GHOST_ENTERING_HOME;
                 this.setDir(DIR_DOWN);
             }
@@ -1629,7 +1583,7 @@ Ghost.prototype.homeSteer = (function(){
     };
 
     steerFuncs[GHOST_ENTERING_HOME] = function() {
-        if (this.pixel.y == tileMap.homeBottomPixel)
+        if (this.pixel.y == map.homeBottomPixel)
             // revive if reached its seat
             if (this.pixel.x == this.startPixel.x) {
                 this.setDir(DIR_UP);
@@ -1645,24 +1599,24 @@ Ghost.prototype.homeSteer = (function(){
         if (this.sigLeaveHome) {
             this.sigLeaveHome = false;
             this.mode = GHOST_LEAVING_HOME;
-            if (this.pixel.x == tileMap.doorPixel.x)
+            if (this.pixel.x == map.doorPixel.x)
                 this.setDir(DIR_UP);
             else
-                this.setDir(this.pixel.x < tileMap.doorPixel.x ? DIR_RIGHT : DIR_LEFT);
+                this.setDir(this.pixel.x < map.doorPixel.x ? DIR_RIGHT : DIR_LEFT);
         }
         // pace back and forth
         else {
-            if (this.pixel.y == tileMap.homeTopPixel)
+            if (this.pixel.y == map.homeTopPixel)
                 this.setDir(DIR_DOWN);
-            else if (this.pixel.y == tileMap.homeBottomPixel)
+            else if (this.pixel.y == map.homeBottomPixel)
                 this.setDir(DIR_UP);
         }
     };
 
     steerFuncs[GHOST_LEAVING_HOME] = function() {
-        if (this.pixel.x == tileMap.doorPixel.x)
+        if (this.pixel.x == map.doorPixel.x)
             // reached door
-            if (this.pixel.y == tileMap.doorPixel.y) {
+            if (this.pixel.y == map.doorPixel.y) {
                 this.mode = GHOST_OUTSIDE;
                 this.setDir(DIR_LEFT); // always turn left at door?
             }
@@ -1683,7 +1637,7 @@ Ghost.prototype.homeSteer = (function(){
 // special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
 Ghost.prototype.isScatterBrain = function() {
     return (
-        game.mode == GAME_MSPACMAN && 
+        gameMode == GAME_MSPACMAN && 
         ghostCommander.getCommand() == GHOST_CMD_SCATTER &&
         (this == blinky || this == pinky));
 };
@@ -1725,7 +1679,7 @@ Ghost.prototype.steer = function() {
         return;
 
     // get surrounding tiles and their open indication
-    openTiles = getOpenSurroundTiles(this.tile, this.dirEnum);
+    openTiles = getOpenTiles(this.tile, this.dirEnum);
 
     if (this.scared) {
         // choose a random turn
@@ -1737,8 +1691,8 @@ Ghost.prototype.steer = function() {
     else {
         // target ghost door
         if (this.mode == GHOST_GOING_HOME) {
-            this.targetTile.x = tileMap.doorTile.x;
-            this.targetTile.y = tileMap.doorTile.y;
+            this.targetTile.x = map.doorTile.x;
+            this.targetTile.y = map.doorTile.y;
         }
         // target corner when scattering
         else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
@@ -1754,8 +1708,8 @@ Ghost.prototype.steer = function() {
             this.setTarget();
 
         // edit openTiles to reflect the current map's special contraints
-        if (tileMap.constrainGhostTurns)
-            tileMap.constrainGhostTurns(this.tile, openTiles);
+        if (map.constrainGhostTurns)
+            map.constrainGhostTurns(this.tile, openTiles);
 
         // choose direction that minimizes distance to target
         dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
@@ -1807,7 +1761,7 @@ Player.prototype.getNumSteps = function() {
         return 2;
 
     var pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
-    return this.getStepSizeFromTable(game.level, pattern);
+    return this.getStepSizeFromTable(level, pattern);
 };
 
 // move forward one step
@@ -1827,7 +1781,7 @@ Player.prototype.step = (function(){
         var b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
 
         // Don't proceed past the middle of a tile if facing a wall
-        var stop = this.distToMid[a] == 0 && !tileMap.isNextTileFloor(this.tile, this.dir);
+        var stop = this.distToMid[a] == 0 && !isNextTileFloor(this.tile, this.dir);
         if (!stop)
             this.pixel[a] += this.dir[a];
 
@@ -1848,7 +1802,7 @@ Player.prototype.steer = function() {
             return;
 
         // make turn that is closest to target
-        var openTiles = getOpenSurroundTiles(this.tile, this.dirEnum);
+        var openTiles = getOpenTiles(this.tile, this.dirEnum);
         this.setTarget();
         this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
     }
@@ -1856,7 +1810,7 @@ Player.prototype.steer = function() {
         this.targetting = undefined;
 
     // head in the desired direction if possible
-    if (tileMap.isNextTileFloor(this.tile, this.nextDir))
+    if (isNextTileFloor(this.tile, this.nextDir))
         this.setDir(this.nextDirEnum);
 };
 
@@ -1879,14 +1833,14 @@ Player.prototype.update = function(j) {
     Actor.prototype.update.call(this,j);
 
     // eat something
-    var t = tileMap.getTile(this.tile.x, this.tile.y);
+    var t = map.getTile(this.tile.x, this.tile.y);
     if (t == '.' || t == 'o') {
         this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
 
-        tileMap.onDotEat(this.tile.x, this.tile.y);
+        map.onDotEat(this.tile.x, this.tile.y);
         ghostReleaser.onDotEat();
         fruit.onDotEat();
-        game.addScore((t=='.') ? 10 : 50);
+        addScore((t=='.') ? 10 : 50);
 
         if (t=='o')
             energizer.activate();
@@ -1929,6 +1883,7 @@ var ghosts = [blinky, pinky, inky, clyde];
 /////////////////////////////////////////////////////////////////
 // Targetting
 // (a definition for each actor's targetting algorithm and a draw function to visualize it)
+// (getPathDistLeft is used to obtain a smoothly interpolated path endpoint)
 
 // the tile length of the path drawn toward the target
 var actorPathLength = 16;
@@ -1957,9 +1912,9 @@ blinky.drawTarget = function(ctx) {
     if (!this.targetting) return;
     ctx.fillStyle = this.color;
     if (this.targetting == 'pacman')
-        screen.renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
+        renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
     else
-        screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+        renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
 blinky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -1993,10 +1948,10 @@ pinky.drawTarget = function(ctx) {
         ctx.lineTo(px, py);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, px,py, targetSize);
+        renderer.drawCenterPixelSq(ctx, px,py, targetSize);
     }
     else
-        screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+        renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
 pinky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -2043,10 +1998,10 @@ inky.drawTarget = function(ctx) {
         ctx.lineTo(pixel.x, pixel.y);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, pixel.x, pixel.y, targetSize);
+        renderer.drawCenterPixelSq(ctx, pixel.x, pixel.y, targetSize);
     }
     else
-        screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+        renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
 inky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -2088,10 +2043,10 @@ clyde.drawTarget = function(ctx) {
         ctx.arc(pacman.pixel.x, pacman.pixel.y, tileSize*8,0, 2*Math.PI);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
+        renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
     }
     else
-        screen.renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+        renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
 clyde.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -2135,10 +2090,10 @@ pacman.drawTarget = function(ctx) {
         ctx.lineTo(px,py);
         ctx.closePath();
         ctx.stroke();
-        screen.renderer.drawCenterPixelSq(ctx, px, py, targetSize);
+        renderer.drawCenterPixelSq(ctx, px, py, targetSize);
     }
     else {
-        screen.renderer.drawCenterPixelSq(ctx, pinky.pixel.x, pinky.pixel.y, targetSize);
+        renderer.drawCenterPixelSq(ctx, pinky.pixel.x, pinky.pixel.y, targetSize);
     };
 
 };
@@ -2168,8 +2123,11 @@ pacman.getPathDistLeft = function(fromPixel, dirEnum) {
 //@line 1 "src/ghostCommander.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander
-
 // Determines when a ghost should be chasing a target
+
+// modes representing the ghosts' current command
+var GHOST_CMD_CHASE = 0;
+var GHOST_CMD_SCATTER = 1;
 
 var ghostCommander = (function() {
 
@@ -2204,9 +2162,9 @@ var ghostCommander = (function() {
 
         return function(frame) {
             var i;
-            if (game.level == 1)
+            if (level == 1)
                 i = 0;
-            else if (game.level >= 2 && game.level <= 4)
+            else if (level >= 2 && level <= 4)
                 i = 1;
             else
                 i = 2;
@@ -2228,7 +2186,7 @@ var ghostCommander = (function() {
                 newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     // new command is always "chase" when in Ms. Pac-Man mode
-                    command = (game.mode == GAME_MSPACMAN) ? GHOST_CMD_CHASE : newCmd;
+                    command = (gameMode == GAME_MSPACMAN) ? GHOST_CMD_CHASE : newCmd;
 
                     for (i=0; i<4; i++)
                         ghosts[i].reverse();
@@ -2258,15 +2216,15 @@ var ghostReleaser = (function(){
     var CLYDE = 3;
 
     // this is how many frames it will take to release a ghost after pacman stops eating
-    var getTimeoutLimit = function() { return (game.level < 5) ? 4*60 : 3*60; };
+    var getTimeoutLimit = function() { return (level < 5) ? 4*60 : 3*60; };
 
     // dot limits used in personal mode to release ghost after # of dots have been eaten
     var personalDotLimit = {};
     personalDotLimit[PINKY] = function() { return 0; };
-    personalDotLimit[INKY] = function() { return (game.level==1) ? 30 : 0; };
+    personalDotLimit[INKY] = function() { return (level==1) ? 30 : 0; };
     personalDotLimit[CLYDE] = function() {
-        if (game.level == 1) return 60;
-        if (game.level == 2) return 50;
+        if (level == 1) return 60;
+        if (level == 2) return 50;
         return 0;
     };
 
@@ -2376,7 +2334,7 @@ var elroyTimer = (function(){
             [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120], // elroy1
             [10,15,20,20,20,25,25,25,30,30,30,40,40,40, 50, 50, 50, 50, 60, 60, 60]]; // elroy2
         return function(stage) {
-            var i = game.level;
+            var i = level;
             if (i>21) i = 21;
             return dotsLeft[stage-1][i-1];
         };
@@ -2393,7 +2351,7 @@ var elroyTimer = (function(){
             waitForClyde = true;
         },
         update: function() {
-            var dotsLeft = tileMap.dotsLeft();
+            var dotsLeft = map.dotsLeft();
 
             // stop waiting for clyde when clyde leaves home
             if (waitForClyde && clyde.mode != GHOST_PACING_HOME)
@@ -2427,7 +2385,7 @@ var energizer = (function() {
     var getDuration = (function(){
         var seconds = [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
         return function() {
-            var i = game.level;
+            var i = level;
             return (i > 18) ? 0 : 60*seconds[i-1];
         };
     })();
@@ -2436,7 +2394,7 @@ var energizer = (function() {
     var getFlashes = (function(){
         var flashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
         return function() {
-            var i = game.level;
+            var i = level;
             return (i > 18) ? 0 : flashes[i-1];
         };
     })();
@@ -2484,7 +2442,7 @@ var energizer = (function() {
             return points;
         },
         addPoints: function() {
-            game.addScore(points*=2);
+            addScore(points*=2);
             pointsFramesLeft = pointsDuration*60;
         },
         showingPoints: function() { return pointsFramesLeft > 0; },
@@ -2523,14 +2481,14 @@ var fruit = (function(){
                 scoreFramesLeft--;
         },
         onDotEat: function() {
-            if (tileMap.dotsEaten == dotLimit1 || tileMap.dotsEaten == dotLimit2)
+            if (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2)
                 framesLeft = 60*duration;
         },
         isPresent: function() { return framesLeft > 0; },
         isScorePresent: function() { return scoreFramesLeft > 0; },
         testCollide: function() {
             if (framesLeft > 0 && pacman.pixel.y == this.pixel.y && Math.abs(pacman.pixel.x - this.pixel.x) <= midTile.x) {
-                game.addScore(this.getPoints());
+                addScore(this.getPoints());
                 framesLeft = 0;
                 scoreFramesLeft = scoreDuration*60;
             }
@@ -2539,7 +2497,7 @@ var fruit = (function(){
         getPoints: (function() {
             var points = [100,300,500,500,700,700,1000,1000,2000,2000,3000,3000,5000];
             return function() {
-                var i = game.level;
+                var i = level;
                 if (i > 13) i = 13;
                 return points[i-1];
             };
@@ -2551,10 +2509,29 @@ var fruit = (function(){
 //////////////////////////////////////////////////////////////////////////////////////
 // Game
 
+// game modes
 var GAME_PACMAN = 0;
 var GAME_MSPACMAN = 1;
 
-var game = (function(){
+// current game mode
+var gameMode = GAME_PACMAN;
+
+// current level and lives left
+var level = 1;
+var extraLives = 0;
+
+// scoring
+var highScore = 0;
+var score = 0;
+var addScore = function(p) {
+    if (score < 10000 && score+p >= 10000)
+        extraLives++;
+    score += p;
+    if (score > highScore)
+        highScore = score;
+};
+//@line 1 "src/executive.js"
+var executive = (function(){
 
     var interval; // used by setInterval and clearInterval to execute the game loop
     var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
@@ -2562,38 +2539,18 @@ var game = (function(){
 
     return {
 
-        mode:GAME_PACMAN,
-
-        // scoring
-        highScore:0,
-        score:0,
-        addScore: function(p) {
-            if (this.score < 10000 && this.score+p >= 10000)
-                this.extraLives++;
-            this.score += p;
-            if (this.score > this.highScore)
-                this.highScore = this.score;
-        },
-
-        // current level and lives left
-        level:1,
-        extraLives:0,
-
         // scheduling
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
             nextFrameTime = (new Date).getTime();
         },
-        restart: function() {
-            this.switchState(menuState);
-            this.resume();
-        },
-        pause: function() {
-            clearInterval(interval);
-        },
-        resume: function() {
+        start: function() {
             nextFrameTime = (new Date).getTime();
-            interval = setInterval(function(){game.tick();}, 1000/60);
+            var that = this;
+            interval = setInterval(function(){that.tick();}, 1000/60);
+        },
+        stop: function() {
+            clearInterval(interval);
         },
         tick: (function(){
             var maxFrameSkip = 5;
@@ -2602,27 +2559,15 @@ var game = (function(){
                 var frames = 0;
                 if (framePeriod != Infinity) {
                     while (frames < maxFrameSkip && (new Date).getTime() > nextFrameTime) {
-                        this.state.update();
+                        state.update();
                         nextFrameTime += framePeriod;
                         frames++;
                     }
                 }
                 // draw after updates are caught up
-                this.state.draw();
+                state.draw();
             };
         })(),
-
-        // switches to another game state
-        switchState: function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
-            this.state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration, continueUpdate1, continueUpdate2) : nextState;
-            this.state.init();
-        },
-
-        // switches to another map
-        switchMap: function(map) {
-            tileMap = maps[map];
-            tileMap.onLoad();
-        },
 
     };
 })();
@@ -2630,7 +2575,16 @@ var game = (function(){
 //////////////////////////////////////////////////////////////////////////////////////
 // States
 // (main loops for each state of the game)
-// game.state is set to any of these states, each containing an init(), draw(), and update()
+// state is set to any of these states, each containing an init(), draw(), and update()
+
+// current game state
+var state;
+
+// switches to another game state
+var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
+    state = (fadeDuration) ? fadeNextState(this.state,nextState,fadeDuration,continueUpdate1, continueUpdate2) : nextState;
+    state.init();
+};
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Fade state
@@ -2645,19 +2599,19 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
     return {
         init: function() {
             frames = 0;
-            screen.onClick = undefined; // remove all click events from previous state
+            canvas.onmousedown = undefined; // remove all click events from previous state
         },
         draw: function() {
             var t = getStateTime();
             if (inFirstState()) {
                 if (prevState) {
                     prevState.draw();
-                    screen.renderer.drawFadeIn(1-t);
+                    renderer.drawFadeIn(1-t);
                 }
             }
             else {
                 nextState.draw();
-                screen.renderer.drawFadeIn(t);
+                renderer.drawFadeIn(t);
             }
         },
         update: function() {
@@ -2669,7 +2623,7 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
             }
 
             if (frames == frameDuration)
-                game.state = nextState; // hand over state
+                state = nextState; // hand over state
             else {
                 if (frames == frameDuration/2)
                     nextState.init();
@@ -2694,19 +2648,19 @@ var fadeRendererState = function (currState, nextRenderer, frameDuration) {
             currState.draw();
             if (frames < frameDuration/2) {
                 t = frames/frameDuration*2;
-                screen.renderer.drawFadeIn(1-t);
+                renderer.drawFadeIn(1-t);
             }
             else {
                 t = frames/frameDuration*2 - 1;
-                screen.renderer.drawFadeIn(t);
+                renderer.drawFadeIn(t);
             }
         },
         update: function() {
             if (frames == frameDuration)
-                game.state = currState; // hand over state
+                state = currState; // hand over state
             else {
                 if (frames == frameDuration/2)
-                    screen.switchRenderer(nextRenderer);
+                    switchRenderer(nextRenderer);
                 frames++;
             }
         },
@@ -2719,22 +2673,22 @@ var fadeRendererState = function (currState, nextRenderer, frameDuration) {
 
 var menuState = {
     init: function() {
-        game.switchMap(MAP_MENU);
+        switchMap(0);
         for (i=0; i<5; i++)
             actors[i].reset();
-        screen.renderer.drawMap();
-        screen.onClick = function() {
-            newGameState.nextMap = MAP_PACMAN;
-            game.switchState(newGameState,60,true,false);
-            screen.onClick = undefined;
+        renderer.drawMap();
+        canvas.onmousedown = function() {
+            newGameState.nextMap = 1;
+            switchState(newGameState,60,true,false);
+            canvas.onmousedown = undefined;
         };
     },
     draw: function() {
-        screen.blitMap();
-        if (game.score != 0 && game.highScore != 0)
-            screen.renderer.drawScore();
-        screen.renderer.drawMessage("click to play","#FF0");
-        screen.renderer.drawActors();
+        renderer.blitMap();
+        if (score != 0 && highScore != 0)
+            renderer.drawScore();
+        renderer.drawMessage("click to play","#FF0");
+        renderer.drawActors();
     },
     update: function() {
         var i,j;
@@ -2758,28 +2712,28 @@ var newGameState = (function() {
     return {
         init: function() {
             if (this.nextMap != undefined) {
-                game.switchMap(this.nextMap);
+                switchMap(this.nextMap);
                 this.nextMap = undefined;
             }
             frames = 0;
-            tileMap.resetCurrent();
-            screen.renderer.drawMap();
-            game.extraLives = 3;
-            game.level = 1;
-            game.score = 0;
+            map.resetCurrent();
+            renderer.drawMap();
+            extraLives = 3;
+            level = 1;
+            score = 0;
         },
         draw: function() {
-            screen.blitMap();
-            screen.renderer.drawEnergizers();
-            screen.renderer.drawExtraLives();
-            screen.renderer.drawLevelIcons();
-            screen.renderer.drawScore();
-            screen.renderer.drawMessage("ready","#FF0");
+            renderer.blitMap();
+            renderer.drawEnergizers();
+            renderer.drawExtraLives();
+            renderer.drawLevelIcons();
+            renderer.drawScore();
+            renderer.drawMessage("ready","#FF0");
         },
         update: function() {
             if (frames == duration*60) {
-                game.extraLives--;
-                game.switchState(readyNewState);
+                extraLives--;
+                switchState(readyNewState);
             }
             else 
                 frames++;
@@ -2807,11 +2761,11 @@ var readyState =  (function(){
         },
         draw: function() {
             newGameState.draw();
-            screen.renderer.drawActors();
+            renderer.drawActors();
         },
         update: function() {
             if (frames == duration*60)
-                game.switchState(playState);
+                switchState(playState);
             else
                 frames++;
         },
@@ -2830,10 +2784,10 @@ var readyNewState = {
     init: function() {
         // switch to next map if given
         if (this.nextMap != undefined) {
-            game.switchMap(this.nextMap);
+            switchMap(this.nextMap);
             this.nextMap = undefined;
-            tileMap.resetCurrent();
-            screen.renderer.drawMap();
+            map.resetCurrent();
+            renderer.drawMap();
         }
         ghostReleaser.onNewLevel();
         elroyTimer.onNewLevel();
@@ -2853,7 +2807,7 @@ var readyRestartState = {
     __proto__: readyState, 
 
     init: function() {
-        game.extraLives--;
+        extraLives--;
         ghostReleaser.onRestartLevel();
         elroyTimer.onRestartLevel();
 
@@ -2869,15 +2823,15 @@ var readyRestartState = {
 var playState = {
     init: function() { },
     draw: function() {
-        screen.blitMap();
-        screen.renderer.drawEnergizers();
-        screen.renderer.drawExtraLives();
-        screen.renderer.drawLevelIcons();
-        screen.renderer.drawScore();
-        screen.renderer.drawFruit();
-        screen.renderer.drawPaths();
-        screen.renderer.drawActors();
-        screen.renderer.drawTargets();
+        renderer.blitMap();
+        renderer.drawEnergizers();
+        renderer.drawExtraLives();
+        renderer.drawLevelIcons();
+        renderer.drawScore();
+        renderer.drawFruit();
+        renderer.drawPaths();
+        renderer.drawActors();
+        renderer.drawTargets();
     },
 
     // handles collision between pac-man and ghosts
@@ -2894,7 +2848,7 @@ var playState = {
                 else if (pacman.invincible) // pass through ghost
                     continue;
                 else // killed by ghost
-                    game.switchState(deadState);
+                    switchState(deadState);
                 return true;
             }
         }
@@ -2939,9 +2893,9 @@ var playState = {
             fruit.testCollide();
 
             // finish level if all dots have been eaten
-            if (tileMap.allDotsEaten()) {
+            if (map.allDotsEaten()) {
                 this.draw();
-                game.switchState(finishState);
+                switchState(finishState);
                 break;
             }
 
@@ -3006,12 +2960,12 @@ var deadState = (function() {
     
     // this state will always have these drawn
     var commonDraw = function() {
-        screen.blitMap();
-        screen.renderer.drawEnergizers();
-        screen.renderer.drawExtraLives();
-        screen.renderer.drawLevelIcons();
-        screen.renderer.drawScore();
-        screen.renderer.drawFruit();
+        renderer.blitMap();
+        renderer.drawEnergizers();
+        renderer.drawExtraLives();
+        renderer.drawLevelIcons();
+        renderer.drawScore();
+        renderer.drawFruit();
     };
 
     return {
@@ -3029,25 +2983,25 @@ var deadState = (function() {
                 },
                 draw: function() {
                     commonDraw();
-                    screen.renderer.drawActors();
+                    renderer.drawActors();
                 }
             },
             60: {
                 init: function() { // isolate pacman
                     commonDraw();
-                    screen.renderer.drawPacman();
+                    renderer.drawPacman();
                 },
             },
             120: {
                 draw: function(t) { // shrink
                     commonDraw();
-                    screen.renderer.drawDyingPacman(t/60);
+                    renderer.drawDyingPacman(t/60);
                 },
             },
             180: {
                 draw: function(t) { // explode
                     commonDraw();
-                    screen.renderer.drawExplodingPacman(t/15);
+                    renderer.drawExplodingPacman(t/15);
                 },
             },
             195: {
@@ -3055,7 +3009,7 @@ var deadState = (function() {
             },
             240: {
                 init: function() { // leave
-                    game.switchState( game.extraLives == 0 ? overState : readyRestartState);
+                    switchState( extraLives == 0 ? overState : readyRestartState);
                 }
             },
         },
@@ -3070,19 +3024,19 @@ var finishState = (function(){
 
     // this state will always have these drawn
     var commonDraw = function() {
-        screen.renderer.drawMap();
-        screen.blitMap();
-        screen.renderer.drawEnergizers();
-        screen.renderer.drawExtraLives();
-        screen.renderer.drawLevelIcons();
-        screen.renderer.drawScore();
-        screen.renderer.drawFruit();
-        screen.renderer.drawPacman();
+        renderer.drawMap();
+        renderer.blitMap();
+        renderer.drawEnergizers();
+        renderer.drawExtraLives();
+        renderer.drawLevelIcons();
+        renderer.drawScore();
+        renderer.drawFruit();
+        renderer.drawPacman();
     };
     
     // flash the floor and draw
     var flashFloorAndDraw = function() {
-        screen.renderer.toggleLevelFlash();
+        renderer.toggleLevelFlash();
         commonDraw();
     };
 
@@ -3104,10 +3058,10 @@ var finishState = (function(){
             225: { init: flashFloorAndDraw },
             255: { 
                 init: function() {
-                    game.level++;
-                    game.switchState(readyNewState,60);
-                    tileMap.resetCurrent();
-                    screen.renderer.drawMap();
+                    level++;
+                    switchState(readyNewState,60);
+                    map.resetCurrent();
+                    renderer.drawMap();
                 }
             },
         },
@@ -3122,13 +3076,13 @@ var overState = (function() {
     var frames;
     return {
         init: function() {
-            screen.renderer.drawMessage("game over", "#F00");
+            renderer.drawMessage("game over", "#F00");
             frames = 0;
         },
         draw: function() {},
         update: function() {
             if (frames == 120) {
-                game.switchState(menuState);
+                switchState(menuState);
             }
             else
                 frames++;
@@ -3141,22 +3095,22 @@ var overState = (function() {
 
 // Definitions of playable maps along with respective actor configurations
 
-// current map
-var tileMap;
-var maps;
+// list of available maps
+var map_list;
 
-// enumerations for each map
-var MAP_MENU = 0;
-var MAP_PACMAN = 1;
-var MAP_MSPACMAN1 = 2;
-var MAP_MSPACMAN2 = 3;
-var MAP_MSPACMAN3 = 4;
-var MAP_MSPACMAN4 = 5;
+// current map
+var map;
+
+// switches to another map
+var switchMap = function(i) {
+    map = map_list[i];
+    map.onLoad();
+};
 
 // create maps
 (function() {
 
-    // default onLoad function for TileMaps
+    // default onLoad function for a map
     // contains potentially map-specific locations
     var onLoad = function() {
 
@@ -3232,16 +3186,16 @@ var MAP_MSPACMAN4 = 5;
 
     var onLoadPacman = function() {
         onLoad.call(this);
-        game.mode = GAME_PACMAN;
+        gameMode = GAME_PACMAN;
     };
 
     var onLoadMsPacman = function() {
         onLoad.call(this);
-        game.mode = GAME_MSPACMAN;
+        gameMode = GAME_MSPACMAN;
     };
 
     // Original Pac-Man map
-    var mapPacman = new TileMap(28, 36, (
+    var mapPacman = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -3279,6 +3233,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapPacman.name = "Pac-Man";
     mapPacman.onLoad = onLoadPacman;
     //mapPacman.wallColor = "#2121ff"; // from original
     mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
@@ -3292,7 +3247,7 @@ var MAP_MSPACMAN4 = 5;
 
     // Ms. Pac-Man map 1
 
-    var mapMsPacman1 = new TileMap(28, 36, (
+    var mapMsPacman1 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -3330,13 +3285,14 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapMsPacman1.name = "Ms. Pac-Man 1";
     mapMsPacman1.onLoad = onLoadMsPacman;
     mapMsPacman1.wallColor = "#FFB8AE";
     mapMsPacman1.pelletColor = "#dedeff";
 
     // Ms. Pac-Man map 2
 
-    var mapMsPacman2 = new TileMap(28, 36, (
+    var mapMsPacman2 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -3374,13 +3330,14 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapMsPacman2.name = "Ms. Pac-Man 2";
     mapMsPacman2.onLoad = onLoadMsPacman;
     mapMsPacman2.wallColor = "#47b8ff";
     mapMsPacman2.pelletColor = "#ffff00";
 
     // Ms. Pac-Man map 3
 
-    var mapMsPacman3 = new TileMap(28, 36, (
+    var mapMsPacman3 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -3418,13 +3375,14 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapMsPacman3.name = "Ms. Pac-Man 3";
     mapMsPacman3.onLoad = onLoadMsPacman;
     mapMsPacman3.wallColor = "#de9751";
     mapMsPacman3.pelletColor = "#ff0000";
 
     // Ms. Pac-Man map 4
 
-    var mapMsPacman4 = new TileMap(28, 36, (
+    var mapMsPacman4 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -3462,13 +3420,14 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapMsPacman4.name = "Ms. Pac-Man 4";
     mapMsPacman4.onLoad = onLoadMsPacman;
     mapMsPacman4.wallColor = "#2121ff";
     mapMsPacman4.pelletColor = "#dedeff";
 
     // Menu Map
 
-    var menuMap = new TileMap(28, 36, (
+    var menuMap = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -3563,7 +3522,7 @@ var MAP_MSPACMAN4 = 5;
     menuMap.pelletColor = "#FFF";
 
     // create list of maps
-    maps = [
+    map_list = [
         menuMap,
         mapPacman,
         mapMsPacman1,
@@ -3578,7 +3537,8 @@ var MAP_MSPACMAN4 = 5;
 // Entry Point
 
 window.onload = function() {
-    screen.create();
-    game.restart();
+    gui.create();
+    switchState(menuState);
+    executive.start();
 };
 })();

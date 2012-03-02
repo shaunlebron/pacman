@@ -39,7 +39,7 @@ Actor.prototype.setPos = function(px,py) {
 Actor.prototype.commitPos = function() {
 
     // use map-specific tunnel teleport
-    tileMap.teleport(this);
+    map.teleport(this);
 
     this.tile.x = Math.floor(this.pixel.x / tileSize);
     this.tile.y = Math.floor(this.pixel.y / tileSize);
@@ -134,48 +134,4 @@ Actor.prototype.update = function(j) {
 
     // update head direction
     this.steer();
-};
-
-// retrieve four surrounding tiles and indicate whether they are open
-getOpenSurroundTiles = function(tile,dirEnum) {
-
-    // get open passages
-    var openTiles = tileMap.getOpenTiles(tile).slice();
-    var numOpenTiles = 0;
-    var i;
-    for (i=0; i<4; i++)
-        if (openTiles[i])
-            numOpenTiles++;
-
-    // By design, no mazes should have dead ends,
-    // but allow player to turn around if and only if it's necessary.
-    // Only close the passage behind the player if there are other openings.
-    var oppDirEnum = (dirEnum+2)%4; // current opposite direction enum
-    if (numOpenTiles > 1)
-        openTiles[oppDirEnum] = false;
-
-    return openTiles;
-};
-
-// return the direction of the open, surrounding tile closest to our target
-getTurnClosestToTarget = function(tile,targetTile,openTiles) {
-
-    var dx,dy,dist;                      // variables used for euclidean distance
-    var minDist = Infinity;              // variable used for finding minimum distance path
-    var dir = {};
-    var dirEnum = 0;
-    var i;
-    for (i=0; i<4; i++) {
-        if (openTiles[i]) {
-            setDirFromEnum(dir,i);
-            dx = dir.x + tile.x - targetTile.x;
-            dy = dir.y + tile.y - targetTile.y;
-            dist = dx*dx+dy*dy;
-            if (dist < minDist) {
-                minDist = dist;
-                dirEnum = i;
-            }
-        }
-    }
-    return dirEnum;
 };

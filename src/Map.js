@@ -1,31 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// Directions
-// (variables and utility functions for representing actor heading direction)
-
-// direction enums (in clockwise order)
-var DIR_UP = 0;
-var DIR_RIGHT = 1;
-var DIR_DOWN = 2;
-var DIR_LEFT = 3;
-
-// get direction enum from a direction vector
-var getEnumFromDir = function(dir) {
-    if (dir.x==-1) return DIR_LEFT;
-    if (dir.x==1) return DIR_RIGHT;
-    if (dir.y==-1) return DIR_UP;
-    if (dir.y==1) return DIR_DOWN;
-};
-
-// set direction vector from a direction enum
-var setDirFromEnum = function(dir,dirEnum) {
-    if (dirEnum == DIR_UP)         { dir.x = 0; dir.y =-1; }
-    else if (dirEnum == DIR_RIGHT)  { dir.x =1; dir.y = 0; }
-    else if (dirEnum == DIR_DOWN)  { dir.x = 0; dir.y = 1; }
-    else if (dirEnum == DIR_LEFT) { dir.x = -1; dir.y = 0; }
-};
-
-//////////////////////////////////////////////////////////////////////////////////////
-// TileMap
+// Map
 // (an ascii map of tiles representing a level maze)
 
 // size of a square tile in pixels
@@ -35,7 +9,7 @@ var tileSize = 8;
 var midTile = {x:3, y:4};
 
 // constructor
-var TileMap = function(numCols, numRows, tiles) {
+var Map = function(numCols, numRows, tiles) {
 
     // sizes
     this.numCols = numCols;
@@ -50,26 +24,16 @@ var TileMap = function(numCols, numRows, tiles) {
     this.resetCurrent();
     this.parseDots();
     this.parseTunnels();
-    this.parseIntersections();
 };
 
 // reset current tiles
-TileMap.prototype.resetCurrent = function() {
+Map.prototype.resetCurrent = function() {
     this.currentTiles = this.tiles.split(""); // create a mutable list copy of an immutable string
     this.dotsEaten = 0;
 };
 
-TileMap.prototype.parseIntersections = function() {
-    this.intersections = [];
-    var i = 0;
-    var x,y;
-    for (y=0; y<this.numRows; y++) for (x=0; x<this.numCols; x++) {
-        this.intersections[i++] = this.getOpenTiles({x:x,y:y});
-    }
-};
-
 // count pellets and store energizer locations
-TileMap.prototype.parseDots = function() {
+Map.prototype.parseDots = function() {
 
     this.numDots = 0;
     this.numEnergizers = 0;
@@ -92,17 +56,17 @@ TileMap.prototype.parseDots = function() {
 };
 
 // get remaining dots left
-TileMap.prototype.dotsLeft = function() {
+Map.prototype.dotsLeft = function() {
     return this.numDots - this.dotsEaten;
 };
 
 // determine if all dots have been eaten
-TileMap.prototype.allDotsEaten = function() {
+Map.prototype.allDotsEaten = function() {
     return this.dotsLeft() == 0;
 };
 
 // create a record of tunnel locations
-TileMap.prototype.parseTunnels = (function(){
+Map.prototype.parseTunnels = (function(){
     
     // starting from x,y and increment x by dx...
     // determine where the tunnel entrance begins
@@ -134,7 +98,7 @@ TileMap.prototype.parseTunnels = (function(){
 })();
 
 // teleport actor to other side of tunnel if necessary
-TileMap.prototype.teleport = function(actor){
+Map.prototype.teleport = function(actor){
     var i;
     var t = this.tunnelRows[actor.tile.y];
     if (t) {
@@ -144,14 +108,14 @@ TileMap.prototype.teleport = function(actor){
 };
 
 // define which tiles are inside the tunnel
-TileMap.prototype.isTunnelTile = function(x,y) {
+Map.prototype.isTunnelTile = function(x,y) {
     var tunnel = this.tunnelRows[y];
     return tunnel && (x < tunnel.leftEntrance || x > tunnel.rightEntrance);
 };
 
 // retrieves tile character at given coordinate
 // extended to include offscreen tunnel space
-TileMap.prototype.getTile = function(x,y) {
+Map.prototype.getTile = function(x,y) {
     if (x>=0 && x<this.numCols && y>=0 && y<this.numRows) 
         return this.currentTiles[x+y*this.numCols];
     if (this.isTunnelTile(x,y))
@@ -159,41 +123,18 @@ TileMap.prototype.getTile = function(x,y) {
 };
 
 // determines if the given character is a walkable floor tile
-TileMap.prototype.isFloorTileChar = function(tile) {
+Map.prototype.isFloorTileChar = function(tile) {
     return tile==' ' || tile=='.' || tile=='o';
 };
 
 // determines if the given tile coordinate has a walkable floor tile
-TileMap.prototype.isFloorTile = function(x,y) {
+Map.prototype.isFloorTile = function(x,y) {
     return this.isFloorTileChar(this.getTile(x,y));
 };
 
-// get a list of the four surrounding tiles
-TileMap.prototype.getSurroundingTiles = function(tile) {
-    var result = [];
-    result[DIR_UP] = this.getTile(tile.x, tile.y-1);
-    result[DIR_RIGHT] = this.getTile(tile.x+1, tile.y);
-    result[DIR_DOWN] = this.getTile(tile.x, tile.y+1);
-    result[DIR_LEFT] = this.getTile(tile.x-1, tile.y);
-    return result;
-};
-
-TileMap.prototype.getOpenTiles = function(tile) {
-    var surroundTiles = this.getSurroundingTiles(tile);
-    var i;
-    for (i=0; i<4; i++)
-        surroundTiles[i] = this.isFloorTileChar(surroundTiles[i]);
-    return surroundTiles;
-};
-
-// returns if the given tile coordinate plus the given direction vector has a walkable floor tile
-TileMap.prototype.isNextTileFloor = function(tile,dir) {
-    return this.isFloorTile(tile.x+dir.x,tile.y+dir.y);
-};
-
 // mark the dot at the given coordinate eaten
-TileMap.prototype.onDotEat = function(x,y) {
+Map.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
     this.currentTiles[x+y*this.numCols] = ' ';
-    screen.renderer.erasePellet(x,y);
+    renderer.erasePellet(x,y);
 };

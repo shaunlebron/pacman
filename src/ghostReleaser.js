@@ -14,15 +14,15 @@ var ghostReleaser = (function(){
     var CLYDE = 3;
 
     // this is how many frames it will take to release a ghost after pacman stops eating
-    var getTimeoutLimit = function() { return (game.level < 5) ? 4*60 : 3*60; };
+    var getTimeoutLimit = function() { return (level < 5) ? 4*60 : 3*60; };
 
     // dot limits used in personal mode to release ghost after # of dots have been eaten
     var personalDotLimit = {};
     personalDotLimit[PINKY] = function() { return 0; };
-    personalDotLimit[INKY] = function() { return (game.level==1) ? 30 : 0; };
+    personalDotLimit[INKY] = function() { return (level==1) ? 30 : 0; };
     personalDotLimit[CLYDE] = function() {
-        if (game.level == 1) return 60;
-        if (game.level == 2) return 50;
+        if (level == 1) return 60;
+        if (level == 2) return 50;
         return 0;
     };
 

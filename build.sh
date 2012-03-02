@@ -22,24 +22,26 @@ echo "
 " > $output
 
 for file in \
-TileMap.js \
-renderers.js  \
-sprites.js \
-screen.js \
-Actor.js \
-Ghost.js \
-Player.js \
-actors.js \
-targets.js \
-ghostCommander.js \
-ghostReleaser.js \
-elroyTimer.js \
-energizer.js \
-fruit.js \
-game.js \
-states.js \
-maps.js \
-main.js
+    direction.js \
+    Map.js \
+    renderers.js  \
+    sprites.js \
+    gui.js \
+    Actor.js \
+    Ghost.js \
+    Player.js \
+    actors.js \
+    targets.js \
+    ghostCommander.js \
+    ghostReleaser.js \
+    elroyTimer.js \
+    energizer.js \
+    fruit.js \
+    game.js \
+    executive.js \
+    states.js \
+    maps.js \
+    main.js
 do
     # points firebug to correct file (or so I hoped)
     # if JSOPTION_ATLINE is set, this should work in firefox (but I don't know how to set it)

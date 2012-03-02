@@ -3,22 +3,22 @@
 
 // Definitions of playable maps along with respective actor configurations
 
-// current map
-var tileMap;
-var maps;
+// list of available maps
+var map_list;
 
-// enumerations for each map
-var MAP_MENU = 0;
-var MAP_PACMAN = 1;
-var MAP_MSPACMAN1 = 2;
-var MAP_MSPACMAN2 = 3;
-var MAP_MSPACMAN3 = 4;
-var MAP_MSPACMAN4 = 5;
+// current map
+var map;
+
+// switches to another map
+var switchMap = function(i) {
+    map = map_list[i];
+    map.onLoad();
+};
 
 // create maps
 (function() {
 
-    // default onLoad function for TileMaps
+    // default onLoad function for a map
     // contains potentially map-specific locations
     var onLoad = function() {
 
@@ -94,16 +94,16 @@ var MAP_MSPACMAN4 = 5;
 
     var onLoadPacman = function() {
         onLoad.call(this);
-        game.mode = GAME_PACMAN;
+        gameMode = GAME_PACMAN;
     };
 
     var onLoadMsPacman = function() {
         onLoad.call(this);
-        game.mode = GAME_MSPACMAN;
+        gameMode = GAME_MSPACMAN;
     };
 
     // Original Pac-Man map
-    var mapPacman = new TileMap(28, 36, (
+    var mapPacman = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -141,6 +141,7 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapPacman.name = "Pac-Man";
     mapPacman.onLoad = onLoadPacman;
     //mapPacman.wallColor = "#2121ff"; // from original
     mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
@@ -154,7 +155,7 @@ var MAP_MSPACMAN4 = 5;
 
     // Ms. Pac-Man map 1
 
-    var mapMsPacman1 = new TileMap(28, 36, (
+    var mapMsPacman1 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -192,13 +193,14 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapMsPacman1.name = "Ms. Pac-Man 1";
     mapMsPacman1.onLoad = onLoadMsPacman;
     mapMsPacman1.wallColor = "#FFB8AE";
     mapMsPacman1.pelletColor = "#dedeff";
 
     // Ms. Pac-Man map 2
 
-    var mapMsPacman2 = new TileMap(28, 36, (
+    var mapMsPacman2 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -236,13 +238,14 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapMsPacman2.name = "Ms. Pac-Man 2";
     mapMsPacman2.onLoad = onLoadMsPacman;
     mapMsPacman2.wallColor = "#47b8ff";
     mapMsPacman2.pelletColor = "#ffff00";
 
     // Ms. Pac-Man map 3
 
-    var mapMsPacman3 = new TileMap(28, 36, (
+    var mapMsPacman3 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -280,13 +283,14 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapMsPacman3.name = "Ms. Pac-Man 3";
     mapMsPacman3.onLoad = onLoadMsPacman;
     mapMsPacman3.wallColor = "#de9751";
     mapMsPacman3.pelletColor = "#ff0000";
 
     // Ms. Pac-Man map 4
 
-    var mapMsPacman4 = new TileMap(28, 36, (
+    var mapMsPacman4 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -324,13 +328,14 @@ var MAP_MSPACMAN4 = 5;
         "____________________________" +
         "____________________________"));
 
+    mapMsPacman4.name = "Ms. Pac-Man 4";
     mapMsPacman4.onLoad = onLoadMsPacman;
     mapMsPacman4.wallColor = "#2121ff";
     mapMsPacman4.pelletColor = "#dedeff";
 
     // Menu Map
 
-    var menuMap = new TileMap(28, 36, (
+    var menuMap = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
@@ -425,7 +430,7 @@ var MAP_MSPACMAN4 = 5;
     menuMap.pelletColor = "#FFF";
 
     // create list of maps
-    maps = [
+    map_list = [
         menuMap,
         mapPacman,
         mapMsPacman1,

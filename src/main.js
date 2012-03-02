@@ -2,6 +2,7 @@
 // Entry Point
 
 window.onload = function() {
-    screen.create();
-    game.restart();
+    gui.create();
+    switchState(menuState);
+    executive.start();
 };

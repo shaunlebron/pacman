@@ -1,7 +1,16 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // States
 // (main loops for each state of the game)
-// game.state is set to any of these states, each containing an init(), draw(), and update()
+// state is set to any of these states, each containing an init(), draw(), and update()
+
+// current game state
+var state;
+
+// switches to another game state
+var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
+    state = (fadeDuration) ? fadeNextState(state,nextState,fadeDuration,continueUpdate1, continueUpdate2) : nextState;
+    state.init();
+};
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Fade state
@@ -16,19 +25,19 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
     return {
         init: function() {
             frames = 0;
-            screen.onClick = undefined; // remove all click events from previous state
+            canvas.onmousedown = undefined; // remove all click events from previous state
         },
         draw: function() {
             var t = getStateTime();
             if (inFirstState()) {
                 if (prevState) {
                     prevState.draw();
-                    screen.renderer.drawFadeIn(1-t);
+                    renderer.drawFadeIn(1-t);
                 }
             }
             else {
                 nextState.draw();
-                screen.renderer.drawFadeIn(t);
+                renderer.drawFadeIn(t);
             }
         },
         update: function() {
@@ -40,44 +49,10 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
             }
 
             if (frames == frameDuration)
-                game.state = nextState; // hand over state
+                state = nextState; // hand over state
             else {
                 if (frames == frameDuration/2)
                     nextState.init();
-                frames++;
-            }
-        },
-    }
-};
-
-//////////////////////////////////////////////////////////////////////////////////////
-// Fade Renderer state
-
-// creates a state that will pause the current state and fade to the given renderer in a given amount of time
-var fadeRendererState = function (currState, nextRenderer, frameDuration) {
-    var frames;
-    return {
-        init: function() {
-            frames = 0;
-        },
-        draw: function() {
-            var t;
-            currState.draw();
-            if (frames < frameDuration/2) {
-                t = frames/frameDuration*2;
-                screen.renderer.drawFadeIn(1-t);
-            }
-            else {
-                t = frames/frameDuration*2 - 1;
-                screen.renderer.drawFadeIn(t);
-            }
-        },
-        update: function() {
-            if (frames == frameDuration)
-                game.state = currState; // hand over state
-            else {
-                if (frames == frameDuration/2)
-                    screen.switchRenderer(nextRenderer);
                 frames++;
             }
         },
@@ -90,22 +65,22 @@ var fadeRendererState = function (currState, nextRenderer, frameDuration) {
 
 var menuState = {
     init: function() {
-        game.switchMap(MAP_MENU);
+        switchMap(0);
         for (i=0; i<5; i++)
             actors[i].reset();
-        screen.renderer.drawMap();
-        screen.onClick = function() {
-            newGameState.nextMap = MAP_PACMAN;
-            game.switchState(newGameState,60,true,false);
-            screen.onClick = undefined;
+        renderer.drawMap();
+        canvas.onmousedown = function() {
+            newGameState.nextMap = 1;
+            switchState(newGameState,60,true,false);
+            canvas.onmousedown = undefined;
         };
     },
     draw: function() {
-        screen.blitMap();
-        if (game.score != 0 && game.highScore != 0)
-            screen.renderer.drawScore();
-        screen.renderer.drawMessage("click to play","#FF0");
-        screen.renderer.drawActors();
+        renderer.blitMap();
+        if (score != 0 && highScore != 0)
+            renderer.drawScore();
+        renderer.drawMessage("click to play","#FF0");
+        renderer.drawActors();
     },
     update: function() {
         var i,j;
@@ -129,28 +104,28 @@ var newGameState = (function() {
     return {
         init: function() {
             if (this.nextMap != undefined) {
-                game.switchMap(this.nextMap);
+                switchMap(this.nextMap);
                 this.nextMap = undefined;
             }
             frames = 0;
-            tileMap.resetCurrent();
-            screen.renderer.drawMap();
-            game.extraLives = 3;
-            game.level = 1;
-            game.score = 0;
+            map.resetCurrent();
+            renderer.drawMap();
+            extraLives = 3;
+            level = 1;
+            score = 0;
         },
         draw: function() {
-            screen.blitMap();
-            screen.renderer.drawEnergizers();
-            screen.renderer.drawExtraLives();
-            screen.renderer.drawLevelIcons();
-            screen.renderer.drawScore();
-            screen.renderer.drawMessage("ready","#FF0");
+            renderer.blitMap();
+            renderer.drawEnergizers();
+            renderer.drawExtraLives();
+            renderer.drawLevelIcons();
+            renderer.drawScore();
+            renderer.drawMessage("ready","#FF0");
         },
         update: function() {
             if (frames == duration*60) {
-                game.extraLives--;
-                game.switchState(readyNewState);
+                extraLives--;
+                switchState(readyNewState);
             }
             else 
                 frames++;
@@ -178,11 +153,11 @@ var readyState =  (function(){
         },
         draw: function() {
             newGameState.draw();
-            screen.renderer.drawActors();
+            renderer.drawActors();
         },
         update: function() {
             if (frames == duration*60)
-                game.switchState(playState);
+                switchState(playState);
             else
                 frames++;
         },
@@ -201,10 +176,10 @@ var readyNewState = {
     init: function() {
         // switch to next map if given
         if (this.nextMap != undefined) {
-            game.switchMap(this.nextMap);
+            switchMap(this.nextMap);
             this.nextMap = undefined;
-            tileMap.resetCurrent();
-            screen.renderer.drawMap();
+            map.resetCurrent();
+            renderer.drawMap();
         }
         ghostReleaser.onNewLevel();
         elroyTimer.onNewLevel();
@@ -224,7 +199,7 @@ var readyRestartState = {
     __proto__: readyState, 
 
     init: function() {
-        game.extraLives--;
+        extraLives--;
         ghostReleaser.onRestartLevel();
         elroyTimer.onRestartLevel();
 
@@ -240,15 +215,15 @@ var readyRestartState = {
 var playState = {
     init: function() { },
     draw: function() {
-        screen.blitMap();
-        screen.renderer.drawEnergizers();
-        screen.renderer.drawExtraLives();
-        screen.renderer.drawLevelIcons();
-        screen.renderer.drawScore();
-        screen.renderer.drawFruit();
-        screen.renderer.drawPaths();
-        screen.renderer.drawActors();
-        screen.renderer.drawTargets();
+        renderer.blitMap();
+        renderer.drawEnergizers();
+        renderer.drawExtraLives();
+        renderer.drawLevelIcons();
+        renderer.drawScore();
+        renderer.drawFruit();
+        renderer.drawPaths();
+        renderer.drawActors();
+        renderer.drawTargets();
     },
 
     // handles collision between pac-man and ghosts
@@ -265,7 +240,7 @@ var playState = {
                 else if (pacman.invincible) // pass through ghost
                     continue;
                 else // killed by ghost
-                    game.switchState(deadState);
+                    switchState(deadState);
                 return true;
             }
         }
@@ -310,9 +285,9 @@ var playState = {
             fruit.testCollide();
 
             // finish level if all dots have been eaten
-            if (tileMap.allDotsEaten()) {
+            if (map.allDotsEaten()) {
                 this.draw();
-                game.switchState(finishState);
+                switchState(finishState);
                 break;
             }
 
@@ -377,12 +352,12 @@ var deadState = (function() {
     
     // this state will always have these drawn
     var commonDraw = function() {
-        screen.blitMap();
-        screen.renderer.drawEnergizers();
-        screen.renderer.drawExtraLives();
-        screen.renderer.drawLevelIcons();
-        screen.renderer.drawScore();
-        screen.renderer.drawFruit();
+        renderer.blitMap();
+        renderer.drawEnergizers();
+        renderer.drawExtraLives();
+        renderer.drawLevelIcons();
+        renderer.drawScore();
+        renderer.drawFruit();
     };
 
     return {
@@ -400,25 +375,25 @@ var deadState = (function() {
                 },
                 draw: function() {
                     commonDraw();
-                    screen.renderer.drawActors();
+                    renderer.drawActors();
                 }
             },
             60: {
                 init: function() { // isolate pacman
                     commonDraw();
-                    screen.renderer.drawPacman();
+                    renderer.drawPacman();
                 },
             },
             120: {
                 draw: function(t) { // shrink
                     commonDraw();
-                    screen.renderer.drawDyingPacman(t/60);
+                    renderer.drawDyingPacman(t/60);
                 },
             },
             180: {
                 draw: function(t) { // explode
                     commonDraw();
-                    screen.renderer.drawExplodingPacman(t/15);
+                    renderer.drawExplodingPacman(t/15);
                 },
             },
             195: {
@@ -426,7 +401,7 @@ var deadState = (function() {
             },
             240: {
                 init: function() { // leave
-                    game.switchState( game.extraLives == 0 ? overState : readyRestartState);
+                    switchState( extraLives == 0 ? overState : readyRestartState);
                 }
             },
         },
@@ -441,19 +416,19 @@ var finishState = (function(){
 
     // this state will always have these drawn
     var commonDraw = function() {
-        screen.renderer.drawMap();
-        screen.blitMap();
-        screen.renderer.drawEnergizers();
-        screen.renderer.drawExtraLives();
-        screen.renderer.drawLevelIcons();
-        screen.renderer.drawScore();
-        screen.renderer.drawFruit();
-        screen.renderer.drawPacman();
+        renderer.drawMap();
+        renderer.blitMap();
+        renderer.drawEnergizers();
+        renderer.drawExtraLives();
+        renderer.drawLevelIcons();
+        renderer.drawScore();
+        renderer.drawFruit();
+        renderer.drawPacman();
     };
     
     // flash the floor and draw
     var flashFloorAndDraw = function() {
-        screen.renderer.toggleLevelFlash();
+        renderer.toggleLevelFlash();
         commonDraw();
     };
 
@@ -475,10 +450,10 @@ var finishState = (function(){
             225: { init: flashFloorAndDraw },
             255: { 
                 init: function() {
-                    game.level++;
-                    game.switchState(readyNewState,60);
-                    tileMap.resetCurrent();
-                    screen.renderer.drawMap();
+                    level++;
+                    switchState(readyNewState,60);
+                    map.resetCurrent();
+                    renderer.drawMap();
                 }
             },
         },
@@ -493,13 +468,13 @@ var overState = (function() {
     var frames;
     return {
         init: function() {
-            screen.renderer.drawMessage("game over", "#F00");
+            renderer.drawMessage("game over", "#F00");
             frames = 0;
         },
         draw: function() {},
         update: function() {
             if (frames == 120) {
-                game.switchState(menuState);
+                switchState(menuState);
             }
             else
                 frames++;

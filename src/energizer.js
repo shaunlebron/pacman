@@ -13,7 +13,7 @@ var energizer = (function() {
     var getDuration = (function(){
         var seconds = [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
         return function() {
-            var i = game.level;
+            var i = level;
             return (i > 18) ? 0 : 60*seconds[i-1];
         };
     })();
@@ -22,7 +22,7 @@ var energizer = (function() {
     var getFlashes = (function(){
         var flashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
         return function() {
-            var i = game.level;
+            var i = level;
             return (i > 18) ? 0 : flashes[i-1];
         };
     })();
@@ -70,7 +70,7 @@ var energizer = (function() {
             return points;
         },
         addPoints: function() {
-            game.addScore(points*=2);
+            addScore(points*=2);
             pointsFramesLeft = pointsDuration*60;
         },
         showingPoints: function() { return pointsFramesLeft > 0; },

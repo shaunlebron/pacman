@@ -1,7 +1,10 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander
-
 // Determines when a ghost should be chasing a target
+
+// modes representing the ghosts' current command
+var GHOST_CMD_CHASE = 0;
+var GHOST_CMD_SCATTER = 1;
 
 var ghostCommander = (function() {
 
@@ -36,9 +39,9 @@ var ghostCommander = (function() {
 
         return function(frame) {
             var i;
-            if (game.level == 1)
+            if (level == 1)
                 i = 0;
-            else if (game.level >= 2 && game.level <= 4)
+            else if (level >= 2 && level <= 4)
                 i = 1;
             else
                 i = 2;
@@ -60,7 +63,7 @@ var ghostCommander = (function() {
                 newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     // new command is always "chase" when in Ms. Pac-Man mode
-                    command = (game.mode == GAME_MSPACMAN) ? GHOST_CMD_CHASE : newCmd;
+                    command = (gameMode == GAME_MSPACMAN) ? GHOST_CMD_CHASE : newCmd;
 
                     for (i=0; i<4; i++)
                         ghosts[i].reverse();

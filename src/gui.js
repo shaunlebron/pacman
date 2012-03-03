@@ -171,6 +171,7 @@ var gui = (function() {
             mapDropDown.onchange = function() {
                 readyNewState.nextMap = mapDropDown.selectedIndex+1;
                 switchState(readyNewState, 60);
+                mapDropDown.blur();
             };
             fieldset.appendChild(mapDropDown);
             form.appendChild(fieldset);

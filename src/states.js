@@ -381,23 +381,16 @@ var deadState = (function() {
             60: {
                 init: function() { // isolate pacman
                     commonDraw();
-                    renderer.drawPacman();
+                    renderer.drawPlayer();
                 },
             },
             120: {
-                draw: function(t) { // shrink
+                draw: function(t) { // dying animation
                     commonDraw();
-                    renderer.drawDyingPacman(t/60);
-                },
-            },
-            180: {
-                draw: function(t) { // explode
-                    commonDraw();
-                    renderer.drawExplodingPacman(t/15);
+                    renderer.drawDyingPlayer(t/75);
                 },
             },
             195: {
-                draw: function(){}, // pause
             },
             240: {
                 init: function() { // leave
@@ -423,7 +416,7 @@ var finishState = (function(){
         renderer.drawLevelIcons();
         renderer.drawScore();
         renderer.drawFruit();
-        renderer.drawPacman();
+        renderer.drawPlayer();
     };
     
     // flash the floor and draw

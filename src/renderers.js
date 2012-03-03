@@ -59,7 +59,6 @@ var switchRenderer = function(i) {
 
         this.energizerColor = "#FFF";
         this.pelletColor = "#888";
-        this.scaredGhostColor = "#2121ff";
 
         this.flashLevel = false;
     };
@@ -282,32 +281,18 @@ var switchRenderer = function(i) {
                 for (i=0; i<4; i++)
                     this.drawGhost(ghosts[i]);
                 if (!energizer.showingPoints())
-                    this.drawPacman();
+                    this.drawPlayer();
                 else
                     this.drawEatenPoints();
             }
             // draw such that pacman appears on bottom
             else {
-                this.drawPacman();
+                this.drawPlayer();
                 for (i=3; i>=0; i--) 
                     this.drawGhost(ghosts[i]);
             }
         },
 
-        // draw fruit
-        drawFruit: function() {
-            if (fruit.isPresent()) {
-                ctx.fillStyle = "#0F0";
-                this.drawCenterPixelSq(ctx, fruit.pixel.x, fruit.pixel.y, tileSize+2);
-            }
-            else if (fruit.isScorePresent()) {
-                ctx.font = this.pointsEarnedTextSize + "px sans-serif";
-                ctx.textBaseline = "middle";
-                ctx.textAlign = "center";
-                ctx.fillStyle = "#FFF";
-                ctx.fillText(fruit.getPoints(), fruit.pixel.x, fruit.pixel.y);
-            }
-        },
     };
 
     //////////////////////////////////////////////////////////////
@@ -412,7 +397,7 @@ var switchRenderer = function(i) {
         },
 
         // draw pacman
-        drawPacman: function(scale, opacity) {
+        drawPlayer: function(scale, opacity) {
             if (scale == undefined) scale = 1;
             if (opacity == undefined) opacity = 1;
             ctx.fillStyle = "rgba(255,255,0,"+opacity+")";
@@ -420,13 +405,17 @@ var switchRenderer = function(i) {
         },
 
         // draw dying pacman animation (with 0<=t<=1)
-        drawDyingPacman: function(t) {
-            this.drawPacman(1-t);
-        },
-
-        // draw exploding pacman animation (with 0<=t<=1)
-        drawExplodingPacman: function(t) {
-            this.drawPacman(t,1-t);
+        drawDyingPlayer: function(t) {
+            var f = t*85;
+            if (f <= 60) {
+                t = f/60;
+                this.drawPlayer(1-t);
+            }
+            else {
+                f -= 60;
+                t = f/15;
+                this.drawPlayer(t,1-t);
+            }
         },
 
         // draw ghost
@@ -435,11 +424,25 @@ var switchRenderer = function(i) {
                 return;
             var color = g.color;
             if (g.scared)
-                color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
+                color = energizer.isFlash() ? "#FFF" : "#2121ff";
             else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
                 color = "rgba(255,255,255,0.3)";
             ctx.fillStyle = color;
             this.drawCenterPixelSq(ctx, g.pixel.x, g.pixel.y, this.actorSize);
+        },
+
+        drawFruit: function() {
+            if (fruit.isPresent()) {
+                ctx.fillStyle = "#0F0";
+                this.drawCenterPixelSq(ctx, fruit.pixel.x, fruit.pixel.y, tileSize+2);
+            }
+            else if (fruit.isScorePresent()) {
+                ctx.font = this.pointsEarnedTextSize + "px sans-serif";
+                ctx.textBaseline = "middle";
+                ctx.textAlign = "center";
+                ctx.fillStyle = "#FFF";
+                ctx.fillText(fruit.getPoints(), fruit.pixel.x, fruit.pixel.y);
+            }
         },
 
     };
@@ -536,13 +539,18 @@ var switchRenderer = function(i) {
 
             ctx.save();
             ctx.translate(3*tileSize, (map.numRows-1)*tileSize);
-            ctx.beginPath();
-            for (i=0; i<extraLives; i++) {
-                addPacmanBody(ctx, DIR_RIGHT, Math.PI/6);
-                ctx.translate(2*tileSize,0);
+            if (gameMode == GAME_PACMAN) {
+                for (i=0; i<extraLives; i++) {
+                    drawPacmanSprite(ctx, DIR_RIGHT, Math.PI/6);
+                    ctx.translate(2*tileSize,0);
+                }
             }
-            ctx.closePath();
-            ctx.fill();
+            else if (gameMode == GAME_MSPACMAN) {
+                for (i=0; i<extraLives; i++) {
+                    drawMsPacmanSprite(ctx, DIR_RIGHT, 1);
+                    ctx.translate(2*tileSize,0);
+                }
+            }
             ctx.restore();
         },
 
@@ -560,78 +568,83 @@ var switchRenderer = function(i) {
         drawGhost: function(g) {
             if (g.mode == GHOST_EATEN)
                 return;
-            var color = g.color;
-            if (g.scared)
-                color = energizer.isFlash() ? "#FFF" : this.scaredGhostColor;
-            else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
-                color = "rgba(255,255,255,0)";
-
             ctx.save();
             ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
-
-            // draw body
-            ctx.beginPath();
-            addGhostHead(ctx);
-            if (Math.floor(g.frames/6) % 2 == 0) // change animation frame every 6 ticks
-                addGhostFeet1(ctx);
-            else
-                addGhostFeet2(ctx);
-            ctx.closePath();
-            ctx.fillStyle = color;
-            ctx.fill();
-
-            // draw face
-            if (g.scared)
-                addScaredGhostFace(ctx, energizer.isFlash());
-            else
-                addGhostEyes(ctx,g.dirEnum);
-
+            var frame = Math.floor(g.frames/6)%2; // toggle frame every 6 ticks
+            var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
+            drawGhostSprite(ctx,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
             ctx.restore();
         },
 
-        // draw pacman
-        drawPacman: function() {
-            ctx.save();
-            ctx.translate(pacman.pixel.x, pacman.pixel.y);
-
-            ctx.beginPath();
+        // get animation frame for player
+        getPlayerAnimFrame: function() {
             var frame = Math.floor(pacman.steps/2)%4; // change animation frame every 2 steps
+            if (gameMode == GAME_MSPACMAN) { // ms. pacman starts with mouth open
+                frame = (frame+1)%4;
+                if (state == deadState)
+                    frame = 1; // hack to force this frame when dead
+            }
             if (frame == 3) 
                 frame = 1;
-            addPacmanBody(ctx, pacman.dirEnum, frame*Math.PI/6);
-            ctx.closePath();
-            ctx.fillStyle = pacman.color;
-            ctx.fill();
+            return frame;
+        },
+
+        // draw pacman
+        drawPlayer: function() {
+            ctx.save();
+            ctx.translate(pacman.pixel.x, pacman.pixel.y);
+            var frame = this.getPlayerAnimFrame();
+            if (gameMode == GAME_PACMAN) {
+                drawPacmanSprite(ctx, pacman.dirEnum, frame*Math.PI/6);
+            }
+            else if (gameMode == GAME_MSPACMAN) {
+                drawMsPacmanSprite(ctx,pacman.dirEnum,frame);
+            }
 
             ctx.restore();
         },
 
         // draw dying pacman animation (with 0<=t<=1)
-        // open mouth all the way while shifting corner of mouth forward
-        drawDyingPacman: function(t) {
-            ctx.save();
-            ctx.translate(pacman.pixel.x, pacman.pixel.y);
-            ctx.beginPath();
-            var frame = Math.floor(pacman.steps/2)%4;
-            if (frame == 3) 
-                frame = 1;
-            var a = frame*Math.PI/6;
-            addPacmanBody(ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
-            ctx.closePath();
-            ctx.fillStyle = pacman.color;
-            ctx.fill();
-            ctx.restore();
+        drawDyingPlayer: function(t) {
+            var frame = this.getPlayerAnimFrame();
+
+            if (gameMode == GAME_PACMAN) {
+                // 60 frames dying
+                // 15 frames exploding
+                var f = t*75;
+                if (f <= 60) {
+                    // open mouth all the way while shifting corner of mouth forward
+                    t = f/60;
+                    ctx.save();
+                    ctx.translate(pacman.pixel.x, pacman.pixel.y);
+                    var a = frame*Math.PI/6;
+                    drawPacmanSprite(ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
+                    ctx.restore();
+                }
+                else {
+                    // explode
+                    f -= 60;
+                    this.drawExplodingPlayer(f/15);
+                }
+            }
+            else if (gameMode == GAME_MSPACMAN) {
+                // spin 540 degrees
+                ctx.save();
+                ctx.translate(pacman.pixel.x, pacman.pixel.y);
+                var maxAngle = Math.PI*5;
+                var step = (Math.PI/4) / maxAngle; // 45 degree steps
+                ctx.rotate(Math.floor(t/step)*step*maxAngle);
+                drawMsPacmanSprite(ctx, pacman.dirEnum, frame);
+                ctx.restore();
+            }
         },
 
         // draw exploding pacman animation (with 0<=t<=1)
-        drawExplodingPacman: function(t) {
+        drawExplodingPlayer: function(t) {
             ctx.save();
+            var frame = this.getPlayerAnimFrame();
             ctx.translate(pacman.pixel.x, pacman.pixel.y);
-            ctx.beginPath();
-            addPacmanBody(ctx, pacman.dirEnum, 0, 0, t,-3);
-            ctx.closePath();
-            ctx.fillStyle = "rgba(255,255,0," + (1-t) + ")";
-            ctx.fill();
+            drawPacmanSprite(ctx, pacman.dirEnum, 0, 0, t,-3,1-t);
             ctx.restore();
         },
 
@@ -639,6 +652,7 @@ var switchRenderer = function(i) {
         drawEnergizers: function() {
             var e;
             var i;
+            ctx.fillStyle = this.energizerColor;
             ctx.beginPath();
             for (i=0; i<map.numEnergizers; i++) {
                 e = map.energizers[i];
@@ -648,8 +662,24 @@ var switchRenderer = function(i) {
                 }
             }
             ctx.closePath();
-            ctx.fillStyle = this.energizerColor;
             ctx.fill();
+        },
+
+        // draw fruit
+        drawFruit: function() {
+            if (fruit.isPresent()) {
+                ctx.beginPath();
+                ctx.arc(fruit.pixel.x,fruit.pixel.y,this.energizerSize/2,0,Math.PI*2);
+                ctx.fillStyle = "#0F0";
+                ctx.fill();
+            }
+            else if (fruit.isScorePresent()) {
+                ctx.font = this.pointsEarnedTextSize + "px sans-serif";
+                ctx.textBaseline = "middle";
+                ctx.textAlign = "center";
+                ctx.fillStyle = "#FFF";
+                ctx.fillText(fruit.getPoints(), fruit.pixel.x, fruit.pixel.y);
+            }
         },
 
     };

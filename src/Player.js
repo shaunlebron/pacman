@@ -6,6 +6,9 @@ var Player = function() {
 
     // inherit data from Actor
     Actor.apply(this);
+    if (gameMode == GAME_MSPACMAN) {
+        this.frames = 1; // start with mouth open
+    }
 
     this.nextDir = {};
 

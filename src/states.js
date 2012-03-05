@@ -150,6 +150,8 @@ var readyState =  (function(){
             fruit.reset();
             energizer.reset();
             frames = 0;
+
+
         },
         draw: function() {
             newGameState.draw();
@@ -174,6 +176,8 @@ var readyNewState = {
     __proto__: readyState, 
 
     init: function() {
+        backupStatus();
+
         // switch to next map if given
         if (this.nextMap != undefined) {
             switchMap(this.nextMap);

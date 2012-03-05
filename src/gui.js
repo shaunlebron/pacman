@@ -169,8 +169,16 @@ var gui = (function() {
             for (i=1; i<map_list.length; i++)
                 mapDropDown.appendChild(makeDropDownOption(map_list[i].name));
             mapDropDown.onchange = function() {
-                readyNewState.nextMap = mapDropDown.selectedIndex+1;
-                switchState(readyNewState, 60);
+                var nextMap = mapDropDown.selectedIndex+1;
+                if (state == menuState) {
+                    newGameState.nextMap = nextMap;
+                    switchState(newGameState, 60);
+                }
+                else {
+                    restoreStatus();
+                    readyNewState.nextMap = nextMap;
+                    switchState(readyNewState, 60);
+                }
                 mapDropDown.blur();
             };
             fieldset.appendChild(mapDropDown);

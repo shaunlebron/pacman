@@ -21,19 +21,39 @@ var GAME_MSPACMAN = 1;
 // current game mode
 var gameMode = GAME_PACMAN;
 
-// current level and lives left
+// current level, lives, and score
 var level = 1;
 var extraLives = 0;
-
-// scoring
 var highScore = 0;
 var score = 0;
+
+// state at the beginning of a level
+// (saved so you can change to a different map with the same state at the beginning of the level)
+var prevLevel;
+var prevExtraLives;
+var prevHighScore;
+var prevScore;
+
 var addScore = function(p) {
     if (score < 10000 && score+p >= 10000)
         extraLives++;
     score += p;
     if (score > highScore)
         highScore = score;
+};
+
+var backupStatus = function() {
+    prevLevel = level;
+    prevExtraLives = extraLives;
+    prevHighScore = highScore;
+    prevScore = score;
+};
+
+var restoreStatus = function() {
+    level = prevLevel;
+    extraLives = prevExtraLives;
+    highScore = prevHighScore;
+    score = prevScore;
 };
 //@line 1 "src/direction.js"
 //////////////////////////////////////////////////////////////////////////////////////
@@ -1455,8 +1475,16 @@ var gui = (function() {
             for (i=1; i<map_list.length; i++)
                 mapDropDown.appendChild(makeDropDownOption(map_list[i].name));
             mapDropDown.onchange = function() {
-                readyNewState.nextMap = mapDropDown.selectedIndex+1;
-                switchState(readyNewState, 60);
+                var nextMap = mapDropDown.selectedIndex+1;
+                if (state == menuState) {
+                    newGameState.nextMap = nextMap;
+                    switchState(newGameState, 60);
+                }
+                else {
+                    restoreStatus();
+                    readyNewState.nextMap = nextMap;
+                    switchState(readyNewState, 60);
+                }
                 mapDropDown.blur();
             };
             fieldset.appendChild(mapDropDown);
@@ -2903,6 +2931,8 @@ var readyState =  (function(){
             fruit.reset();
             energizer.reset();
             frames = 0;
+
+
         },
         draw: function() {
             newGameState.draw();
@@ -2927,6 +2957,8 @@ var readyNewState = {
     __proto__: readyState, 
 
     init: function() {
+        backupStatus();
+
         // switch to next map if given
         if (this.nextMap != undefined) {
             switchMap(this.nextMap);
@@ -3613,8 +3645,8 @@ var switchMap = function(i) {
         this.homeTopPixel = 18*tileSize;
         this.homeBottomPixel = 19*tileSize;
 
-        // location of the fruit
-        var fruitTile = {x:13, y:21};
+        // location of the fruit (just hide it)
+        var fruitTile = {x:-13, y:21};
         fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
 
         // actor starting states

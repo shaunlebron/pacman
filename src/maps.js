@@ -383,8 +383,8 @@ var switchMap = function(i) {
         this.homeTopPixel = 18*tileSize;
         this.homeBottomPixel = 19*tileSize;
 
-        // location of the fruit
-        var fruitTile = {x:13, y:21};
+        // location of the fruit (just hide it)
+        var fruitTile = {x:-13, y:21};
         fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
 
         // actor starting states

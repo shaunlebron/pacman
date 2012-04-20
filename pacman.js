@@ -176,12 +176,13 @@ Map.prototype.resetCurrent = function() {
     this.dotsEaten = 0;
 };
 
+// parse wall tiles to create a list of drawable paths for rendering
 Map.prototype.parseWalls = function() {
 
     // creates a list of drawable canvas paths to render the map walls
     this.paths = [];
 
-    // a map of which wall tiles already belong to a built path
+    // a map of wall tiles that already belong to a built path
     var visited = {};
 
     // a map of which wall tiles that are not completely surrounded by other wall tiles
@@ -234,17 +235,16 @@ Map.prototype.parseWalls = function() {
         var pad;
         var cx,cy; // center of tile
         var px,py,rpx,rpy; // point and rotated point (path control point)
-        console.log("starting path");
         var k;
         for (k=0;;k++) {
             //console.log(tx,ty,dir);
             visited[that.posToIndex(tx,ty)] = true;
 
             // get center of tile
-            cx = (tx+0.5)*tileSize;
-            cy = (ty+0.5)*tileSize;
+            cx = tx*tileSize + midTile.x;
+            cy = ty*tileSize + midTile.y;
 
-            // plot point
+            // determine start point
             if (!(that.posToIndex(tx+dir.y,ty-dir.x) in edges))
                 pad = that.isFloorTile(tx+dir.y,ty-dir.x) ? 5 : 0;
             px = -tileSize/2+pad;
@@ -265,23 +265,42 @@ Map.prototype.parseWalls = function() {
                 rpx = py;
                 rpy = -px;
             }
-            path.push({x:cx+rpx, y:cy+rpy});
 
             // change direction
             var j;
+            var turn = false;
+            var turnAround = false;
             if ((j=that.posToIndex(tx+dir.y,ty-dir.x)) in edges) { // turn left
                 dirEnum = (dirEnum+3)%4;
+                turn = true;
             }
             else if ((j=that.posToIndex(tx+dir.x,ty+dir.y)) in edges) { // continue straight
                 // keep dirEnum
             }
             else if ((j=that.posToIndex(tx-dir.y,ty+dir.x)) in edges) { // turn right
                 dirEnum = (dirEnum+1)%4;
+                turn = true;
             }
             else { // turn around
                 dirEnum = (dirEnum+2)%4;
+                turnAround = true;
             }
             setDirFromEnum(dir,dirEnum);
+
+            // commit path point
+            var node = {x:cx+rpx, y:cy+rpy};
+            if (turn) {
+                // if we're turning, this keeps track of which coordinate needs to stay the same to define the control point of the curve
+                //
+                // >---+  <- control point
+                //     |
+                //     V
+                //
+                // (in this example, the first two points (i.e. 'from' and 'control' points) share the same y coordinate,
+                //   thus it is the 'x' coordinate that needs to change, so turnChange='x'.
+                node.turnChange = (dir.x==0) ? 'x' : 'y';
+            }
+            path.push(node);
 
             // advance to the next wall
             tx += dir.x;
@@ -293,12 +312,10 @@ Map.prototype.parseWalls = function() {
                 break;
             }
         }
-        console.log("finished path");
-        //throw "finish for now";
     };
 
     // iterate through all edges, making a new path after hitting an unvisited wall edge
-    for (i=0;i<this.tiles.length;i++)
+    for (i=0;i<this.numTiles;i++)
         if (i in edges && !(i in visited))
             makePath(i);
 };
@@ -946,15 +963,44 @@ var switchRenderer = function(i) {
             var i,j;
             var tile;
 
-            bgCtx.fillStyle = map.wallFillColor;
-            bgCtx.strokeStyle = map.wallStrokeColor;
+            if (this.flashLevel) {
+                bgCtx.fillStyle = "#000";
+                bgCtx.strokeStyle = "#fff";
+            }
+            else {
+                bgCtx.fillStyle = map.wallFillColor;
+                bgCtx.strokeStyle = map.wallStrokeColor;
+            }
             for (i=0; i<map.paths.length; i++) {
                 var path = map.paths[i];
                 bgCtx.beginPath();
                 bgCtx.moveTo(path[0].x, path[0].y);
-                for (j=1; j<path.length; j++)
-                    bgCtx.lineTo(path[j].x, path[j].y);
-                bgCtx.closePath();
+                for (j=1; j<path.length; j++) {
+
+                    // if the previous path node indicated a turn, then insert a quadratic curve
+                    //  using a control point indicated by 'turnChange'
+                    if (path[j-1].turnChange) {
+                        // if we're turning, this keeps track of which coordinate needs to stay the same to define the control point of the curve
+                        //
+                        // >---+
+                        //     |
+                        //     V
+                        //
+                        // '>' = path[j-1] point
+                        // '+' = control point for quadratic curve
+                        // 'V' = path[j] point
+                        //
+                        // (in this example, the first two points share the same y coordinate,
+                        //   thus it is the 'x' coordinate that needs to change, so turnChange='x'.
+                        if (path[j-1].turnChange == 'x')
+                            bgCtx.quadraticCurveTo(path[j].x, path[j-1].y, path[j].x, path[j].y);
+                        else
+                            bgCtx.quadraticCurveTo(path[j-1].x, path[j].y, path[j].x, path[j].y);
+                    }
+                    else
+                        bgCtx.lineTo(path[j].x, path[j].y);
+                }
+                bgCtx.quadraticCurveTo(path[j-1].x, path[0].y, path[0].x, path[0].y);
                 bgCtx.fill();
                 bgCtx.stroke();
             }

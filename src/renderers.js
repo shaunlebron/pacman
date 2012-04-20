@@ -474,6 +474,7 @@ var switchRenderer = function(i) {
         // inherit functions from Common Renderer
         __proto__: CommonRenderer.prototype,
 
+        /*
         drawMap: function() {
 
             // fill background
@@ -504,6 +505,41 @@ var switchRenderer = function(i) {
                     this.drawNoGroutTile(bgCtx,x,y,tileSize);
                 else if (tile != '|')
                     this.drawCenterTileSq(bgCtx,x,y,this.actorSize+4);
+            }
+
+            // draw pellet tiles
+            bgCtx.fillStyle = map.pelletColor;
+            i=0;
+            for (y=0; y<map.numRows; y++)
+            for (x=0; x<map.numCols; x++) {
+                tile = map.currentTiles[i++];
+                if (tile == '.')
+                    this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
+            }
+        },
+        */
+
+        drawMap: function() {
+
+            // fill background
+            bgCtx.fillStyle = this.backColor;
+            bgCtx.fillRect(0,0,map.widthPixels, map.heightPixels);
+
+            var x,y;
+            var i,j;
+            var tile;
+
+            bgCtx.fillStyle = map.wallFillColor;
+            bgCtx.strokeStyle = map.wallStrokeColor;
+            for (i=0; i<map.paths.length; i++) {
+                var path = map.paths[i];
+                bgCtx.beginPath();
+                bgCtx.moveTo(path[0].x, path[0].y);
+                for (j=1; j<path.length; j++)
+                    bgCtx.lineTo(path[j].x, path[j].y);
+                bgCtx.closePath();
+                bgCtx.fill();
+                bgCtx.stroke();
             }
 
             // draw pellet tiles

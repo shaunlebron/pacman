@@ -167,12 +167,140 @@ var Map = function(numCols, numRows, tiles) {
     this.resetCurrent();
     this.parseDots();
     this.parseTunnels();
+    this.parseWalls();
 };
 
 // reset current tiles
 Map.prototype.resetCurrent = function() {
     this.currentTiles = this.tiles.split(""); // create a mutable list copy of an immutable string
     this.dotsEaten = 0;
+};
+
+Map.prototype.parseWalls = function() {
+
+    // creates a list of drawable canvas paths to render the map walls
+    this.paths = [];
+
+    // a map of which wall tiles already belong to a built path
+    var visited = {};
+
+    // a map of which wall tiles that are not completely surrounded by other wall tiles
+    var edges = {};
+    var i=0,x,y;
+    for (y=0;y<this.numRows;y++)
+        for (x=0;x<this.numCols;x++,i++)
+            if (this.getTile(x,y) == '|' &&
+                (this.getTile(x-1,y) != '|' ||
+                this.getTile(x+1,y) != '|' ||
+                this.getTile(x,y-1) != '|' ||
+                this.getTile(x,y+1) != '|' ||
+                this.getTile(x-1,y-1) != '|' ||
+                this.getTile(x-1,y+1) != '|' ||
+                this.getTile(x+1,y-1) != '|' ||
+                this.getTile(x+1,y+1) != '|'))
+                edges[i] = true;
+
+    // walks along edge wall tiles starting at the given index to build a canvas path
+    var that = this;
+    var makePath = function(i) {
+
+        visited[i] = true;
+
+        // determine initial tile location
+        var tx = i%that.numCols;
+        var ty = Math.floor(i/that.numCols);
+
+        // get initial direction
+        var dir = {};
+        var dirEnum;
+        if (that.posToIndex(tx+1,ty) in edges)
+            dirEnum = DIR_RIGHT;
+        else if (that.posToIndex(tx,ty+1) in edges)
+            dirEnum = DIR_DOWN;
+        else
+            throw "tile shouldn't be 1x1";
+        setDirFromEnum(dir,dirEnum);
+
+        // increment to next tile
+        tx += dir.x;
+        ty += dir.y;
+
+        // backup initial location and direction
+        var init_tx = tx;
+        var init_ty = ty;
+        var init_dirEnum = dirEnum;
+
+        var path = [];
+        var pad;
+        var cx,cy; // center of tile
+        var px,py,rpx,rpy; // point and rotated point (path control point)
+        console.log("starting path");
+        var k;
+        for (k=0;;k++) {
+            //console.log(tx,ty,dir);
+            visited[that.posToIndex(tx,ty)] = true;
+
+            // get center of tile
+            cx = (tx+0.5)*tileSize;
+            cy = (ty+0.5)*tileSize;
+
+            // plot point
+            if (!(that.posToIndex(tx+dir.y,ty-dir.x) in edges))
+                pad = that.isFloorTile(tx+dir.y,ty-dir.x) ? 5 : 0;
+            px = -tileSize/2+pad;
+            py = tileSize/2;
+            if (dirEnum == DIR_UP) {
+                rpx = px;
+                rpy = py;
+            }
+            else if (dirEnum == DIR_RIGHT) {
+                rpx = -py;
+                rpy = px;
+            }
+            else if (dirEnum == DIR_DOWN) {
+                rpx = -px;
+                rpy = -py;
+            }
+            else if (dirEnum == DIR_LEFT) {
+                rpx = py;
+                rpy = -px;
+            }
+            path.push({x:cx+rpx, y:cy+rpy});
+
+            // change direction
+            var j;
+            if ((j=that.posToIndex(tx+dir.y,ty-dir.x)) in edges) { // turn left
+                dirEnum = (dirEnum+3)%4;
+            }
+            else if ((j=that.posToIndex(tx+dir.x,ty+dir.y)) in edges) { // continue straight
+                // keep dirEnum
+            }
+            else if ((j=that.posToIndex(tx-dir.y,ty+dir.x)) in edges) { // turn right
+                dirEnum = (dirEnum+1)%4;
+            }
+            else { // turn around
+                dirEnum = (dirEnum+2)%4;
+            }
+            setDirFromEnum(dir,dirEnum);
+
+            // advance to the next wall
+            tx += dir.x;
+            ty += dir.y;
+
+            // exit at full cycle
+            if (tx==init_tx && ty==init_ty && dirEnum == init_dirEnum) {
+                that.paths.push(path);
+                break;
+            }
+        }
+        console.log("finished path");
+        //throw "finish for now";
+    };
+
+    // iterate through all edges, making a new path after hitting an unvisited wall edge
+    for (i=0;i<this.tiles.length;i++)
+        if (i in edges && !(i in visited))
+            makePath(i);
 };
 
 // count pellets and store energizer locations
@@ -250,6 +378,11 @@ Map.prototype.teleport = function(actor){
     }
 };
 
+Map.prototype.posToIndex = function(x,y) {
+    if (x>=0 && x<this.numCols && y>=0 && y<this.numRows) 
+        return x+y*this.numCols;
+};
+
 // define which tiles are inside the tunnel
 Map.prototype.isTunnelTile = function(x,y) {
     var tunnel = this.tunnelRows[y];
@@ -260,7 +393,7 @@ Map.prototype.isTunnelTile = function(x,y) {
 // extended to include offscreen tunnel space
 Map.prototype.getTile = function(x,y) {
     if (x>=0 && x<this.numCols && y>=0 && y<this.numRows) 
-        return this.currentTiles[x+y*this.numCols];
+        return this.currentTiles[this.posToIndex(x,y)];
     if (this.isTunnelTile(x,y))
         return ' ';
 };
@@ -278,7 +411,7 @@ Map.prototype.isFloorTile = function(x,y) {
 // mark the dot at the given coordinate eaten
 Map.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
-    this.currentTiles[x+y*this.numCols] = ' ';
+    this.currentTiles[this.posToIndex(x,y)] = ' ';
     renderer.erasePellet(x,y);
 };
 //@line 1 "src/renderers.js"
@@ -758,6 +891,7 @@ var switchRenderer = function(i) {
         // inherit functions from Common Renderer
         __proto__: CommonRenderer.prototype,
 
+        /*
         drawMap: function() {
 
             // fill background
@@ -788,6 +922,41 @@ var switchRenderer = function(i) {
                     this.drawNoGroutTile(bgCtx,x,y,tileSize);
                 else if (tile != '|')
                     this.drawCenterTileSq(bgCtx,x,y,this.actorSize+4);
+            }
+
+            // draw pellet tiles
+            bgCtx.fillStyle = map.pelletColor;
+            i=0;
+            for (y=0; y<map.numRows; y++)
+            for (x=0; x<map.numCols; x++) {
+                tile = map.currentTiles[i++];
+                if (tile == '.')
+                    this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
+            }
+        },
+        */
+
+        drawMap: function() {
+
+            // fill background
+            bgCtx.fillStyle = this.backColor;
+            bgCtx.fillRect(0,0,map.widthPixels, map.heightPixels);
+
+            var x,y;
+            var i,j;
+            var tile;
+
+            bgCtx.fillStyle = map.wallFillColor;
+            bgCtx.strokeStyle = map.wallStrokeColor;
+            for (i=0; i<map.paths.length; i++) {
+                var path = map.paths[i];
+                bgCtx.beginPath();
+                bgCtx.moveTo(path[0].x, path[0].y);
+                for (j=1; j<path.length; j++)
+                    bgCtx.lineTo(path[j].x, path[j].y);
+                bgCtx.closePath();
+                bgCtx.fill();
+                bgCtx.stroke();
             }
 
             // draw pellet tiles
@@ -3372,7 +3541,7 @@ var switchMap = function(i) {
         "||||||||||||||||||||||||||||" +
         "|............||............|" +
         "|.||||.|||||.||.|||||.||||.|" +
-        "|o|__|.|___|.||.|___|.|__|o|" +
+        "|o||||.|||||.||.|||||.||||o|" +
         "|.||||.|||||.||.|||||.||||.|" +
         "|..........................|" +
         "|.||||.||.||||||||.||.||||.|" +
@@ -3405,8 +3574,9 @@ var switchMap = function(i) {
 
     mapPacman.name = "Pac-Man";
     mapPacman.onLoad = onLoadPacman;
-    //mapPacman.wallColor = "#2121ff"; // from original
-    mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
+    //mapPacman.wallStrokeColor = "#47b897"; // from Pac-Man Plus
+    mapPacman.wallStrokeColor = "#2121ff"; // from original
+    mapPacman.wallFillColor = "#000";
     mapPacman.pelletColor = "#ffb8ae";
     mapPacman.constrainGhostTurns = function(tile,openTiles) {
         // prevent ghost from turning up at these tiles
@@ -3457,7 +3627,8 @@ var switchMap = function(i) {
 
     mapMsPacman1.name = "Ms. Pac-Man 1";
     mapMsPacman1.onLoad = onLoadMsPacman;
-    mapMsPacman1.wallColor = "#FFB8AE";
+    mapMsPacman1.wallFillColor = "#FFB8AE";
+    mapMsPacman1.wallStrokeColor = "#FF0000";
     mapMsPacman1.pelletColor = "#dedeff";
 
     // Ms. Pac-Man map 2
@@ -3502,7 +3673,8 @@ var switchMap = function(i) {
 
     mapMsPacman2.name = "Ms. Pac-Man 2";
     mapMsPacman2.onLoad = onLoadMsPacman;
-    mapMsPacman2.wallColor = "#47b8ff";
+    mapMsPacman2.wallFillColor = "#47b8ff";
+    mapMsPacman2.wallStrokeColor = "#dedeff";
     mapMsPacman2.pelletColor = "#ffff00";
 
     // Ms. Pac-Man map 3
@@ -3547,7 +3719,8 @@ var switchMap = function(i) {
 
     mapMsPacman3.name = "Ms. Pac-Man 3";
     mapMsPacman3.onLoad = onLoadMsPacman;
-    mapMsPacman3.wallColor = "#de9751";
+    mapMsPacman3.wallFillColor = "#de9751";
+    mapMsPacman3.wallStrokeColor = "#dedeff";
     mapMsPacman3.pelletColor = "#ff0000";
 
     // Ms. Pac-Man map 4
@@ -3592,7 +3765,8 @@ var switchMap = function(i) {
 
     mapMsPacman4.name = "Ms. Pac-Man 4";
     mapMsPacman4.onLoad = onLoadMsPacman;
-    mapMsPacman4.wallColor = "#2121ff";
+    mapMsPacman4.wallFillColor = "#2121ff";
+    mapMsPacman4.wallStrokeColor = "#ffb851";
     mapMsPacman4.pelletColor = "#dedeff";
 
     // Empty Map
@@ -3707,7 +3881,8 @@ var switchMap = function(i) {
 
         gameMode = GAME_PACMAN;
     };
-    mapSketch.wallColor = "#555";
+    mapSketch.wallFillColor = "#555";
+    mapSketch.wallStrokeColor = "#fff";
     mapSketch.pelletColor = "#dedeff";
 
     // Empty Map
@@ -3752,100 +3927,54 @@ var switchMap = function(i) {
 
     mapEmpty.name = "Empty Test";
     mapEmpty.onLoad = onLoadPacman;
-    mapEmpty.wallColor = "#AAA";
+    mapEmpty.wallFillColor = "#AAA";
+    mapEmpty.wallStrokeColor = "#FFF";
     mapEmpty.pelletColor = "#DDD";
 
-    // Dead Ends Map
-    var mapDeadEnds = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "|.........||||||||.........|" +
-        "|.........||||||||.........|" +
-        "|o........||....||........o|" +
-        "|.........||o||.||.........|" +
-        "|.........|||||.||.........|" +
-        "|.........|||||.||.........|" +
-        "|.........|||||.||.........|" +
-        "|...............||.........|" +
-        "|......|||||||||||||||||...|" +
-        "|......|||||||||||||||||...|" +
-        "|......||......o||.........|" +
-        "|||||||||.|||--|||..||.|||||" +
-        "|||||||||.|______|..||.|||||" +
-        "  ....o||.|______|..||.||.  " +
-        "|||||||||.|______|..||.||.||" +
-        "|||||||||.||||||||..||.||.||" +
-        "         ...........||.||.  " +
-        "|||||||||.|||||||||.||||||||" +
-        "|||||||||.|_______|.||||||||" +
-        "      .||.|_______|........|" +
-        "||||||.||.|||||||||||.||||.|" +
-        "|____|.||.||....|||||.|__|||" +
-        "|____|.||.|||||.||.||.||||||" +
-        "|____|....|||||.||.........|" +
-        "|____|.|||||o||.||.|||||||.|" +
-        "||||||.|||||....||.|||||||.|" +
-        "|o........||||||||.........|" +
-        "||||| |||.||||||||..|| |||||" +
-        "      |||...........||      " +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________"));
-
-    mapDeadEnds.name = "Dead Ends Test";
-    mapDeadEnds.onLoad = function() {
-        onLoadMsPacman();
-    };
-    mapDeadEnds.wallColor = "#AAA";
-    mapDeadEnds.pelletColor = "#DDD";
 
     // Generated Maps
 
-    var mapGen1 = new Map(28,36,(
+    var mapGen1 = new Map(28, 36, (
         "____________________________" +
         "____________________________" +
         "____________________________" +
         "||||||||||||||||||||||||||||" +
-        "|............||............|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|o||||.|||||.||.|||||.||||o|" +
-        "|.||||.||..........||.||||.|" +
-        "|......||.||||||||.||......|" +
+        "|.........||....||.........|" +
+        "|.||.||||.||.||.||.||||.||.|" +
+        "|.||.||||....||....||||.||.|" +
+        "|.||...||.||||||||.||...||.|" +
         "|.||||.||.||||||||.||.||||.|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|.|||.....||||||||.....|||.|" +
-        "|.....||| |||||||| |||.....|" +
-        "|||||.|||          |||.|||||" +
-        "|||||.||| |||--||| |||.|||||" +
-        "|||||.||| |______| |||.|||||" +
-        "          |______|          " +
-        "|||||.||| |______| |||.|||||" +
-        "|||||.||| |||||||| |||.|||||" +
-        "|||||.||.          .||.|||||" +
-        "|||||.||.||||||||||.||.|||||" +
-        "|........||||||||||........|" +
-        "|.||||||.||||||||||.||||||.|" +
-        "|.||||||.|||....|||.||||||.|" +
-        "|.||||||.|||.||.|||.||||||.|" +
-        "|............||............|" +
-        "|.|||.||||||.||.||||||.|||.|" +
-        "|.|||.||||||.||.||||||.|||.|" +
-        "|.|||........||........|||.|" +
-        "|o||||||.|||.||.|||.||||||o|" +
-        "|.||||||.|||.||.|||.||||||.|" +
+        "|.||||.||.||....||.||.||||.|" +
+        "|.........||.||.||.........|" +
+        "||||.||||.||.||.||.||||.||||" +
+        "||||.|__|.||.||.||.|__|.||||" +
+        "..||.||||.||.||.||.||||.||.." +
+        "|.||....................||.|" +
+        "|.||.||||.|||--|||.||||.||.|" +
+        "|.||.||||.|______|.||||.||.|" +
+        "|.........|______|.........|" +
+        "|||||||||.|______|.|||||||||" +
+        "|||||||||.||||||||.|||||||||" +
+        "..||....................||.." +
+        "|.||.||.||||.||.||||.||.||.|" +
+        "|.||.||.||||.||.||||.||.||.|" +
+        "|....||...||.||.||...||....|" +
+        "|||||||||.||.||.||.|||||||||" +
+        "|||||||||.||.||.||.|||||||||" +
+        "|.........||....||.........|" +
+        "|.|||||.||||.||.||||.|||||.|" +
+        "|.|___|.||||.||.||||.|___|.|" +
+        "|.|___|......||......|___|.|" +
+        "|.|___|.||||||||||||.|___|.|" +
+        "|.|||||.||||||||||||.|||||.|" +
         "|..........................|" +
         "||||||||||||||||||||||||||||" +
         "____________________________" +
         "____________________________"));
     mapGen1.name = "Generated 1";
-    mapGen1.onLoad = function() {
-        onLoadMsPacman.call(this);
-        pacman.startPixel.y = 24*tileSize + midTile.y;
-    };
-    mapGen1.wallColor = "#1877d2";
+    mapGen1.onLoad = onLoadMsPacman;
+    mapGen1.wallFillColor = "#AAA";
+    mapGen1.wallStrokeColor = "#fff";
     mapGen1.pelletColor = "#DDD";
 
     // Menu Map
@@ -3941,7 +4070,8 @@ var switchMap = function(i) {
             x:14*tileSize+midTile.x, 
             y:-26*tileSize+midTile.y }; // offscreen
     };
-    menuMap.wallColor = "#777";
+    menuMap.wallFillColor = "#777";
+    menuMap.wallStrokeColor = "#FFF";
     menuMap.pelletColor = "#FFF";
 
     // create list of maps

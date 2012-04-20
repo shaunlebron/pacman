@@ -110,7 +110,7 @@ var switchMap = function(i) {
         "||||||||||||||||||||||||||||" +
         "|............||............|" +
         "|.||||.|||||.||.|||||.||||.|" +
-        "|o|__|.|___|.||.|___|.|__|o|" +
+        "|o||||.|||||.||.|||||.||||o|" +
         "|.||||.|||||.||.|||||.||||.|" +
         "|..........................|" +
         "|.||||.||.||||||||.||.||||.|" +
@@ -143,8 +143,9 @@ var switchMap = function(i) {
 
     mapPacman.name = "Pac-Man";
     mapPacman.onLoad = onLoadPacman;
-    //mapPacman.wallColor = "#2121ff"; // from original
-    mapPacman.wallColor = "#47b897"; // from Pac-Man Plus
+    //mapPacman.wallStrokeColor = "#47b897"; // from Pac-Man Plus
+    mapPacman.wallStrokeColor = "#2121ff"; // from original
+    mapPacman.wallFillColor = "#000";
     mapPacman.pelletColor = "#ffb8ae";
     mapPacman.constrainGhostTurns = function(tile,openTiles) {
         // prevent ghost from turning up at these tiles
@@ -195,7 +196,8 @@ var switchMap = function(i) {
 
     mapMsPacman1.name = "Ms. Pac-Man 1";
     mapMsPacman1.onLoad = onLoadMsPacman;
-    mapMsPacman1.wallColor = "#FFB8AE";
+    mapMsPacman1.wallFillColor = "#FFB8AE";
+    mapMsPacman1.wallStrokeColor = "#FF0000";
     mapMsPacman1.pelletColor = "#dedeff";
 
     // Ms. Pac-Man map 2
@@ -240,7 +242,8 @@ var switchMap = function(i) {
 
     mapMsPacman2.name = "Ms. Pac-Man 2";
     mapMsPacman2.onLoad = onLoadMsPacman;
-    mapMsPacman2.wallColor = "#47b8ff";
+    mapMsPacman2.wallFillColor = "#47b8ff";
+    mapMsPacman2.wallStrokeColor = "#dedeff";
     mapMsPacman2.pelletColor = "#ffff00";
 
     // Ms. Pac-Man map 3
@@ -285,7 +288,8 @@ var switchMap = function(i) {
 
     mapMsPacman3.name = "Ms. Pac-Man 3";
     mapMsPacman3.onLoad = onLoadMsPacman;
-    mapMsPacman3.wallColor = "#de9751";
+    mapMsPacman3.wallFillColor = "#de9751";
+    mapMsPacman3.wallStrokeColor = "#dedeff";
     mapMsPacman3.pelletColor = "#ff0000";
 
     // Ms. Pac-Man map 4
@@ -330,7 +334,8 @@ var switchMap = function(i) {
 
     mapMsPacman4.name = "Ms. Pac-Man 4";
     mapMsPacman4.onLoad = onLoadMsPacman;
-    mapMsPacman4.wallColor = "#2121ff";
+    mapMsPacman4.wallFillColor = "#2121ff";
+    mapMsPacman4.wallStrokeColor = "#ffb851";
     mapMsPacman4.pelletColor = "#dedeff";
 
     // Empty Map
@@ -445,7 +450,8 @@ var switchMap = function(i) {
 
         gameMode = GAME_PACMAN;
     };
-    mapSketch.wallColor = "#555";
+    mapSketch.wallFillColor = "#555";
+    mapSketch.wallStrokeColor = "#fff";
     mapSketch.pelletColor = "#dedeff";
 
     // Empty Map
@@ -490,7 +496,8 @@ var switchMap = function(i) {
 
     mapEmpty.name = "Empty Test";
     mapEmpty.onLoad = onLoadPacman;
-    mapEmpty.wallColor = "#AAA";
+    mapEmpty.wallFillColor = "#AAA";
+    mapEmpty.wallStrokeColor = "#FFF";
     mapEmpty.pelletColor = "#DDD";
 
 
@@ -535,7 +542,8 @@ var switchMap = function(i) {
         "____________________________"));
     mapGen1.name = "Generated 1";
     mapGen1.onLoad = onLoadMsPacman;
-    mapGen1.wallColor = "#AAA";
+    mapGen1.wallFillColor = "#AAA";
+    mapGen1.wallStrokeColor = "#fff";
     mapGen1.pelletColor = "#DDD";
 
     // Menu Map
@@ -631,7 +639,8 @@ var switchMap = function(i) {
             x:14*tileSize+midTile.x, 
             y:-26*tileSize+midTile.y }; // offscreen
     };
-    menuMap.wallColor = "#777";
+    menuMap.wallFillColor = "#777";
+    menuMap.wallStrokeColor = "#FFF";
     menuMap.pelletColor = "#FFF";
 
     // create list of maps

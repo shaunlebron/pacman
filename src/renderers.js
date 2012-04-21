@@ -474,51 +474,6 @@ var switchRenderer = function(i) {
         // inherit functions from Common Renderer
         __proto__: CommonRenderer.prototype,
 
-        /*
-        drawMap: function() {
-
-            // fill background
-            bgCtx.fillStyle = this.backColor;
-            bgCtx.fillRect(0,0,map.widthPixels, map.heightPixels);
-
-            var x,y;
-            var i;
-            var tile;
-
-            // draw wall tiles
-            bgCtx.fillStyle = (this.flashLevel ? this.flashWallColor : map.wallColor);
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                tile = map.currentTiles[i++];
-                if (tile == '|')
-                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
-            }
-
-            // draw floor tiles
-            bgCtx.fillStyle = this.floorColor;
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                tile = map.currentTiles[i++];
-                if (tile == '_')
-                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
-                else if (tile != '|')
-                    this.drawCenterTileSq(bgCtx,x,y,this.actorSize+4);
-            }
-
-            // draw pellet tiles
-            bgCtx.fillStyle = map.pelletColor;
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                tile = map.currentTiles[i++];
-                if (tile == '.')
-                    this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
-            }
-        },
-        */
-
         drawMap: function() {
 
             // fill background
@@ -606,7 +561,7 @@ var switchRenderer = function(i) {
             ctx.translate(3*tileSize, (map.numRows-1)*tileSize);
             if (gameMode == GAME_PACMAN) {
                 for (i=0; i<extraLives; i++) {
-                    drawPacmanSprite(ctx, DIR_RIGHT, Math.PI/6);
+                    drawPacmanSprite(ctx, DIR_LEFT, Math.PI/6);
                     ctx.translate(2*tileSize,0);
                 }
             }

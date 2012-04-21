@@ -124,8 +124,10 @@ Map.prototype.parseWalls = function() {
             var c = Math.cos(a);
             var s = Math.sin(a);
             return {
-                x:px*c - py*s + tx*tileSize + midTile.x,
-                y:px*s + py*c + ty*tileSize + midTile.y,
+                // the first expression is the rotated point centered at origin
+                // the second expression is to translate it to the tile
+                x:(px*c - py*s) + (tx+0.5)*tileSize,
+                y:(px*s + py*c) + (ty+0.5)*tileSize,
             };
         };
         while (true) {

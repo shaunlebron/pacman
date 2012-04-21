@@ -176,8 +176,11 @@ Map.prototype.resetCurrent = function() {
     this.dotsEaten = 0;
 };
 
-// parse wall tiles to create a list of drawable paths for rendering
+// This is a procedural way to generate original-looking maps from a simple ascii tile
+// map without a spritesheet.
 Map.prototype.parseWalls = function() {
+
+    var that = this;
 
     // creates a list of drawable canvas paths to render the map walls
     this.paths = [];
@@ -185,11 +188,17 @@ Map.prototype.parseWalls = function() {
     // a map of wall tiles that already belong to a built path
     var visited = {};
 
+    // we extend the x range to suggest the continuation of the tunnels
+    var toIndex = function(x,y) {
+        if (x>=-2 && x<that.numCols+2 && y>=0 && y<that.numRows)
+            return (x+2)+y*(that.numCols+4);
+    };
+
     // a map of which wall tiles that are not completely surrounded by other wall tiles
     var edges = {};
     var i=0,x,y;
-    for (y=0;y<this.numRows;y++)
-        for (x=0;x<this.numCols;x++,i++)
+    for (y=0;y<this.numRows;y++) {
+        for (x=-2;x<this.numCols+2;x++,i++) {
             if (this.getTile(x,y) == '|' &&
                 (this.getTile(x-1,y) != '|' ||
                 this.getTile(x+1,y) != '|' ||
@@ -198,28 +207,24 @@ Map.prototype.parseWalls = function() {
                 this.getTile(x-1,y-1) != '|' ||
                 this.getTile(x-1,y+1) != '|' ||
                 this.getTile(x+1,y-1) != '|' ||
-                this.getTile(x+1,y+1) != '|'))
+                this.getTile(x+1,y+1) != '|')) {
                 edges[i] = true;
+            }
+        }
+    }
 
     // walks along edge wall tiles starting at the given index to build a canvas path
-    var that = this;
-    var makePath = function(i) {
-
-        visited[i] = true;
-
-        // determine initial tile location
-        var tx = i%that.numCols;
-        var ty = Math.floor(i/that.numCols);
+    var makePath = function(tx,ty) {
 
         // get initial direction
         var dir = {};
         var dirEnum;
-        if (that.posToIndex(tx+1,ty) in edges)
+        if (toIndex(tx+1,ty) in edges)
             dirEnum = DIR_RIGHT;
-        else if (that.posToIndex(tx,ty+1) in edges)
+        else if (toIndex(tx, ty+1) in edges)
             dirEnum = DIR_DOWN;
         else
-            throw "tile shouldn't be 1x1";
+            throw "tile shouldn't be 1x1 at "+tx+","+ty;
         setDirFromEnum(dir,dirEnum);
 
         // increment to next tile
@@ -235,49 +240,50 @@ Map.prototype.parseWalls = function() {
         var pad;
         var cx,cy; // center of tile
         var px,py,rpx,rpy; // point and rotated point (path control point)
-        var k;
-        for (k=0;;k++) {
-            //console.log(tx,ty,dir);
-            visited[that.posToIndex(tx,ty)] = true;
+
+        /*
+
+           We employ the 'right-hand rule' by keeping our right hand in contact
+           with the wall to outline an individual wall piece.
+
+           Since we parse the tiles in row major order, we will always start
+           walking along the wall at the leftmost tile of its topmost row.  We
+           then proceed walking to the right.  
+
+           When facing the direction of the walk at each tile, the outline will
+           hug the left side of the tile unless there is a walkable tile to the
+           left.  In that case, there will be a padding distance applied.
+           
+        */
+        while (true) {
+            
+            visited[toIndex(tx,ty)] = true;
 
             // get center of tile
             cx = tx*tileSize + midTile.x;
             cy = ty*tileSize + midTile.y;
 
             // determine start point
-            if (!(that.posToIndex(tx+dir.y,ty-dir.x) in edges))
+            if (!(toIndex(tx+dir.y,ty-dir.x) in edges))
                 pad = that.isFloorTile(tx+dir.y,ty-dir.x) ? 5 : 0;
             px = -tileSize/2+pad;
             py = tileSize/2;
-            if (dirEnum == DIR_UP) {
-                rpx = px;
-                rpy = py;
-            }
-            else if (dirEnum == DIR_RIGHT) {
-                rpx = -py;
-                rpy = px;
-            }
-            else if (dirEnum == DIR_DOWN) {
-                rpx = -px;
-                rpy = -py;
-            }
-            else if (dirEnum == DIR_LEFT) {
-                rpx = py;
-                rpy = -px;
-            }
+            var a = dirEnum*Math.PI/2;
+            var c = Math.cos(a);
+            var s = Math.sin(a);
+            rpx = px*c - py*s;
+            rpy = px*s + py*c;
 
-            // change direction
-            var j;
+            // update direction
             var turn = false;
             var turnAround = false;
-            if ((j=that.posToIndex(tx+dir.y,ty-dir.x)) in edges) { // turn left
+            if (toIndex(tx+dir.y, ty-dir.x) in edges) { // turn left
                 dirEnum = (dirEnum+3)%4;
                 turn = true;
             }
-            else if ((j=that.posToIndex(tx+dir.x,ty+dir.y)) in edges) { // continue straight
-                // keep dirEnum
+            else if (toIndex(tx+dir.x, ty+dir.y) in edges) { // continue straight
             }
-            else if ((j=that.posToIndex(tx-dir.y,ty+dir.x)) in edges) { // turn right
+            else if (toIndex(tx-dir.y, ty+dir.x) in edges) { // turn right
                 dirEnum = (dirEnum+1)%4;
                 turn = true;
             }
@@ -315,9 +321,13 @@ Map.prototype.parseWalls = function() {
     };
 
     // iterate through all edges, making a new path after hitting an unvisited wall edge
-    for (i=0;i<this.numTiles;i++)
-        if (i in edges && !(i in visited))
-            makePath(i);
+    i=0;
+    for (y=0;y<this.numRows;y++)
+        for (x=-2;x<this.numCols+2;x++,i++)
+            if (i in edges && !(i in visited)) {
+                visited[i] = true;
+                makePath(x,y);
+            }
 };
 
 // count pellets and store energizer locations
@@ -411,6 +421,8 @@ Map.prototype.isTunnelTile = function(x,y) {
 Map.prototype.getTile = function(x,y) {
     if (x>=0 && x<this.numCols && y>=0 && y<this.numRows) 
         return this.currentTiles[this.posToIndex(x,y)];
+    if ((x<0 || x>=this.numCols) && (this.isTunnelTile(x,y-1) || this.isTunnelTile(x,y+1)))
+        return '|';
     if (this.isTunnelTile(x,y))
         return ' ';
 };
@@ -3836,13 +3848,13 @@ var switchMap = function(i) {
         "|....||..............||....|" +
         "||||.||||.|||--|||.||||.||||" +
         "||||.||||.|______|.||||.||||" +
-        "|.||......|______|......||.|" +
+        "..||......|______|......||.." +
         "|.||.||||.|______|.||||.||.|" +
         "|....||||.||||||||.||||....|" +
         "|.||.||..............||.||.|" +
         "|.||.||.||||||||||||.||.||.|" +
         "|.||.||.||||||||||||.||.||.|" +
-        "|.||.||......||......||.||.|" +
+        "..||.||......||......||.||.." +
         "||||.|||||||.||.|||||||.||||" +
         "||||.|||||||.||.|||||||.||||" +
         "|..........................|" +
@@ -3930,53 +3942,6 @@ var switchMap = function(i) {
     mapSketch.wallFillColor = "#555";
     mapSketch.wallStrokeColor = "#fff";
     mapSketch.pelletColor = "#dedeff";
-
-    // Empty Map
-
-    var mapEmpty = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "|..........................|" +
-        "|..........................|" +
-        "|o........................o|" +
-        "|..........................|" +
-        "|............||............|" +
-        "|............||............|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|.........|||--|||.........|" +
-        "|.........|______|.........|" +
-        "|o........|______|........o|" +
-        "|.........|______|.........|" +
-        "|.........||||||||.........|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|o........................o|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "|..........................|" +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________"));
-
-    mapEmpty.name = "Empty Test";
-    mapEmpty.onLoad = onLoadPacman;
-    mapEmpty.wallFillColor = "#AAA";
-    mapEmpty.wallStrokeColor = "#FFF";
-    mapEmpty.pelletColor = "#DDD";
-
 
     // Generated Maps
 
@@ -4130,7 +4095,6 @@ var switchMap = function(i) {
         mapMsPacman4,
         mapSketch,
         mapGen1,
-        mapEmpty,
     ];
 
 })();

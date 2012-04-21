@@ -237,9 +237,10 @@ Map.prototype.parseWalls = function() {
         var init_dirEnum = dirEnum;
 
         var path = [];
-        var pad;
-        var cx,cy; // center of tile
-        var px,py,rpx,rpy; // point and rotated point (path control point)
+        var pad; // (persists for each call to getStartPoint)
+        var point;
+
+        var turn,turnAround;
 
         /*
 
@@ -255,28 +256,31 @@ Map.prototype.parseWalls = function() {
            left.  In that case, there will be a padding distance applied.
            
         */
+        var getStartPoint = function(tx,ty,dirEnum) {
+            var dir = {};
+            setDirFromEnum(dir, dirEnum);
+            if (!(toIndex(tx+dir.y,ty-dir.x) in edges))
+                pad = that.isFloorTile(tx+dir.y,ty-dir.x) ? 5 : 0;
+            var px = -tileSize/2+pad;
+            var py = tileSize/2;
+            var a = dirEnum*Math.PI/2;
+            var c = Math.cos(a);
+            var s = Math.sin(a);
+            return {
+                x:px*c - py*s + tx*tileSize + midTile.x,
+                y:px*s + py*c + ty*tileSize + midTile.y,
+            };
+        };
         while (true) {
             
             visited[toIndex(tx,ty)] = true;
 
-            // get center of tile
-            cx = tx*tileSize + midTile.x;
-            cy = ty*tileSize + midTile.y;
-
             // determine start point
-            if (!(toIndex(tx+dir.y,ty-dir.x) in edges))
-                pad = that.isFloorTile(tx+dir.y,ty-dir.x) ? 5 : 0;
-            px = -tileSize/2+pad;
-            py = tileSize/2;
-            var a = dirEnum*Math.PI/2;
-            var c = Math.cos(a);
-            var s = Math.sin(a);
-            rpx = px*c - py*s;
-            rpy = px*s + py*c;
+            point = getStartPoint(tx,ty,dirEnum);
 
             // update direction
-            var turn = false;
-            var turnAround = false;
+            turn = false;
+            turnAround = false;
             if (toIndex(tx+dir.y, ty-dir.x) in edges) { // turn left
                 dirEnum = (dirEnum+3)%4;
                 turn = true;
@@ -294,7 +298,6 @@ Map.prototype.parseWalls = function() {
             setDirFromEnum(dir,dirEnum);
 
             // commit path point
-            var node = {x:cx+rpx, y:cy+rpy};
             if (turn) {
                 // if we're turning, this keeps track of which coordinate needs to stay the same to define the control point of the curve
                 //
@@ -304,9 +307,15 @@ Map.prototype.parseWalls = function() {
                 //
                 // (in this example, the first two points (i.e. 'from' and 'control' points) share the same y coordinate,
                 //   thus it is the 'x' coordinate that needs to change, so turnChange='x'.
-                node.turnChange = (dir.x==0) ? 'x' : 'y';
+                point.turnChange = (dir.x==0) ? 'x' : 'y';
             }
-            path.push(node);
+            path.push(point);
+
+            // special case for turning around (have to connect more dots manually)
+            if (turnAround) {
+                path.push(getStartPoint(tx-dir.x, ty-dir.y, (dirEnum+2)%4));
+                path.push(getStartPoint(tx, ty, dirEnum));
+            }
 
             // advance to the next wall
             tx += dir.x;

@@ -592,8 +592,8 @@ var switchMap = function(i) {
             x:14*tileSize+midTile.x, 
             y:-26*tileSize+midTile.y }; // offscreen
     };
-    menuMap.wallFillColor = "#777";
-    menuMap.wallStrokeColor = "#FFF";
+    menuMap.wallFillColor = "#333";
+    menuMap.wallStrokeColor = "#000";
     menuMap.pelletColor = "#FFF";
 
     // create list of maps

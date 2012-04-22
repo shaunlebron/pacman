@@ -497,27 +497,8 @@ var switchRenderer = function(i) {
                 bgCtx.beginPath();
                 bgCtx.moveTo(path[0].x, path[0].y);
                 for (j=1; j<path.length; j++) {
-
-                    // if the previous path node indicated a turn, then insert a quadratic curve
-                    //  using a control point indicated by 'turnChange'
-                    if (path[j-1].turnChange) {
-                        // if we're turning, this keeps track of which coordinate needs to stay the same to define the control point of the curve
-                        //
-                        // >---+
-                        //     |
-                        //     V
-                        //
-                        // '>' = path[j-1] point
-                        // '+' = control point for quadratic curve
-                        // 'V' = path[j] point
-                        //
-                        // (in this example, the first two points share the same y coordinate,
-                        //   thus it is the 'x' coordinate that needs to change, so turnChange='x'.
-                        if (path[j-1].turnChange == 'x')
-                            bgCtx.quadraticCurveTo(path[j].x, path[j-1].y, path[j].x, path[j].y);
-                        else
-                            bgCtx.quadraticCurveTo(path[j-1].x, path[j].y, path[j].x, path[j].y);
-                    }
+                    if (path[j].cx != undefined)
+                        bgCtx.quadraticCurveTo(path[j].cx, path[j].cy, path[j].x, path[j].y);
                     else
                         bgCtx.lineTo(path[j].x, path[j].y);
                 }

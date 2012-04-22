@@ -96,6 +96,7 @@ Map.prototype.parseWalls = function() {
         var path = [];
         var pad; // (persists for each call to getStartPoint)
         var point;
+        var lastPoint;
 
         var turn,turnAround;
 
@@ -137,6 +138,23 @@ Map.prototype.parseWalls = function() {
             // determine start point
             point = getStartPoint(tx,ty,dirEnum);
 
+            if (turn) {
+                // if we're turning into this tile, create a control point for the curve
+                //
+                // >---+  <- control point
+                //     |
+                //     V
+                lastPoint = path[path.length-1];
+                if (dir.x == 0) {
+                    point.cx = point.x;
+                    point.cy = lastPoint.y;
+                }
+                else {
+                    point.cx = lastPoint.x;
+                    point.cy = point.y;
+                }
+            }
+
             // update direction
             turn = false;
             turnAround = false;
@@ -157,17 +175,6 @@ Map.prototype.parseWalls = function() {
             setDirFromEnum(dir,dirEnum);
 
             // commit path point
-            if (turn) {
-                // if we're turning, this keeps track of which coordinate needs to stay the same to define the control point of the curve
-                //
-                // >---+  <- control point
-                //     |
-                //     V
-                //
-                // (in this example, the first two points (i.e. 'from' and 'control' points) share the same y coordinate,
-                //   thus it is the 'x' coordinate that needs to change, so turnChange='x'.
-                point.turnChange = (dir.x==0) ? 'x' : 'y';
-            }
             path.push(point);
 
             // special case for turning around (have to connect more dots manually)

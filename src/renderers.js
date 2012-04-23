@@ -25,7 +25,7 @@ var switchRenderer = function(i) {
     var ctx, bgCtx;
 
     // drawing scale
-    var scale = 2.0;        // scale everything by this amount
+    var scale = 1.5;        // scale everything by this amount
 
     // creates a canvas
     var makeCanvas = function() {

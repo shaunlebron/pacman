@@ -489,7 +489,7 @@ var switchRenderer = function(i) {
     var ctx, bgCtx;
 
     // drawing scale
-    var scale = 1.5;        // scale everything by this amount
+    var scale = 2.0;        // scale everything by this amount
 
     // creates a canvas
     var makeCanvas = function() {
@@ -1194,10 +1194,16 @@ var drawGhostSprite = (function(){
             // to try to force centering
             ctx.translate(0.5,0);
 
+            ctx.moveTo(0,6);
+            ctx.quadraticCurveTo(1.5,0,6.5,0);
+            ctx.quadraticCurveTo(11.5,0,13,6);
+
             // draw lines between pixel coordinates
+            /*
             ctx.moveTo(coords[0],coords[1]);
             for (i=2; i<coords.length; i+=2)
                 ctx.lineTo(coords[i],coords[i+1]);
+            */
 
             ctx.restore();
         };
@@ -1282,6 +1288,31 @@ var drawGhostSprite = (function(){
         ctx.save();
         ctx.translate(2,3);
 
+        var coords = [
+            0,1,
+            1,0,
+            2,0,
+            3,1,
+            3,3,
+            2,4,
+            1,4,
+            0,3
+        ];
+
+        var drawEyeball = function() {
+            ctx.translate(0.5,0.5);
+            ctx.beginPath();
+            ctx.moveTo(coords[0],coords[1]);
+            for (i=2; i<coords.length; i+=2)
+                ctx.lineTo(coords[i],coords[i+1]);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.translate(-0.5,-0.5);
+            //ctx.fillRect(1,0,2,5); // left
+            //ctx.fillRect(0,1,4,3);
+        };
+
         // translate eye balls to correct position
         if (dirEnum == DIR_LEFT) ctx.translate(-1,0);
         else if (dirEnum == DIR_RIGHT) ctx.translate(1,0);
@@ -1290,11 +1321,11 @@ var drawGhostSprite = (function(){
 
         // draw eye balls
         ctx.fillStyle = "#FFF";
-        ctx.fillRect(1,0,2,5); // left
-        ctx.fillRect(0,1,4,3);
+        ctx.strokeStyle = "#FFF";
+        ctx.lineWidth = 1.0;
+        drawEyeball();
         ctx.translate(6,0);
-        ctx.fillRect(1,0,2,5); // right
-        ctx.fillRect(0,1,4,3);
+        drawEyeball();
 
         // translate pupils to correct position
         if (dirEnum == DIR_LEFT) ctx.translate(0,2);
@@ -1313,13 +1344,36 @@ var drawGhostSprite = (function(){
 
     // draw scared ghost face
     var addScaredFace = function(ctx,flash){
-        ctx.fillStyle = flash ? "#F00" : "#FF0";
+        ctx.strokeStyle = ctx.fillStyle = flash ? "#F00" : "#FF0";
 
         // eyes
         ctx.fillRect(4,5,2,2);
         ctx.fillRect(8,5,2,2);
 
         // mouth
+        var coords = [
+            1,10,
+            2,9,
+            3,9,
+            4,10,
+            5,10,
+            6,9,
+            7,9,
+            8,10,
+            9,10,
+            10,9,
+            11,9,
+            12,10,
+        ];
+        ctx.translate(0.5,0.5);
+        ctx.beginPath();
+        ctx.moveTo(coords[0],coords[1]);
+        for (i=2; i<coords.length; i+=2)
+            ctx.lineTo(coords[i],coords[i+1]);
+        ctx.lineWidth = 1.0;
+        ctx.stroke();
+        ctx.translate(-0.5,-0.5);
+        /*
         ctx.fillRect(1,10,1,1);
         ctx.fillRect(12,10,1,1);
         ctx.fillRect(2,9,2,1);
@@ -1327,6 +1381,7 @@ var drawGhostSprite = (function(){
         ctx.fillRect(10,9,2,1);
         ctx.fillRect(4,10,2,1);
         ctx.fillRect(8,10,2,1);
+        */
     };
 
 

@@ -1190,6 +1190,12 @@ var mapgen = (function(){
         setTile(subcols-2,2,'o');
         setTile(subcols-2,subrows-3,'o');
 
+        // erase pellets in the tunnels
+        var y = tunnely;
+        for (x=subcols-1; getTile(x,y-1) == '|' && getTile(x,y+1) == '|'; x--) {
+            setTile(x,y,' ');
+        }
+
         // erase pellets on starting position
         setTile(1,subrows-8,' ');
 
@@ -1197,6 +1203,10 @@ var mapgen = (function(){
         var i,j;
         var y;
         for (i=0; i<7; i++) {
+
+            // erase pellets from bottom of the ghost house proceeding down until
+            // reaching a pellet tile that isn't surround by walls
+            // on the left and right
             y = subrows-14;
             setTile(i, y, ' ');
             j = 1;
@@ -1207,6 +1217,9 @@ var mapgen = (function(){
                 j++;
             }
 
+            // erase pellets from top of the ghost house proceeding up until
+            // reaching a pellet tile that isn't surround by walls
+            // on the left and right
             y = subrows-20;
             setTile(i, y, ' ');
             j = 1;
@@ -1217,8 +1230,22 @@ var mapgen = (function(){
                 j++;
             }
         }
-        for (i=0; i<6; i++) {
-            setTile(6, subrows-14-i, ' ');
+        // erase pellets on the side of the ghost house
+        for (i=0; i<7; i++) {
+
+            // erase pellets from side of the ghost house proceeding right until
+            // reaching a pellet tile that isn't surround by walls
+            // on the top and bottom.
+            x = 6;
+            y = subrows-14-i;
+            setTile(x, y, ' ');
+            j = 1;
+            while (getTile(x+j,y) == '.' &&
+                    getTile(x+j,y-1) == '|' &&
+                    getTile(x+j,y+1) == '|') {
+                setTile(x+j,y,' ');
+                j++;
+            }
         }
 
         // return a tile string

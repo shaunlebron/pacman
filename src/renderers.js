@@ -563,6 +563,12 @@ var switchRenderer = function(i) {
                     ctx.translate(2*tileSize,0);
                 }
             }
+            else if (gameMode == GAME_COOKIE) {
+                for (i=0; i<extraLives; i++) {
+                    drawCookiemanSprite(ctx, DIR_RIGHT, 1);
+                    ctx.translate(2*tileSize,0);
+                }
+            }
             ctx.restore();
         },
 
@@ -591,7 +597,7 @@ var switchRenderer = function(i) {
         // get animation frame for player
         getPlayerAnimFrame: function() {
             var frame = Math.floor(pacman.steps/2)%4; // change animation frame every 2 steps
-            if (gameMode == GAME_MSPACMAN) { // ms. pacman starts with mouth open
+            if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) { // ms. pacman starts with mouth open
                 frame = (frame+1)%4;
                 if (state == deadState)
                     frame = 1; // hack to force this frame when dead
@@ -611,6 +617,9 @@ var switchRenderer = function(i) {
             }
             else if (gameMode == GAME_MSPACMAN) {
                 drawMsPacmanSprite(ctx,pacman.dirEnum,frame);
+            }
+            else if (gameMode == GAME_COOKIE) {
+                drawCookiemanSprite(ctx,pacman.dirEnum,frame);
             }
 
             ctx.restore();
@@ -647,6 +656,16 @@ var switchRenderer = function(i) {
                 var step = (Math.PI/4) / maxAngle; // 45 degree steps
                 ctx.rotate(Math.floor(t/step)*step*maxAngle);
                 drawMsPacmanSprite(ctx, pacman.dirEnum, frame);
+                ctx.restore();
+            }
+            else if (gameMode == GAME_COOKIE) {
+                // spin 540 degrees
+                ctx.save();
+                ctx.translate(pacman.pixel.x, pacman.pixel.y);
+                var maxAngle = Math.PI*5;
+                var step = (Math.PI/4) / maxAngle; // 45 degree steps
+                ctx.rotate(Math.floor(t/step)*step*maxAngle);
+                drawCookiemanSprite(ctx, pacman.dirEnum, frame);
                 ctx.restore();
             }
         },

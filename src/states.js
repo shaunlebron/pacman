@@ -442,7 +442,7 @@ var finishState = (function(){
                         }
                     }
                     else if (gameMode == GAME_COOKIE) {
-                        // TODO: generate new map
+                        map = mapgen();
                     }
 
                     switchState(readyNewState,60);

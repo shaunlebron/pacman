@@ -25,6 +25,7 @@ for file in \
     game.js \
     direction.js \
     Map.js \
+    mapgen.js \
     renderers.js  \
     menu.js \
     sprites.js \

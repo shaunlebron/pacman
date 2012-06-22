@@ -189,7 +189,7 @@ Ghost.prototype.homeSteer = (function(){
 // special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
 Ghost.prototype.isScatterBrain = function() {
     return (
-        gameMode == GAME_MSPACMAN && 
+        (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) &&
         ghostCommander.getCommand() == GHOST_CMD_SCATTER &&
         (this == blinky || this == pinky));
 };

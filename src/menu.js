@@ -35,8 +35,8 @@ menu = (function() {
             newGameState.nextMap = mapMsPacman1;
         }
         else if (inRect(pos,cookieRect)) {
-            // TODO: gameMode = GAME_COOKIE;
-            // TODO: newGameState.nextMap = randomMap();
+            gameMode = GAME_COOKIE;
+            newGameState.nextMap = mapgen();
         }
         else {
             return;

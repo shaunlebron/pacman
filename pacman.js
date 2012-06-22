@@ -470,6 +470,8 @@ var renderer_list;
 var renderer;
 
 var renderScale;
+var screenWidth = 28*tileSize;
+var screenHeight = 36*tileSize;
 
 // all rendering will be shown on this canvas
 var canvas;
@@ -496,8 +498,8 @@ var switchRenderer = function(i) {
         var c = document.createElement("canvas");
 
         // use conventional pacman map size
-        c.width = 28*tileSize * scale;
-        c.height = 36*tileSize * scale;
+        c.width = screenWidth * scale;
+        c.height = screenHeight * scale;
 
         // transform to scale
         var ctx = c.getContext("2d");
@@ -705,7 +707,7 @@ var switchRenderer = function(i) {
         // draw a fade filter for 0<=t<=1
         drawFadeIn: function(t) {
             ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
-            ctx.fillRect(0,0,map.widthPixels, map.heightPixels);
+            ctx.fillRect(0,0,screenWidth,screenHeight);
         },
 
         // erase pellet from background
@@ -1166,18 +1168,18 @@ var switchRenderer = function(i) {
 //@line 1 "src/menu.js"
 menu = (function() {
 
-    var w = 20*tilesize;
-    var h = 7*tilesize;
+    var w = 20*tileSize;
+    var h = 7*tileSize;
 
-    var pacmanRect =   {x:10,y:10,w:w,h:h};
-    var mspacmanRect = {x:10,y:h,w:w,h:h};
-    var cookieRect =   {x:10,y:2*h,w:w,h:h};
+    var pacmanRect =   {x:screenWidth/2-w/2,y:screenHeight/2-h/2-h,w:w,h:h};
+    var mspacmanRect = {x:screenWidth/2-w/2,y:screenHeight/2-h/2,w:w,h:h};
+    var cookieRect =   {x:screenWidth/2-w/2,y:screenHeight/2+h/2,w:w,h:h};
 
     var drawButton = function(ctx,rect,title,color) {
 
         // draw button outline
-        ctx.strokeStyle = "#FFF";
-        ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);
+        //ctx.strokeStyle = "#FFF";
+        //ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);
 
         // draw caption
         ctx.fillStyle = color;
@@ -1236,16 +1238,16 @@ menu = (function() {
         draw: function(ctx) {
             // clear screen
             ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,28*tilesize,36*tilesize);
+            ctx.fillRect(0,0,screenWidth,screenHeight);
 
             // set text size and alignment
-            ctx.font = Math.floor(rect.h/3*2) + "px sans-serif";
+            ctx.font = "bold " + Math.floor(h/5) + "px sans-serif";
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
 
-            drawButton(ctx, pacmanRect, "Pac-Man", "#FF0");
-            drawButton(ctx, mspacmanRect, "Ms. Pac-Man", "#FFB8AE");
-            drawButton(ctx, cookieRect, "Cookie-Man", "#00F");
+            drawButton(ctx, pacmanRect, "Pac-Man (1980)", "#FF0");
+            drawButton(ctx, mspacmanRect, "Ms. Pac-Man (1982)", "#FFB8AE");
+            drawButton(ctx, cookieRect, "Cookie-Man (2012)", "#47b8ff");
 
             // TODO: draw previous and high score next to each game type.
             /*
@@ -3184,7 +3186,7 @@ var menuState = {
         menu.setInput();
     },
     draw: function() {
-        renderer.drawFunc(menu.draw);
+        renderer.renderFunc(menu.draw);
     },
     update: function() {
     },
@@ -3271,7 +3273,6 @@ var readyNewState = {
     __proto__: readyState, 
 
     init: function() {
-        backupStatus();
 
         // switch to next map if given
         if (this.nextMap != undefined) {
@@ -3543,6 +3544,25 @@ var finishState = (function(){
             255: { 
                 init: function() {
                     level++;
+
+                    if (gameMode == GAME_MSPACMAN) {
+                        if (level <= 2) {
+                            map = mapMsPacman1;
+                        }
+                        else if (level <= 5) {
+                            map = mapMsPacman2;
+                        }
+                        else if (level <= 9) {
+                            map = mapMsPacman3;
+                        }
+                        else if (level <= 13) {
+                            map = mapMsPacman4;
+                        }
+                    }
+                    else if (gameMode == GAME_COOKIE) {
+                        // TODO: generate new map
+                    }
+
                     switchState(readyNewState,60);
                     map.resetCurrent();
                     renderer.drawMap();
@@ -3590,7 +3610,7 @@ blinky.startPixel = {
     y: 14*tileSize+midTile.y
 };
 blinky.cornerTile = {
-    x: this.numCols-1-2,
+    x: 28-1-2,
     y: 0
 };
 blinky.startMode = GHOST_OUTSIDE;
@@ -3614,8 +3634,8 @@ inky.startPixel = {
     y: 17*tileSize + midTile.y,
 };
 inky.cornerTile = {
-    x: this.numCols-1,
-    y: this.numRows - 2,
+    x: 28-1,
+    y: 36 - 2,
 };
 inky.startMode = GHOST_PACING_HOME;
 inky.arriveHomeMode = GHOST_PACING_HOME;
@@ -3627,7 +3647,7 @@ clyde.startPixel = {
 };
 clyde.cornerTile = {
     x: 0,
-    y: this.numRows-2,
+    y: 36-2,
 };
 clyde.startMode = GHOST_PACING_HOME;
 clyde.arriveHomeMode = GHOST_PACING_HOME;

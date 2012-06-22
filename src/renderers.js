@@ -10,6 +10,10 @@ var renderer_list;
 // current renderer
 var renderer;
 
+var renderScale;
+var screenWidth = 28*tileSize;
+var screenHeight = 36*tileSize;
+
 // all rendering will be shown on this canvas
 var canvas;
 
@@ -27,13 +31,16 @@ var switchRenderer = function(i) {
     // drawing scale
     var scale = 1.5;        // scale everything by this amount
 
+    // (temporary global version of scale just to get things quickly working)
+    renderScale = scale; 
+
     // creates a canvas
     var makeCanvas = function() {
         var c = document.createElement("canvas");
 
         // use conventional pacman map size
-        c.width = 28*tileSize * scale;
-        c.height = 36*tileSize * scale;
+        c.width = screenWidth * scale;
+        c.height = screenHeight * scale;
 
         // transform to scale
         var ctx = c.getContext("2d");
@@ -70,6 +77,10 @@ var switchRenderer = function(i) {
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);
+        },
+
+        renderFunc: function(f) {
+            f(ctx);
         },
 
         // scaling the canvas can incur floating point roundoff errors
@@ -237,7 +248,7 @@ var switchRenderer = function(i) {
         // draw a fade filter for 0<=t<=1
         drawFadeIn: function(t) {
             ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
-            ctx.fillRect(0,0,map.widthPixels, map.heightPixels);
+            ctx.fillRect(0,0,screenWidth,screenHeight);
         },
 
         // erase pellet from background

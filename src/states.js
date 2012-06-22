@@ -65,31 +65,12 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
 
 var menuState = {
     init: function() {
-        switchMap(0);
-        for (i=0; i<5; i++)
-            actors[i].reset();
-        renderer.drawMap();
-        canvas.onmousedown = function() {
-            newGameState.nextMap = 1;
-            switchState(newGameState,60,true,false);
-            canvas.onmousedown = undefined;
-        };
+        menu.setInput();
     },
     draw: function() {
-        renderer.blitMap();
-        if (score != 0 && highScore != 0)
-            renderer.drawScore();
-        renderer.drawMessage("Pac-Man","#FF0");
-        renderer.drawActors();
+        renderer.renderFunc(menu.draw);
     },
     update: function() {
-        var i,j;
-        for (j=0; j<2; j++) {
-            for (i = 0; i<4; i++)
-                ghosts[i].update(j);
-        }
-        for (i = 0; i<4; i++)
-            ghosts[i].frames++;
     },
 };
 
@@ -104,7 +85,7 @@ var newGameState = (function() {
     return {
         init: function() {
             if (this.nextMap != undefined) {
-                switchMap(this.nextMap);
+                map = this.nextMap;
                 this.nextMap = undefined;
             }
             frames = 0;
@@ -150,8 +131,6 @@ var readyState =  (function(){
             fruit.reset();
             energizer.reset();
             frames = 0;
-
-
         },
         draw: function() {
             newGameState.draw();
@@ -176,11 +155,10 @@ var readyNewState = {
     __proto__: readyState, 
 
     init: function() {
-        backupStatus();
 
         // switch to next map if given
         if (this.nextMap != undefined) {
-            switchMap(this.nextMap);
+            map = this.nextMap;
             this.nextMap = undefined;
             map.resetCurrent();
             renderer.drawMap();
@@ -448,6 +426,25 @@ var finishState = (function(){
             255: { 
                 init: function() {
                     level++;
+
+                    if (gameMode == GAME_MSPACMAN) {
+                        if (level <= 2) {
+                            map = mapMsPacman1;
+                        }
+                        else if (level <= 5) {
+                            map = mapMsPacman2;
+                        }
+                        else if (level <= 9) {
+                            map = mapMsPacman3;
+                        }
+                        else if (level <= 13) {
+                            map = mapMsPacman4;
+                        }
+                    }
+                    else if (gameMode == GAME_COOKIE) {
+                        // TODO: generate new map
+                    }
+
                     switchState(readyNewState,60);
                     map.resetCurrent();
                     renderer.drawMap();

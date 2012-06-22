@@ -17,6 +17,7 @@
 // game modes
 var GAME_PACMAN = 0;
 var GAME_MSPACMAN = 1;
+var GAME_COOKIE = 2;
 
 // current game mode
 var gameMode = GAME_PACMAN;
@@ -27,12 +28,7 @@ var extraLives = 0;
 var highScore = 0;
 var score = 0;
 
-// state at the beginning of a level
-// (saved so you can change to a different map with the same state at the beginning of the level)
-var prevLevel;
-var prevExtraLives;
-var prevHighScore;
-var prevScore;
+// TODO: have a high score for each game type
 
 var addScore = function(p) {
     if (score < 10000 && score+p >= 10000)
@@ -40,20 +36,6 @@ var addScore = function(p) {
     score += p;
     if (score > highScore)
         highScore = score;
-};
-
-var backupStatus = function() {
-    prevLevel = level;
-    prevExtraLives = extraLives;
-    prevHighScore = highScore;
-    prevScore = score;
-};
-
-var restoreStatus = function() {
-    level = prevLevel;
-    extraLives = prevExtraLives;
-    highScore = prevHighScore;
-    score = prevScore;
 };
 //@line 1 "src/direction.js"
 //////////////////////////////////////////////////////////////////////////////////////
@@ -163,6 +145,19 @@ var Map = function(numCols, numRows, tiles) {
 
     // ascii map
     this.tiles = tiles;
+
+    // ghost home location
+    this.doorTile = {x:13, y:14};
+    this.doorPixel = {
+        x:(this.doorTile.x+1)*tileSize-1, 
+        y:this.doorTile.y*tileSize + midTile.y
+    };
+    this.homeTopPixel = 17*tileSize;
+    this.homeBottomPixel = 18*tileSize;
+
+    // location of the fruit
+    var fruitTile = {x:13, y:20};
+    fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
 
     this.resetCurrent();
     this.parseDots();
@@ -474,6 +469,8 @@ var renderer_list;
 // current renderer
 var renderer;
 
+var renderScale;
+
 // all rendering will be shown on this canvas
 var canvas;
 
@@ -490,6 +487,9 @@ var switchRenderer = function(i) {
 
     // drawing scale
     var scale = 1.5;        // scale everything by this amount
+
+    // (temporary global version of scale just to get things quickly working)
+    renderScale = scale; 
 
     // creates a canvas
     var makeCanvas = function() {
@@ -534,6 +534,10 @@ var switchRenderer = function(i) {
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);
+        },
+
+        renderFunc: function(f) {
+            f(ctx);
         },
 
         // scaling the canvas can incur floating point roundoff errors
@@ -1159,6 +1163,99 @@ var switchRenderer = function(i) {
     renderer = renderer_list[1];
 
 })();
+//@line 1 "src/menu.js"
+menu = (function() {
+
+    var w = 20*tilesize;
+    var h = 7*tilesize;
+
+    var pacmanRect =   {x:10,y:10,w:w,h:h};
+    var mspacmanRect = {x:10,y:h,w:w,h:h};
+    var cookieRect =   {x:10,y:2*h,w:w,h:h};
+
+    var drawButton = function(ctx,rect,title,color) {
+
+        // draw button outline
+        ctx.strokeStyle = "#FFF";
+        ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);
+
+        // draw caption
+        ctx.fillStyle = color;
+        ctx.fillText(title, rect.x + rect.w/2, rect.y + rect.h/2);
+    };
+
+    var inRect = function(pos, rect) {
+        return pos.x >= rect.x && pos.x <= rect.x+rect.w &&
+               pos.y >= rect.y && pos.y <= rect.y+rect.h;
+    };
+
+    var onmousedown = function(evt) {
+
+        var pos = getmousepos(evt);
+        if (inRect(pos,pacmanRect)) {
+            gameMode = GAME_PACMAN;
+            newGameState.nextMap = mapPacman;
+        }
+        else if (inRect(pos,mspacmanRect)) {
+            gameMode = GAME_MSPACMAN;
+            newGameState.nextMap = mapMsPacman1;
+        }
+        else if (inRect(pos,cookieRect)) {
+            // TODO: gameMode = GAME_COOKIE;
+            // TODO: newGameState.nextMap = randomMap();
+        }
+        else {
+            return;
+        }
+        switchState(newGameState,60,true,false);
+        canvas.removeEventListener('mousedown', onmousedown);
+    };
+
+    var getmousepos = function(evt) {
+        var obj = canvas;
+        var top = 0;
+        var left = 0;
+        while (obj.tagName != 'BODY') {
+            top += obj.offsetTop;
+            left += obj.offsetLeft;
+            obj = obj.offsetParent;
+        }
+
+        // calculate relative mouse position
+        var mouseX = evt.clientX - left + window.pageXOffset;
+        var mouseY = evt.clientY - top + window.pageYOffset;
+
+        // return scale-independent mouse coordinate
+        return { x: mouseX/renderScale, y: mouseY/renderScale };
+    };
+
+    return {
+        setInput: function() {
+            canvas.addEventListener('mousedown', onmousedown);
+        },
+        draw: function(ctx) {
+            // clear screen
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0,0,28*tilesize,36*tilesize);
+
+            // set text size and alignment
+            ctx.font = Math.floor(rect.h/3*2) + "px sans-serif";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+
+            drawButton(ctx, pacmanRect, "Pac-Man", "#FF0");
+            drawButton(ctx, mspacmanRect, "Ms. Pac-Man", "#FFB8AE");
+            drawButton(ctx, cookieRect, "Cookie-Man", "#00F");
+
+            // TODO: draw previous and high score next to each game type.
+            /*
+            if (score != 0 && highScore != 0)
+                this.drawScore();
+            */
+        },
+    };
+
+})();
 //@line 1 "src/sprites.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Sprites
@@ -1732,6 +1829,8 @@ var gui = (function() {
     })();
 
     var addInput = function() {
+        // TODO: add touch swipe events for mobile access
+
         // handle key press event
         document.onkeydown = function(e) {
             var key = (e||window.event).keyCode;
@@ -1755,7 +1854,7 @@ var gui = (function() {
             // add canvas and controls to our div
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
-            addControls();
+            //addControls();
             addInput();
         },
     };
@@ -3082,31 +3181,12 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
 
 var menuState = {
     init: function() {
-        switchMap(0);
-        for (i=0; i<5; i++)
-            actors[i].reset();
-        renderer.drawMap();
-        canvas.onmousedown = function() {
-            newGameState.nextMap = 1;
-            switchState(newGameState,60,true,false);
-            canvas.onmousedown = undefined;
-        };
+        menu.setInput();
     },
     draw: function() {
-        renderer.blitMap();
-        if (score != 0 && highScore != 0)
-            renderer.drawScore();
-        renderer.drawMessage("Pac-Man","#FF0");
-        renderer.drawActors();
+        renderer.drawFunc(menu.draw);
     },
     update: function() {
-        var i,j;
-        for (j=0; j<2; j++) {
-            for (i = 0; i<4; i++)
-                ghosts[i].update(j);
-        }
-        for (i = 0; i<4; i++)
-            ghosts[i].frames++;
     },
 };
 
@@ -3121,7 +3201,7 @@ var newGameState = (function() {
     return {
         init: function() {
             if (this.nextMap != undefined) {
-                switchMap(this.nextMap);
+                map = this.nextMap;
                 this.nextMap = undefined;
             }
             frames = 0;
@@ -3167,8 +3247,6 @@ var readyState =  (function(){
             fruit.reset();
             energizer.reset();
             frames = 0;
-
-
         },
         draw: function() {
             newGameState.draw();
@@ -3197,7 +3275,7 @@ var readyNewState = {
 
         // switch to next map if given
         if (this.nextMap != undefined) {
-            switchMap(this.nextMap);
+            map = this.nextMap;
             this.nextMap = undefined;
             map.resetCurrent();
             renderer.drawMap();
@@ -3499,614 +3577,297 @@ var overState = (function() {
 //////////////////////////////////////////////////////////////////////////////////////
 // Maps
 
-// Definitions of playable maps along with respective actor configurations
-
-// list of available maps
-var map_list;
+// Definitions of playable maps
 
 // current map
 var map;
 
-// switches to another map
-var switchMap = function(i) {
-    map = map_list[i];
-    map.onLoad();
+// actor starting states
+
+blinky.startDirEnum = DIR_LEFT;
+blinky.startPixel = {
+    x: 14*tileSize-1,
+    y: 14*tileSize+midTile.y
+};
+blinky.cornerTile = {
+    x: this.numCols-1-2,
+    y: 0
+};
+blinky.startMode = GHOST_OUTSIDE;
+blinky.arriveHomeMode = GHOST_LEAVING_HOME;
+
+pinky.startDirEnum = DIR_DOWN;
+pinky.startPixel = {
+    x: 14*tileSize-1,
+    y: 17*tileSize+midTile.y,
+};
+pinky.cornerTile = {
+    x: 2,
+    y: 0
+};
+pinky.startMode = GHOST_PACING_HOME;
+pinky.arriveHomeMode = GHOST_PACING_HOME;
+
+inky.startDirEnum = DIR_UP;
+inky.startPixel = {
+    x: 12*tileSize-1,
+    y: 17*tileSize + midTile.y,
+};
+inky.cornerTile = {
+    x: this.numCols-1,
+    y: this.numRows - 2,
+};
+inky.startMode = GHOST_PACING_HOME;
+inky.arriveHomeMode = GHOST_PACING_HOME;
+
+clyde.startDirEnum = DIR_UP;
+clyde.startPixel = {
+    x: 16*tileSize-1,
+    y: 17*tileSize + midTile.y,
+};
+clyde.cornerTile = {
+    x: 0,
+    y: this.numRows-2,
+};
+clyde.startMode = GHOST_PACING_HOME;
+clyde.arriveHomeMode = GHOST_PACING_HOME;
+
+pacman.startDirEnum = DIR_LEFT;
+pacman.startPixel = {
+    x: 14*tileSize-1,
+    y: 26*tileSize + midTile.y,
 };
 
-// create maps
-(function() {
+// Original Pac-Man map
+var mapPacman = new Map(28, 36, (
+    "____________________________" +
+    "____________________________" +
+    "____________________________" +
+    "||||||||||||||||||||||||||||" +
+    "|............||............|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|o||||.|||||.||.|||||.||||o|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|..........................|" +
+    "|.||||.||.||||||||.||.||||.|" +
+    "|.||||.||.||||||||.||.||||.|" +
+    "|......||....||....||......|" +
+    "||||||.||||| || |||||.||||||" +
+    "_____|.||||| || |||||.|_____" +
+    "_____|.||          ||.|_____" +
+    "_____|.|| |||--||| ||.|_____" +
+    "||||||.|| |______| ||.||||||" +
+    "      .   |______|   .      " +
+    "||||||.|| |______| ||.||||||" +
+    "_____|.|| |||||||| ||.|_____" +
+    "_____|.||          ||.|_____" +
+    "_____|.|| |||||||| ||.|_____" +
+    "||||||.|| |||||||| ||.||||||" +
+    "|............||............|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|o..||.......  .......||..o|" +
+    "|||.||.||.||||||||.||.||.|||" +
+    "|||.||.||.||||||||.||.||.|||" +
+    "|......||....||....||......|" +
+    "|.||||||||||.||.||||||||||.|" +
+    "|.||||||||||.||.||||||||||.|" +
+    "|..........................|" +
+    "||||||||||||||||||||||||||||" +
+    "____________________________" +
+    "____________________________"));
 
-    // default onLoad function for a map
-    // contains potentially map-specific locations
-    var onLoad = function() {
+mapPacman.name = "Pac-Man";
+//mapPacman.wallStrokeColor = "#47b897"; // from Pac-Man Plus
+mapPacman.wallStrokeColor = "#2121ff"; // from original
+mapPacman.wallFillColor = "#000";
+mapPacman.pelletColor = "#ffb8ae";
+mapPacman.constrainGhostTurns = function(tile,openTiles) {
+    // prevent ghost from turning up at these tiles
+    if ((tile.x == 12 || tile.x == 15) && (tile.y == 14 || tile.y == 26)) {
+        openTiles[DIR_UP] = false;
+    }
+};
 
-        // ghost home location
-        this.doorTile = {x:13, y:14};
-        this.doorPixel = {
-            x:(this.doorTile.x+1)*tileSize-1, 
-            y:this.doorTile.y*tileSize + midTile.y
-        };
-        this.homeTopPixel = 17*tileSize;
-        this.homeBottomPixel = 18*tileSize;
+// Ms. Pac-Man map 1
 
-        // location of the fruit
-        var fruitTile = {x:13, y:20};
-        fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
+var mapMsPacman1 = new Map(28, 36, (
+    "____________________________" +
+    "____________________________" +
+    "____________________________" +
+    "||||||||||||||||||||||||||||" +
+    "|......||..........||......|" +
+    "|o||||.||.||||||||.||.||||o|" +
+    "|.||||.||.||||||||.||.||||.|" +
+    "|..........................|" +
+    "|||.||.|||||.||.|||||.||.|||" +
+    "__|.||.|||||.||.|||||.||.|__" +
+    "|||.||.|||||.||.|||||.||.|||" +
+    "   .||.......||.......||.   " +
+    "|||.||||| |||||||| |||||.|||" +
+    "__|.||||| |||||||| |||||.|__" +
+    "__|.                    .|__" +
+    "__|.||||| |||--||| |||||.|__" +
+    "__|.||||| |______| |||||.|__" +
+    "__|.||    |______|    ||.|__" +
+    "__|.|| || |______| || ||.|__" +
+    "|||.|| || |||||||| || ||.|||" +
+    "   .   ||          ||   .   " +
+    "|||.|||||||| || ||||||||.|||" +
+    "__|.|||||||| || ||||||||.|__" +
+    "__|.......   ||   .......|__" +
+    "__|.|||||.||||||||.|||||.|__" +
+    "|||.|||||.||||||||.|||||.|||" +
+    "|............  ............|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|.||||.||....||....||.||||.|" +
+    "|o||||.||.||||||||.||.||||o|" +
+    "|.||||.||.||||||||.||.||||.|" +
+    "|..........................|" +
+    "||||||||||||||||||||||||||||" +
+    "____________________________" +
+    "____________________________"));
 
-        // actor starting states
+mapMsPacman1.name = "Ms. Pac-Man 1";
+mapMsPacman1.wallFillColor = "#FFB8AE";
+mapMsPacman1.wallStrokeColor = "#FF0000";
+mapMsPacman1.pelletColor = "#dedeff";
 
-        blinky.startDirEnum = DIR_LEFT;
-        blinky.startPixel = {
-            x: 14*tileSize-1,
-            y: 14*tileSize+midTile.y
-        };
-        blinky.cornerTile = {
-            x: this.numCols-1-2,
-            y: 0
-        };
-        blinky.startMode = GHOST_OUTSIDE;
-        blinky.arriveHomeMode = GHOST_LEAVING_HOME;
+// Ms. Pac-Man map 2
 
-        pinky.startDirEnum = DIR_DOWN;
-        pinky.startPixel = {
-            x: 14*tileSize-1,
-            y: 17*tileSize+midTile.y,
-        };
-        pinky.cornerTile = {
-            x: 2,
-            y: 0
-        };
-        pinky.startMode = GHOST_PACING_HOME;
-        pinky.arriveHomeMode = GHOST_PACING_HOME;
+var mapMsPacman2 = new Map(28, 36, (
+    "____________________________" +
+    "____________________________" +
+    "____________________________" +
+    "||||||||||||||||||||||||||||" +
+    "       ||..........||       " +
+    "|||||| ||.||||||||.|| ||||||" +
+    "|||||| ||.||||||||.|| ||||||" +
+    "|o...........||...........o|" +
+    "|.|||||||.||.||.||.|||||||.|" +
+    "|.|||||||.||.||.||.|||||||.|" +
+    "|.||......||.||.||......||.|" +
+    "|.||.|||| ||....|| ||||.||.|" +
+    "|.||.|||| |||||||| ||||.||.|" +
+    "|......|| |||||||| ||......|" +
+    "||||||.||          ||.||||||" +
+    "||||||.|| |||--||| ||.||||||" +
+    "|......|| |______| ||......|" +
+    "|.||||.|| |______| ||.||||.|" +
+    "|.||||.   |______|   .||||.|" +
+    "|...||.|| |||||||| ||.||...|" +
+    "|||.||.||          ||.||.|||" +
+    "__|.||.|||| |||| ||||.||.|__" +
+    "__|.||.|||| |||| ||||.||.|__" +
+    "__|.........||||.........|__" +
+    "__|.|||||||.||||.|||||||.|__" +
+    "|||.|||||||.||||.|||||||.|||" +
+    "   ....||...    ...||....   " +
+    "|||.||.||.||||||||.||.||.|||" +
+    "|||.||.||.||||||||.||.||.|||" +
+    "|o..||.......||.......||..o|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|..........................|" +
+    "||||||||||||||||||||||||||||" +
+    "____________________________" +
+    "____________________________"));
 
-        inky.startDirEnum = DIR_UP;
-        inky.startPixel = {
-            x: 12*tileSize-1,
-            y: 17*tileSize + midTile.y,
-        };
-        inky.cornerTile = {
-            x: this.numCols-1,
-            y: this.numRows - 2,
-        };
-        inky.startMode = GHOST_PACING_HOME;
-        inky.arriveHomeMode = GHOST_PACING_HOME;
+mapMsPacman2.name = "Ms. Pac-Man 2";
+mapMsPacman2.wallFillColor = "#47b8ff";
+mapMsPacman2.wallStrokeColor = "#dedeff";
+mapMsPacman2.pelletColor = "#ffff00";
 
-        clyde.startDirEnum = DIR_UP;
-        clyde.startPixel = {
-            x: 16*tileSize-1,
-            y: 17*tileSize + midTile.y,
-        };
-        clyde.cornerTile = {
-            x: 0,
-            y: this.numRows-2,
-        };
-        clyde.startMode = GHOST_PACING_HOME;
-        clyde.arriveHomeMode = GHOST_PACING_HOME;
+// Ms. Pac-Man map 3
 
-        pacman.startDirEnum = DIR_LEFT;
-        pacman.startPixel = {
-            x: 14*tileSize-1,
-            y: 26*tileSize + midTile.y,
-        };
-    };
+var mapMsPacman3 = new Map(28, 36, (
+    "____________________________" +
+    "____________________________" +
+    "____________________________" +
+    "||||||||||||||||||||||||||||" +
+    "|.........||....||.........|" +
+    "|o|||||||.||.||.||.|||||||o|" +
+    "|.|||||||.||.||.||.|||||||.|" +
+    "|.||.........||.........||.|" +
+    "|.||.||.||||.||.||||.||.||.|" +
+    "|....||.||||.||.||||.||....|" +
+    "||||.||.||||.||.||||.||.||||" +
+    "||||.||..............||.||||" +
+    " ....|||| |||||||| ||||.... " +
+    "|.|| |||| |||||||| |||| ||.|" +
+    "|.||                    ||.|" +
+    "|.|||| || |||--||| || ||||.|" +
+    "|.|||| || |______| || ||||.|" +
+    "|.     || |______| ||     .|" +
+    "|.|| |||| |______| |||| ||.|" +
+    "|.|| |||| |||||||| |||| ||.|" +
+    "|.||                    ||.|" +
+    "|.|||| ||||| || ||||| ||||.|" +
+    "|.|||| ||||| || ||||| ||||.|" +
+    "|......||....||....||......|" +
+    "|||.||.||.||||||||.||.||.|||" +
+    "|||.||.||.||||||||.||.||.|||" +
+    "|o..||.......  .......||..o|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|.||||.|||||.||.|||||.||||.|" +
+    "|......||....||....||......|" +
+    "|.||||.||.||||||||.||.||||.|" +
+    "|.||||.||.||||||||.||.||||.|" +
+    "|......||..........||......|" +
+    "||||||||||||||||||||||||||||" +
+    "____________________________" +
+    "____________________________"));
 
-    var onLoadPacman = function() {
-        onLoad.call(this);
-        gameMode = GAME_PACMAN;
-    };
+mapMsPacman3.name = "Ms. Pac-Man 3";
+mapMsPacman3.wallFillColor = "#de9751";
+mapMsPacman3.wallStrokeColor = "#dedeff";
+mapMsPacman3.pelletColor = "#ff0000";
 
-    var onLoadMsPacman = function() {
-        onLoad.call(this);
-        gameMode = GAME_MSPACMAN;
-    };
+// Ms. Pac-Man map 4
 
-    // Original Pac-Man map
-    var mapPacman = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "|............||............|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|o||||.|||||.||.|||||.||||o|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|..........................|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|......||....||....||......|" +
-        "||||||.||||| || |||||.||||||" +
-        "_____|.||||| || |||||.|_____" +
-        "_____|.||          ||.|_____" +
-        "_____|.|| |||--||| ||.|_____" +
-        "||||||.|| |______| ||.||||||" +
-        "      .   |______|   .      " +
-        "||||||.|| |______| ||.||||||" +
-        "_____|.|| |||||||| ||.|_____" +
-        "_____|.||          ||.|_____" +
-        "_____|.|| |||||||| ||.|_____" +
-        "||||||.|| |||||||| ||.||||||" +
-        "|............||............|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|o..||.......  .......||..o|" +
-        "|||.||.||.||||||||.||.||.|||" +
-        "|||.||.||.||||||||.||.||.|||" +
-        "|......||....||....||......|" +
-        "|.||||||||||.||.||||||||||.|" +
-        "|.||||||||||.||.||||||||||.|" +
-        "|..........................|" +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________"));
+var mapMsPacman4 = new Map(28, 36, (
+    "____________________________" +
+    "____________________________" +
+    "____________________________" +
+    "||||||||||||||||||||||||||||" +
+    "|..........................|" +
+    "|.||.||||.||||||||.||||.||.|" +
+    "|o||.||||.||||||||.||||.||o|" +
+    "|.||.||||.||....||.||||.||.|" +
+    "|.||......||.||.||......||.|" +
+    "|.||||.||.||.||.||.||.||||.|" +
+    "|.||||.||.||.||.||.||.||||.|" +
+    "|......||....||....||......|" +
+    "|||.|||||||| || ||||||||.|||" +
+    "__|.|||||||| || ||||||||.|__" +
+    "__|....||          ||....|__" +
+    "||| ||.|| |||--||| ||.|| |||" +
+    "    ||.|| |______| ||.||    " +
+    "||||||.   |______|   .||||||" +
+    "||||||.|| |______| ||.||||||" +
+    "    ||.|| |||||||| ||.||    " +
+    "||| ||.||          ||.|| |||" +
+    "__|....||||| || |||||....|__" +
+    "__|.||.||||| || |||||.||.|__" +
+    "__|.||....   ||   ....||.|__" +
+    "__|.|||||.|| || ||.|||||.|__" +
+    "|||.|||||.|| || ||.|||||.|||" +
+    "|.........||    ||.........|" +
+    "|.||||.||.||||||||.||.||||.|" +
+    "|.||||.||.||||||||.||.||||.|" +
+    "|.||...||..........||...||.|" +
+    "|o||.|||||||.||.|||||||.||o|" +
+    "|.||.|||||||.||.|||||||.||.|" +
+    "|............||............|" +
+    "||||||||||||||||||||||||||||" +
+    "____________________________" +
+    "____________________________"));
 
-    mapPacman.name = "Pac-Man";
-    mapPacman.onLoad = onLoadPacman;
-    //mapPacman.wallStrokeColor = "#47b897"; // from Pac-Man Plus
-    mapPacman.wallStrokeColor = "#2121ff"; // from original
-    mapPacman.wallFillColor = "#000";
-    mapPacman.pelletColor = "#ffb8ae";
-    mapPacman.constrainGhostTurns = function(tile,openTiles) {
-        // prevent ghost from turning up at these tiles
-        if ((tile.x == 12 || tile.x == 15) && (tile.y == 14 || tile.y == 26)) {
-            openTiles[DIR_UP] = false;
-        }
-    };
-
-    // Ms. Pac-Man map 1
-
-    var mapMsPacman1 = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "|......||..........||......|" +
-        "|o||||.||.||||||||.||.||||o|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|..........................|" +
-        "|||.||.|||||.||.|||||.||.|||" +
-        "__|.||.|||||.||.|||||.||.|__" +
-        "|||.||.|||||.||.|||||.||.|||" +
-        "   .||.......||.......||.   " +
-        "|||.||||| |||||||| |||||.|||" +
-        "__|.||||| |||||||| |||||.|__" +
-        "__|.                    .|__" +
-        "__|.||||| |||--||| |||||.|__" +
-        "__|.||||| |______| |||||.|__" +
-        "__|.||    |______|    ||.|__" +
-        "__|.|| || |______| || ||.|__" +
-        "|||.|| || |||||||| || ||.|||" +
-        "   .   ||          ||   .   " +
-        "|||.|||||||| || ||||||||.|||" +
-        "__|.|||||||| || ||||||||.|__" +
-        "__|.......   ||   .......|__" +
-        "__|.|||||.||||||||.|||||.|__" +
-        "|||.|||||.||||||||.|||||.|||" +
-        "|............  ............|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|.||||.||....||....||.||||.|" +
-        "|o||||.||.||||||||.||.||||o|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|..........................|" +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________"));
-
-    mapMsPacman1.name = "Ms. Pac-Man 1";
-    mapMsPacman1.onLoad = onLoadMsPacman;
-    mapMsPacman1.wallFillColor = "#FFB8AE";
-    mapMsPacman1.wallStrokeColor = "#FF0000";
-    mapMsPacman1.pelletColor = "#dedeff";
-
-    // Ms. Pac-Man map 2
-
-    var mapMsPacman2 = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "       ||..........||       " +
-        "|||||| ||.||||||||.|| ||||||" +
-        "|||||| ||.||||||||.|| ||||||" +
-        "|o...........||...........o|" +
-        "|.|||||||.||.||.||.|||||||.|" +
-        "|.|||||||.||.||.||.|||||||.|" +
-        "|.||......||.||.||......||.|" +
-        "|.||.|||| ||....|| ||||.||.|" +
-        "|.||.|||| |||||||| ||||.||.|" +
-        "|......|| |||||||| ||......|" +
-        "||||||.||          ||.||||||" +
-        "||||||.|| |||--||| ||.||||||" +
-        "|......|| |______| ||......|" +
-        "|.||||.|| |______| ||.||||.|" +
-        "|.||||.   |______|   .||||.|" +
-        "|...||.|| |||||||| ||.||...|" +
-        "|||.||.||          ||.||.|||" +
-        "__|.||.|||| |||| ||||.||.|__" +
-        "__|.||.|||| |||| ||||.||.|__" +
-        "__|.........||||.........|__" +
-        "__|.|||||||.||||.|||||||.|__" +
-        "|||.|||||||.||||.|||||||.|||" +
-        "   ....||...    ...||....   " +
-        "|||.||.||.||||||||.||.||.|||" +
-        "|||.||.||.||||||||.||.||.|||" +
-        "|o..||.......||.......||..o|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|..........................|" +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________"));
-
-    mapMsPacman2.name = "Ms. Pac-Man 2";
-    mapMsPacman2.onLoad = onLoadMsPacman;
-    mapMsPacman2.wallFillColor = "#47b8ff";
-    mapMsPacman2.wallStrokeColor = "#dedeff";
-    mapMsPacman2.pelletColor = "#ffff00";
-
-    // Ms. Pac-Man map 3
-
-    var mapMsPacman3 = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "|.........||....||.........|" +
-        "|o|||||||.||.||.||.|||||||o|" +
-        "|.|||||||.||.||.||.|||||||.|" +
-        "|.||.........||.........||.|" +
-        "|.||.||.||||.||.||||.||.||.|" +
-        "|....||.||||.||.||||.||....|" +
-        "||||.||.||||.||.||||.||.||||" +
-        "||||.||..............||.||||" +
-        " ....|||| |||||||| ||||.... " +
-        "|.|| |||| |||||||| |||| ||.|" +
-        "|.||                    ||.|" +
-        "|.|||| || |||--||| || ||||.|" +
-        "|.|||| || |______| || ||||.|" +
-        "|.     || |______| ||     .|" +
-        "|.|| |||| |______| |||| ||.|" +
-        "|.|| |||| |||||||| |||| ||.|" +
-        "|.||                    ||.|" +
-        "|.|||| ||||| || ||||| ||||.|" +
-        "|.|||| ||||| || ||||| ||||.|" +
-        "|......||....||....||......|" +
-        "|||.||.||.||||||||.||.||.|||" +
-        "|||.||.||.||||||||.||.||.|||" +
-        "|o..||.......  .......||..o|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|.||||.|||||.||.|||||.||||.|" +
-        "|......||....||....||......|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|......||..........||......|" +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________"));
-
-    mapMsPacman3.name = "Ms. Pac-Man 3";
-    mapMsPacman3.onLoad = onLoadMsPacman;
-    mapMsPacman3.wallFillColor = "#de9751";
-    mapMsPacman3.wallStrokeColor = "#dedeff";
-    mapMsPacman3.pelletColor = "#ff0000";
-
-    // Ms. Pac-Man map 4
-
-    var mapMsPacman4 = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "|..........................|" +
-        "|.||.||||.||||||||.||||.||.|" +
-        "|o||.||||.||||||||.||||.||o|" +
-        "|.||.||||.||....||.||||.||.|" +
-        "|.||......||.||.||......||.|" +
-        "|.||||.||.||.||.||.||.||||.|" +
-        "|.||||.||.||.||.||.||.||||.|" +
-        "|......||....||....||......|" +
-        "|||.|||||||| || ||||||||.|||" +
-        "__|.|||||||| || ||||||||.|__" +
-        "__|....||          ||....|__" +
-        "||| ||.|| |||--||| ||.|| |||" +
-        "    ||.|| |______| ||.||    " +
-        "||||||.   |______|   .||||||" +
-        "||||||.|| |______| ||.||||||" +
-        "    ||.|| |||||||| ||.||    " +
-        "||| ||.||          ||.|| |||" +
-        "__|....||||| || |||||....|__" +
-        "__|.||.||||| || |||||.||.|__" +
-        "__|.||....   ||   ....||.|__" +
-        "__|.|||||.|| || ||.|||||.|__" +
-        "|||.|||||.|| || ||.|||||.|||" +
-        "|.........||    ||.........|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|.||...||..........||...||.|" +
-        "|o||.|||||||.||.|||||||.||o|" +
-        "|.||.|||||||.||.|||||||.||.|" +
-        "|............||............|" +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________"));
-
-    mapMsPacman4.name = "Ms. Pac-Man 4";
-    mapMsPacman4.onLoad = onLoadMsPacman;
-    mapMsPacman4.wallFillColor = "#2121ff";
-    mapMsPacman4.wallStrokeColor = "#ffb851";
-    mapMsPacman4.pelletColor = "#dedeff";
-
-    // Empty Map
-
-    var mapSketch = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "______||||||||||||||||______" +
-        "______|..............|______" +
-        "______|.||.||||||.||.|______" +
-        "______|.||.||||||.||.|______" +
-        "______|.||...||...||.|______" +
-        "______|.||||.||.||||.|______" +
-        "|||||||.||||.||.||||.|||||||" +
-        "|.......||........||.......|" +
-        "|||.||||||.||||||.||||||.|||" +
-        "|||.||||||.||||||.||||||.|||" +
-        "|.......||...||...||.......|" +
-        "|.|||||.||||.||.||||.|||||.|" +
-        "|.|||||.||||.||.||||.|||||.|" +
-        "|....||..............||....|" +
-        "||||.||||.|||--|||.||||.||||" +
-        "||||.||||.|______|.||||.||||" +
-        "..||......|______|......||.." +
-        "|.||.||||.|______|.||||.||.|" +
-        "|....||||.||||||||.||||....|" +
-        "|.||.||..............||.||.|" +
-        "|.||.||.||||||||||||.||.||.|" +
-        "|.||.||.||||||||||||.||.||.|" +
-        "..||.||......||......||.||.." +
-        "||||.|||||||.||.|||||||.||||" +
-        "||||.|||||||.||.|||||||.||||" +
-        "|..........................|" +
-        "|.||.||||||||||||||||||.||.|" +
-        "|.||.|________________|.||.|" +
-        "|.||.|________________|.||.|" +
-        "|.||.|________________|.||.|" +
-        "|....|________________|....|" +
-        "||||||________________||||||" +
-        "____________________________"));
-
-    mapSketch.name = "Iwatani's Sketch";
-    mapSketch.onLoad = function() {
-        // ghost home location
-        this.doorTile = {x:13, y:15};
-        this.doorPixel = {
-            x:(this.doorTile.x+1)*tileSize-1, 
-            y:this.doorTile.y*tileSize + midTile.y
-        };
-        this.homeTopPixel = 18*tileSize;
-        this.homeBottomPixel = 19*tileSize;
-
-        // location of the fruit (just hide it)
-        var fruitTile = {x:-13, y:21};
-        fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
-
-        // actor starting states
-
-        blinky.startDirEnum = DIR_LEFT;
-        blinky.startPixel = {
-            x: 14*tileSize-1,
-            y: 15*tileSize+midTile.y
-        };
-        blinky.cornerTile = {
-            x: this.numCols-1-2,
-            y: 0
-        };
-        blinky.startMode = GHOST_OUTSIDE;
-        blinky.arriveHomeMode = GHOST_LEAVING_HOME;
-
-        pinky.startDirEnum = DIR_DOWN;
-        pinky.startPixel = {
-            x: 14*tileSize-1,
-            y: 18*tileSize+midTile.y,
-        };
-        pinky.cornerTile = {
-            x: 2,
-            y: 0
-        };
-        pinky.startMode = GHOST_PACING_HOME;
-        pinky.arriveHomeMode = GHOST_PACING_HOME;
-
-        inky.startDirEnum = DIR_UP;
-        inky.startPixel = {
-            x: 12*tileSize-1,
-            y: 18*tileSize + midTile.y,
-        };
-        inky.cornerTile = {
-            x: this.numCols-1,
-            y: this.numRows - 2,
-        };
-        inky.startMode = GHOST_PACING_HOME;
-        inky.arriveHomeMode = GHOST_PACING_HOME;
-
-        clyde.startDirEnum = DIR_UP;
-        clyde.startPixel = {
-            x: 16*tileSize-1,
-            y: 18*tileSize + midTile.y,
-        };
-        clyde.cornerTile = {
-            x: 0,
-            y: this.numRows-2,
-        };
-        clyde.startMode = GHOST_PACING_HOME;
-        clyde.arriveHomeMode = GHOST_PACING_HOME;
-
-        pacman.startDirEnum = DIR_LEFT;
-        pacman.startPixel = {
-            x: 14*tileSize-1,
-            y: 27*tileSize + midTile.y,
-        };
-
-        gameMode = GAME_PACMAN;
-    };
-    mapSketch.wallFillColor = "#555";
-    mapSketch.wallStrokeColor = "#fff";
-    mapSketch.pelletColor = "#dedeff";
-
-    // Generated Maps
-
-    var mapGen1 = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "|.........||....||.........|" +
-        "|.||.||||.||.||.||.||||.||.|" +
-        "|.||.||||....||....||||.||.|" +
-        "|.||...||.||||||||.||...||.|" +
-        "|.||||.||.||||||||.||.||||.|" +
-        "|.||||.||.||....||.||.||||.|" +
-        "|.........||.||.||.........|" +
-        "||||.||||.||.||.||.||||.||||" +
-        "||||.|__|.||.||.||.|__|.||||" +
-        "..||.||||.||.||.||.||||.||.." +
-        "|.||....................||.|" +
-        "|.||.||||.|||--|||.||||.||.|" +
-        "|.||.||||.|______|.||||.||.|" +
-        "|.........|______|.........|" +
-        "|||||||||.|______|.|||||||||" +
-        "|||||||||.||||||||.|||||||||" +
-        "..||....................||.." +
-        "|.||.||.||||.||.||||.||.||.|" +
-        "|.||.||.||||.||.||||.||.||.|" +
-        "|....||...||.||.||...||....|" +
-        "|||||||||.||.||.||.|||||||||" +
-        "|||||||||.||.||.||.|||||||||" +
-        "|.........||....||.........|" +
-        "|.|||||.||||.||.||||.|||||.|" +
-        "|.|___|.||||.||.||||.|___|.|" +
-        "|.|___|......||......|___|.|" +
-        "|.|___|.||||||||||||.|___|.|" +
-        "|.|||||.||||||||||||.|||||.|" +
-        "|..........................|" +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________"));
-    mapGen1.name = "Generated 1";
-    mapGen1.onLoad = onLoadMsPacman;
-    mapGen1.wallFillColor = "#AAA";
-    mapGen1.wallStrokeColor = "#fff";
-    mapGen1.pelletColor = "#DDD";
-
-    // Menu Map
-
-    var menuMap = new Map(28, 36, (
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "||||||||||||||||||||||||||||" +
-        "                            " +
-        "||||||||||||||||||||||||||||" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________" +
-        "____________________________"));
-
-    menuMap.onLoad = function() {
-
-        var row = 12;
-
-        ghostCommander.reset();
-        blinky.startDirEnum = DIR_LEFT;
-        blinky.startPixel = {
-            x: 19*tileSize,
-            y: row*tileSize+midTile.y
-        };
-        blinky.cornerTile = {
-            x: this.numCols-1-2,
-            y: 0
-        };
-        blinky.startMode = GHOST_OUTSIDE;
-
-        pinky.startDirEnum = DIR_LEFT;
-        pinky.startPixel = {
-            x: 21*tileSize,
-            y: row*tileSize + midTile.y,
-        };
-        pinky.cornerTile = {
-            x: 2,
-            y: 0
-        };
-        pinky.startMode = GHOST_OUTSIDE;
-
-        clyde.startDirEnum = DIR_LEFT;
-        clyde.startPixel = {
-            x: 25*tileSize,
-            y: row*tileSize+midTile.y,
-        };
-        clyde.cornerTile = {
-            x: 8,
-            y: 14,
-        };
-        clyde.startMode = GHOST_OUTSIDE;
-
-        inky.startDirEnum = DIR_LEFT;
-        inky.startPixel = {
-            x: 23*tileSize,
-            y: row*tileSize + midTile.y,
-        };
-        inky.cornerTile = {
-            x: this.numCols-1,
-            y: this.numRows - 2,
-        };
-        inky.startMode = GHOST_OUTSIDE;
-
-        pacman.startPixel = { 
-            x:14*tileSize+midTile.x, 
-            y:-26*tileSize+midTile.y }; // offscreen
-    };
-    menuMap.wallFillColor = "#333";
-    menuMap.wallStrokeColor = "#000";
-    menuMap.pelletColor = "#FFF";
-
-    // create list of maps
-    map_list = [
-        menuMap,
-        mapPacman,
-        mapMsPacman1,
-        mapMsPacman2,
-        mapMsPacman3,
-        mapMsPacman4,
-        mapSketch,
-        mapGen1,
-    ];
-
-})();
+mapMsPacman4.name = "Ms. Pac-Man 4";
+mapMsPacman4.wallFillColor = "#2121ff";
+mapMsPacman4.wallStrokeColor = "#ffb851";
+mapMsPacman4.pelletColor = "#dedeff";
 //@line 1 "src/main.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Entry Point

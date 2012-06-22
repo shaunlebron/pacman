@@ -21,6 +21,19 @@ var Map = function(numCols, numRows, tiles) {
     // ascii map
     this.tiles = tiles;
 
+    // ghost home location
+    this.doorTile = {x:13, y:14};
+    this.doorPixel = {
+        x:(this.doorTile.x+1)*tileSize-1, 
+        y:this.doorTile.y*tileSize + midTile.y
+    };
+    this.homeTopPixel = 17*tileSize;
+    this.homeBottomPixel = 18*tileSize;
+
+    // location of the fruit
+    var fruitTile = {x:13, y:20};
+    fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
+
     this.resetCurrent();
     this.parseDots();
     this.parseTunnels();

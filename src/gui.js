@@ -190,6 +190,8 @@ var gui = (function() {
     })();
 
     var addInput = function() {
+        // TODO: add touch swipe events for mobile access
+
         // handle key press event
         document.onkeydown = function(e) {
             var key = (e||window.event).keyCode;
@@ -213,7 +215,7 @@ var gui = (function() {
             // add canvas and controls to our div
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
-            addControls();
+            //addControls();
             addInput();
         },
     };

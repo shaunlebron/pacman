@@ -26,6 +26,7 @@ for file in \
     direction.js \
     Map.js \
     renderers.js  \
+    menu.js \
     sprites.js \
     gui.js \
     Actor.js \

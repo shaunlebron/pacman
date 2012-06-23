@@ -378,70 +378,102 @@ var drawMsPacmanSprite = function(ctx,dirEnum,frame) {
     ctx.restore();
 };
 
-var drawCookiemanSprite = function(ctx,dirEnum,frame) {
-    var angle = 0;
+var drawCookiemanSprite = (function(){
 
-    // draw body
-    if (frame == 0) {
-        // closed
-        drawPacmanSprite(ctx,dirEnum,0);
-    }
-    else if (frame == 1) {
-        // open
-        angle = Math.atan(4/5);
-        drawPacmanSprite(ctx,dirEnum,angle);
-        angle = Math.atan(4/8); // angle for drawing eye
-    }
-    else if (frame == 2) {
-        // wide
-        angle = Math.atan(6/3);
-        drawPacmanSprite(ctx,dirEnum,angle);
-        angle = Math.atan(6/6); // angle for drawing eye
-    }
-    ctx.fillStyle = "#47b8ff";
-    ctx.fill();
+    var prevFrame = undefined;
+    var sx1 = 0; // shift x for first pupil
+    var sy1 = 0; // shift y for first pupil
+    var sx2 = 0; // shift x for second pupil
+    var sy2 = 0; // shift y for second pupil
 
-    ctx.save();
-
-    // reflect or rotate sprite according to current direction
-    var d90 = Math.PI/2;
-    if (dirEnum == DIR_UP)
-        ctx.rotate(-d90);
-    else if (dirEnum == DIR_DOWN)
-        ctx.rotate(d90);
-    else if (dirEnum == DIR_LEFT)
-        ctx.scale(-1,1);
-
-    // eye
-    ctx.strokeStyle = "#000";
-    ctx.fillStyle = "#FFF";
-    ctx.lineWidth = "1";
-    var x = -4;
-    var y = -3.5;
-    var r1 = 3;   // distance of first eye
-    var r2 = 6; // distance of second eye
     var er = 2.1; // eye radius
     var pr = 1; // pupil radius
-    angle *= 0.5;
-    angle += Math.PI/8;
-    var c = Math.cos(angle);
-    var s = Math.sin(angle);
-    ctx.beginPath();
-    ctx.arc(x+r2*c, y-r2*s, er, 0, Math.PI*2);
-    ctx.fill();
-    //ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x+r1*c, y-r1*s, er, 0, Math.PI*2);
-    ctx.fill();
-    //ctx.stroke();
 
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(x+r2*c+0.5, y-r2*s, pr, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x+r1*c-0.5, y-r1*s+0.5, pr, 0, Math.PI*2);
-    ctx.fill();
+    var movePupils = function() {
+        var a1 = Math.random()*Math.PI*2;
+        var a2 = Math.random()*Math.PI*2;
+        var r1 = Math.random()*pr;
+        var r2 = Math.random()*pr;
 
-    ctx.restore();
-};
+        sx1 = Math.cos(a1)*r1;
+        sy1 = Math.sin(a1)*r1;
+        sx2 = Math.cos(a2)*r2;
+        sy2 = Math.sin(a2)*r2;
+    };
+
+    return function(ctx,dirEnum,frame,shake) {
+        var angle = 0;
+
+        // draw body
+        if (frame == 0) {
+            // closed
+            drawPacmanSprite(ctx,dirEnum,0);
+        }
+        else if (frame == 1) {
+            // open
+            angle = Math.atan(4/5);
+            drawPacmanSprite(ctx,dirEnum,angle);
+            angle = Math.atan(4/8); // angle for drawing eye
+        }
+        else if (frame == 2) {
+            // wide
+            angle = Math.atan(6/3);
+            drawPacmanSprite(ctx,dirEnum,angle);
+            angle = Math.atan(6/6); // angle for drawing eye
+        }
+        ctx.fillStyle = "#47b8ff";
+        ctx.fill();
+
+        ctx.save();
+
+        // reflect or rotate sprite according to current direction
+        var d90 = Math.PI/2;
+        if (dirEnum == DIR_UP)
+            ctx.rotate(-d90);
+        else if (dirEnum == DIR_DOWN)
+            ctx.rotate(d90);
+        else if (dirEnum == DIR_LEFT)
+            ctx.scale(-1,1);
+
+        var x = -4; // pivot point
+        var y = -3.5;
+        var r1 = 3;   // distance from pivot of first eye
+        var r2 = 6; // distance from pivot of second eye
+        angle *= 0.5; // angle from pivot point
+        angle += Math.PI/8;
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+
+        if (shake) {
+            if (frame != prevFrame) {
+                movePupils();
+            }
+            prevFrame = frame;
+        }
+
+        // second eyeball
+        ctx.beginPath();
+        ctx.arc(x+r2*c, y-r2*s, er, 0, Math.PI*2);
+        ctx.fillStyle = "#FFF";
+        ctx.fill();
+        // second pupil
+        ctx.beginPath();
+        ctx.arc(x+r2*c+sx2, y-r2*s+sy2, pr, 0, Math.PI*2);
+        ctx.fillStyle = "#000";
+        ctx.fill();
+
+        // first eyeball
+        ctx.beginPath();
+        ctx.arc(x+r1*c, y-r1*s, er, 0, Math.PI*2);
+        ctx.fillStyle = "#FFF";
+        ctx.fill();
+        // first pupil
+        ctx.beginPath();
+        ctx.arc(x+r1*c+sx1, y-r1*s+sy1, pr, 0, Math.PI*2);
+        ctx.fillStyle = "#000";
+        ctx.fill();
+
+        ctx.restore();
+
+    };
+})();

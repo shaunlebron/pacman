@@ -495,6 +495,17 @@ var switchRenderer = function(i) {
             var i,j;
             var tile;
 
+            // ghost house door
+            i=0;
+            for (y=0; y<map.numRows; y++)
+            for (x=0; x<map.numCols; x++) {
+                tile = map.currentTiles[i++];
+                if (tile == '-') {
+                    bgCtx.fillStyle = "#FFF";
+                    bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize,2);
+                }
+            }
+
             if (this.flashLevel) {
                 bgCtx.fillStyle = "#000";
                 bgCtx.strokeStyle = "#fff";
@@ -566,7 +577,7 @@ var switchRenderer = function(i) {
             }
             else if (gameMode == GAME_COOKIE) {
                 for (i=0; i<extraLives; i++) {
-                    drawCookiemanSprite(ctx, DIR_RIGHT, 1);
+                    drawCookiemanSprite(ctx, DIR_RIGHT, 1, false);
                     ctx.translate(2*tileSize,0);
                 }
             }
@@ -620,7 +631,7 @@ var switchRenderer = function(i) {
                 drawMsPacmanSprite(ctx,pacman.dirEnum,frame);
             }
             else if (gameMode == GAME_COOKIE) {
-                drawCookiemanSprite(ctx,pacman.dirEnum,frame);
+                drawCookiemanSprite(ctx,pacman.dirEnum,frame,true);
             }
 
             ctx.restore();

@@ -119,7 +119,7 @@ var gui = (function() {
             var fieldset = makeFieldSet('Player');
             addCheckbox(fieldset, 'autoplay', function(on) { pacman.ai = on; }, pacman.ai);
             addCheckbox(fieldset, 'invincible', function(on) { pacman.invincible = on; }, pacman.invincible);
-            addCheckbox(fieldset, 'double speed', function(on) { pacman.doubleSpeed = on; }, pacman.doubleSpeed);
+            addCheckbox(fieldset, 'turbo', function(on) { pacman.doubleSpeed = on; }, pacman.doubleSpeed);
             form.appendChild(fieldset);
 
             // machine speed group
@@ -163,27 +163,6 @@ var gui = (function() {
             addSlider(fieldset, ' tile path', actorPathLength, 1, 50, 1, function(x) { actorPathLength = x; });
             form.appendChild(fieldset);
 
-            // maps group
-            fieldset = makeFieldSet('Maps');
-            var mapDropDown = document.createElement('select');
-            for (i=1; i<map_list.length; i++)
-                mapDropDown.appendChild(makeDropDownOption(map_list[i].name));
-            mapDropDown.onchange = function() {
-                var nextMap = mapDropDown.selectedIndex+1;
-                if (state == menuState) {
-                    newGameState.nextMap = nextMap;
-                    switchState(newGameState, 60);
-                }
-                else {
-                    restoreStatus();
-                    readyNewState.nextMap = nextMap;
-                    switchState(readyNewState, 60);
-                }
-                mapDropDown.blur();
-            };
-            fieldset.appendChild(mapDropDown);
-            form.appendChild(fieldset);
-
             // add control from to our div
             controlDiv.appendChild(form);
         };
@@ -215,7 +194,7 @@ var gui = (function() {
             // add canvas and controls to our div
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
-            //addControls();
+            addControls();
             addInput();
         },
     };

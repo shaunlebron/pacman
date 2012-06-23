@@ -534,13 +534,13 @@ var mapgen = (function(){
         var joinWalls = function() {
 
             // randomly join wall pieces to the boundary to increase difficulty
-            // TODO: prevent some pieces that extend too long
 
             var x;
             var c;
             for (x=0; x<cols; x++) {
                 c = cells[x];
-                if (!c.connect[LEFT] && !c.connect[RIGHT] && !c.connect[UP]) {
+                if (!c.connect[LEFT] && !c.connect[RIGHT] && !c.connect[UP] &&
+                    (!c.connect[DOWN] || !c.next[DOWN].connect[DOWN])) {
                     if ((!c.next[LEFT] || !c.next[LEFT].connect[UP]) &&
                         (c.next[RIGHT] && !c.next[RIGHT].connect[UP])) {
                         if (Math.random() <= 0.25) {
@@ -552,7 +552,8 @@ var mapgen = (function(){
 
             for (x=0; x<cols; x++) {
                 c = cells[x+(rows-1)*cols];
-                if (!c.connect[LEFT] && !c.connect[RIGHT] && !c.connect[DOWN]) {
+                if (!c.connect[LEFT] && !c.connect[RIGHT] && !c.connect[DOWN] &&
+                    (!c.connect[UP] || !c.next[UP].connect[UP])) {
                     if ((!c.next[LEFT] || !c.next[LEFT].connect[DOWN]) &&
                         (c.next[RIGHT] && !c.next[RIGHT].connect[DOWN])) {
                         if (Math.random() <= 0.25) {
@@ -789,7 +790,7 @@ var mapgen = (function(){
             }
         }
 
-        // return a tile string
+        // return a tile string (3 empty lines on top and 2 on bottom)
         return (
             "____________________________" +
             "____________________________" +

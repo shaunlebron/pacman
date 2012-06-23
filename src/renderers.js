@@ -524,8 +524,11 @@ var switchRenderer = function(i) {
             for (y=0; y<map.numRows; y++)
             for (x=0; x<map.numCols; x++) {
                 tile = map.currentTiles[i++];
-                if (tile == '.')
+                if (tile == '.') {
+                    bgCtx.translate(1,0); // manually align pellets
                     this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
+                    bgCtx.translate(-1,0);
+                }
             }
         },
 
@@ -588,6 +591,7 @@ var switchRenderer = function(i) {
                 return;
             ctx.save();
             ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
+            ctx.translate(1,0);
             var frame = Math.floor(g.frames/6)%2; // toggle frame every 6 ticks
             var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
             drawGhostSprite(ctx,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
@@ -611,6 +615,7 @@ var switchRenderer = function(i) {
         drawPlayer: function() {
             ctx.save();
             ctx.translate(pacman.pixel.x, pacman.pixel.y);
+            ctx.translate(1,0);
             var frame = this.getPlayerAnimFrame();
             if (gameMode == GAME_PACMAN) {
                 drawPacmanSprite(ctx, pacman.dirEnum, frame*Math.PI/6);
@@ -628,6 +633,7 @@ var switchRenderer = function(i) {
         // draw dying pacman animation (with 0<=t<=1)
         drawDyingPlayer: function(t) {
             var frame = this.getPlayerAnimFrame();
+            ctx.translate(1,0);
 
             if (gameMode == GAME_PACMAN) {
                 // 60 frames dying
@@ -668,6 +674,7 @@ var switchRenderer = function(i) {
                 drawCookiemanSprite(ctx, pacman.dirEnum, frame);
                 ctx.restore();
             }
+            ctx.translate(-1,0);
         },
 
         // draw exploding pacman animation (with 0<=t<=1)
@@ -675,12 +682,14 @@ var switchRenderer = function(i) {
             ctx.save();
             var frame = this.getPlayerAnimFrame();
             ctx.translate(pacman.pixel.x, pacman.pixel.y);
+            ctx.translate(1,0);
             drawPacmanSprite(ctx, pacman.dirEnum, 0, 0, t,-3,1-t);
             ctx.restore();
         },
 
         // draw energizer items on foreground
         drawEnergizers: function() {
+            ctx.translate(1,0);
             var e;
             var i;
             ctx.fillStyle = this.energizerColor;
@@ -694,10 +703,12 @@ var switchRenderer = function(i) {
             }
             ctx.closePath();
             ctx.fill();
+            ctx.translate(-1,0);
         },
 
         // draw fruit
         drawFruit: function() {
+            ctx.translate(1,0);
             if (fruit.isPresent()) {
                 ctx.beginPath();
                 ctx.arc(fruit.pixel.x,fruit.pixel.y,this.energizerSize/2,0,Math.PI*2);
@@ -711,6 +722,7 @@ var switchRenderer = function(i) {
                 ctx.fillStyle = "#FFF";
                 ctx.fillText(fruit.getPoints(), fruit.pixel.x, fruit.pixel.y);
             }
+            ctx.translate(-1,0);
         },
 
     };

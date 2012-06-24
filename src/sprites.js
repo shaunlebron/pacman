@@ -249,12 +249,16 @@ var drawGhostSprite = (function(){
 })();
 
 // draw pacman body
-var drawPacmanSprite = function(ctx,dirEnum,angle,mouthShift,scale,centerShift,alpha) {
+var drawPacmanSprite = function(ctx,dirEnum,angle,mouthShift,scale,centerShift,alpha,color) {
 
     if (mouthShift == undefined) mouthShift = 0;
     if (centerShift == undefined) centerShift = 0;
     if (scale == undefined) scale = 1;
     if (alpha == undefined) alpha = 1;
+
+    if (color == undefined) {
+        color = "rgba(255,255,0," + alpha + ")";
+    }
 
     ctx.save();
 
@@ -273,7 +277,7 @@ var drawPacmanSprite = function(ctx,dirEnum,angle,mouthShift,scale,centerShift,a
     ctx.arc(centerShift,0,6.5*scale,angle,2*Math.PI-angle);
     ctx.closePath();
 
-    ctx.fillStyle = "rgba(255,255,0," + alpha + ")";
+    ctx.fillStyle = color;
     ctx.fill();
 
     ctx.restore();
@@ -299,8 +303,6 @@ var drawMsPacmanSprite = function(ctx,dirEnum,frame) {
         drawPacmanSprite(ctx,dirEnum,angle);
         angle = Math.atan(6/6); // angle for drawing eye
     }
-    ctx.fillStyle = pacman.color;
-    ctx.fill();
 
     ctx.save();
 
@@ -405,24 +407,26 @@ var drawCookiemanSprite = (function(){
         var angle = 0;
 
         // draw body
+        var draw = function(angle) {
+            //angle = Math.PI/6*frame;
+            drawPacmanSprite(ctx,dirEnum,angle,undefined,undefined,undefined,undefined,"#47b8ff");
+        };
         if (frame == 0) {
             // closed
-            drawPacmanSprite(ctx,dirEnum,0);
+            draw(0);
         }
         else if (frame == 1) {
             // open
             angle = Math.atan(4/5);
-            drawPacmanSprite(ctx,dirEnum,angle);
+            draw(angle);
             angle = Math.atan(4/8); // angle for drawing eye
         }
         else if (frame == 2) {
             // wide
             angle = Math.atan(6/3);
-            drawPacmanSprite(ctx,dirEnum,angle);
+            draw(angle);
             angle = Math.atan(6/6); // angle for drawing eye
         }
-        ctx.fillStyle = "#47b8ff";
-        ctx.fill();
 
         ctx.save();
 
@@ -439,7 +443,7 @@ var drawCookiemanSprite = (function(){
         var y = -3.5;
         var r1 = 3;   // distance from pivot of first eye
         var r2 = 6; // distance from pivot of second eye
-        angle *= 0.5; // angle from pivot point
+        angle /= 3; // angle from pivot point
         angle += Math.PI/8;
         var c = Math.cos(angle);
         var s = Math.sin(angle);

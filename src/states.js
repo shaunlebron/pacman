@@ -468,7 +468,7 @@ var overState = (function() {
         draw: function() {},
         update: function() {
             if (frames == 120) {
-                switchState(menuState);
+                switchState(menuState,60);
             }
             else
                 frames++;

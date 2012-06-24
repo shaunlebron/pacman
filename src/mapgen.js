@@ -832,10 +832,41 @@ var genRandom = function() {
         return '#'+('00000'+(Math.random()*(1<<24)|0).toString(16)).slice(-6);
     };
 
+    var randomPalette = (function() {
+        var palettes = [
+            ["#82894c", "#f5bd27"],
+            ["#b9223c", "#f2a811"],
+            ["#7e2b64", "#eec5c6"],
+            ["#2a61a7", "#c2e5a8"],
+            ["#21a5a8", "#a0f499"],
+            ["#215183", "#06ba6a"],
+            ["#18531a", "#569b9e"],
+            ["#606a65", "#f0dd85"],
+            ["#751030", "#80f7d2"],
+            ["#c90750", "#e6d142"],
+            ["#323230", "#e068ac"],
+            ["#54751e", "#7cd493"],
+            ["#308bfd", "#272285"],
+            ["#5921b5", "#d77899"],
+            ["#367252", "#8dffc9"],
+            ["#7a373b", "#b48485"],
+            ["#92f4d6", "#3a8f2a"],
+        ];
+        var size = palettes.length;
+        return function() {
+            var i = getRandomInt(0,size-1);
+            console.log("palette",i);
+            return palettes[i];
+        };
+    })();
+
     return function() {
         genRandom();
         var map = new Map(28,36,getTiles());
         map.name = "Random Map";
+        //var p = randomPalette();
+        //map.wallFillColor = p[0];
+        //map.wallStrokeColor = p[1];
         map.wallFillColor = randomColor();
         map.wallStrokeColor = randomColor();
         map.pelletColor = "#ffb8ae";

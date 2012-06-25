@@ -253,7 +253,6 @@ var genRandom = function() {
                         }
                     }
                     else if (size == 3 || size == 4) {
-                        // create L piece
                         if (longPieces < maxLongPieces && firstCell.x > 0 && Math.random() <= 0.5) {
                             for (i=0; i<4; i++) {
                                 if (!cell.connect[i]) {
@@ -610,7 +609,7 @@ var genRandom = function() {
     joinWalls();
 
     // print out the number of tries to generate a valid map.
-    console.log(genCount);
+    //console.log(genCount);
 };
 
     // Transform the simple cells to a tile array used for creating the map.

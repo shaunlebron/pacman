@@ -496,8 +496,6 @@ var mapgen = (function(){
                             return false;
                         }
 
-                        // FIXME: bug introduced because the far right vertical pieces' group is overridden to -1
-
                         // Join the four cells to create a square.
                         cells[x+y*cols].connect[DOWN] = true;
                         cells[x+y*cols].connect[RIGHT] = true;
@@ -588,10 +586,13 @@ var mapgen = (function(){
                 var c;
                 var candidates = [];
                 var count = 0;
+                var touchTop;
+                var touchBot;
                 for (c=cells[2*cols-1]; c; c = c.next[DOWN]) {
                     if (!c.connect[RIGHT] && !c.connect[DOWN] && !c.connect[UP]) { // single-cell touching boundary
-                        if ((!c.next[UP] || c.next[UP].connect[RIGHT]) &&
-                            (!c.next[DOWN] || c.next[DOWN].connect[RIGHT])) { // surrounded by right-pieces
+                        touchTop = c.next[UP] && c.next[UP].connect[RIGHT];
+                        touchBot = c.next[DOWN] && c.next[DOWN].connect[RIGHT];
+                        if (touchTop && touchBot) { // surrounded by right-pieces
                             candidates.push(c);
                             count++;
                         }
@@ -618,15 +619,18 @@ var mapgen = (function(){
             };
 
             var method3 = function() {
-                // promote a single-cell, non-right-boundary piece that touches a right-piece
+                // promote a single-cell, non-right-boundary piece that touches one and only one right-piece
                 //  to a right-boundary-piece itself.
                 var c;
                 var candidates = [];
                 var count = 0;
+                var touchTop;
+                var touchBot;
                 for (c=cells[2*cols-1]; c; c = c.next[DOWN]) {
                     if (!c.connect[RIGHT] && !c.connect[DOWN] && !c.connect[UP]) { // single-cell touching boundary
-                        if ((!c.next[UP] || c.next[UP].connect[RIGHT]) &&
-                            (!c.next[DOWN] || c.next[DOWN].connect[RIGHT])) { // surrounded by right-pieces
+                        touchTop = !c.next[UP] || c.next[UP].connect[RIGHT];
+                        touchBot = !c.next[DOWN] || c.next[DOWN].connect[RIGHT];
+                        if (touchTop != touchBot) { // surrounded by one and only one right-piece
                             candidates.push(c);
                             count++;
                         }
@@ -671,7 +675,7 @@ var mapgen = (function(){
                 // destroy the connections between right-connected tiles that are not tunnels
                 var c;
                 for (c=cells[2*cols-1]; c; c = c.next[DOWN]) {
-                    if (!c.connect[UP] && c.connect[RIGHT] && c.next[UP].connect[RIGHT] && !c.topTunnel) {
+                    if (!c.connect[UP] && c.connect[RIGHT] && c.next[UP].connect[RIGHT] && !c.topTunnel && !c.next[UP].botTunnel) {
                         reassignGroup(c.group, c.next[UP].group);
                         c.connect[UP] = true;
                         c.next[UP].connect[DOWN] = true;
@@ -680,13 +684,15 @@ var mapgen = (function(){
             };
 
             return function() {
-                var methods = [method1, method2, method3, method4];
-                var methodCount = methods.length;
+                var numTunnels = Math.random() <= 0.45 ? 2 : 1;
 
-                var i;
-                for (i=0; i<methodCount; i++) {
-                    if (methods[i]()) {
-                        break;
+                if (numTunnels == 1) {
+                    method1() || method3() || method4();
+                }
+                else if (numTunnels == 2) {
+                    // FIXME: randomly try method2, if not, then try to balance out the distribution of the tunnels using the other methods
+                    if (!method2()) {
+                        method1() || method3() || method4();
                     }
                 }
 

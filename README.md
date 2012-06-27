@@ -3,11 +3,11 @@ Pac-Man
 
 A historical tribute and accurate remake of the original Pac-Man arcade game.  Includes the remakes of Pac-Man and Ms. Pac-Man.
 
-<img src="https://github.com/shaunew/Pac-Man/raw/gh-pages/shots/preview.png" width="100%"/>
+<img src="http://shaunew.github.com/Pac-Man/shots/preview.png" width="100%"/>
 
 A new game mode 'Cookie-Man' generates a random maze for every level, allowing for extended play.
 
-<img src="https://github.com/shaunew/Pac-Man/raw/gh-pages/shots/preview2.png" width="100%"/>
+<img src="http://shaunew.github.com/Pac-Man/shots/preview2.png" width="100%"/>
 
 Play
 ----

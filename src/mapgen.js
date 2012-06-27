@@ -1007,7 +1007,7 @@ var mapgen = (function(){
         var map = new Map(28,36,getTiles());
         map.name = "Random Map";
         map.wallFillColor = randomColor();
-        map.wallStrokeColor = randomColor();
+        map.wallStrokeColor = rgbString(hslToRgb(Math.random(), Math.random(), Math.random() * 0.4 + 0.6));
         map.pelletColor = "#ffb8ae";
         return map;
     };

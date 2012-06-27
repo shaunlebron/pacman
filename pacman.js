@@ -613,6 +613,18 @@ var mapgen = (function(){
         return Math.floor(Math.random() * (max-min+1)) + min;
     };
 
+    var shuffle = function(list) {
+        var len = list.length;
+        var i,j;
+        var temp;
+        for (i=0; i<len; i++) {
+            j = getRandomInt(0,len-1);
+            temp = list[i];
+            list[i] = list[j];
+            list[j] = temp;
+        }
+    };
+
     var UP = 0;
     var RIGHT = 1;
     var DOWN = 2;
@@ -976,18 +988,30 @@ var mapgen = (function(){
                     }
                 }
 
+                // build candidate list
+                var candidates = [];
+                var numCandidates = 0;
                 for (; c2; c2=c2.next[LEFT]) {
-
-                    if (c2.isShrinkWidthCandidate && canShrinkWidth(c2.x,c2.y)) {
-                        c2.shrinkWidth = true;
-                        narrowCols[c2.y] = c2.x;
-                        return true;
+                    if (c2.isShrinkWidthCandidate) {
+                        candidates.push(c2);
+                        numCandidates++;
                     }
 
                     // cannot proceed further without causing irreconcilable tight turns
                     if ((!c2.connect[LEFT] || cellIsCrossCenter(c2)) &&
                         (!c2.next[UP].connect[LEFT] || cellIsCrossCenter(c2.next[UP]))) {
                         break;
+                    }
+                }
+                shuffle(candidates);
+
+                var i;
+                for (i=0; i<numCandidates; i++) {
+                    c2 = candidates[i];
+                    if (canShrinkWidth(c2.x,c2.y)) {
+                        c2.shrinkWidth = true;
+                        narrowCols[c2.y] = c2.x;
+                        return true;
                     }
                 }
 
@@ -1031,18 +1055,29 @@ var mapgen = (function(){
                 }
 
                 // Proceed from the right cell upwards, looking for a cell that can be raised.
+                var candidates = [];
+                var numCandidates = 0;
                 for (; c2; c2=c2.next[DOWN]) {
-
-                    if (c2.isRaiseHeightCandidate && canRaiseHeight(c2.x,c2.y)) {
-                        c2.raiseHeight = true;
-                        tallRows[c2.x] = c2.y;
-                        return true;
+                    if (c2.isRaiseHeightCandidate) {
+                        candidates.push(c2);
+                        numCandidates++;
                     }
 
                     // cannot proceed further without causing irreconcilable tight turns
                     if ((!c2.connect[DOWN] || cellIsCrossCenter(c2)) &&
                         (!c2.next[LEFT].connect[DOWN] || cellIsCrossCenter(c2.next[LEFT]))) {
                         break;
+                    }
+                }
+                shuffle(candidates);
+
+                var i;
+                for (i=0; i<numCandidates; i++) {
+                    c2 = candidates[i];
+                    if (canRaiseHeight(c2.x,c2.y)) {
+                        c2.raiseHeight = true;
+                        tallRows[c2.x] = c2.y;
+                        return true;
                     }
                 }
 

@@ -1167,14 +1167,17 @@ var mapgen = (function(){
 
         var createTunnels = (function() {
 
-            var method1 = function() {
+            var method1 = function(select) {
                 // choose from currently existing dead-ends
                 // between right boundary pieces
                 var c;
                 var candidates = [];
                 var count = 0;
                 for (c=cells[2*cols-1]; c; c = c.next[DOWN]) {
-                    if (c.connect[RIGHT] && !c.connect[UP] && c.next[UP].connect[RIGHT]) {
+                    if (select && !select(c)) {
+                        continue;
+                    }
+                    if (c.connect[RIGHT] && !c.connect[UP] && c.next[UP].connect[RIGHT] && !c.topTunnel) {
                         candidates.push(c);
                         count++;
                     }
@@ -1189,7 +1192,7 @@ var mapgen = (function(){
                 return 0;
             };
 
-            var method2 = function() {
+            var method2 = function(select) {
                 // promote a single-cell, non-right-boundary piece surrounded by right-pieces
                 //  to a right-boundary-piece itself.
                 var c;
@@ -1197,14 +1200,14 @@ var mapgen = (function(){
                 var count = 0;
                 var touchTop;
                 var touchBot;
-                for (c=cells[2*cols-1]; c; c = c.next[DOWN]) {
-                    if (!c.connect[RIGHT] && !c.connect[DOWN] && !c.connect[UP]) { // single-cell touching boundary
-                        touchTop = c.next[UP] && c.next[UP].connect[RIGHT];
-                        touchBot = c.next[DOWN] && c.next[DOWN].connect[RIGHT];
-                        if (touchTop && touchBot) { // surrounded by right-pieces
-                            candidates.push(c);
-                            count++;
-                        }
+                for (c=cells[2*cols-1]; c.y < rows-1; c = c.next[DOWN]) {
+                    if (select && !select(c)) {
+                        continue;
+                    }
+                    if (!c.connect[RIGHT] && !c.connect[DOWN] && !c.connect[UP] && // single-cell touching boundary
+                        (c.next[LEFT].connect[UP] || c.next[LEFT].connect[DOWN])) {
+                        candidates.push(c);
+                        count++;
                     }
                 }
                 var i;
@@ -1227,7 +1230,7 @@ var mapgen = (function(){
                 return 0;
             };
 
-            var method3 = function() {
+            var method3 = function(select) {
                 // promote a single-cell, non-right-boundary piece that touches one and only one right-piece
                 //  to a right-boundary-piece itself.
                 var c;
@@ -1235,11 +1238,16 @@ var mapgen = (function(){
                 var count = 0;
                 var touchTop;
                 var touchBot;
-                for (c=cells[2*cols-1]; c; c = c.next[DOWN]) {
-                    if (!c.connect[RIGHT] && !c.connect[DOWN] && !c.connect[UP]) { // single-cell touching boundary
-                        touchTop = !c.next[UP] || c.next[UP].connect[RIGHT];
-                        touchBot = !c.next[DOWN] || c.next[DOWN].connect[RIGHT];
-                        if (touchTop != touchBot) { // surrounded by one and only one right-piece
+                for (c=cells[2*cols-1]; c.y < rows-1; c = c.next[DOWN]) {
+                    if (select && !select(c)) {
+                        continue;
+                    }
+                    if (!c.connect[RIGHT] && !c.connect[DOWN] && !c.connect[UP] &&// single-cell touching boundary
+                        !c.topTunnel && !c.botTunnel &&
+                        (c.next[LEFT].connect[UP] || c.next[LEFT].connect[DOWN])) {
+                        touchTop = c.next[UP] && c.next[UP].connect[RIGHT];
+                        touchBot = c.next[DOWN] && c.next[DOWN].connect[RIGHT];
+                        if (touchTop && !touchBot) { // surrounded by one and only one right-piece
                             candidates.push(c);
                             count++;
                         }
@@ -1261,23 +1269,15 @@ var mapgen = (function(){
                 return 0;
             };
 
-            var method4 = function() {
-                // choose a random piece without a top connection and turn it into a tunnel
-                var c;
-                var candidates = [];
-                var count = 0;
-                for (c=cells[2*cols-1]; c; c = c.next[DOWN]) {
-                    if (!c.connect[UP]) {
-                        candidates.push(c);
-                        count++;
-                    }
-                }
-                if (count > 0) {
-                    i = getRandomInt(0,count-1);
-                    candidates[i].topTunnel = true;
-                    return 1;
-                }
-                return 0;
+            var method5 = function() {
+                // choose one tunnel for each half using the previous methods
+                // This function may create 0, 1, or 2 tunnels.
+
+                var isTopHalf = function(c) { return c.y < rows/2-2; };
+                method1(isTopHalf) || method3(isTopHalf);
+
+                var isBotHalf = function(c) { return c.y >= rows/2+1; };
+                method1(isBotHalf) || method3(isBotHalf);
             };
 
             var clearDeadEnds = function() {
@@ -1293,18 +1293,20 @@ var mapgen = (function(){
             };
 
             return function() {
+
                 var numTunnels = Math.random() <= 0.45 ? 2 : 1;
 
                 if (numTunnels == 1) {
-                    method1() || method3() || method4();
+                    method1() || method3();
                 }
                 else if (numTunnels == 2) {
-                    // FIXME: randomly try method2, if not, then try to balance out the distribution of the tunnels using the other methods
-                    if (!method2()) {
-                        method1() || method3() || method4();
+                    if (Math.random() <= 0.35) {
+                        method5();
+                    }
+                    else {
+                        method2() || method5();
                     }
                 }
-
                 clearDeadEnds();
             };
 
@@ -1458,14 +1460,52 @@ var mapgen = (function(){
         }
 
         // extend tunnels
+        var hasTunnel = false;
+        var y;
         for (c=cells[cols-1]; c; c = c.next[DOWN]) {
             if (c.topTunnel) {
-                setTile(subcols-1, c.final_y+1,'.');
-                setTile(subcols-2, c.final_y+1,'.');
+                y = c.final_y+1;
+                setTile(subcols-1, y,'.');
+                setTile(subcols-2, y,'.');
+                hasTunnel = true;
             }
             if (c.botTunnel) {
-                setTile(subcols-1, c.final_y+1 + c.final_h,'.');
-                setTile(subcols-2, c.final_y+1 + c.final_h,'.');
+                y = c.final_y+1 + c.final_h;
+                setTile(subcols-1, y,'.');
+                setTile(subcols-2, y,'.');
+                hasTunnel = true;
+            }
+        }
+
+        // create a tunnel if initial tunnel construction failed
+        var x;
+        var minx = subcols;
+        var tunnely;
+        if (!hasTunnel) {
+            
+            // start from center and move down
+            for (y=Math.floor(subrows/2); y<subrows; y++) {
+                for(x=subcols-1; getTile(x,y) == '_'; x--) {
+                }
+                if (getTile(x-1,y) == '.' && x < minx) {
+                    minx = x;
+                    tunnely = y;
+                }
+            }
+
+            // start from center and move up
+            for (y=Math.floor(subrows/2); y>=0; y--) {
+                for(x=subcols-1; getTile(x,y) == '_'; x--) {
+                }
+                if (getTile(x-1,y) == '.' && x < minx) {
+                    minx = x;
+                    tunnely = y;
+                }
+            }
+
+            // create tunnel
+            for (x=minx; x<subcols+2; x++) {
+                setTile(x,tunnely,'.');
             }
         }
 
@@ -1497,8 +1537,6 @@ var mapgen = (function(){
                 break;
             }
         }
-        //setTile(subcols-2,2,'o');
-        //setTile(subcols-2,subrows-3,'o');
 
         // erase pellets in the tunnels
         for (y=0; y<subrows; y++) {

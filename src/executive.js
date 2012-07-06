@@ -1,9 +1,60 @@
 var executive = (function(){
 
     var interval; // used by setInterval and clearInterval to execute the game loop
+    var timeout;
     var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
     var nextFrameTime;
     var running = false;
+
+    /**********/
+    // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+    // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+
+    // requestAnimationFrame polyfill by Erik Möller
+    // fixes from Paul Irish and Tino Zijdel
+
+    (function() {
+        var lastTime = 0;
+        var vendors = ['ms', 'moz', 'webkit', 'o'];
+        for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+            window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+            window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+                                       || window[vendors[x]+'CancelRequestAnimationFrame'];
+        }
+     
+        if (!window.requestAnimationFrame)
+            window.requestAnimationFrame = function(callback, element) {
+                var currTime = new Date().getTime();
+                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+                  timeToCall);
+                lastTime = currTime + timeToCall;
+                return id;
+            };
+     
+        if (!window.cancelAnimationFrame)
+            window.cancelAnimationFrame = function(id) {
+                clearTimeout(id);
+            };
+    }());
+    /**********/
+    var reqFrame;
+
+    var maxFrameSkip = 10;
+    var tick = function(now) {
+        // call update for every frame period that has elapsed
+        var frames = 0;
+        if (framePeriod != Infinity) {
+            while (frames < maxFrameSkip && (now > nextFrameTime)) {
+                state.update();
+                nextFrameTime += framePeriod;
+                frames++;
+            }
+        }
+        // draw after updates are caught up
+        state.draw();
+        reqFrame = requestAnimationFrame(tick);
+    };
 
     return {
 
@@ -21,31 +72,13 @@ var executive = (function(){
         start: function() {
             if (running) return;
             nextFrameTime = (new Date).getTime();
-            var that = this;
-            interval = setInterval(function(){that.tick();}, 1000/60);
+            reqFrame = requestAnimationFrame(tick);
             running = true;
         },
         stop: function() {
             if (!running) return;
-            clearInterval(interval);
+            cancelAnimationFrame(reqFrame);
             running = false;
         },
-        tick: (function(){
-            var maxFrameSkip = 5;
-            return function() {
-                // call update for every frame period that has elapsed
-                var frames = 0;
-                if (framePeriod != Infinity) {
-                    while (frames < maxFrameSkip && (new Date).getTime() > nextFrameTime) {
-                        state.update();
-                        nextFrameTime += framePeriod;
-                        frames++;
-                    }
-                }
-                // draw after updates are caught up
-                state.draw();
-            };
-        })(),
-
     };
 })();

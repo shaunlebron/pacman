@@ -22,12 +22,16 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
     var frames;
     var inFirstState = function() { return frames < frameDuration/2; };
     var getStateTime = function() { return inFirstState() ? frames/frameDuration*2 : frames/frameDuration*2-1; };
+    var initialized = false;
+
     return {
         init: function() {
             frames = 0;
             canvas.onmousedown = undefined; // remove all click events from previous state
+            initialized = true;
         },
         draw: function() {
+            if (!initialized) return;
             var t = getStateTime();
             if (inFirstState()) {
                 if (prevState) {
@@ -48,8 +52,10 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
                 if (continueUpdate2) nextState.update();
             }
 
-            if (frames == frameDuration)
+            if (frames == frameDuration) {
                 state = nextState; // hand over state
+                initialized = false;
+            }
             else {
                 if (frames == frameDuration/2)
                     nextState.init();
@@ -96,6 +102,8 @@ var newGameState = (function() {
             score = 0;
         },
         draw: function() {
+            if (!map)
+                return;
             renderer.blitMap();
             renderer.drawEnergizers();
             renderer.drawExtraLives();

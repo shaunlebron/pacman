@@ -14,6 +14,23 @@ var Player = function() {
 
     // determines if this player should be AI controlled
     this.ai = false;
+
+    this.savedNextDirEnum = {};
+    this.savedEatPauseFramesLeft = {};
+};
+
+Player.prototype.save = function(t) {
+    this.savedEatPauseFramesLeft[t] = this.eatPauseFramesLeft;
+    this.savedNextDirEnum[t] = this.nextDirEnum;
+
+    Actor.prototype.save.call(this,t);
+};
+
+Player.prototype.load = function(t) {
+    this.nextDirEnum = this.savedNextDirEnum[t];
+    this.eatPauseFramesLeft = this.savedEatPauseFramesLeft[t];
+
+    Actor.prototype.load.call(this,t);
 };
 
 // inherit functions from Actor

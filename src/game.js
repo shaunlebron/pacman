@@ -15,6 +15,22 @@ var extraLives = 0;
 var highScore = 0;
 var score = 0;
 
+var savedExtraLives = {};
+var savedHighScore = {};
+var savedScore = {};
+
+var saveGame = function(t) {
+    savedExtraLives[t] = extraLives;
+    savedHighScore[t] = highScore;
+    savedScore[t] = score;
+};
+
+var loadGame = function(t) {
+    extraLives = savedExtraLives[t];
+    highScore = savedHighScore[t];
+    score = savedScore[t];
+};
+
 // TODO: have a high score for each game type
 
 var addScore = function(p) {

@@ -180,10 +180,19 @@ var gui = (function() {
                 case 38: pacman.setNextDir(DIR_UP); break;
                 case 39: pacman.setNextDir(DIR_RIGHT); break;
                 case 40: pacman.setNextDir(DIR_DOWN); break;
+                case 16: vcr.mode = VCR_REWIND; // shift
                 default: return;
             }
             // prevent default action for arrow keys
             // (don't scroll page with arrow keys)
+            e.preventDefault();
+        };
+        document.onkeyup = function(e) {
+            var key = (e||window.event).keyCode;
+            switch (key) {
+                case 16: vcr.mode = VCR_RECORD; // shift
+                default: return;
+            }
             e.preventDefault();
         };
     };

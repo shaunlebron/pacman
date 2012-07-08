@@ -23,6 +23,7 @@ echo "
 
 for file in \
     game.js \
+    vcr.js \
     direction.js \
     Map.js \
     colors.js \

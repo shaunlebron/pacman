@@ -52,7 +52,24 @@ var ghostCommander = (function() {
     var frame;   // current frame
     var command; // last command given to ghosts
 
+    var savedFrame = {};
+    var savedCommand = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedFrame[t] = frame;
+        savedCommand[t] = command;
+    };
+
+    // load state at time t
+    var load = function(t) {
+        frame = savedFrame[t];
+        command = savedCommand[t];
+    };
+
     return {
+        save: save,
+        load: load,
         reset: function() { 
             command = GHOST_CMD_SCATTER;
             frame = 0;

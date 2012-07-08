@@ -74,9 +74,13 @@ var switchRenderer = function(i) {
 
         // copy background canvas to the foreground canvas
         blitMap: function() {
+            if (vcr.mode == VCR_REWIND) {
+                ctx.globalAlpha = 0.2;
+            }
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);
+            ctx.globalAlpha = 1;
         },
 
         renderFunc: function(f) {
@@ -538,6 +542,18 @@ var switchRenderer = function(i) {
                 if (tile == '.') {
                     this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
                 }
+            }
+        },
+
+        refreshPellet: function(x,y) {
+            var i = map.posToIndex(x,y);
+            var tile = map.currentTiles[i];
+            if (tile == ' ') {
+                this.erasePellet(x,y);
+            }
+            else if (tile == '.') {
+                bgCtx.fillStyle = map.pelletColor;
+                this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
             }
         },
 

@@ -35,7 +35,30 @@ var energizer = (function() {
     var points; // points that the last eaten ghost was worth
     var pointsFramesLeft; // number of frames left to display points earned from eating ghost
 
+    var savedCount = {};
+    var savedActive = {};
+    var savedPoints = {};
+    var savedPointsFramesLeft = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedCount[t] = count;
+        savedActive[t] = active;
+        savedPoints[t] = points;
+        savedPointsFramesLeft[t] = pointsFramesLeft;
+    };
+
+    // load state at time t
+    var load = function(t) {
+        count = savedCount[t];
+        active = savedActive[t];
+        points = savedPoints[t];
+        pointsFramesLeft = savedPointsFramesLeft[t];
+    };
+
     return {
+        save: save,
+        load: load,
         reset: function() {
             count = 0;
             active = false;

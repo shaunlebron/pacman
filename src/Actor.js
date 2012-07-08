@@ -17,7 +17,29 @@ var Actor = function() {
 
     this.frames = 0;        // frame count
     this.steps = 0;         // step count
+
+    this.savedSteps = {};
+    this.savedFrames = {};
+    this.savedDirEnum = {};
+    this.savedPixel = {};
 };
+
+// save state at time t
+Actor.prototype.save = function(t) {
+    this.savedSteps[t] = this.steps;
+    this.savedFrames[t] = this.frames;
+    this.savedDirEnum[t] = this.dirEnum;
+    this.savedPixel[t] = { x:this.pixel.x, y:this.pixel.y };
+};
+
+// load state at time t
+Actor.prototype.load = function(t) {
+    this.steps = this.savedSteps[t];
+    this.frames = this.savedFrames[t];
+    this.setDir(this.savedDirEnum[t]);
+    this.setPos(this.savedPixel[t].x, this.savedPixel[t].y);
+};
+
 
 // reset to initial position and direction
 Actor.prototype.reset = function() {

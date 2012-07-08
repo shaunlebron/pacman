@@ -138,6 +138,7 @@ var readyState =  (function(){
             ghostCommander.reset();
             fruit.reset();
             energizer.reset();
+            map.resetTimeEaten();
             frames = 0;
         },
         draw: function() {
@@ -203,7 +204,7 @@ var readyRestartState = {
 // (state when playing the game)
 
 var playState = {
-    init: function() { },
+    init: function() { vcr.reset(); },
     draw: function() {
         renderer.blitMap();
         renderer.drawEnergizers();
@@ -237,61 +238,75 @@ var playState = {
         return false;
     },
     update: function() {
-        var i,j; // loop index
-        var maxSteps = 2;
+        
+        if (vcr.mode == VCR_RECORD) {
 
-        // skip this frame if needed,
-        // but update ghosts running home
-        if (energizer.showingPoints()) {
-            for (j=0; j<maxSteps; j++)
-                for (i=0; i<4; i++)
-                    if (ghosts[i].mode == GHOST_GOING_HOME || ghosts[i].mode == GHOST_ENTERING_HOME)
-                        ghosts[i].update(j);
-            energizer.updatePointsTimer();
-            return;
-        }
-        else { // make ghosts go home immediately after points disappear
-            for (i=0; i<4; i++)
-                if (ghosts[i].mode == GHOST_EATEN) {
-                    ghosts[i].mode = GHOST_GOING_HOME;
-                    ghosts[i].targetting = 'door';
-                }
-        }
+            // record current state
+            vcr.record();
 
-        // update counters
-        ghostReleaser.update();
-        ghostCommander.update();
-        elroyTimer.update();
-        fruit.update();
-        energizer.update();
+            var i,j; // loop index
+            var maxSteps = 2;
+            var skip = false;
 
-        // update actors one step at a time
-        for (j=0; j<maxSteps; j++) {
-
-            // advance pacman
-            pacman.update(j);
-
-            // test collision with fruit
-            fruit.testCollide();
-
-            // finish level if all dots have been eaten
-            if (map.allDotsEaten()) {
-                this.draw();
-                switchState(finishState);
-                break;
+            // skip this frame if needed,
+            // but update ghosts running home
+            if (energizer.showingPoints()) {
+                for (j=0; j<maxSteps; j++)
+                    for (i=0; i<4; i++)
+                        if (ghosts[i].mode == GHOST_GOING_HOME || ghosts[i].mode == GHOST_ENTERING_HOME)
+                            ghosts[i].update(j);
+                energizer.updatePointsTimer();
+                skip = true;
             }
+            else { // make ghosts go home immediately after points disappear
+                for (i=0; i<4; i++)
+                    if (ghosts[i].mode == GHOST_EATEN) {
+                        ghosts[i].mode = GHOST_GOING_HOME;
+                        ghosts[i].targetting = 'door';
+                    }
+            }
+            
+            if (!skip) {
 
-            // test pacman collision before and after updating ghosts
-            // (redundant to prevent pass-throughs)
-            // (if collision happens, stop immediately.)
-            if (this.isPacmanCollide()) break;
-            for (i=0;i<4;i++) actors[i].update(j);
-            if (this.isPacmanCollide()) break;
+                // update counters
+                ghostReleaser.update();
+                ghostCommander.update();
+                elroyTimer.update();
+                fruit.update();
+                energizer.update();
+
+                // update actors one step at a time
+                for (j=0; j<maxSteps; j++) {
+
+                    // advance pacman
+                    pacman.update(j);
+
+                    // test collision with fruit
+                    fruit.testCollide();
+
+                    // finish level if all dots have been eaten
+                    if (map.allDotsEaten()) {
+                        this.draw();
+                        switchState(finishState);
+                        break;
+                    }
+
+                    // test pacman collision before and after updating ghosts
+                    // (redundant to prevent pass-throughs)
+                    // (if collision happens, stop immediately.)
+                    if (this.isPacmanCollide()) break;
+                    for (i=0;i<4;i++) actors[i].update(j);
+                    if (this.isPacmanCollide()) break;
+                }
+
+                // update frame counts
+                for (i=0; i<5; i++)
+                    actors[i].frames++;
+            }
         }
-
-        // update frame counts
-        for (i=0; i<5; i++)
-            actors[i].frames++;
+        else if (vcr.mode = VCR_REWIND) {
+            vcr.rewind();
+        }
     },
 };
 
@@ -299,40 +314,62 @@ var playState = {
 // Script state
 // (a state that triggers functions at certain times)
 
-var scriptState = {
-    init: function() {
-        this.frames = 0;        // frames since state began
-        this.triggerFrame = 0;  // frames since last trigger
+var scriptState = (function(){
 
-        this.drawFunc = undefined;   // current draw function
-        this.updateFunc = undefined; // current update function
-    },
-    update: function() {
+    return {
+        init: function() {
+            this.frames = 0;        // frames since state began
+            this.triggerFrame = 0;  // frames since last trigger
 
-        // if trigger is found for current time,
-        // call its init() function
-        // and store its draw() and update() functions
-        var trigger = this.triggers[this.frames];
-        if (trigger) {
-            if (trigger.init) trigger.init();
-            this.drawFunc = trigger.draw;
-            this.updateFunc = trigger.update;
-            this.triggerFrame = 0;
-        }
+            this.drawFunc = undefined;   // current draw function
+            this.updateFunc = undefined; // current update function
+        },
+        rewind: function() {
+            // FIXME: handle calling the trigger's init function?
 
-        // call the last trigger's update function
-        if (this.updateFunc) 
-            this.updateFunc(this.triggerFrame);
+            var trigger = this.triggers[this.frames];
+            if (trigger) {
+                var i;
+                for (i=this.frames-1; i>=0; i--) {
+                    trigger = this.triggers[i];
+                    if (trigger) {
+                        this.drawFunc = trigger.draw;
+                        this.updateFunc = trigger.update;
+                        this.triggerFrame = this.frames-i;
+                        break;
+                    }
+                }
+            }
+            this.frames--;
+            this.triggerFrame--;
+        },
+        update: function() {
 
-        this.frames++;
-        this.triggerFrame++;
-    },
-    draw: function() {
-        // call the last trigger's draw function
-        if (this.drawFunc) 
-            this.drawFunc(this.triggerFrame);
-    },
-};
+            // if trigger is found for current time,
+            // call its init() function
+            // and store its draw() and update() functions
+            var trigger = this.triggers[this.frames];
+            if (trigger) {
+                if (trigger.init) trigger.init();
+                this.drawFunc = trigger.draw;
+                this.updateFunc = trigger.update;
+                this.triggerFrame = 0;
+            }
+
+            // call the last trigger's update function
+            if (this.updateFunc) 
+                this.updateFunc(this.triggerFrame);
+
+            this.frames++;
+            this.triggerFrame++;
+        },
+        draw: function() {
+            // call the last trigger's draw function
+            if (this.drawFunc) 
+                this.drawFunc(this.triggerFrame);
+        },
+    };
+})();
 
 ////////////////////////////////////////////////////
 // Dead state
@@ -355,6 +392,22 @@ var deadState = (function() {
         // inherit script state functions
         __proto__: scriptState,
 
+        update: function() {
+            if (vcr.mode == VCR_RECORD) {
+                vcr.record();
+                scriptState.update.call(this);
+            }
+            else if (vcr.mode == VCR_REWIND) {
+                if (this.frames == 0) {
+                    state = playState;
+                }
+                else {
+                    vcr.rewind();
+                    scriptState.rewind.call(this);
+                }
+            }
+        },
+
         // script functions for each time
         triggers: {
             0: { // freeze
@@ -369,7 +422,7 @@ var deadState = (function() {
                 }
             },
             60: {
-                init: function() { // isolate pacman
+                draw: function() { // isolate pacman
                     commonDraw();
                     renderer.drawPlayer();
                 },

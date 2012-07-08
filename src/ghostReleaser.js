@@ -37,7 +37,40 @@ var ghostReleaser = (function(){
     var ghostCounts = {};   // personal dot counts for each ghost
     var globalCount;        // global dot count
 
+    var savedGlobalCount = {};
+    var savedFramesSinceLastDot = {};
+    var savedGhostCounts = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedFramesSinceLastDot[t] = framesSinceLastDot;
+        if (mode == MODE_GLOBAL) {
+            savedGlobalCount[t] = globalCount;
+        }
+        else if (mode == MODE_PERSONAL) {
+            savedGhostCounts[t] = {};
+            savedGhostCounts[t][PINKY] = ghostCounts[PINKY];
+            savedGhostCounts[t][INKY] = ghostCounts[INKY];
+            savedGhostCounts[t][CLYDE] = ghostCounts[CLYDE];
+        }
+    };
+
+    // load state at time t
+    var load = function(t) {
+        framesSinceLastDot = savedFramesSinceLastDot[t];
+        if (mode == MODE_GLOBAL) {
+            globalCount = savedGlobalCount[t];
+        }
+        else if (mode == MODE_PERSONAL) {
+            ghostCounts[PINKY] = savedGhostCounts[t][PINKY];
+            ghostCounts[INKY] = savedGhostCounts[t][INKY];
+            ghostCounts[CLYDE] = savedGhostCounts[t][CLYDE];
+        }
+    };
+
     return {
+        save: save,
+        load: load,
         onNewLevel: function() {
             mode = MODE_PERSONAL;
             framesSinceLastDot = 0;
@@ -47,8 +80,8 @@ var ghostReleaser = (function(){
         },
         onRestartLevel: function() {
             mode = MODE_GLOBAL;
-            globalCount = 0;
             framesSinceLastDot = 0;
+            globalCount = 0;
         },
         onDotEat: function() {
             var i;

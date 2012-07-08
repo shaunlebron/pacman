@@ -12,7 +12,24 @@ var fruit = (function(){
     var framesLeft; // frames left until fruit is off the screen
     var scoreFramesLeft; // frames left until the picked-up fruit score is off the screen
 
+    var savedFramesLeft = {};
+    var savedScoreFramesLeft = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedFramesLeft[t] = framesLeft;
+        savedScoreFramesLeft[t] = scoreFramesLeft;
+    };
+
+    // load state at time t
+    var load = function(t) {
+        framesLeft = savedFramesLeft[t];
+        scoreFramesLeft = savedScoreFramesLeft[t];
+    };
+
     return {
+        save: save,
+        load: load,
         pixel: {x:0, y:0}, // pixel location
         setPosition: function(px,py) {
             this.pixel.x = px;

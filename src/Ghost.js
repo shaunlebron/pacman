@@ -30,8 +30,36 @@ Ghost.prototype.reset = function() {
     this.mode = this.startMode;
     this.scared = false;
 
+    this.savedSigReverse = {};
+    this.savedSigLeaveHome = {};
+    this.savedMode = {};
+    this.savedScared = {};
+    this.savedElroy = {};
+
     // call Actor's reset function to reset position and direction
     Actor.prototype.reset.apply(this);
+};
+
+Ghost.prototype.save = function(t) {
+    this.savedSigReverse[t] = this.sigReverse;
+    this.savedSigLeaveHome[t] = this.sigLeaveHome;
+    this.savedMode[t] = this.mode;
+    this.savedScared[t] = this.scared;
+    if (this == blinky) {
+        this.savedElroy[t] = this.elroy;
+    }
+    Actor.prototype.save.call(this,t);
+};
+
+Ghost.prototype.load = function(t) {
+    this.sigReverse = this.savedSigReverse[t];
+    this.sigLeaveHome = this.savedSigLeaveHome[t];
+    this.mode = this.savedMode[t];
+    this.scared = this.savedScared[t];
+    if (this == blinky) {
+        this.elroy = this.savedElroy[t];
+    }
+    Actor.prototype.load.call(this,t);
 };
 
 // indicates if we slow down in the tunnel

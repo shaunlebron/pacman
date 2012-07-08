@@ -20,6 +20,18 @@ var elroyTimer = (function(){
     // when level restarts, blinky must wait for clyde to leave home before resuming elroy mode
     var waitForClyde;
 
+    var savedWaitForClyde = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedWaitForClyde[t] = waitForClyde;
+    };
+
+    // load state at time t
+    var load = function(t) {
+        waitForClyde = savedWaitForClyde[t];
+    };
+
     return {
         onNewLevel: function() {
             waitForClyde = false;
@@ -44,5 +56,7 @@ var elroyTimer = (function(){
                 else
                     blinky.elroy = 0;
         },
+        save: save,
+        load: load,
     };
 })();

@@ -28,6 +28,22 @@ var extraLives = 0;
 var highScore = 0;
 var score = 0;
 
+var savedExtraLives = {};
+var savedHighScore = {};
+var savedScore = {};
+
+var saveGame = function(t) {
+    savedExtraLives[t] = extraLives;
+    savedHighScore[t] = highScore;
+    savedScore[t] = score;
+};
+
+var loadGame = function(t) {
+    extraLives = savedExtraLives[t];
+    highScore = savedHighScore[t];
+    score = savedScore[t];
+};
+
 // TODO: have a high score for each game type
 
 var addScore = function(p) {
@@ -37,6 +53,100 @@ var addScore = function(p) {
     if (score > highScore)
         highScore = score;
 };
+//@line 1 "src/vcr.js"
+//////////////////////////////////////////////////////////////////////////////////////
+// VCR
+// This coordinates the recording and rewinding of the game state.
+// Inspired by Braid.
+
+var VCR_RECORD = 0;
+var VCR_REWIND = 1;
+var VCR_PLAY = 2;
+
+var vcr = (function() {
+
+    var time;
+
+    var frame;
+    var startFrame;
+    var maxFrames = 15*60;
+
+    var reset = function() {
+        time = 0;
+        frame = 0;
+        startFrame = 0;
+    };
+
+    var load = function() {
+        var i;
+        for (i=0; i<5; i++) {
+            actors[i].load(frame);
+        }
+        elroyTimer.load(frame);
+        energizer.load(frame);
+        fruit.load(frame);
+        ghostCommander.load(frame);
+        ghostReleaser.load(frame);
+        map.load(frame,time);
+        loadGame(frame);
+    };
+
+    var save = function() {
+        var i;
+        for (i=0; i<5; i++) {
+            actors[i].save(frame);
+        }
+        elroyTimer.save(frame);
+        energizer.save(frame);
+        fruit.save(frame);
+        ghostCommander.save(frame);
+        ghostReleaser.save(frame);
+        map.save(frame);
+        saveGame(frame);
+    };
+
+    var canRewind = function() {
+        return frame != startFrame;
+    };
+
+    var decrementFrame = function() {
+        if (canRewind()) {
+            frame = (frame-1)%maxFrames;
+            if (frame < 0) {
+                frame += maxFrames;
+            }
+            time--;
+        }
+    };
+
+    var incrementFrame = function() {
+        frame = (frame+1)%maxFrames;
+        if (frame == startFrame) {
+            startFrame = (startFrame+1)%maxFrames;
+        }
+        time++;
+    };
+
+    var rewind = function() {
+        if (canRewind()) {
+            decrementFrame();
+            load();
+        }
+    };
+
+    var record = function() {
+        save();
+        incrementFrame();
+    };
+
+    return {
+        mode: VCR_RECORD,
+        reset: reset,
+        rewind: rewind,
+        record: record,
+        getTime: function() { return time; },
+    };
+})();
 //@line 1 "src/direction.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Directions
@@ -159,10 +269,50 @@ var Map = function(numCols, numRows, tiles) {
     var fruitTile = {x:13, y:20};
     fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
 
+    this.timeEaten = {};
+
     this.resetCurrent();
     this.parseDots();
     this.parseTunnels();
     this.parseWalls();
+};
+
+Map.prototype.save = function(t) {
+};
+
+Map.prototype.load = function(t,abs_t) {
+    var i;
+    var firstTile,curTile;
+    var x,y;
+    for (i=0; i<this.numTiles; i++) {
+        firstTile = this.startTiles[i];
+        if (firstTile == '.' || firstTile == 'o') {
+            t0 = this.timeEaten[i];
+            curTile = (t0 == undefined || abs_t < t0) ? firstTile : ' ';
+            if (this.currentTiles[i] != curTile) {
+                if (curTile != ' ') {
+                    this.dotsEaten--
+                }
+                this.currentTiles[i] = curTile;
+                x = i%this.numCols;
+                y = Math.floor(i/this.numCols);
+                renderer.refreshPellet(x,y);
+            }
+
+            // for now, this will not allow replay
+            // but keeps the timeline from diverging.
+            if (this.timeEaten[i] == abs_t) {
+                this.timeEaten[i] = undefined;
+            }
+        }
+    }
+    //this.dotsEaten = this.savedDotsEaten[t];
+};
+
+Map.prototype.resetTimeEaten = function()
+{
+    this.startTiles = this.currentTiles.slice(0);
+    this.timeEaten = {};
 };
 
 // reset current tiles
@@ -354,7 +504,7 @@ Map.prototype.parseDots = function() {
     var i = 0;
     var tile;
     for (y=0; y<this.numRows; y++) for (x=0; x<this.numCols; x++) {
-        tile = this.tiles[i++];
+        tile = this.tiles[i];
         if (tile == '.') {
             this.numDots++;
         }
@@ -363,6 +513,7 @@ Map.prototype.parseDots = function() {
             this.numEnergizers++;
             this.energizers.push({'x':x,'y':y});
         }
+        i++;
     }
 };
 
@@ -453,7 +604,9 @@ Map.prototype.isFloorTile = function(x,y) {
 // mark the dot at the given coordinate eaten
 Map.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
-    this.currentTiles[this.posToIndex(x,y)] = ' ';
+    var i = this.posToIndex(x,y);
+    this.currentTiles[i] = ' ';
+    this.timeEaten[i] = vcr.getTime();
     renderer.erasePellet(x,y);
 };
 //@line 1 "src/colors.js"
@@ -1898,9 +2051,13 @@ var switchRenderer = function(i) {
 
         // copy background canvas to the foreground canvas
         blitMap: function() {
+            if (vcr.mode == VCR_REWIND) {
+                ctx.globalAlpha = 0.2;
+            }
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);
+            ctx.globalAlpha = 1;
         },
 
         renderFunc: function(f) {
@@ -2362,6 +2519,18 @@ var switchRenderer = function(i) {
                 if (tile == '.') {
                     this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
                 }
+            }
+        },
+
+        refreshPellet: function(x,y) {
+            var i = map.posToIndex(x,y);
+            var tile = map.currentTiles[i];
+            if (tile == ' ') {
+                this.erasePellet(x,y);
+            }
+            else if (tile == '.') {
+                bgCtx.fillStyle = map.pelletColor;
+                this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
             }
         },
 
@@ -3321,10 +3490,19 @@ var gui = (function() {
                 case 38: pacman.setNextDir(DIR_UP); break;
                 case 39: pacman.setNextDir(DIR_RIGHT); break;
                 case 40: pacman.setNextDir(DIR_DOWN); break;
+                case 16: vcr.mode = VCR_REWIND; // shift
                 default: return;
             }
             // prevent default action for arrow keys
             // (don't scroll page with arrow keys)
+            e.preventDefault();
+        };
+        document.onkeyup = function(e) {
+            var key = (e||window.event).keyCode;
+            switch (key) {
+                case 16: vcr.mode = VCR_RECORD; // shift
+                default: return;
+            }
             e.preventDefault();
         };
     };
@@ -3361,7 +3539,29 @@ var Actor = function() {
 
     this.frames = 0;        // frame count
     this.steps = 0;         // step count
+
+    this.savedSteps = {};
+    this.savedFrames = {};
+    this.savedDirEnum = {};
+    this.savedPixel = {};
 };
+
+// save state at time t
+Actor.prototype.save = function(t) {
+    this.savedSteps[t] = this.steps;
+    this.savedFrames[t] = this.frames;
+    this.savedDirEnum[t] = this.dirEnum;
+    this.savedPixel[t] = { x:this.pixel.x, y:this.pixel.y };
+};
+
+// load state at time t
+Actor.prototype.load = function(t) {
+    this.steps = this.savedSteps[t];
+    this.frames = this.savedFrames[t];
+    this.setDir(this.savedDirEnum[t]);
+    this.setPos(this.savedPixel[t].x, this.savedPixel[t].y);
+};
+
 
 // reset to initial position and direction
 Actor.prototype.reset = function() {
@@ -3512,8 +3712,36 @@ Ghost.prototype.reset = function() {
     this.mode = this.startMode;
     this.scared = false;
 
+    this.savedSigReverse = {};
+    this.savedSigLeaveHome = {};
+    this.savedMode = {};
+    this.savedScared = {};
+    this.savedElroy = {};
+
     // call Actor's reset function to reset position and direction
     Actor.prototype.reset.apply(this);
+};
+
+Ghost.prototype.save = function(t) {
+    this.savedSigReverse[t] = this.sigReverse;
+    this.savedSigLeaveHome[t] = this.sigLeaveHome;
+    this.savedMode[t] = this.mode;
+    this.savedScared[t] = this.scared;
+    if (this == blinky) {
+        this.savedElroy[t] = this.elroy;
+    }
+    Actor.prototype.save.call(this,t);
+};
+
+Ghost.prototype.load = function(t) {
+    this.sigReverse = this.savedSigReverse[t];
+    this.sigLeaveHome = this.savedSigLeaveHome[t];
+    this.mode = this.savedMode[t];
+    this.scared = this.savedScared[t];
+    if (this == blinky) {
+        this.elroy = this.savedElroy[t];
+    }
+    Actor.prototype.load.call(this,t);
 };
 
 // indicates if we slow down in the tunnel
@@ -3770,6 +3998,23 @@ var Player = function() {
 
     // determines if this player should be AI controlled
     this.ai = false;
+
+    this.savedNextDirEnum = {};
+    this.savedEatPauseFramesLeft = {};
+};
+
+Player.prototype.save = function(t) {
+    this.savedEatPauseFramesLeft[t] = this.eatPauseFramesLeft;
+    this.savedNextDirEnum[t] = this.nextDirEnum;
+
+    Actor.prototype.save.call(this,t);
+};
+
+Player.prototype.load = function(t) {
+    this.nextDirEnum = this.savedNextDirEnum[t];
+    this.eatPauseFramesLeft = this.savedEatPauseFramesLeft[t];
+
+    Actor.prototype.load.call(this,t);
 };
 
 // inherit functions from Actor
@@ -4212,7 +4457,24 @@ var ghostCommander = (function() {
     var frame;   // current frame
     var command; // last command given to ghosts
 
+    var savedFrame = {};
+    var savedCommand = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedFrame[t] = frame;
+        savedCommand[t] = command;
+    };
+
+    // load state at time t
+    var load = function(t) {
+        frame = savedFrame[t];
+        command = savedCommand[t];
+    };
+
     return {
+        save: save,
+        load: load,
         reset: function() { 
             command = GHOST_CMD_SCATTER;
             frame = 0;
@@ -4276,7 +4538,40 @@ var ghostReleaser = (function(){
     var ghostCounts = {};   // personal dot counts for each ghost
     var globalCount;        // global dot count
 
+    var savedGlobalCount = {};
+    var savedFramesSinceLastDot = {};
+    var savedGhostCounts = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedFramesSinceLastDot[t] = framesSinceLastDot;
+        if (mode == MODE_GLOBAL) {
+            savedGlobalCount[t] = globalCount;
+        }
+        else if (mode == MODE_PERSONAL) {
+            savedGhostCounts[t] = {};
+            savedGhostCounts[t][PINKY] = ghostCounts[PINKY];
+            savedGhostCounts[t][INKY] = ghostCounts[INKY];
+            savedGhostCounts[t][CLYDE] = ghostCounts[CLYDE];
+        }
+    };
+
+    // load state at time t
+    var load = function(t) {
+        framesSinceLastDot = savedFramesSinceLastDot[t];
+        if (mode == MODE_GLOBAL) {
+            globalCount = savedGlobalCount[t];
+        }
+        else if (mode == MODE_PERSONAL) {
+            ghostCounts[PINKY] = savedGhostCounts[t][PINKY];
+            ghostCounts[INKY] = savedGhostCounts[t][INKY];
+            ghostCounts[CLYDE] = savedGhostCounts[t][CLYDE];
+        }
+    };
+
     return {
+        save: save,
+        load: load,
         onNewLevel: function() {
             mode = MODE_PERSONAL;
             framesSinceLastDot = 0;
@@ -4286,8 +4581,8 @@ var ghostReleaser = (function(){
         },
         onRestartLevel: function() {
             mode = MODE_GLOBAL;
-            globalCount = 0;
             framesSinceLastDot = 0;
+            globalCount = 0;
         },
         onDotEat: function() {
             var i;
@@ -4380,6 +4675,18 @@ var elroyTimer = (function(){
     // when level restarts, blinky must wait for clyde to leave home before resuming elroy mode
     var waitForClyde;
 
+    var savedWaitForClyde = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedWaitForClyde[t] = waitForClyde;
+    };
+
+    // load state at time t
+    var load = function(t) {
+        waitForClyde = savedWaitForClyde[t];
+    };
+
     return {
         onNewLevel: function() {
             waitForClyde = false;
@@ -4404,6 +4711,8 @@ var elroyTimer = (function(){
                 else
                     blinky.elroy = 0;
         },
+        save: save,
+        load: load,
     };
 })();
 //@line 1 "src/energizer.js"
@@ -4444,7 +4753,30 @@ var energizer = (function() {
     var points; // points that the last eaten ghost was worth
     var pointsFramesLeft; // number of frames left to display points earned from eating ghost
 
+    var savedCount = {};
+    var savedActive = {};
+    var savedPoints = {};
+    var savedPointsFramesLeft = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedCount[t] = count;
+        savedActive[t] = active;
+        savedPoints[t] = points;
+        savedPointsFramesLeft[t] = pointsFramesLeft;
+    };
+
+    // load state at time t
+    var load = function(t) {
+        count = savedCount[t];
+        active = savedActive[t];
+        points = savedPoints[t];
+        pointsFramesLeft = savedPointsFramesLeft[t];
+    };
+
     return {
+        save: save,
+        load: load,
         reset: function() {
             count = 0;
             active = false;
@@ -4501,7 +4833,24 @@ var fruit = (function(){
     var framesLeft; // frames left until fruit is off the screen
     var scoreFramesLeft; // frames left until the picked-up fruit score is off the screen
 
+    var savedFramesLeft = {};
+    var savedScoreFramesLeft = {};
+
+    // save state at time t
+    var save = function(t) {
+        savedFramesLeft[t] = framesLeft;
+        savedScoreFramesLeft[t] = scoreFramesLeft;
+    };
+
+    // load state at time t
+    var load = function(t) {
+        framesLeft = savedFramesLeft[t];
+        scoreFramesLeft = savedScoreFramesLeft[t];
+    };
+
     return {
+        save: save,
+        load: load,
         pixel: {x:0, y:0}, // pixel location
         setPosition: function(px,py) {
             this.pixel.x = px;
@@ -4768,6 +5117,7 @@ var readyState =  (function(){
             ghostCommander.reset();
             fruit.reset();
             energizer.reset();
+            map.resetTimeEaten();
             frames = 0;
         },
         draw: function() {
@@ -4833,7 +5183,7 @@ var readyRestartState = {
 // (state when playing the game)
 
 var playState = {
-    init: function() { },
+    init: function() { vcr.reset(); },
     draw: function() {
         renderer.blitMap();
         renderer.drawEnergizers();
@@ -4867,61 +5217,75 @@ var playState = {
         return false;
     },
     update: function() {
-        var i,j; // loop index
-        var maxSteps = 2;
+        
+        if (vcr.mode == VCR_RECORD) {
 
-        // skip this frame if needed,
-        // but update ghosts running home
-        if (energizer.showingPoints()) {
-            for (j=0; j<maxSteps; j++)
-                for (i=0; i<4; i++)
-                    if (ghosts[i].mode == GHOST_GOING_HOME || ghosts[i].mode == GHOST_ENTERING_HOME)
-                        ghosts[i].update(j);
-            energizer.updatePointsTimer();
-            return;
-        }
-        else { // make ghosts go home immediately after points disappear
-            for (i=0; i<4; i++)
-                if (ghosts[i].mode == GHOST_EATEN) {
-                    ghosts[i].mode = GHOST_GOING_HOME;
-                    ghosts[i].targetting = 'door';
-                }
-        }
+            // record current state
+            vcr.record();
 
-        // update counters
-        ghostReleaser.update();
-        ghostCommander.update();
-        elroyTimer.update();
-        fruit.update();
-        energizer.update();
+            var i,j; // loop index
+            var maxSteps = 2;
+            var skip = false;
 
-        // update actors one step at a time
-        for (j=0; j<maxSteps; j++) {
-
-            // advance pacman
-            pacman.update(j);
-
-            // test collision with fruit
-            fruit.testCollide();
-
-            // finish level if all dots have been eaten
-            if (map.allDotsEaten()) {
-                this.draw();
-                switchState(finishState);
-                break;
+            // skip this frame if needed,
+            // but update ghosts running home
+            if (energizer.showingPoints()) {
+                for (j=0; j<maxSteps; j++)
+                    for (i=0; i<4; i++)
+                        if (ghosts[i].mode == GHOST_GOING_HOME || ghosts[i].mode == GHOST_ENTERING_HOME)
+                            ghosts[i].update(j);
+                energizer.updatePointsTimer();
+                skip = true;
             }
+            else { // make ghosts go home immediately after points disappear
+                for (i=0; i<4; i++)
+                    if (ghosts[i].mode == GHOST_EATEN) {
+                        ghosts[i].mode = GHOST_GOING_HOME;
+                        ghosts[i].targetting = 'door';
+                    }
+            }
+            
+            if (!skip) {
 
-            // test pacman collision before and after updating ghosts
-            // (redundant to prevent pass-throughs)
-            // (if collision happens, stop immediately.)
-            if (this.isPacmanCollide()) break;
-            for (i=0;i<4;i++) actors[i].update(j);
-            if (this.isPacmanCollide()) break;
+                // update counters
+                ghostReleaser.update();
+                ghostCommander.update();
+                elroyTimer.update();
+                fruit.update();
+                energizer.update();
+
+                // update actors one step at a time
+                for (j=0; j<maxSteps; j++) {
+
+                    // advance pacman
+                    pacman.update(j);
+
+                    // test collision with fruit
+                    fruit.testCollide();
+
+                    // finish level if all dots have been eaten
+                    if (map.allDotsEaten()) {
+                        this.draw();
+                        switchState(finishState);
+                        break;
+                    }
+
+                    // test pacman collision before and after updating ghosts
+                    // (redundant to prevent pass-throughs)
+                    // (if collision happens, stop immediately.)
+                    if (this.isPacmanCollide()) break;
+                    for (i=0;i<4;i++) actors[i].update(j);
+                    if (this.isPacmanCollide()) break;
+                }
+
+                // update frame counts
+                for (i=0; i<5; i++)
+                    actors[i].frames++;
+            }
         }
-
-        // update frame counts
-        for (i=0; i<5; i++)
-            actors[i].frames++;
+        else if (vcr.mode = VCR_REWIND) {
+            vcr.rewind();
+        }
     },
 };
 
@@ -4929,40 +5293,62 @@ var playState = {
 // Script state
 // (a state that triggers functions at certain times)
 
-var scriptState = {
-    init: function() {
-        this.frames = 0;        // frames since state began
-        this.triggerFrame = 0;  // frames since last trigger
+var scriptState = (function(){
 
-        this.drawFunc = undefined;   // current draw function
-        this.updateFunc = undefined; // current update function
-    },
-    update: function() {
+    return {
+        init: function() {
+            this.frames = 0;        // frames since state began
+            this.triggerFrame = 0;  // frames since last trigger
 
-        // if trigger is found for current time,
-        // call its init() function
-        // and store its draw() and update() functions
-        var trigger = this.triggers[this.frames];
-        if (trigger) {
-            if (trigger.init) trigger.init();
-            this.drawFunc = trigger.draw;
-            this.updateFunc = trigger.update;
-            this.triggerFrame = 0;
-        }
+            this.drawFunc = undefined;   // current draw function
+            this.updateFunc = undefined; // current update function
+        },
+        rewind: function() {
+            // FIXME: handle calling the trigger's init function?
 
-        // call the last trigger's update function
-        if (this.updateFunc) 
-            this.updateFunc(this.triggerFrame);
+            var trigger = this.triggers[this.frames];
+            if (trigger) {
+                var i;
+                for (i=this.frames-1; i>=0; i--) {
+                    trigger = this.triggers[i];
+                    if (trigger) {
+                        this.drawFunc = trigger.draw;
+                        this.updateFunc = trigger.update;
+                        this.triggerFrame = this.frames-i;
+                        break;
+                    }
+                }
+            }
+            this.frames--;
+            this.triggerFrame--;
+        },
+        update: function() {
 
-        this.frames++;
-        this.triggerFrame++;
-    },
-    draw: function() {
-        // call the last trigger's draw function
-        if (this.drawFunc) 
-            this.drawFunc(this.triggerFrame);
-    },
-};
+            // if trigger is found for current time,
+            // call its init() function
+            // and store its draw() and update() functions
+            var trigger = this.triggers[this.frames];
+            if (trigger) {
+                if (trigger.init) trigger.init();
+                this.drawFunc = trigger.draw;
+                this.updateFunc = trigger.update;
+                this.triggerFrame = 0;
+            }
+
+            // call the last trigger's update function
+            if (this.updateFunc) 
+                this.updateFunc(this.triggerFrame);
+
+            this.frames++;
+            this.triggerFrame++;
+        },
+        draw: function() {
+            // call the last trigger's draw function
+            if (this.drawFunc) 
+                this.drawFunc(this.triggerFrame);
+        },
+    };
+})();
 
 ////////////////////////////////////////////////////
 // Dead state
@@ -4985,6 +5371,22 @@ var deadState = (function() {
         // inherit script state functions
         __proto__: scriptState,
 
+        update: function() {
+            if (vcr.mode == VCR_RECORD) {
+                vcr.record();
+                scriptState.update.call(this);
+            }
+            else if (vcr.mode == VCR_REWIND) {
+                if (this.frames == 0) {
+                    state = playState;
+                }
+                else {
+                    vcr.rewind();
+                    scriptState.rewind.call(this);
+                }
+            }
+        },
+
         // script functions for each time
         triggers: {
             0: { // freeze
@@ -4999,7 +5401,7 @@ var deadState = (function() {
                 }
             },
             60: {
-                init: function() { // isolate pacman
+                draw: function() { // isolate pacman
                     commonDraw();
                     renderer.drawPlayer();
                 },

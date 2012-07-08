@@ -34,10 +34,50 @@ var Map = function(numCols, numRows, tiles) {
     var fruitTile = {x:13, y:20};
     fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
 
+    this.timeEaten = {};
+
     this.resetCurrent();
     this.parseDots();
     this.parseTunnels();
     this.parseWalls();
+};
+
+Map.prototype.save = function(t) {
+};
+
+Map.prototype.load = function(t,abs_t) {
+    var i;
+    var firstTile,curTile;
+    var x,y;
+    for (i=0; i<this.numTiles; i++) {
+        firstTile = this.startTiles[i];
+        if (firstTile == '.' || firstTile == 'o') {
+            t0 = this.timeEaten[i];
+            curTile = (t0 == undefined || abs_t < t0) ? firstTile : ' ';
+            if (this.currentTiles[i] != curTile) {
+                if (curTile != ' ') {
+                    this.dotsEaten--
+                }
+                this.currentTiles[i] = curTile;
+                x = i%this.numCols;
+                y = Math.floor(i/this.numCols);
+                renderer.refreshPellet(x,y);
+            }
+
+            // for now, this will not allow replay
+            // but keeps the timeline from diverging.
+            if (this.timeEaten[i] == abs_t) {
+                this.timeEaten[i] = undefined;
+            }
+        }
+    }
+    //this.dotsEaten = this.savedDotsEaten[t];
+};
+
+Map.prototype.resetTimeEaten = function()
+{
+    this.startTiles = this.currentTiles.slice(0);
+    this.timeEaten = {};
 };
 
 // reset current tiles
@@ -229,7 +269,7 @@ Map.prototype.parseDots = function() {
     var i = 0;
     var tile;
     for (y=0; y<this.numRows; y++) for (x=0; x<this.numCols; x++) {
-        tile = this.tiles[i++];
+        tile = this.tiles[i];
         if (tile == '.') {
             this.numDots++;
         }
@@ -238,6 +278,7 @@ Map.prototype.parseDots = function() {
             this.numEnergizers++;
             this.energizers.push({'x':x,'y':y});
         }
+        i++;
     }
 };
 
@@ -328,6 +369,8 @@ Map.prototype.isFloorTile = function(x,y) {
 // mark the dot at the given coordinate eaten
 Map.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
-    this.currentTiles[this.posToIndex(x,y)] = ' ';
+    var i = this.posToIndex(x,y);
+    this.currentTiles[i] = ' ';
+    this.timeEaten[i] = vcr.getTime();
     renderer.erasePellet(x,y);
 };

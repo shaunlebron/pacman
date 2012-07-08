@@ -75,7 +75,7 @@ var switchRenderer = function(i) {
         // copy background canvas to the foreground canvas
         blitMap: function() {
             if (vcr.mode == VCR_REWIND) {
-                ctx.globalAlpha = 0.2;
+                //ctx.globalAlpha = 0.2;
             }
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
@@ -119,6 +119,10 @@ var switchRenderer = function(i) {
         // this flag is used to flash the level upon its successful completion
         toggleLevelFlash: function () {
             this.flashLevel = !this.flashLevel;
+        },
+
+        setLevelFlash: function(on) {
+            this.flashLevel = on;
         },
 
         // draw the target visualizers for each actor

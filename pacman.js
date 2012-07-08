@@ -105,6 +105,10 @@ var vcr = (function() {
         saveGame(frame);
     };
 
+    var eraseFuture = function() {
+        map.eraseFuture(frame);
+    };
+
     var canRewind = function() {
         return frame != startFrame;
     };
@@ -144,6 +148,7 @@ var vcr = (function() {
         reset: reset,
         rewind: rewind,
         record: record,
+        eraseFuture: eraseFuture,
         getTime: function() { return time; },
     };
 })();
@@ -280,33 +285,45 @@ var Map = function(numCols, numRows, tiles) {
 Map.prototype.save = function(t) {
 };
 
-Map.prototype.load = function(t,abs_t) {
+Map.prototype.eraseFuture = function(t) {
+    // current state at t.
+    // erase all states after t.
     var i;
+    for (i=0; i<this.numTiles; i++) {
+        if (t <= this.timeEaten[i]) {
+            delete this.timeEaten[i];
+        }
+    }
+};
+
+Map.prototype.load = function(t,abs_t) {
     var firstTile,curTile;
-    var x,y;
+    var refresh = function(i) {
+        var x,y;
+        x = i%this.numCols;
+        y = Math.floor(i/this.numCols);
+        renderer.refreshPellet(x,y);
+    };
+    var i;
     for (i=0; i<this.numTiles; i++) {
         firstTile = this.startTiles[i];
         if (firstTile == '.' || firstTile == 'o') {
-            t0 = this.timeEaten[i];
-            curTile = (t0 == undefined || abs_t < t0) ? firstTile : ' ';
-            if (this.currentTiles[i] != curTile) {
-                if (curTile != ' ') {
-                    this.dotsEaten--
+            if (abs_t <= this.timeEaten[i]) { // dot should be present
+                if (this.currentTiles[i] != firstTile) {
+                    this.dotsEaten--;
+                    this.currentTiles[i] = firstTile;
+                    refresh.call(this,i);
                 }
-                this.currentTiles[i] = curTile;
-                x = i%this.numCols;
-                y = Math.floor(i/this.numCols);
-                renderer.refreshPellet(x,y);
             }
-
-            // for now, this will not allow replay
-            // but keeps the timeline from diverging.
-            if (this.timeEaten[i] == abs_t) {
-                this.timeEaten[i] = undefined;
+            else if (abs_t > this.timeEaten[i]) { // dot should be missing
+                if (this.currentTiles[i] != ' ') {
+                    this.dotsEaten++;
+                    this.currentTiles[i] = ' ';
+                    refresh.call(this,i);
+                }
             }
         }
     }
-    //this.dotsEaten = this.savedDotsEaten[t];
 };
 
 Map.prototype.resetTimeEaten = function()
@@ -2052,7 +2069,7 @@ var switchRenderer = function(i) {
         // copy background canvas to the foreground canvas
         blitMap: function() {
             if (vcr.mode == VCR_REWIND) {
-                ctx.globalAlpha = 0.2;
+                //ctx.globalAlpha = 0.2;
             }
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
@@ -2096,6 +2113,10 @@ var switchRenderer = function(i) {
         // this flag is used to flash the level upon its successful completion
         toggleLevelFlash: function () {
             this.flashLevel = !this.flashLevel;
+        },
+
+        setLevelFlash: function(on) {
+            this.flashLevel = on;
         },
 
         // draw the target visualizers for each actor
@@ -3500,7 +3521,10 @@ var gui = (function() {
         document.onkeyup = function(e) {
             var key = (e||window.event).keyCode;
             switch (key) {
-                case 16: vcr.mode = VCR_RECORD; // shift
+                case 16: 
+                    vcr.mode = VCR_RECORD; // shift
+                    vcr.eraseFuture();
+                    break;
                 default: return;
             }
             e.preventDefault();
@@ -4934,7 +4958,7 @@ var executive = (function(){
     /**********/
     var reqFrame;
 
-    var maxFrameSkip = 10;
+    var maxFrameSkip = 3;
     var tick = function(now) {
         // call update for every frame period that has elapsed
         var frames = 0;
@@ -5312,6 +5336,7 @@ var scriptState = (function(){
                 for (i=this.frames-1; i>=0; i--) {
                     trigger = this.triggers[i];
                     if (trigger) {
+                        if (trigger.init) trigger.init();
                         this.drawFunc = trigger.draw;
                         this.updateFunc = trigger.update;
                         this.triggerFrame = this.frames-i;
@@ -5321,6 +5346,21 @@ var scriptState = (function(){
             }
             this.frames--;
             this.triggerFrame--;
+        },
+        updateWithRewind: function() {
+            if (vcr.mode == VCR_RECORD) {
+                vcr.record();
+                scriptState.update.call(this);
+            }
+            else if (vcr.mode == VCR_REWIND) {
+                if (this.frames == 0) {
+                    state = playState;
+                }
+                else {
+                    vcr.rewind();
+                    scriptState.rewind.call(this);
+                }
+            }
         },
         update: function() {
 
@@ -5371,20 +5411,8 @@ var deadState = (function() {
         // inherit script state functions
         __proto__: scriptState,
 
-        update: function() {
-            if (vcr.mode == VCR_RECORD) {
-                vcr.record();
-                scriptState.update.call(this);
-            }
-            else if (vcr.mode == VCR_REWIND) {
-                if (this.frames == 0) {
-                    state = playState;
-                }
-                else {
-                    vcr.rewind();
-                    scriptState.rewind.call(this);
-                }
-            }
+        update: function () {
+            scriptState.updateWithRewind.call(this);
         },
 
         // script functions for each time
@@ -5442,8 +5470,8 @@ var finishState = (function(){
     };
     
     // flash the floor and draw
-    var flashFloorAndDraw = function() {
-        renderer.toggleLevelFlash();
+    var flashFloorAndDraw = function(on) {
+        renderer.setLevelFlash(on);
         commonDraw();
     };
 
@@ -5452,17 +5480,22 @@ var finishState = (function(){
         // inherit script state functions
         __proto__: scriptState,
 
+        update: function () {
+            scriptState.updateWithRewind.call(this);
+        },
+
         // script functions for each time
         triggers: {
-            60: { init: commonDraw },
-            120: { init: flashFloorAndDraw },
-            135: { init: flashFloorAndDraw },
-            150: { init: flashFloorAndDraw },
-            165: { init: flashFloorAndDraw },
-            180: { init: flashFloorAndDraw },
-            195: { init: flashFloorAndDraw },
-            210: { init: flashFloorAndDraw },
-            225: { init: flashFloorAndDraw },
+            0: { init: function() { playState.draw(); } },
+            60:  { init: function() { flashFloorAndDraw(false); } },
+            120: { init: function() { flashFloorAndDraw(true); } },
+            135: { init: function() { flashFloorAndDraw(false); } },
+            150: { init: function() { flashFloorAndDraw(true); } },
+            165: { init: function() { flashFloorAndDraw(false); } },
+            180: { init: function() { flashFloorAndDraw(true); } },
+            195: { init: function() { flashFloorAndDraw(false); } },
+            210: { init: function() { flashFloorAndDraw(true); } },
+            225: { init: function() { flashFloorAndDraw(false); } },
             255: { 
                 init: function() {
                     level++;

@@ -190,7 +190,10 @@ var gui = (function() {
         document.onkeyup = function(e) {
             var key = (e||window.event).keyCode;
             switch (key) {
-                case 16: vcr.mode = VCR_RECORD; // shift
+                case 16: 
+                    vcr.mode = VCR_RECORD; // shift
+                    vcr.eraseFuture();
+                    break;
                 default: return;
             }
             e.preventDefault();

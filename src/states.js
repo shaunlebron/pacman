@@ -333,6 +333,7 @@ var scriptState = (function(){
                 for (i=this.frames-1; i>=0; i--) {
                     trigger = this.triggers[i];
                     if (trigger) {
+                        if (trigger.init) trigger.init();
                         this.drawFunc = trigger.draw;
                         this.updateFunc = trigger.update;
                         this.triggerFrame = this.frames-i;
@@ -342,6 +343,21 @@ var scriptState = (function(){
             }
             this.frames--;
             this.triggerFrame--;
+        },
+        updateWithRewind: function() {
+            if (vcr.mode == VCR_RECORD) {
+                vcr.record();
+                scriptState.update.call(this);
+            }
+            else if (vcr.mode == VCR_REWIND) {
+                if (this.frames == 0) {
+                    state = playState;
+                }
+                else {
+                    vcr.rewind();
+                    scriptState.rewind.call(this);
+                }
+            }
         },
         update: function() {
 
@@ -392,20 +408,8 @@ var deadState = (function() {
         // inherit script state functions
         __proto__: scriptState,
 
-        update: function() {
-            if (vcr.mode == VCR_RECORD) {
-                vcr.record();
-                scriptState.update.call(this);
-            }
-            else if (vcr.mode == VCR_REWIND) {
-                if (this.frames == 0) {
-                    state = playState;
-                }
-                else {
-                    vcr.rewind();
-                    scriptState.rewind.call(this);
-                }
-            }
+        update: function () {
+            scriptState.updateWithRewind.call(this);
         },
 
         // script functions for each time
@@ -463,8 +467,8 @@ var finishState = (function(){
     };
     
     // flash the floor and draw
-    var flashFloorAndDraw = function() {
-        renderer.toggleLevelFlash();
+    var flashFloorAndDraw = function(on) {
+        renderer.setLevelFlash(on);
         commonDraw();
     };
 
@@ -473,17 +477,22 @@ var finishState = (function(){
         // inherit script state functions
         __proto__: scriptState,
 
+        update: function () {
+            scriptState.updateWithRewind.call(this);
+        },
+
         // script functions for each time
         triggers: {
-            60: { init: commonDraw },
-            120: { init: flashFloorAndDraw },
-            135: { init: flashFloorAndDraw },
-            150: { init: flashFloorAndDraw },
-            165: { init: flashFloorAndDraw },
-            180: { init: flashFloorAndDraw },
-            195: { init: flashFloorAndDraw },
-            210: { init: flashFloorAndDraw },
-            225: { init: flashFloorAndDraw },
+            0: { init: function() { playState.draw(); } },
+            60:  { init: function() { flashFloorAndDraw(false); } },
+            120: { init: function() { flashFloorAndDraw(true); } },
+            135: { init: function() { flashFloorAndDraw(false); } },
+            150: { init: function() { flashFloorAndDraw(true); } },
+            165: { init: function() { flashFloorAndDraw(false); } },
+            180: { init: function() { flashFloorAndDraw(true); } },
+            195: { init: function() { flashFloorAndDraw(false); } },
+            210: { init: function() { flashFloorAndDraw(true); } },
+            225: { init: function() { flashFloorAndDraw(false); } },
             255: { 
                 init: function() {
                     level++;

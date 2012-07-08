@@ -45,33 +45,45 @@ var Map = function(numCols, numRows, tiles) {
 Map.prototype.save = function(t) {
 };
 
-Map.prototype.load = function(t,abs_t) {
+Map.prototype.eraseFuture = function(t) {
+    // current state at t.
+    // erase all states after t.
     var i;
+    for (i=0; i<this.numTiles; i++) {
+        if (t <= this.timeEaten[i]) {
+            delete this.timeEaten[i];
+        }
+    }
+};
+
+Map.prototype.load = function(t,abs_t) {
     var firstTile,curTile;
-    var x,y;
+    var refresh = function(i) {
+        var x,y;
+        x = i%this.numCols;
+        y = Math.floor(i/this.numCols);
+        renderer.refreshPellet(x,y);
+    };
+    var i;
     for (i=0; i<this.numTiles; i++) {
         firstTile = this.startTiles[i];
         if (firstTile == '.' || firstTile == 'o') {
-            t0 = this.timeEaten[i];
-            curTile = (t0 == undefined || abs_t < t0) ? firstTile : ' ';
-            if (this.currentTiles[i] != curTile) {
-                if (curTile != ' ') {
-                    this.dotsEaten--
+            if (abs_t <= this.timeEaten[i]) { // dot should be present
+                if (this.currentTiles[i] != firstTile) {
+                    this.dotsEaten--;
+                    this.currentTiles[i] = firstTile;
+                    refresh.call(this,i);
                 }
-                this.currentTiles[i] = curTile;
-                x = i%this.numCols;
-                y = Math.floor(i/this.numCols);
-                renderer.refreshPellet(x,y);
             }
-
-            // for now, this will not allow replay
-            // but keeps the timeline from diverging.
-            if (this.timeEaten[i] == abs_t) {
-                this.timeEaten[i] = undefined;
+            else if (abs_t > this.timeEaten[i]) { // dot should be missing
+                if (this.currentTiles[i] != ' ') {
+                    this.dotsEaten++;
+                    this.currentTiles[i] = ' ';
+                    refresh.call(this,i);
+                }
             }
         }
     }
-    //this.dotsEaten = this.savedDotsEaten[t];
 };
 
 Map.prototype.resetTimeEaten = function()

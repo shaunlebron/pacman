@@ -40,7 +40,7 @@ var executive = (function(){
     /**********/
     var reqFrame;
 
-    var maxFrameSkip = 10;
+    var maxFrameSkip = 3;
     var tick = function(now) {
         // call update for every frame period that has elapsed
         var frames = 0;

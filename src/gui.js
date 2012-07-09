@@ -168,38 +168,6 @@ var gui = (function() {
         };
     })();
 
-    var addInput = function() {
-        // TODO: add touch swipe events for mobile access
-
-        // handle key press event
-        document.onkeydown = function(e) {
-            var key = (e||window.event).keyCode;
-            switch (key) {
-                // steer pac-man
-                case 37: pacman.setNextDir(DIR_LEFT); break;
-                case 38: pacman.setNextDir(DIR_UP); break;
-                case 39: pacman.setNextDir(DIR_RIGHT); break;
-                case 40: pacman.setNextDir(DIR_DOWN); break;
-                case 16: vcr.mode = VCR_REWIND; // shift
-                default: return;
-            }
-            // prevent default action for arrow keys
-            // (don't scroll page with arrow keys)
-            e.preventDefault();
-        };
-        document.onkeyup = function(e) {
-            var key = (e||window.event).keyCode;
-            switch (key) {
-                case 16: 
-                    vcr.mode = VCR_RECORD; // shift
-                    vcr.eraseFuture();
-                    break;
-                default: return;
-            }
-            e.preventDefault();
-        };
-    };
-
     return {
         create: function() {
 
@@ -207,7 +175,6 @@ var gui = (function() {
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
             addControls();
-            addInput();
         },
     };
 })();

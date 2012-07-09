@@ -22,6 +22,7 @@ echo "
 " > $output
 
 for file in \
+    input.js \
     game.js \
     vcr.js \
     direction.js \

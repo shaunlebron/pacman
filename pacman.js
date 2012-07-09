@@ -10,6 +10,64 @@
 
 (function(){
 
+//@line 1 "src/input.js"
+
+document.onkeydown = function(e) {
+    var key = (e||window.event).keyCode;
+    switch (key) {
+
+        // LEFT
+        case 37: 
+            pacman.setNextDir(DIR_LEFT);
+            break;
+
+        // RIGHT
+        case 39:
+            pacman.setNextDir(DIR_RIGHT);
+            break;
+
+        // UP
+        case 38:
+            pacman.setNextDir(DIR_UP);
+            if (vcr.getMode() != VCR_RECORD) {
+                vcr.nextSpeed(1);
+            }
+            break;
+
+        // DOWN
+        case 40:
+            pacman.setNextDir(DIR_DOWN);
+            if (vcr.getMode() != VCR_RECORD) {
+                vcr.nextSpeed(-1);
+            }
+            break;
+
+        // SHIFT
+        case 16:
+            if (vcr.getMode() == VCR_RECORD) {
+                vcr.startSeeking();
+            }
+            break;
+        default: return;
+    }
+    // prevent default action for arrow keys
+    // (don't scroll page with arrow keys)
+    e.preventDefault();
+};
+
+document.onkeyup = function(e) {
+    var key = (e||window.event).keyCode;
+    switch (key) {
+
+        // SHIFT
+        case 16:
+            vcr.startRecording();
+            break;
+
+        default: return;
+    }
+    e.preventDefault();
+};
 //@line 1 "src/game.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Game
@@ -56,27 +114,50 @@ var addScore = function(p) {
 //@line 1 "src/vcr.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // VCR
-// This coordinates the recording and rewinding of the game state.
+// This coordinates the recording, rewinding, and replaying of the game state.
 // Inspired by Braid.
 
 var VCR_RECORD = 0;
 var VCR_REWIND = 1;
-var VCR_PLAY = 2;
+var VCR_FORWARD = 2;
+var VCR_PAUSE = 3;
 
 var vcr = (function() {
 
+    var mode;
+
+    var initialized;
+
+    // current time
     var time;
 
+    // tracking speed
+    var speedIndex;
+    var speeds = [-8,-4,-2,-1,0,1,2,4,8];
+
+    // current frame associated with current time
+    // (frame == time % maxFrames)
     var frame;
-    var startFrame;
+
+    // maximum number of frames to record
     var maxFrames = 15*60;
 
+    // rolling bounds of the recorded frames
+    var startFrame; // can't rewind past this
+    var stopFrame; // can't replay past this
+
+    // reset the VCR
     var reset = function() {
+        initialized = false;
         time = 0;
         frame = 0;
         startFrame = 0;
+        stopFrame = 0;
+        eraseFuture();
+        mode = VCR_RECORD;
     };
 
+    // load the state of the current time
     var load = function() {
         var i;
         for (i=0; i<5; i++) {
@@ -91,6 +172,7 @@ var vcr = (function() {
         loadGame(frame);
     };
 
+    // save the state of the current time
     var save = function() {
         var i;
         for (i=0; i<5; i++) {
@@ -105,51 +187,102 @@ var vcr = (function() {
         saveGame(frame);
     };
 
+    // erase any states after the current time
+    // (only necessary for saves that do interpolation)
     var eraseFuture = function() {
-        map.eraseFuture(frame);
+        map.eraseFuture(time);
+        stopFrame = frame;
     };
 
-    var canRewind = function() {
-        return frame != startFrame;
-    };
-
-    var decrementFrame = function() {
-        if (canRewind()) {
-            frame = (frame-1)%maxFrames;
-            if (frame < 0) {
-                frame += maxFrames;
-            }
-            time--;
+    // increment or decrement the time
+    var addTime = function(dt) {
+        time += dt;
+        frame = (frame+dt)%maxFrames;
+        if (frame < 0) {
+            frame += maxFrames;
         }
     };
 
-    var incrementFrame = function() {
-        frame = (frame+1)%maxFrames;
-        if (frame == startFrame) {
-            startFrame = (startFrame+1)%maxFrames;
-        }
-        time++;
+    // measures the modular distance if increasing from x0 to x1 on our circular frame buffer.
+    var getForwardDist = function(x0,x1) {
+        return (x0 <= x1) ? x1-x0 : x1+maxFrames-x0;
     };
 
-    var rewind = function() {
-        if (canRewind()) {
-            decrementFrame();
+    // caps the time increment or decrement to prevent going over our rolling bounds.
+    var capSeekTime = function(dt) {
+        if (!initialized || dt == 0) {
+            return 0;
+        }
+        var maxForward = getForwardDist(frame,stopFrame);
+        var maxReverse = getForwardDist(startFrame,frame);
+        return (dt > 0) ? Math.min(maxForward,dt) : Math.max(-maxReverse,dt);
+    };
+
+    // seek to the state at the given relative time difference.
+    var seek = function(dt) {
+        if (dt == undefined) {
+            dt = speeds[speedIndex];
+        }
+        if (initialized) {
+            addTime(capSeekTime(dt));
             load();
         }
     };
 
+    // record a new state.
     var record = function() {
+        if (initialized) {
+            addTime(1);
+            if (frame == startFrame) {
+                startFrame = (startFrame+1)%maxFrames;
+            }
+            stopFrame = frame;
+        }
+        else {
+            initialized = true;
+        }
         save();
-        incrementFrame();
+    };
+
+    var startRecording = function() {
+        mode = VCR_RECORD;
+        eraseFuture();
+    };
+
+    var startSeeking = function() {
+        speedIndex = 3;
+        updateMode();
+    };
+
+    var nextSpeed = function(di) {
+        if (speeds[speedIndex+di] != undefined) {
+            speedIndex = speedIndex+di;
+        }
+    };
+
+    var updateMode = function() {
+        var speed = speeds[speedIndex];
+        if (speed == 0) {
+            mode = VCR_PAUSE;
+        }
+        else if (speed < 0) {
+            mode = VCR_REWIND;
+        }
+        else if (speed > 0) {
+            mode = VCR_FORWARD;
+        }
     };
 
     return {
-        mode: VCR_RECORD,
         reset: reset,
-        rewind: rewind,
+        seek: seek,
         record: record,
         eraseFuture: eraseFuture,
+        startRecording: startRecording,
+        startSeeking: startSeeking,
+        nextSpeed: nextSpeed,
         getTime: function() { return time; },
+        getMode: function() { return mode; },
     };
 })();
 //@line 1 "src/direction.js"
@@ -2068,9 +2201,6 @@ var switchRenderer = function(i) {
 
         // copy background canvas to the foreground canvas
         blitMap: function() {
-            if (vcr.mode == VCR_REWIND) {
-                //ctx.globalAlpha = 0.2;
-            }
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);
@@ -3499,38 +3629,6 @@ var gui = (function() {
         };
     })();
 
-    var addInput = function() {
-        // TODO: add touch swipe events for mobile access
-
-        // handle key press event
-        document.onkeydown = function(e) {
-            var key = (e||window.event).keyCode;
-            switch (key) {
-                // steer pac-man
-                case 37: pacman.setNextDir(DIR_LEFT); break;
-                case 38: pacman.setNextDir(DIR_UP); break;
-                case 39: pacman.setNextDir(DIR_RIGHT); break;
-                case 40: pacman.setNextDir(DIR_DOWN); break;
-                case 16: vcr.mode = VCR_REWIND; // shift
-                default: return;
-            }
-            // prevent default action for arrow keys
-            // (don't scroll page with arrow keys)
-            e.preventDefault();
-        };
-        document.onkeyup = function(e) {
-            var key = (e||window.event).keyCode;
-            switch (key) {
-                case 16: 
-                    vcr.mode = VCR_RECORD; // shift
-                    vcr.eraseFuture();
-                    break;
-                default: return;
-            }
-            e.preventDefault();
-        };
-    };
-
     return {
         create: function() {
 
@@ -3538,7 +3636,6 @@ var gui = (function() {
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
             addControls();
-            addInput();
         },
     };
 })();
@@ -5242,7 +5339,7 @@ var playState = {
     },
     update: function() {
         
-        if (vcr.mode == VCR_RECORD) {
+        if (vcr.getMode() == VCR_RECORD) {
 
             // record current state
             vcr.record();
@@ -5307,8 +5404,8 @@ var playState = {
                     actors[i].frames++;
             }
         }
-        else if (vcr.mode = VCR_REWIND) {
-            vcr.rewind();
+        else {
+            vcr.seek();
         }
     },
 };
@@ -5348,16 +5445,16 @@ var scriptState = (function(){
             this.triggerFrame--;
         },
         updateWithRewind: function() {
-            if (vcr.mode == VCR_RECORD) {
+            if (vcr.getMode() == VCR_RECORD) {
                 vcr.record();
                 scriptState.update.call(this);
             }
-            else if (vcr.mode == VCR_REWIND) {
+            else if (vcr.getMode() == VCR_REWIND) {
                 if (this.frames == 0) {
                     state = playState;
                 }
                 else {
-                    vcr.rewind();
+                    vcr.seek(-1);
                     scriptState.rewind.call(this);
                 }
             }

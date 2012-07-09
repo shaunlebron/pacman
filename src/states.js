@@ -239,7 +239,7 @@ var playState = {
     },
     update: function() {
         
-        if (vcr.mode == VCR_RECORD) {
+        if (vcr.getMode() == VCR_RECORD) {
 
             // record current state
             vcr.record();
@@ -304,8 +304,8 @@ var playState = {
                     actors[i].frames++;
             }
         }
-        else if (vcr.mode = VCR_REWIND) {
-            vcr.rewind();
+        else {
+            vcr.seek();
         }
     },
 };
@@ -345,16 +345,16 @@ var scriptState = (function(){
             this.triggerFrame--;
         },
         updateWithRewind: function() {
-            if (vcr.mode == VCR_RECORD) {
+            if (vcr.getMode() == VCR_RECORD) {
                 vcr.record();
                 scriptState.update.call(this);
             }
-            else if (vcr.mode == VCR_REWIND) {
+            else if (vcr.getMode() == VCR_REWIND) {
                 if (this.frames == 0) {
                     state = playState;
                 }
                 else {
-                    vcr.rewind();
+                    vcr.seek(-1);
                     scriptState.rewind.call(this);
                 }
             }

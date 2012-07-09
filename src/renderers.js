@@ -74,9 +74,6 @@ var switchRenderer = function(i) {
 
         // copy background canvas to the foreground canvas
         blitMap: function() {
-            if (vcr.mode == VCR_REWIND) {
-                //ctx.globalAlpha = 0.2;
-            }
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);

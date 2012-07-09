@@ -134,6 +134,17 @@ var vcr = (function() {
     // tracking speed
     var speedIndex;
     var speeds = [-8,-4,-2,-1,0,1,2,4,8];
+    var speedColors = [
+        "rgba(255,255,0,0.20)",
+        "rgba(255,255,0,0.15)",
+        "rgba(255,255,0,0.10)",
+        "rgba(255,255,0,0.05)",
+        "rgba(0,0,0,0)",
+        "rgba(0,0,255,0.05)",
+        "rgba(0,0,255,0.10)",
+        "rgba(0,0,255,0.15)",
+        "rgba(0,0,255,0.20)",
+    ];
 
     // current frame associated with current time
     // (frame == time % maxFrames)
@@ -258,6 +269,47 @@ var vcr = (function() {
         if (speeds[speedIndex+di] != undefined) {
             speedIndex = speedIndex+di;
         }
+        updateMode();
+    };
+
+    var renderHud = function(ctx) {
+        if (vcr.getMode() != VCR_RECORD) {
+
+            // change the hue to reflect speed
+            ctx.fillStyle = speedColors[speedIndex];
+            ctx.fillRect(0,0,screenWidth,screenHeight);
+
+            // draw the speed
+            ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "right";
+            ctx.fillStyle = "#FFF";
+            ctx.fillText(speeds[speedIndex]+"x", screenWidth-2*tileSize, tileSize*1.5);
+
+            // draw up/down arrows
+            var s = tileSize/2;
+            ctx.fillStyle = "#AAA";
+            ctx.save();
+
+            ctx.translate(screenWidth-1.65*tileSize, tileSize+2);
+            ctx.beginPath();
+            ctx.moveTo(0,s);
+            ctx.lineTo(s/2,0);
+            ctx.lineTo(s,s);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.translate(0,s+s/2);
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            ctx.lineTo(s/2,s);
+            ctx.lineTo(s,0);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
     };
 
     var updateMode = function() {
@@ -281,6 +333,7 @@ var vcr = (function() {
         startRecording: startRecording,
         startSeeking: startSeeking,
         nextSpeed: nextSpeed,
+        renderHud: renderHud,
         getTime: function() { return time; },
         getMode: function() { return mode; },
     };
@@ -2204,7 +2257,6 @@ var switchRenderer = function(i) {
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);
-            ctx.globalAlpha = 1;
         },
 
         renderFunc: function(f) {
@@ -2493,6 +2545,19 @@ var switchRenderer = function(i) {
                     this.drawNoGroutTile(bgCtx,x,y,tileSize);
             }
         },
+
+        refreshPellet: function(x,y) {
+            var i = map.posToIndex(x,y);
+            var tile = map.currentTiles[i];
+            if (tile == ' ') {
+                this.erasePellet(x,y);
+            }
+            else if (tile == '.') {
+                bgCtx.fillStyle = this.pelletColor;
+                this.drawNoGroutTile(bgCtx,x,y,tileSize);
+            }
+        },
+
 
         // draw the current score and high score
         drawScore: function() {
@@ -5315,6 +5380,7 @@ var playState = {
         renderer.drawPaths();
         renderer.drawActors();
         renderer.drawTargets();
+        renderer.renderFunc(vcr.renderHud);
     },
 
     // handles collision between pac-man and ghosts

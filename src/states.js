@@ -215,6 +215,7 @@ var playState = {
         renderer.drawPaths();
         renderer.drawActors();
         renderer.drawTargets();
+        renderer.renderFunc(vcr.renderHud);
     },
 
     // handles collision between pac-man and ghosts

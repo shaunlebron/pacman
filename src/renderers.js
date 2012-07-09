@@ -77,7 +77,6 @@ var switchRenderer = function(i) {
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,0,0);
             ctx.scale(scale,scale);
-            ctx.globalAlpha = 1;
         },
 
         renderFunc: function(f) {
@@ -366,6 +365,19 @@ var switchRenderer = function(i) {
                     this.drawNoGroutTile(bgCtx,x,y,tileSize);
             }
         },
+
+        refreshPellet: function(x,y) {
+            var i = map.posToIndex(x,y);
+            var tile = map.currentTiles[i];
+            if (tile == ' ') {
+                this.erasePellet(x,y);
+            }
+            else if (tile == '.') {
+                bgCtx.fillStyle = this.pelletColor;
+                this.drawNoGroutTile(bgCtx,x,y,tileSize);
+            }
+        },
+
 
         // draw the current score and high score
         drawScore: function() {

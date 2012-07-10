@@ -325,41 +325,6 @@ var scriptState = (function(){
             this.drawFunc = undefined;   // current draw function
             this.updateFunc = undefined; // current update function
         },
-        rewind: function() {
-            // FIXME: handle calling the trigger's init function?
-
-            var trigger = this.triggers[this.frames];
-            if (trigger) {
-                var i;
-                for (i=this.frames-1; i>=0; i--) {
-                    trigger = this.triggers[i];
-                    if (trigger) {
-                        if (trigger.init) trigger.init();
-                        this.drawFunc = trigger.draw;
-                        this.updateFunc = trigger.update;
-                        this.triggerFrame = this.frames-i;
-                        break;
-                    }
-                }
-            }
-            this.frames--;
-            this.triggerFrame--;
-        },
-        updateWithRewind: function() {
-            if (vcr.getMode() == VCR_RECORD) {
-                vcr.record();
-                scriptState.update.call(this);
-            }
-            else if (vcr.getMode() == VCR_REWIND) {
-                if (this.frames == 0) {
-                    state = playState;
-                }
-                else {
-                    vcr.seek(-1);
-                    scriptState.rewind.call(this);
-                }
-            }
-        },
         update: function() {
 
             // if trigger is found for current time,
@@ -389,6 +354,53 @@ var scriptState = (function(){
 })();
 
 ////////////////////////////////////////////////////
+// Seekable Script state
+// (a script state that can be controled by the VCR)
+
+var seekableScriptState = (function(){
+    return {
+
+        __proto__: scriptState,
+
+        init: function() {
+            scriptState.init.call(this);
+            this.savedFrames = {};
+            this.savedTriggerFrame = {};
+            this.savedDrawFunc = {};
+            this.savedUpdateFunc = {};
+        },
+
+        save: function(t) {
+            this.savedFrames[t] = this.frames;
+            this.savedTriggerFrame[t] = this.triggerFrame;
+            this.savedDrawFunc[t] = this.drawFunc;
+            this.savedUpdateFunc[t] = this.updateFunc;
+        },
+        load: function(t) {
+            this.frames = this.savedFrames[t];
+            this.triggerFrame = this.savedTriggerFrame[t];
+            this.drawFunc = this.savedDrawFunc[t];
+            this.updateFunc = this.savedUpdateFunc[t];
+        },
+        update: function() {
+            if (vcr.getMode() == VCR_RECORD) {
+                vcr.record();
+                scriptState.update.call(this);
+            }
+            else {
+                vcr.seek();
+            }
+        },
+        draw: function() {
+            if (this.drawFunc) {
+                scriptState.draw.call(this);
+                renderer.renderFunc(vcr.renderHud);
+            }
+        },
+    };
+})();
+
+////////////////////////////////////////////////////
 // Dead state
 // (state when player has lost a life)
 
@@ -407,11 +419,7 @@ var deadState = (function() {
     return {
 
         // inherit script state functions
-        __proto__: scriptState,
-
-        update: function () {
-            scriptState.updateWithRewind.call(this);
-        },
+        __proto__: seekableScriptState,
 
         // script functions for each time
         triggers: {
@@ -439,6 +447,10 @@ var deadState = (function() {
                 },
             },
             195: {
+                draw: function() {
+                    commonDraw();
+                    renderer.drawDyingPlayer(1);
+                },
             },
             240: {
                 init: function() { // leave
@@ -457,7 +469,6 @@ var finishState = (function(){
 
     // this state will always have these drawn
     var commonDraw = function() {
-        renderer.drawMap();
         renderer.blitMap();
         renderer.drawEnergizers();
         renderer.drawExtraLives();
@@ -476,24 +487,29 @@ var finishState = (function(){
     return {
 
         // inherit script state functions
-        __proto__: scriptState,
-
-        update: function () {
-            scriptState.updateWithRewind.call(this);
-        },
+        __proto__: seekableScriptState,
 
         // script functions for each time
         triggers: {
-            0: { init: function() { playState.draw(); } },
-            60:  { init: function() { flashFloorAndDraw(false); } },
-            120: { init: function() { flashFloorAndDraw(true); } },
-            135: { init: function() { flashFloorAndDraw(false); } },
-            150: { init: function() { flashFloorAndDraw(true); } },
-            165: { init: function() { flashFloorAndDraw(false); } },
-            180: { init: function() { flashFloorAndDraw(true); } },
-            195: { init: function() { flashFloorAndDraw(false); } },
-            210: { init: function() { flashFloorAndDraw(true); } },
-            225: { init: function() { flashFloorAndDraw(false); } },
+            0:   { draw: function() {
+                    renderer.blitMap();
+                    renderer.drawEnergizers();
+                    renderer.drawExtraLives();
+                    renderer.drawLevelIcons();
+                    renderer.drawScore();
+                    renderer.drawFruit();
+                    renderer.drawActors();
+                    renderer.drawTargets();
+            } },
+            60:  { draw: function() { flashFloorAndDraw(false); } },
+            120: { draw: function() { flashFloorAndDraw(true); } },
+            135: { draw: function() { flashFloorAndDraw(false); } },
+            150: { draw: function() { flashFloorAndDraw(true); } },
+            165: { draw: function() { flashFloorAndDraw(false); } },
+            180: { draw: function() { flashFloorAndDraw(true); } },
+            195: { draw: function() { flashFloorAndDraw(false); } },
+            210: { draw: function() { flashFloorAndDraw(true); } },
+            225: { draw: function() { flashFloorAndDraw(false); } },
             255: { 
                 init: function() {
                     level++;

@@ -12,6 +12,7 @@ var vcr = (function() {
 
     var mode;
 
+    // controls whether to increment the frame before recording.
     var initialized;
 
     // current time
@@ -45,13 +46,12 @@ var vcr = (function() {
 
     // reset the VCR
     var reset = function() {
-        initialized = false;
         time = 0;
         frame = 0;
         startFrame = 0;
         stopFrame = 0;
-        eraseFuture();
-        mode = VCR_RECORD;
+        states = {};
+        startRecording();
     };
 
     // load the state of the current time
@@ -67,6 +67,12 @@ var vcr = (function() {
         ghostReleaser.load(frame);
         map.load(frame,time);
         loadGame(frame);
+        if (state == deadState) {
+            deadState.load(frame);
+        }
+        else if (state == finishState) {
+            finishState.load(frame);
+        }
     };
 
     // save the state of the current time
@@ -82,6 +88,12 @@ var vcr = (function() {
         ghostReleaser.save(frame);
         map.save(frame);
         saveGame(frame);
+        if (state == deadState) {
+            deadState.save(frame);
+        }
+        else if (state == finishState) {
+            finishState.save(frame);
+        }
     };
 
     // erase any states after the current time
@@ -143,6 +155,7 @@ var vcr = (function() {
 
     var startRecording = function() {
         mode = VCR_RECORD;
+        initialized = false;
         eraseFuture();
     };
 

@@ -86,20 +86,26 @@ var extraLives = 0;
 var highScore = 0;
 var score = 0;
 
+var savedLevel = {};
 var savedExtraLives = {};
 var savedHighScore = {};
 var savedScore = {};
+var savedState = {};
 
 var saveGame = function(t) {
+    savedLevel[t] = level;
     savedExtraLives[t] = extraLives;
     savedHighScore[t] = highScore;
     savedScore[t] = score;
+    savedState[t] = state;
 };
 
 var loadGame = function(t) {
+    level = savedLevel[t];
     extraLives = savedExtraLives[t];
     highScore = savedHighScore[t];
     score = savedScore[t];
+    state = savedState[t];
 };
 
 // TODO: have a high score for each game type
@@ -126,6 +132,7 @@ var vcr = (function() {
 
     var mode;
 
+    // controls whether to increment the frame before recording.
     var initialized;
 
     // current time
@@ -159,13 +166,12 @@ var vcr = (function() {
 
     // reset the VCR
     var reset = function() {
-        initialized = false;
         time = 0;
         frame = 0;
         startFrame = 0;
         stopFrame = 0;
-        eraseFuture();
-        mode = VCR_RECORD;
+        states = {};
+        startRecording();
     };
 
     // load the state of the current time
@@ -181,6 +187,12 @@ var vcr = (function() {
         ghostReleaser.load(frame);
         map.load(frame,time);
         loadGame(frame);
+        if (state == deadState) {
+            deadState.load(frame);
+        }
+        else if (state == finishState) {
+            finishState.load(frame);
+        }
     };
 
     // save the state of the current time
@@ -196,6 +208,12 @@ var vcr = (function() {
         ghostReleaser.save(frame);
         map.save(frame);
         saveGame(frame);
+        if (state == deadState) {
+            deadState.save(frame);
+        }
+        else if (state == finishState) {
+            finishState.save(frame);
+        }
     };
 
     // erase any states after the current time
@@ -257,6 +275,7 @@ var vcr = (function() {
 
     var startRecording = function() {
         mode = VCR_RECORD;
+        initialized = false;
         eraseFuture();
     };
 
@@ -2298,7 +2317,10 @@ var switchRenderer = function(i) {
         },
 
         setLevelFlash: function(on) {
-            this.flashLevel = on;
+            if (on != this.flashLevel) {
+                this.flashLevel = on;
+                this.drawMap();
+            }
         },
 
         // draw the target visualizers for each actor
@@ -5490,41 +5512,6 @@ var scriptState = (function(){
             this.drawFunc = undefined;   // current draw function
             this.updateFunc = undefined; // current update function
         },
-        rewind: function() {
-            // FIXME: handle calling the trigger's init function?
-
-            var trigger = this.triggers[this.frames];
-            if (trigger) {
-                var i;
-                for (i=this.frames-1; i>=0; i--) {
-                    trigger = this.triggers[i];
-                    if (trigger) {
-                        if (trigger.init) trigger.init();
-                        this.drawFunc = trigger.draw;
-                        this.updateFunc = trigger.update;
-                        this.triggerFrame = this.frames-i;
-                        break;
-                    }
-                }
-            }
-            this.frames--;
-            this.triggerFrame--;
-        },
-        updateWithRewind: function() {
-            if (vcr.getMode() == VCR_RECORD) {
-                vcr.record();
-                scriptState.update.call(this);
-            }
-            else if (vcr.getMode() == VCR_REWIND) {
-                if (this.frames == 0) {
-                    state = playState;
-                }
-                else {
-                    vcr.seek(-1);
-                    scriptState.rewind.call(this);
-                }
-            }
-        },
         update: function() {
 
             // if trigger is found for current time,
@@ -5554,6 +5541,53 @@ var scriptState = (function(){
 })();
 
 ////////////////////////////////////////////////////
+// Seekable Script state
+// (a script state that can be controled by the VCR)
+
+var seekableScriptState = (function(){
+    return {
+
+        __proto__: scriptState,
+
+        init: function() {
+            scriptState.init.call(this);
+            this.savedFrames = {};
+            this.savedTriggerFrame = {};
+            this.savedDrawFunc = {};
+            this.savedUpdateFunc = {};
+        },
+
+        save: function(t) {
+            this.savedFrames[t] = this.frames;
+            this.savedTriggerFrame[t] = this.triggerFrame;
+            this.savedDrawFunc[t] = this.drawFunc;
+            this.savedUpdateFunc[t] = this.updateFunc;
+        },
+        load: function(t) {
+            this.frames = this.savedFrames[t];
+            this.triggerFrame = this.savedTriggerFrame[t];
+            this.drawFunc = this.savedDrawFunc[t];
+            this.updateFunc = this.savedUpdateFunc[t];
+        },
+        update: function() {
+            if (vcr.getMode() == VCR_RECORD) {
+                vcr.record();
+                scriptState.update.call(this);
+            }
+            else {
+                vcr.seek();
+            }
+        },
+        draw: function() {
+            if (this.drawFunc) {
+                scriptState.draw.call(this);
+                renderer.renderFunc(vcr.renderHud);
+            }
+        },
+    };
+})();
+
+////////////////////////////////////////////////////
 // Dead state
 // (state when player has lost a life)
 
@@ -5572,11 +5606,7 @@ var deadState = (function() {
     return {
 
         // inherit script state functions
-        __proto__: scriptState,
-
-        update: function () {
-            scriptState.updateWithRewind.call(this);
-        },
+        __proto__: seekableScriptState,
 
         // script functions for each time
         triggers: {
@@ -5604,6 +5634,10 @@ var deadState = (function() {
                 },
             },
             195: {
+                draw: function() {
+                    commonDraw();
+                    renderer.drawDyingPlayer(1);
+                },
             },
             240: {
                 init: function() { // leave
@@ -5622,7 +5656,6 @@ var finishState = (function(){
 
     // this state will always have these drawn
     var commonDraw = function() {
-        renderer.drawMap();
         renderer.blitMap();
         renderer.drawEnergizers();
         renderer.drawExtraLives();
@@ -5641,24 +5674,29 @@ var finishState = (function(){
     return {
 
         // inherit script state functions
-        __proto__: scriptState,
-
-        update: function () {
-            scriptState.updateWithRewind.call(this);
-        },
+        __proto__: seekableScriptState,
 
         // script functions for each time
         triggers: {
-            0: { init: function() { playState.draw(); } },
-            60:  { init: function() { flashFloorAndDraw(false); } },
-            120: { init: function() { flashFloorAndDraw(true); } },
-            135: { init: function() { flashFloorAndDraw(false); } },
-            150: { init: function() { flashFloorAndDraw(true); } },
-            165: { init: function() { flashFloorAndDraw(false); } },
-            180: { init: function() { flashFloorAndDraw(true); } },
-            195: { init: function() { flashFloorAndDraw(false); } },
-            210: { init: function() { flashFloorAndDraw(true); } },
-            225: { init: function() { flashFloorAndDraw(false); } },
+            0:   { draw: function() {
+                    renderer.blitMap();
+                    renderer.drawEnergizers();
+                    renderer.drawExtraLives();
+                    renderer.drawLevelIcons();
+                    renderer.drawScore();
+                    renderer.drawFruit();
+                    renderer.drawActors();
+                    renderer.drawTargets();
+            } },
+            60:  { draw: function() { flashFloorAndDraw(false); } },
+            120: { draw: function() { flashFloorAndDraw(true); } },
+            135: { draw: function() { flashFloorAndDraw(false); } },
+            150: { draw: function() { flashFloorAndDraw(true); } },
+            165: { draw: function() { flashFloorAndDraw(false); } },
+            180: { draw: function() { flashFloorAndDraw(true); } },
+            195: { draw: function() { flashFloorAndDraw(false); } },
+            210: { draw: function() { flashFloorAndDraw(true); } },
+            225: { draw: function() { flashFloorAndDraw(false); } },
             255: { 
                 init: function() {
                     level++;

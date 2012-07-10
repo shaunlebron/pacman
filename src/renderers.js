@@ -118,7 +118,10 @@ var switchRenderer = function(i) {
         },
 
         setLevelFlash: function(on) {
-            this.flashLevel = on;
+            if (on != this.flashLevel) {
+                this.flashLevel = on;
+                this.drawMap();
+            }
         },
 
         // draw the target visualizers for each actor

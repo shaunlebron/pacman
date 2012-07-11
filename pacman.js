@@ -1675,6 +1675,8 @@ var mapgen = (function(){
 
             var doubleDeadEndCells = [];
 
+            var numTunnelsCreated = 0;
+
             // prepare candidates
             var y;
             var c;
@@ -1763,7 +1765,7 @@ var mapgen = (function(){
                     c.topTunnel = true;
                 }
                 else {
-                    throw "unable to find a single tunnel.  This should never happen.";
+                    return false;
                 }
             }
             else if (numTunnelsDesired == 2) {
@@ -1773,6 +1775,7 @@ var mapgen = (function(){
                     c.next[DOWN].topTunnel = true;
                 }
                 else {
+                    numTunnelsCreated = 1;
                     if (c = randomElement(topVoidTunnelCells)) {
                         c.topTunnel = true;
                     }
@@ -1784,6 +1787,7 @@ var mapgen = (function(){
                     }
                     else {
                         // could not find a top tunnel opening
+                        numTunnelsCreated = 0;
                     }
 
                     if (c = randomElement(botVoidTunnelCells)) {
@@ -1797,6 +1801,9 @@ var mapgen = (function(){
                     }
                     else {
                         // could not find a bottom tunnel opening
+                        if (numTunnelsCreated == 0) {
+                            return false;
+                        }
                     }
                 }
             }
@@ -1822,6 +1829,8 @@ var mapgen = (function(){
                     c.next[UP].connect[DOWN] = true;
                 }
             }
+
+            return true;
         };
 
         var joinWalls = function() {
@@ -1897,19 +1906,23 @@ var mapgen = (function(){
 
         // try to generate a valid map, and keep count of tries.
         var genCount = 0;
-        do {
+        while (true) {
             reset();
             gen();
             genCount++;
+            if (!isDesirable()) {
+                continue;
+            }
+
+            setUpScaleCoords();
+            joinWalls();
+            if (!createTunnels()) {
+                continue;
+            }
+
+            break;
         }
-        while (!isDesirable());
 
-        // set helper attributes to position each cell
-        setUpScaleCoords();
-
-        joinWalls();
-
-        createTunnels();
     };
 
     // Transform the simple cells to a tile array used for creating the map.
@@ -5142,9 +5155,9 @@ var executive = (function(){
     /**********/
     var reqFrame;
 
-    var maxFrameSkip = 3;
     var tick = function(now) {
         // call update for every frame period that has elapsed
+        var maxFrameSkip = 1;
         var frames = 0;
         if (framePeriod != Infinity) {
             while (frames < maxFrameSkip && (now > nextFrameTime)) {

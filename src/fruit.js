@@ -3,6 +3,8 @@
 
 var fruit = (function(){
 
+    // FIXME: Ms. Pac-Man triggers at dot thresholds 64 and 176
+
     var dotLimit1 = 70; // first fruit will appear when this number of dots are eaten
     var dotLimit2 = 170; // second fruit will appear when this number of dots are eaten
 
@@ -26,6 +28,25 @@ var fruit = (function(){
         framesLeft = savedFramesLeft[t];
         scoreFramesLeft = savedScoreFramesLeft[t];
     };
+
+    var bounce_frames = (function(){
+        var U = { dx:0, dy:-1 };
+        var D = { dx:0, dy:1 };
+        var L = { dx:-1, dy:0 };
+        var R = { dx:1, dy:0 };
+        var UL = { dx:-1, dy:-1 };
+        var UR = { dx:1, dy:-1 };
+        var DL = { dx:-1, dy:1 };
+        var DR = { dx:1, dy:1 };
+        var Z = { dx:0, dy:0 };
+
+        return {
+            '^': [U, U, U, U, U, U, U, U, U, Z, U, Z, Z, D, Z, D],
+            '>': [Z, UR,Z, R, Z, UR,Z, R, Z, R, Z, R, Z, DR,DR,Z],
+            '<': [Z, Z, UL,Z, L, Z, UL,Z, L, Z, L, Z, L, Z, DL,DL],
+            'v': [Z, D, D, D, D, D, D, D, D, D, D, D, U, U, Z, U],
+        };
+    })();
 
     return {
         save: save,

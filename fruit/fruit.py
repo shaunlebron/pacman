@@ -1,4 +1,5 @@
 import sys
+import json
 
 path_chars = ['^','>','<','v']
 
@@ -62,16 +63,19 @@ map_paths = [
             {"count": "15", "path": "55 50 41 55 fd aa"},
             {"count": "18", "path": "aa a0 82 aa fe aa"},
             {"count": "19", "path": "aa af 02 2a a0 aa aa"},
-            {"count": "1c", "path": "55 5f 01 00 50 55"},
+            {"count": "1c", "path": "55 5f 01 00 50 55 bf"},
         ],
     },
 ]
 
+def getPixel(p):
+    x = p['x']
+    y = p['y']
+    return {'x':30*8-x, 'y':y+2*8}
+
 def getTile(p):
-    x = p['x']/8
-    y = p['y']/8
-    x = 32 - x - 2
-    return {'x':x-1, 'y':y+2}
+    p = getPixel(p)
+    return {'x':p['x']/8, 'y':p['y']/8}
 
 def decode_start(start):
     bytes = [int(token,16) for token in start.split()]
@@ -105,11 +109,12 @@ def main():
             sys.stdout.write("    ")
             for x in range(-1,29):
                 c = " "
+                if x >= 0 and x < 28:
+                    c = map[x+y*28]
                 if (x,y) in present:
+                    if c == '|':
+                        raise Error("Path travels over a wall")
                     c = present[(x,y)]
-                else:
-                    if x >= 0 and x < 28:
-                        c = map[x+y*28]
                 sys.stdout.write(c)
             print
         print
@@ -119,24 +124,44 @@ def main():
 
 A fruit takes a random path around a maze.  It begins by traveling to the center of the maze from any of a given set of preset entrance paths.  It continues around the ghost pen once and exits the maze from another given set of preset paths for exiting.
 
-All reverse-engineering research for this data was done and contributed by [Bart Grantham](www.bartgrantham.com).
+All reverse-engineering research for this data was done and contributed by [Bart Grantham](http://www.bartgrantham.com).
     """
 
     print "## Path Around Ghost Pen"
     path = decode_path(pen_path, pen_count)
     print_map(pen_start,path,maps[0])
     i = 0
+    js_maplist = []
     for m,map in zip(map_paths,maps):
+        js_map = {'entrances':[], 'exits':[]}
+        js_maplist.append(js_map)
         for j,e in enumerate(m['entrances']):
             print "## Map %d - Entrance %d" % (i,j)
-            start = getTile(decode_start(e['start']))
+            start = decode_start(e['start'])
+            pixel = getPixel(start)
+            tile = getTile(start)
             path = decode_path(e['path'], e['count'])
-            print_map(start,path,map)
+            print_map(tile,path,map)
+
+            js_map['entrances'].append({'start':pixel, 'path':path})
+
         for j,e in enumerate(m['exits']):
             print "## Map %d - Exit %d" % (i,j)
             path = decode_path(e['path'], e['count'])
             print_map(exit_start,path,map)
+
+            js_map['exits'].append({'path':path})
         i += 1
+
+    print "## Generated JSON Map Paths"
+    for line in json.dumps(js_maplist,indent=4).splitlines():
+        print ' '*4,line
+    print
+
+    print "## Generated JSON Ghost Pen Path"
+    path = decode_path(pen_path, pen_count)
+    for line in json.dumps(path,indent=4).splitlines():
+        print ' '*4,line
 
 maps = [
     (

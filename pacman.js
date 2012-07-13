@@ -5045,6 +5045,8 @@ var energizer = (function() {
 
 var fruit = (function(){
 
+    // FIXME: Ms. Pac-Man triggers at dot thresholds 64 and 176
+
     var dotLimit1 = 70; // first fruit will appear when this number of dots are eaten
     var dotLimit2 = 170; // second fruit will appear when this number of dots are eaten
 
@@ -5068,6 +5070,25 @@ var fruit = (function(){
         framesLeft = savedFramesLeft[t];
         scoreFramesLeft = savedScoreFramesLeft[t];
     };
+
+    var bounce_frames = (function(){
+        var U = { dx:0, dy:-1 };
+        var D = { dx:0, dy:1 };
+        var L = { dx:-1, dy:0 };
+        var R = { dx:1, dy:0 };
+        var UL = { dx:-1, dy:-1 };
+        var UR = { dx:1, dy:-1 };
+        var DL = { dx:-1, dy:1 };
+        var DR = { dx:1, dy:1 };
+        var Z = { dx:0, dy:0 };
+
+        return {
+            '^': [U, U, U, U, U, U, U, U, U, Z, U, Z, Z, D, Z, D],
+            '>': [Z, UR,Z, R, Z, UR,Z, R, Z, R, Z, R, Z, DR,DR,Z],
+            '<': [Z, Z, UL,Z, L, Z, UL,Z, L, Z, L, Z, L, Z, DL,DL],
+            'v': [Z, D, D, D, D, D, D, D, D, D, D, D, U, U, Z, U],
+        };
+    })();
 
     return {
         save: save,
@@ -5922,6 +5943,20 @@ mapMsPacman1.name = "Ms. Pac-Man 1";
 mapMsPacman1.wallFillColor = "#FFB8AE";
 mapMsPacman1.wallStrokeColor = "#FF0000";
 mapMsPacman1.pelletColor = "#dedeff";
+mapMsPacman1.fruitPaths = {
+             "entrances": [
+                 { "start": { "y": 164, "x": 228 }, "path": "<<<<vvv<<<<<<<<<^^^" }, 
+                 { "start": { "y": 164, "x": -4 }, "path": ">>>>vvvvvv>>>>>>>>>>>>>>>^^^<<<^^^" }, 
+                 { "start": { "y": 92, "x": -4 }, "path": ">>>>^^^^>>>vvvv>>>vvv>>>>>>>>>vvvvvv<<<" }, 
+                 { "start": { "y": 92, "x": 228 }, "path": "<<<<vvvvvvvvv<<<^^^<<<vvv<<<" }
+             ], 
+             "exits": [
+                 { "path": "<vvv>>>>>>>>>^^^>>>>" }, 
+                 { "path": "<<<<vvv<<<<<<<<<^^^<<<<" }, 
+                 { "path": "<<<<<<<^^^^^^<<<<<<^^^<<<<" }, 
+                 { "path": "<vvv>>>>>>>>>^^^^^^^^^^^^>>>>" }
+             ]
+         };
 
 // Ms. Pac-Man map 2
 
@@ -5967,6 +6002,20 @@ mapMsPacman2.name = "Ms. Pac-Man 2";
 mapMsPacman2.wallFillColor = "#47b8ff";
 mapMsPacman2.wallStrokeColor = "#dedeff";
 mapMsPacman2.pelletColor = "#ffff00";
+mapMsPacman2.fruitPaths = {
+             "entrances": [
+                 { "start": { "y": 212, "x": 228 }, "path": "<<<<^^^<<<<<<<<^^^<" }, 
+                 { "start": { "y": 212, "x": -4 }, "path": ">>>>^^^>>>>>>>>vvv>>>>>^^^^^^<" }, 
+                 { "start": { "y": 36, "x": -4 }, "path": ">>>>>>>vvv>>>vvvvvvv>>>>>>>>>vvvvvv<<<" }, 
+                 { "start": { "y": 36, "x": 228 }, "path": "<<<<<<<vvv<<<vvvvvvvvvvvvv<<<" }
+             ], 
+             "exits": [
+                 { "path": "vvv>>>>>>>>vvv>>>>" }, 
+                 { "path": "vvvvvv<<<<<^^^<<<<<<<<vvv<<<<" }, 
+                 { "path": "<<<<<<<^^^^^^^^^^^^^<<<^^^<<<<<<<" }, 
+                 { "path": "vvv>>>>>^^^^^^^^^^>>>>>^^^^^^<<<<<^^^>>>>>>>" }
+             ]
+         };
 
 // Ms. Pac-Man map 3
 
@@ -6012,6 +6061,20 @@ mapMsPacman3.name = "Ms. Pac-Man 3";
 mapMsPacman3.wallFillColor = "#de9751";
 mapMsPacman3.wallStrokeColor = "#dedeff";
 mapMsPacman3.pelletColor = "#ff0000";
+mapMsPacman3.fruitPaths = {
+             "entrances": [
+                 { "start": { "y": 100, "x": 228 }, "path": "<<<<<vv<<<<<vvvvvv<<<" }, 
+                 { "start": { "y": 100, "x": -4 }, "path": ">>>>>vv>>>>>>>>>>>>>>vvvvvv<<<" }, 
+                 { "start": { "y": 100, "x": -4 }, "path": ">>>>>vv>>>>>>>>>>>>>>vvvvvv<<<" }, 
+                 { "start": { "y": 100, "x": 228 }, "path": "<<vvvvv<<<vvv<<<<<<<<" }
+             ], 
+             "exits": [
+                 { "path": "<vvv>>>vvv>>>^^^>>>>>^^^^^^^^^^^>>" }, 
+                 { "path": "<<<<vvv<<<vvv<<<^^^<<<<<^^^^^^^^^^^<<" }, 
+                 { "path": "<<<<vvv<<<vvv<<<^^^<<<<<^^^^^^^^^^^<<" }, 
+                 { "path": "<vvv>>>vvv>>>^^^^^^<<<^^^^^^>>>>>^^>>>>>" }
+             ]
+         };
 
 // Ms. Pac-Man map 4
 
@@ -6057,6 +6120,20 @@ mapMsPacman4.name = "Ms. Pac-Man 4";
 mapMsPacman4.wallFillColor = "#2121ff";
 mapMsPacman4.wallStrokeColor = "#ffb851";
 mapMsPacman4.pelletColor = "#dedeff";
+mapMsPacman4.fruitPaths = {
+             "entrances": [
+                 { "start": { "y": 156, "x": 228 }, "path": "<<<<vv<<<vv<<<<<<^^^" }, 
+                 { "start": { "y": 156, "x": -4 }, "path": ">>>>vv>>>vv>>>>>>vvv>>>^^^^^^" }, 
+                 { "start": { "y": 132, "x": -4 }, "path": ">>>>^^^^^>>>^^^>>>vvv>>>vvv>>>>>>vvvvvv<<<" }, 
+                 { "start": { "y": 132, "x": 228 }, "path": "<<<<^^<<<vvv<<<vvv<<<" }
+             ], 
+             "exits": [
+                 { "path": "<vvv>>>>>>^^>>>^^>>>>" }, 
+                 { "path": "<<<<vvv<<<<<<^^<<<^^<<<<" }, 
+                 { "path": "<<<<<<<^^^<<<^^^<<<vv<<<<" }, 
+                 { "path": "<vvv>>>>>>^^^^^^^^^>>>vv>>>>" }
+             ]
+         };
 //@line 1 "src/main.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Entry Point

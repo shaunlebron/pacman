@@ -3,7 +3,7 @@
 
 A fruit takes a random path around a maze.  It begins by traveling to the center of the maze from any of a given set of preset entrance paths.  It continues around the ghost pen once and exits the maze from another given set of preset paths for exiting.
 
-All reverse-engineering research for this data was done and contributed by [Bart Grantham](www.bartgrantham.com).
+All reverse-engineering research for this data was done and contributed by [Bart Grantham](http://www.bartgrantham.com).
     
 ## Path Around Ghost Pen
 

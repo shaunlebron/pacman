@@ -262,7 +262,7 @@ var fruit = (function(){
         var fruitFromMode = {};
         fruitFromMode[GAME_PACMAN] = pacFruit;
         fruitFromMode[GAME_MSPACMAN] = mspacFruit;
-        fruitFromMode[GAME_COOKIE] = mspacFruit; // for now
+        fruitFromMode[GAME_COOKIE] = pacFruit; // for now
         return function() {
             return fruitFromMode[gameMode];
         };

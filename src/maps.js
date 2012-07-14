@@ -115,6 +115,33 @@ mapPacman.constrainGhostTurns = function(tile,openTiles) {
 
 // Ms. Pac-Man map 1
 
+var setNextMsPacMap = (function() {
+    var order = [
+        0, // level 1
+        0, // level 2
+        1, // level 3
+        1, // level 4
+        1, // level 5
+        2, // level 6,14,22...
+        2, // level 7,15,23...
+        2, // level 8,16,24...
+        2, // level 9,17,25...
+        3, // level 10,18,26...
+        3, // level 11,19,27...
+        3, // level 12,20,28...
+        3, // level 13,21,29...
+    ];
+    return function() {
+        var maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
+        var i = level-1;
+        if (level > 13) {
+            var cycle = 8;
+            i = ((i-cycle)%cycle)+5;
+        }
+        map = maps[order[i]];
+    }
+})();
+
 var mapMsPacman1 = new Map(28, 36, (
     "____________________________" +
     "____________________________" +

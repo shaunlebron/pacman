@@ -30,10 +30,6 @@ var Map = function(numCols, numRows, tiles) {
     this.homeTopPixel = 17*tileSize;
     this.homeBottomPixel = 18*tileSize;
 
-    // location of the fruit
-    var fruitTile = {x:13, y:20};
-    fruit.setPosition(tileSize*(1+fruitTile.x)-1, tileSize*fruitTile.y + midTile.y);
-
     this.timeEaten = {};
 
     this.resetCurrent();

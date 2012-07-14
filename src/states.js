@@ -174,6 +174,7 @@ var readyNewState = {
         }
         ghostReleaser.onNewLevel();
         elroyTimer.onNewLevel();
+        fruit.onNewLevel();
 
         // inherit attributes from readyState
         readyState.init.call(this);
@@ -515,18 +516,7 @@ var finishState = (function(){
                     level++;
 
                     if (gameMode == GAME_MSPACMAN) {
-                        if (level <= 2) {
-                            map = mapMsPacman1;
-                        }
-                        else if (level <= 5) {
-                            map = mapMsPacman2;
-                        }
-                        else if (level <= 9) {
-                            map = mapMsPacman3;
-                        }
-                        else if (level <= 13) {
-                            map = mapMsPacman4;
-                        }
+                        setNextMsPacMap();
                     }
                     else if (gameMode == GAME_COOKIE) {
                         map = mapgen();

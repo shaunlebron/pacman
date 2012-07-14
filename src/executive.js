@@ -42,7 +42,7 @@ var executive = (function(){
 
     var tick = function(now) {
         // call update for every frame period that has elapsed
-        var maxFrameSkip = 1;
+        var maxFrameSkip = 5;
         var frames = 0;
         if (framePeriod != Infinity) {
             while (frames < maxFrameSkip && (now > nextFrameTime)) {

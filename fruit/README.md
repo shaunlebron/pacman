@@ -9,7 +9,7 @@ All reverse-engineering research for this data was done and contributed by [Bart
 
 Entrances are shown in **green**.  Exits are shown in **red**.
 
-<img src="https://shaunew.github.com/Pac-Man/fruit/mspac_paths.png"/>
+<img src="http://shaunew.github.com/Pac-Man/fruit/mspac_paths.png"/>
 
 ## Generated Maps
 
@@ -19,6 +19,6 @@ This method runs Dijkstra's algorithm twice for every map: for entrances and exi
 
 Similarly, the exit graphs start at tile (16,20), removing the node at (17,20) from the graph to prevent the fruit from reversing direction after rounding the ghost pen.  Once the exit graph is built, it is used to determine the paths to each of the tunnel openings as exits.
 
-Here is a sample image of the paths built from procedurally generated maps.  [View the demo here](https://shaunew.github.com/Pac-Man/fruit/cookie.htm)
+Here is a sample image of the paths built from procedurally generated maps.  [View the demo here](http://shaunew.github.com/Pac-Man/fruit/cookie.htm)
 
-<img src="https://shaunew.github.com/Pac-Man/fruit/cookie_paths.png"/>
+<img src="http://shaunew.github.com/Pac-Man/fruit/cookie_paths.png"/>

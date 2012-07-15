@@ -175,8 +175,7 @@ var vcr = (function() {
         if (vcr.getMode() != VCR_RECORD) {
 
             // change the hue to reflect speed
-            ctx.fillStyle = speedColors[speedIndex];
-            ctx.fillRect(0,0,screenWidth,screenHeight);
+            renderer.setOverlayColor(speedColors[speedIndex]);
 
             // draw the speed
             ctx.font = "bold " + 1.25*tileSize + "px sans-serif";

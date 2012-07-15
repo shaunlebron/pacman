@@ -52,7 +52,9 @@ var executive = (function(){
             }
         }
         // draw after updates are caught up
+        renderer.beginFrame();
         state.draw();
+        renderer.endFrame();
         reqFrame = requestAnimationFrame(tick);
     };
 

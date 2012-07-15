@@ -295,8 +295,7 @@ var vcr = (function() {
         if (vcr.getMode() != VCR_RECORD) {
 
             // change the hue to reflect speed
-            ctx.fillStyle = speedColors[speedIndex];
-            ctx.fillRect(0,0,screenWidth,screenHeight);
+            renderer.setOverlayColor(speedColors[speedIndex]);
 
             // draw the speed
             ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
@@ -2403,8 +2402,13 @@ var renderer_list;
 var renderer;
 
 var renderScale;
-var screenWidth = 28*tileSize;
-var screenHeight = 36*tileSize;
+var screenWidth = 30*tileSize;
+var screenHeight = 38*tileSize;
+
+var mapWidth = 28*tileSize;
+var mapHeight = 36*tileSize;
+var mapLeft = tileSize;
+var mapTop = tileSize;
 
 // all rendering will be shown on this canvas
 var canvas;
@@ -2417,7 +2421,7 @@ var switchRenderer = function(i) {
 
 (function(){
 
-    var bgCanvas;
+    var mapCanvas;
     var ctx, bgCtx;
 
     // drawing scale
@@ -2427,12 +2431,12 @@ var switchRenderer = function(i) {
     renderScale = scale; 
 
     // creates a canvas
-    var makeCanvas = function() {
+    var makeCanvas = function(w,h) {
         var c = document.createElement("canvas");
 
         // use conventional pacman map size
-        c.width = screenWidth * scale;
-        c.height = screenHeight * scale;
+        c.width = w * scale;
+        c.height = h * scale;
 
         // transform to scale
         var ctx = c.getContext("2d");
@@ -2441,10 +2445,18 @@ var switchRenderer = function(i) {
     };
 
     // create foreground and background canvases
-    canvas = makeCanvas();
-    bgCanvas = makeCanvas();
+    canvas = makeCanvas(screenWidth, screenHeight);
+    mapCanvas = makeCanvas(mapWidth, mapHeight);
     ctx = canvas.getContext("2d");
-    bgCtx = bgCanvas.getContext("2d");
+    bgCtx = mapCanvas.getContext("2d");
+
+    var beginMapFrame = function() {
+        bgCtx.fillStyle = "#000";
+        bgCtx.fillRect(0,0,mapWidth,mapHeight);
+    };
+
+    var endMapFrame = function() {
+    };
 
     //////////////////////////////////////////////////////////////
     // Common Renderer
@@ -2464,10 +2476,41 @@ var switchRenderer = function(i) {
 
     CommonRenderer.prototype = {
 
+        setOverlayColor: function(color) {
+            this.overlayColor = color;
+        },
+
+        beginMapClip: function() {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0,0,mapWidth,mapHeight);
+            ctx.clip();
+        },
+
+        endMapClip: function() {
+            ctx.restore();
+        },
+
+        beginFrame: function() {
+            this.setOverlayColor(undefined);
+            ctx.save();
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0,0,screenWidth,screenHeight);
+            ctx.translate(mapLeft, mapTop);
+        },
+
+        endFrame: function() {
+            ctx.restore();
+            if (this.overlayColor != undefined) {
+                ctx.fillStyle = this.overlayColor;
+                ctx.fillRect(0,0,screenWidth,screenHeight);
+            }
+        },
+
         // copy background canvas to the foreground canvas
         blitMap: function() {
             ctx.scale(1/scale,1/scale);
-            ctx.drawImage(bgCanvas,0,0);
+            ctx.drawImage(mapCanvas,0,0);
             ctx.scale(scale,scale);
         },
 
@@ -2644,12 +2687,6 @@ var switchRenderer = function(i) {
             ctx.stroke();
         },
 
-        // draw a fade filter for 0<=t<=1
-        drawFadeIn: function(t) {
-            ctx.fillStyle = "rgba(0,0,0,"+(1-t)+")";
-            ctx.fillRect(0,0,screenWidth,screenHeight);
-        },
-
         // erase pellet from background
         erasePellet: function(x,y) {
             bgCtx.fillStyle = this.floorColor;
@@ -2732,9 +2769,7 @@ var switchRenderer = function(i) {
 
         drawMap: function() {
 
-            // fill background
-            bgCtx.fillStyle = this.backColor;
-            bgCtx.fillRect(0,0,map.widthPixels, map.heightPixels);
+            beginMapFrame();
 
             var x,y;
             var i;
@@ -2759,6 +2794,8 @@ var switchRenderer = function(i) {
                 if (tile == '.')
                     this.drawNoGroutTile(bgCtx,x,y,tileSize);
             }
+
+            endMapFrame();
         },
 
         refreshPellet: function(x,y) {
@@ -2897,11 +2934,17 @@ var switchRenderer = function(i) {
         // inherit functions from Common Renderer
         __proto__: CommonRenderer.prototype,
 
+        // copy background canvas to the foreground canvas
+        blitMap: function() {
+            ctx.scale(1/scale,1/scale);
+            ctx.drawImage(mapCanvas,-1,-1); // offset map to compenstate for misalignment
+            ctx.scale(scale,scale);
+        },
+
         drawMap: function() {
 
             // fill background
-            bgCtx.fillStyle = this.backColor;
-            bgCtx.fillRect(0,0,map.widthPixels, map.heightPixels);
+            beginMapFrame();
 
             var x,y;
             var i,j;
@@ -2946,11 +2989,16 @@ var switchRenderer = function(i) {
             i=0;
             for (y=0; y<map.numRows; y++)
             for (x=0; x<map.numCols; x++) {
+                /*
                 tile = map.currentTiles[i++];
                 if (tile == '.') {
                     this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
                 }
+                */
+                this.refreshPellet(x,y);
             }
+
+            endMapFrame();
         },
 
         refreshPellet: function(x,y) {
@@ -2961,7 +3009,9 @@ var switchRenderer = function(i) {
             }
             else if (tile == '.') {
                 bgCtx.fillStyle = map.pelletColor;
+                bgCtx.translate(0.5, 0.5);
                 this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
+                bgCtx.translate(-0.5, -0.5);
             }
         },
 
@@ -2987,6 +3037,7 @@ var switchRenderer = function(i) {
 
             ctx.save();
             ctx.translate(3*tileSize, (map.numRows-1)*tileSize);
+            ctx.scale(0.85, 0.85);
             if (gameMode == GAME_PACMAN) {
                 for (i=0; i<extraLives; i++) {
                     drawPacmanSprite(ctx, DIR_LEFT, Math.PI/6);
@@ -3136,7 +3187,7 @@ var switchRenderer = function(i) {
         drawFruit: function() {
             if (fruit.isPresent()) {
                 ctx.beginPath();
-                ctx.arc(fruit.pixel.x,fruit.pixel.y,this.energizerSize/2,0,Math.PI*2);
+                ctx.arc(fruit.pixel.x-1,fruit.pixel.y-1,this.energizerSize/2,0,Math.PI*2);
                 ctx.fillStyle = "#0F0";
                 ctx.fill();
             }
@@ -3192,15 +3243,12 @@ menu = (function() {
         var pos = getmousepos(evt);
         if (inRect(pos,pacmanRect)) {
             gameMode = GAME_PACMAN;
-            newGameState.nextMap = mapPacman;
         }
         else if (inRect(pos,mspacmanRect)) {
             gameMode = GAME_MSPACMAN;
-            newGameState.nextMap = mapMsPacman1;
         }
         else if (inRect(pos,cookieRect)) {
             gameMode = GAME_COOKIE;
-            newGameState.nextMap = mapgen();
         }
         else {
             return;
@@ -5297,7 +5345,7 @@ var fruit = (function(){
         };
 
         var onDotEat = function() {
-            if (!isPresent() && map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
+            if (!isPresent() && (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2)) {
                 initiate();
             }
         };
@@ -5459,7 +5507,7 @@ var fruit = (function(){
         };
 
         var onDotEat = function() {
-            if (!isPresent() && map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
+            if (!isPresent() && (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2)) {
                 initiate();
             }
         };
@@ -5614,7 +5662,9 @@ var executive = (function(){
             }
         }
         // draw after updates are caught up
+        renderer.beginFrame();
         state.draw();
+        renderer.endFrame();
         reqFrame = requestAnimationFrame(tick);
     };
 
@@ -5683,12 +5733,12 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
             if (inFirstState()) {
                 if (prevState) {
                     prevState.draw();
-                    renderer.drawFadeIn(1-t);
+                    renderer.setOverlayColor("rgba(0,0,0,"+t+")");
                 }
             }
             else {
                 nextState.draw();
-                renderer.drawFadeIn(t);
+                renderer.setOverlayColor("rgba(0,0,0,"+(1-t)+")");
             }
         },
         update: function() {
@@ -5737,15 +5787,10 @@ var newGameState = (function() {
 
     return {
         init: function() {
-            if (this.nextMap != undefined) {
-                map = this.nextMap;
-                this.nextMap = undefined;
-            }
             frames = 0;
-            map.resetCurrent();
-            renderer.drawMap();
+            level = 0;
+            readyNewState.init();
             extraLives = 3;
-            level = 1;
             score = 0;
         },
         draw: function() {
@@ -5761,7 +5806,7 @@ var newGameState = (function() {
         update: function() {
             if (frames == duration*60) {
                 extraLives--;
-                switchState(readyNewState);
+                state = readyNewState;
             }
             else 
                 frames++;
@@ -5812,13 +5857,21 @@ var readyNewState = {
 
     init: function() {
 
-        // switch to next map if given
-        if (this.nextMap != undefined) {
-            map = this.nextMap;
-            this.nextMap = undefined;
-            map.resetCurrent();
-            renderer.drawMap();
+        // increment level and ready the next map
+        level++;
+        if (gameMode == GAME_PACMAN) {
+            map = mapPacman;
         }
+        else if (gameMode == GAME_MSPACMAN) {
+            setNextMsPacMap();
+        }
+        else if (gameMode == GAME_COOKIE) {
+            map = mapgen();
+        }
+        map.resetCurrent();
+        renderer.drawMap();
+
+        // notify other objects of new level
         ghostReleaser.onNewLevel();
         elroyTimer.onNewLevel();
         fruit.onNewLevel();
@@ -5859,10 +5912,14 @@ var playState = {
         renderer.drawExtraLives();
         renderer.drawLevelIcons();
         renderer.drawScore();
+
+        renderer.beginMapClip();
         renderer.drawFruit();
         renderer.drawPaths();
         renderer.drawActors();
         renderer.drawTargets();
+        renderer.endMapClip();
+
         renderer.renderFunc(vcr.renderHud);
     },
 
@@ -5970,8 +6027,8 @@ var scriptState = (function(){
             this.frames = 0;        // frames since state began
             this.triggerFrame = 0;  // frames since last trigger
 
-            this.drawFunc = undefined;   // current draw function
-            this.updateFunc = undefined; // current update function
+            this.drawFunc = this.triggers[0].draw;   // current draw function
+            this.updateFunc = this.triggers[0].update; // current update function
         },
         update: function() {
 
@@ -6061,7 +6118,6 @@ var deadState = (function() {
         renderer.drawExtraLives();
         renderer.drawLevelIcons();
         renderer.drawScore();
-        renderer.drawFruit();
     };
 
     return {
@@ -6079,28 +6135,43 @@ var deadState = (function() {
                 },
                 draw: function() {
                     commonDraw();
+                    renderer.beginMapClip();
+                    renderer.drawFruit();
                     renderer.drawActors();
+                    renderer.endMapClip();
                 }
             },
             60: {
                 draw: function() { // isolate pacman
                     commonDraw();
+                    renderer.beginMapClip();
                     renderer.drawPlayer();
+                    renderer.endMapClip();
                 },
             },
             120: {
                 draw: function(t) { // dying animation
                     commonDraw();
+                    renderer.beginMapClip();
                     renderer.drawDyingPlayer(t/75);
+                    renderer.endMapClip();
                 },
             },
             195: {
                 draw: function() {
                     commonDraw();
+                    renderer.beginMapClip();
                     renderer.drawDyingPlayer(1);
+                    renderer.endMapClip();
                 },
             },
             240: {
+                draw: function() {
+                    commonDraw();
+                    renderer.beginMapClip();
+                    renderer.drawDyingPlayer(1);
+                    renderer.endMapClip();
+                },
                 init: function() { // leave
                     switchState( extraLives == 0 ? overState : readyRestartState);
                 }
@@ -6122,8 +6193,10 @@ var finishState = (function(){
         renderer.drawExtraLives();
         renderer.drawLevelIcons();
         renderer.drawScore();
-        renderer.drawFruit();
+
+        renderer.beginMapClip();
         renderer.drawPlayer();
+        renderer.endMapClip();
     };
     
     // flash the floor and draw
@@ -6145,8 +6218,10 @@ var finishState = (function(){
                     renderer.drawExtraLives();
                     renderer.drawLevelIcons();
                     renderer.drawScore();
+                    renderer.beginMapClip();
                     renderer.drawFruit();
                     renderer.drawActors();
+                    renderer.endMapClip();
                     renderer.drawTargets();
             } },
             60:  { draw: function() { flashFloorAndDraw(false); } },
@@ -6158,20 +6233,10 @@ var finishState = (function(){
             195: { draw: function() { flashFloorAndDraw(false); } },
             210: { draw: function() { flashFloorAndDraw(true); } },
             225: { draw: function() { flashFloorAndDraw(false); } },
-            255: { 
+            255: {
+                draw: function() { flashFloorAndDraw(false); },
                 init: function() {
-                    level++;
-
-                    if (gameMode == GAME_MSPACMAN) {
-                        setNextMsPacMap();
-                    }
-                    else if (gameMode == GAME_COOKIE) {
-                        map = mapgen();
-                    }
-
                     switchState(readyNewState,60);
-                    map.resetCurrent();
-                    renderer.drawMap();
                 }
             },
         },
@@ -6186,10 +6251,16 @@ var overState = (function() {
     var frames;
     return {
         init: function() {
-            renderer.drawMessage("game over", "#F00");
             frames = 0;
         },
-        draw: function() {},
+        draw: function() {
+            renderer.blitMap();
+            renderer.drawEnergizers();
+            renderer.drawExtraLives();
+            renderer.drawLevelIcons();
+            renderer.drawScore();
+            renderer.drawMessage("game over", "#F00");
+        },
         update: function() {
             if (frames == 120) {
                 switchState(menuState,60);

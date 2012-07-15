@@ -36,12 +36,12 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
             if (inFirstState()) {
                 if (prevState) {
                     prevState.draw();
-                    renderer.drawFadeIn(1-t);
+                    renderer.setOverlayColor("rgba(0,0,0,"+t+")");
                 }
             }
             else {
                 nextState.draw();
-                renderer.drawFadeIn(t);
+                renderer.setOverlayColor("rgba(0,0,0,"+(1-t)+")");
             }
         },
         update: function() {
@@ -90,15 +90,10 @@ var newGameState = (function() {
 
     return {
         init: function() {
-            if (this.nextMap != undefined) {
-                map = this.nextMap;
-                this.nextMap = undefined;
-            }
             frames = 0;
-            map.resetCurrent();
-            renderer.drawMap();
+            level = 0;
+            readyNewState.init();
             extraLives = 3;
-            level = 1;
             score = 0;
         },
         draw: function() {
@@ -114,7 +109,7 @@ var newGameState = (function() {
         update: function() {
             if (frames == duration*60) {
                 extraLives--;
-                switchState(readyNewState);
+                state = readyNewState;
             }
             else 
                 frames++;
@@ -165,13 +160,21 @@ var readyNewState = {
 
     init: function() {
 
-        // switch to next map if given
-        if (this.nextMap != undefined) {
-            map = this.nextMap;
-            this.nextMap = undefined;
-            map.resetCurrent();
-            renderer.drawMap();
+        // increment level and ready the next map
+        level++;
+        if (gameMode == GAME_PACMAN) {
+            map = mapPacman;
         }
+        else if (gameMode == GAME_MSPACMAN) {
+            setNextMsPacMap();
+        }
+        else if (gameMode == GAME_COOKIE) {
+            map = mapgen();
+        }
+        map.resetCurrent();
+        renderer.drawMap();
+
+        // notify other objects of new level
         ghostReleaser.onNewLevel();
         elroyTimer.onNewLevel();
         fruit.onNewLevel();
@@ -212,10 +215,14 @@ var playState = {
         renderer.drawExtraLives();
         renderer.drawLevelIcons();
         renderer.drawScore();
+
+        renderer.beginMapClip();
         renderer.drawFruit();
         renderer.drawPaths();
         renderer.drawActors();
         renderer.drawTargets();
+        renderer.endMapClip();
+
         renderer.renderFunc(vcr.renderHud);
     },
 
@@ -323,8 +330,8 @@ var scriptState = (function(){
             this.frames = 0;        // frames since state began
             this.triggerFrame = 0;  // frames since last trigger
 
-            this.drawFunc = undefined;   // current draw function
-            this.updateFunc = undefined; // current update function
+            this.drawFunc = this.triggers[0].draw;   // current draw function
+            this.updateFunc = this.triggers[0].update; // current update function
         },
         update: function() {
 
@@ -414,7 +421,6 @@ var deadState = (function() {
         renderer.drawExtraLives();
         renderer.drawLevelIcons();
         renderer.drawScore();
-        renderer.drawFruit();
     };
 
     return {
@@ -432,28 +438,43 @@ var deadState = (function() {
                 },
                 draw: function() {
                     commonDraw();
+                    renderer.beginMapClip();
+                    renderer.drawFruit();
                     renderer.drawActors();
+                    renderer.endMapClip();
                 }
             },
             60: {
                 draw: function() { // isolate pacman
                     commonDraw();
+                    renderer.beginMapClip();
                     renderer.drawPlayer();
+                    renderer.endMapClip();
                 },
             },
             120: {
                 draw: function(t) { // dying animation
                     commonDraw();
+                    renderer.beginMapClip();
                     renderer.drawDyingPlayer(t/75);
+                    renderer.endMapClip();
                 },
             },
             195: {
                 draw: function() {
                     commonDraw();
+                    renderer.beginMapClip();
                     renderer.drawDyingPlayer(1);
+                    renderer.endMapClip();
                 },
             },
             240: {
+                draw: function() {
+                    commonDraw();
+                    renderer.beginMapClip();
+                    renderer.drawDyingPlayer(1);
+                    renderer.endMapClip();
+                },
                 init: function() { // leave
                     switchState( extraLives == 0 ? overState : readyRestartState);
                 }
@@ -475,8 +496,10 @@ var finishState = (function(){
         renderer.drawExtraLives();
         renderer.drawLevelIcons();
         renderer.drawScore();
-        renderer.drawFruit();
+
+        renderer.beginMapClip();
         renderer.drawPlayer();
+        renderer.endMapClip();
     };
     
     // flash the floor and draw
@@ -498,8 +521,10 @@ var finishState = (function(){
                     renderer.drawExtraLives();
                     renderer.drawLevelIcons();
                     renderer.drawScore();
+                    renderer.beginMapClip();
                     renderer.drawFruit();
                     renderer.drawActors();
+                    renderer.endMapClip();
                     renderer.drawTargets();
             } },
             60:  { draw: function() { flashFloorAndDraw(false); } },
@@ -511,20 +536,10 @@ var finishState = (function(){
             195: { draw: function() { flashFloorAndDraw(false); } },
             210: { draw: function() { flashFloorAndDraw(true); } },
             225: { draw: function() { flashFloorAndDraw(false); } },
-            255: { 
+            255: {
+                draw: function() { flashFloorAndDraw(false); },
                 init: function() {
-                    level++;
-
-                    if (gameMode == GAME_MSPACMAN) {
-                        setNextMsPacMap();
-                    }
-                    else if (gameMode == GAME_COOKIE) {
-                        map = mapgen();
-                    }
-
                     switchState(readyNewState,60);
-                    map.resetCurrent();
-                    renderer.drawMap();
                 }
             },
         },
@@ -539,10 +554,16 @@ var overState = (function() {
     var frames;
     return {
         init: function() {
-            renderer.drawMessage("game over", "#F00");
             frames = 0;
         },
-        draw: function() {},
+        draw: function() {
+            renderer.blitMap();
+            renderer.drawEnergizers();
+            renderer.drawExtraLives();
+            renderer.drawLevelIcons();
+            renderer.drawScore();
+            renderer.drawMessage("game over", "#F00");
+        },
         update: function() {
             if (frames == 120) {
                 switchState(menuState,60);

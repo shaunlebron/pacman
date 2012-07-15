@@ -28,15 +28,12 @@ menu = (function() {
         var pos = getmousepos(evt);
         if (inRect(pos,pacmanRect)) {
             gameMode = GAME_PACMAN;
-            newGameState.nextMap = mapPacman;
         }
         else if (inRect(pos,mspacmanRect)) {
             gameMode = GAME_MSPACMAN;
-            newGameState.nextMap = mapMsPacman1;
         }
         else if (inRect(pos,cookieRect)) {
             gameMode = GAME_COOKIE;
-            newGameState.nextMap = mapgen();
         }
         else {
             return;

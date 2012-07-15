@@ -75,7 +75,7 @@ var fruit = (function(){
         };
 
         var onDotEat = function() {
-            if (!isPresent() && map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
+            if (!isPresent() && (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2)) {
                 initiate();
             }
         };
@@ -237,7 +237,7 @@ var fruit = (function(){
         };
 
         var onDotEat = function() {
-            if (!isPresent() && map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
+            if (!isPresent() && (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2)) {
                 initiate();
             }
         };

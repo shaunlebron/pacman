@@ -9,7 +9,7 @@ All reverse-engineering research for this data was done and contributed by [Bart
 
 Entrances are shown in **green**.  Exits are shown in **red**.
 
-<img src="http://shaunew.github.com/Pac-Man/fruit/mspac_paths.png"/>
+<a href="http://shaunew.github.com/Pac-Man/fruit/mspac_paths.png"><img src="http://shaunew.github.com/Pac-Man/fruit/mspac_paths.png"/></a>
 
 ## Generated Maps
 
@@ -21,4 +21,4 @@ Similarly, the exit graphs start at tile (16,20), removing the node at (17,20) f
 
 Here is a sample image of the paths built from procedurally generated maps.  [View the demo here](http://shaunew.github.com/Pac-Man/fruit/cookie.htm)
 
-<img src="http://shaunew.github.com/Pac-Man/fruit/cookie_paths.png"/>
+<a href="http://shaunew.github.com/Pac-Man/fruit/cookie_paths.png"><img src="http://shaunew.github.com/Pac-Man/fruit/cookie_paths.png"/></a>

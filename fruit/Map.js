@@ -260,10 +260,8 @@ Map.prototype.draw = function(ctx,left,top,print) {
     ctx.beginPath();
     ctx.rect(0,0,this.widthPixels, this.heightPixels);
     ctx.clip();
-    if (!print) {
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0,0,this.widthPixels, this.heightPixels);
-    }
+    ctx.fillStyle = print ? "#fff" : "#000";
+    ctx.fillRect(0,0,this.widthPixels, this.heightPixels);
 
     // set colors
     ctx.fillStyle = print?"#777":this.wallFillColor;

@@ -1804,6 +1804,29 @@ var mapgen = (function(){
                 }
             }
 
+            // don't allow a horizontal path to cut straight through a map (through tunnels)
+            var exit,topy;
+            for (y=0; y<rows; y++) {
+                c = cells[cols-1+y*cols];
+                if (c.topTunnel) {
+                    exit = true;
+                    topy = c.final_y;
+                    while (c.next[LEFT]) {
+                        c = c.next[LEFT];
+                        if (!c.connect[UP] && c.final_y == topy) {
+                            continue;
+                        }
+                        else {
+                            exit = false;
+                            break;
+                        }
+                    }
+                    if (exit) {
+                        return false;
+                    }
+                }
+            }
+
             // clear unused void tunnels (dead ends)
             var len = voidTunnelCells.length;
             var i;
@@ -2195,9 +2218,170 @@ var mapgen = (function(){
         return '#'+('00000'+(Math.random()*(1<<24)|0).toString(16)).slice(-6);
     };
 
+    var makeFruitPaths = (function(){
+        var getShortestDistGraph = function(map,x0,y0,isNodeTile) {
+            // dijkstra's algorithm to find shortest path to all tiles from (x0,y0)
+            // we also remove (destroyX,destroyY) from the map to try to constrain the path
+            // from going a certain way from the start.
+
+            // build graph
+            var graph = {};
+            var x,y,i,j;
+            for (y=0; y<36; y++) {
+                for (x=0; x<28; x++) {
+                    if (isNodeTile(x,y)) {
+                        i = x+y*28;
+                        graph[i] = {'x':x, 'y':y, 'dist':Infinity, 'penult':undefined, 'neighbors':[], 'completed':false};
+                        if (isNodeTile(x-1,y)) {
+                            j = i-1;
+                            graph[i].neighbors.push(graph[j]);
+                            graph[j].neighbors.push(graph[i]);
+                        }
+                        if (isNodeTile(x,y-1)) {
+                            j = i-28;
+                            graph[i].neighbors.push(graph[j]);
+                            graph[j].neighbors.push(graph[i]);
+                        }
+                    }
+                }
+            }
+
+            var node = graph[x0+y0*28];
+            node.completed = true;
+            node.dist = 0;
+            var d;
+            var next_node,min_dist,dist;
+            while (true) {
+
+                // update distances of current node's neighbors
+                for (i=0; i<4; i++) {
+                    d = node.neighbors[i];
+                    if (d && !d.completed) {
+                        dist = node.dist+1;
+                        if (dist == d.dist) {
+                            if (Math.random() < 0.5) {
+                                d.penult = node;
+                            }
+                        }
+                        else if (dist < d.dist) {
+                            d.dist = dist;
+                            d.penult = node;
+                        }
+                    }
+                }
+
+                // find next node to process (closest fringe node)
+                next_node = undefined;
+                min_dist = Infinity;
+                for (i=0; i<28*36; i++) {
+                    d = graph[i];
+                    if (d && !d.completed) {
+                        if (d.dist < min_dist) { 
+                            next_node = d;
+                            min_dist = d.dist;
+                        }
+                    }
+                }
+
+                if (!next_node) {
+                    break;
+                }
+
+                node = next_node;
+                node.completed = true;
+            }
+
+            return graph;
+        };
+
+        var reversePath = function(path) {
+            var rpath = "";
+            var i;
+            var reversed = {
+                '>':'<',
+                '<':'>',
+                '^':'v',
+                'v':'^',
+            };
+            for (i=path.length-1; i>=0; i--) {
+                rpath += reversed[path[i]];
+            }
+            return rpath;
+        };
+
+        var getPathFromGraph = function(graph,x0,y0,x1,y1,reverse) {
+            // from (x0,y0) to (x1,y1)
+            var start_node = graph[x0+y0*28];
+            var dx,dy;
+            var path = "";
+            var node;
+            for (node=graph[x1+y1*28]; node!=start_node; node=node.penult) {
+                dx = node.x - node.penult.x;
+                dy = node.y - node.penult.y;
+                if (dy == -1) {
+                    path = '^' + path;
+                }
+                else if (dy == 1) {
+                    path = 'v' + path;
+                }
+                else if (dx == -1) {
+                    path = '<' + path;
+                }
+                else if (dx == 1) {
+                    path = '>' + path;
+                }
+            }
+            return reverse ? reversePath(path) : path;
+        }
+
+        return function(map) {
+
+            paths = {entrances:[], exits:[]};
+
+            var isFloorTile = function(x,y) {
+                if (x<0 || x>=28 || y<0 || y>=36) {
+                    return false
+                }
+                return map.isFloorTile(x,y);
+            };
+
+            enter_graph = getShortestDistGraph(map,15,20, function(x,y) { return (x==14 && y==20) ? false : isFloorTile(x,y); });
+            exit_graph =  getShortestDistGraph(map,16,20, function(x,y) { return (x==17 && y==20) ? false : isFloorTile(x,y); });
+
+            // start at (15,20)
+            for (y=0; y<36; y++) {
+                if (map.isFloorTile(-1,y)) {
+
+                    // left entrance
+                    paths.entrances.push({
+                        'start': {'y':y*8+4, 'x': -4},
+                        'path': '>'+getPathFromGraph(enter_graph, 15,20, 0,y, true)});
+
+                    // right entrance
+                    paths.entrances.push({
+                        'start': {'y':y*8+4, 'x': 28*8+4},
+                        'path': '<'+getPathFromGraph(enter_graph, 15,20, 27,y, true)});
+
+                    // left exit
+                    paths.exits.push({
+                        'start': {'y':y*8+4, 'x': -4},
+                        'path': getPathFromGraph(exit_graph, 16,20, 0,y, false)+'<'});
+
+                    // right exit
+                    paths.exits.push({
+                        'start': {'y':y*8+4, 'x': 28*8+4},
+                        'path': getPathFromGraph(exit_graph, 16,20, 27,y, false)+'>'});
+                }
+            }
+
+            map.fruitPaths = paths;
+        };
+    })();
+
     return function() {
         genRandom();
         var map = new Map(28,36,getTiles());
+        makeFruitPaths(map);
         map.name = "Random Map";
         map.wallFillColor = randomColor();
         map.wallStrokeColor = rgbString(hslToRgb(Math.random(), Math.random(), Math.random() * 0.4 + 0.6));
@@ -2935,7 +3119,7 @@ var switchRenderer = function(i) {
         drawEnergizers: function() {
             var e;
             var i;
-            ctx.fillStyle = this.energizerColor;
+            ctx.fillStyle = map.pelletColor;
             ctx.beginPath();
             for (i=0; i<map.numEnergizers; i++) {
                 e = map.energizers[i];
@@ -5053,6 +5237,11 @@ var fruit = (function(){
     // fruit type for the current level
     var currentFruit;
 
+    var cookieFruit = (function() {
+        return {
+        };
+    })();
+
     // ms. pac-man specific
     var mspacFruit = (function() {
         var fruits = [
@@ -5108,7 +5297,7 @@ var fruit = (function(){
         };
 
         var onDotEat = function() {
-            if (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
+            if (!isPresent() && map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
                 initiate();
             }
         };
@@ -5270,8 +5459,9 @@ var fruit = (function(){
         };
 
         var onDotEat = function() {
-            if (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2)
+            if (!isPresent() && map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
                 initiate();
+            }
         };
 
         // saving state
@@ -5300,7 +5490,7 @@ var fruit = (function(){
         var fruitFromMode = {};
         fruitFromMode[GAME_PACMAN] = pacFruit;
         fruitFromMode[GAME_MSPACMAN] = mspacFruit;
-        fruitFromMode[GAME_COOKIE] = pacFruit; // for now
+        fruitFromMode[GAME_COOKIE] = mspacFruit; // for now
         return function() {
             return fruitFromMode[gameMode];
         };

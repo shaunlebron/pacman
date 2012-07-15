@@ -15,6 +15,11 @@ var fruit = (function(){
     // fruit type for the current level
     var currentFruit;
 
+    var cookieFruit = (function() {
+        return {
+        };
+    })();
+
     // ms. pac-man specific
     var mspacFruit = (function() {
         var fruits = [
@@ -70,7 +75,7 @@ var fruit = (function(){
         };
 
         var onDotEat = function() {
-            if (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
+            if (!isPresent() && map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
                 initiate();
             }
         };
@@ -232,8 +237,9 @@ var fruit = (function(){
         };
 
         var onDotEat = function() {
-            if (map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2)
+            if (!isPresent() && map.dotsEaten == dotLimit1 || map.dotsEaten == dotLimit2) {
                 initiate();
+            }
         };
 
         // saving state
@@ -262,7 +268,7 @@ var fruit = (function(){
         var fruitFromMode = {};
         fruitFromMode[GAME_PACMAN] = pacFruit;
         fruitFromMode[GAME_MSPACMAN] = mspacFruit;
-        fruitFromMode[GAME_COOKIE] = pacFruit; // for now
+        fruitFromMode[GAME_COOKIE] = mspacFruit; // for now
         return function() {
             return fruitFromMode[gameMode];
         };

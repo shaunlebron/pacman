@@ -1441,9 +1441,170 @@ var drawTiles = function(ctx,left,top,size) {
     ctx.restore();
 };
 
+var makeFruitPaths = (function(){
+    var getShortestDistGraph = function(map,x0,y0,isNodeTile) {
+        // dijkstra's algorithm to find shortest path to all tiles from (x0,y0)
+        // we also remove (destroyX,destroyY) from the map to try to constrain the path
+        // from going a certain way from the start.
+
+        // build graph
+        var graph = {};
+        var x,y,i,j;
+        for (y=0; y<36; y++) {
+            for (x=0; x<28; x++) {
+                if (isNodeTile(x,y)) {
+                    i = x+y*28;
+                    graph[i] = {'x':x, 'y':y, 'dist':Infinity, 'penult':undefined, 'neighbors':[], 'completed':false};
+                    if (isNodeTile(x-1,y)) {
+                        j = i-1;
+                        graph[i].neighbors.push(graph[j]);
+                        graph[j].neighbors.push(graph[i]);
+                    }
+                    if (isNodeTile(x,y-1)) {
+                        j = i-28;
+                        graph[i].neighbors.push(graph[j]);
+                        graph[j].neighbors.push(graph[i]);
+                    }
+                }
+            }
+        }
+
+        var node = graph[x0+y0*28];
+        node.completed = true;
+        node.dist = 0;
+        var d;
+        var next_node,min_dist,dist;
+        while (true) {
+
+            // update distances of current node's neighbors
+            for (i=0; i<4; i++) {
+                d = node.neighbors[i];
+                if (d && !d.completed) {
+                    dist = node.dist+1;
+                    if (dist == d.dist) {
+                        if (Math.random() < 0.5) {
+                            d.penult = node;
+                        }
+                    }
+                    else if (dist < d.dist) {
+                        d.dist = dist;
+                        d.penult = node;
+                    }
+                }
+            }
+
+            // find next node to process (closest fringe node)
+            next_node = undefined;
+            min_dist = Infinity;
+            for (i=0; i<28*36; i++) {
+                d = graph[i];
+                if (d && !d.completed) {
+                    if (d.dist < min_dist) { 
+                        next_node = d;
+                        min_dist = d.dist;
+                    }
+                }
+            }
+
+            if (!next_node) {
+                break;
+            }
+
+            node = next_node;
+            node.completed = true;
+        }
+
+        return graph;
+    };
+
+    var reversePath = function(path) {
+        var rpath = "";
+        var i;
+        var reversed = {
+            '>':'<',
+            '<':'>',
+            '^':'v',
+            'v':'^',
+        };
+        for (i=path.length-1; i>=0; i--) {
+            rpath += reversed[path[i]];
+        }
+        return rpath;
+    };
+
+    var getPathFromGraph = function(graph,x0,y0,x1,y1,reverse) {
+        // from (x0,y0) to (x1,y1)
+        var start_node = graph[x0+y0*28];
+        var dx,dy;
+        var path = "";
+        var node;
+        for (node=graph[x1+y1*28]; node!=start_node; node=node.penult) {
+            dx = node.x - node.penult.x;
+            dy = node.y - node.penult.y;
+            if (dy == -1) {
+                path = '^' + path;
+            }
+            else if (dy == 1) {
+                path = 'v' + path;
+            }
+            else if (dx == -1) {
+                path = '<' + path;
+            }
+            else if (dx == 1) {
+                path = '>' + path;
+            }
+        }
+        return reverse ? reversePath(path) : path;
+    }
+
+    return function(map) {
+
+        paths = {entrances:[], exits:[]};
+
+        var isFloorTile = function(x,y) {
+            if (x<0 || x>=28 || y<0 || y>=36) {
+                return false
+            }
+            return map.isFloorTile(x,y);
+        };
+
+        enter_graph = getShortestDistGraph(map,15,20, function(x,y) { return (x==14 && y==20) ? false : isFloorTile(x,y); });
+        exit_graph =  getShortestDistGraph(map,16,20, function(x,y) { return (x==17 && y==20) ? false : isFloorTile(x,y); });
+
+        // start at (15,20)
+        for (y=0; y<36; y++) {
+            if (map.isFloorTile(-1,y)) {
+
+                // left entrance
+                paths.entrances.push({
+                    'start': {'y':y*8+4, 'x': -4},
+                    'path': '>'+getPathFromGraph(enter_graph, 15,20, 0,y, true)});
+
+                // right entrance
+                paths.entrances.push({
+                    'start': {'y':y*8+4, 'x': 28*8+4},
+                    'path': '<'+getPathFromGraph(enter_graph, 15,20, 27,y, true)});
+
+                // left exit
+                paths.exits.push({
+                    'start': {'y':y*8+4, 'x': -4},
+                    'path': getPathFromGraph(exit_graph, 16,20, 0,y, false)+'<'});
+
+                // right exit
+                paths.exits.push({
+                    'start': {'y':y*8+4, 'x': 28*8+4},
+                    'path': getPathFromGraph(exit_graph, 16,20, 27,y, false)+'>'});
+            }
+        }
+
+        map.fruitPaths = paths;
+    };
+})();
+
 var mapgen = function() {
     genRandom();
     var map = new Map(28,36,getTiles());
+    makeFruitPaths(map);
     map.name = "";
     map.wallFillColor = randomColor();
     map.wallStrokeColor = rgbString(hslToRgb(Math.random(), Math.random(), Math.random() * 0.4 + 0.6));

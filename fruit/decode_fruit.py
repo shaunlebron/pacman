@@ -1,3 +1,5 @@
+# Thanks to Bart Grantham for all the fruit path details.
+
 import sys
 import json
 
@@ -119,46 +121,33 @@ def main():
             print
         print
 
-    print """
-# Ms. Pac-Man Fruit Paths
-
-A fruit takes a random path around a maze.  It begins by traveling to the center of the maze from any of a given set of preset entrance paths.  It continues around the ghost pen once and exits the maze from another given set of preset paths for exiting.
-
-All reverse-engineering research for this data was done and contributed by [Bart Grantham](http://www.bartgrantham.com).
-    """
-
-    print "## Path Around Ghost Pen"
-    path = decode_path(pen_path, pen_count)
-    print_map(pen_start,path,maps[0])
     i = 0
     js_maplist = []
     for m,map in zip(map_paths,maps):
         js_map = {'entrances':[], 'exits':[]}
         js_maplist.append(js_map)
         for j,e in enumerate(m['entrances']):
-            print "## Map %d - Entrance %d" % (i,j)
             start = decode_start(e['start'])
             pixel = getPixel(start)
             tile = getTile(start)
             path = decode_path(e['path'], e['count'])
-            print_map(tile,path,map)
+            #print_map(tile,path,map)
 
             js_map['entrances'].append({'start':pixel, 'path':path})
 
         for j,e in enumerate(m['exits']):
-            print "## Map %d - Exit %d" % (i,j)
             path = decode_path(e['path'], e['count'])
-            print_map(exit_start,path,map)
+            #print_map(exit_start,path,map)
 
             js_map['exits'].append({'path':path})
         i += 1
 
-    print "## Generated JSON Map Paths"
+    print "// Generated JSON Map Paths"
     for line in json.dumps(js_maplist,indent=4).splitlines():
         print ' '*4,line
     print
 
-    print "## Generated JSON Ghost Pen Path"
+    print "// Generated JSON Ghost Pen Path"
     path = decode_path(pen_path, pen_count)
     for line in json.dumps(path,indent=4).splitlines():
         print ' '*4,line

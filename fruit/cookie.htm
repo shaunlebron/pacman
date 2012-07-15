@@ -1,0 +1,45 @@
+
+<script src="colors.js"></script>
+<script src="mapgen.js"></script>
+<script src="Map.js"></script>
+
+Refresh to generate new maps.
+<canvas id='canvas'></canvas>
+
+<script>
+
+window.onload = function() {
+
+    var canvas = document.getElementById('canvas');
+    canvas.width = tileSize*32*4;
+    canvas.height = tileSize*38*2;
+
+    var ctx = canvas.getContext('2d');
+    var scale = 1;
+    ctx.scale(scale,scale);
+
+    var x,y;
+    x = tileSize*2;
+    y = tileSize;
+
+    var drawMap = function(map,x,y) {
+        map.draw(ctx,x,y,true);
+        map.drawFruitPaths(ctx,x,y,'entrances');
+
+        x += tileSize*30;
+        map.draw(ctx,x,y,true);
+        map.drawFruitPaths(ctx,x,y,'exits');
+    };
+
+    drawMap(mapgen(),x,y);
+    x += tileSize*60;
+    drawMap(mapgen(),x,y);
+
+    x = tileSize*2;
+    y += tileSize*37;
+    drawMap(mapgen(),x,y);
+    x += tileSize*60;
+    drawMap(mapgen(),x,y);
+};
+
+</script>

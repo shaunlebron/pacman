@@ -727,7 +727,7 @@ var switchRenderer = function(i) {
         drawEnergizers: function() {
             var e;
             var i;
-            ctx.fillStyle = this.energizerColor;
+            ctx.fillStyle = map.pelletColor;
             ctx.beginPath();
             for (i=0; i<map.numEnergizers; i++) {
                 e = map.energizers[i];

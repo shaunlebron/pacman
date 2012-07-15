@@ -287,12 +287,23 @@ Ghost.prototype.steer = function() {
         else
             this.setTarget();
 
-        // edit openTiles to reflect the current map's special contraints
-        if (map.constrainGhostTurns)
-            map.constrainGhostTurns(this.tile, openTiles);
+        if (this.mode == GHOST_GOING_HOME &&
+            map.getExitDir && 
+            (dirEnum=map.getExitDir(this.tile.x,this.tile.y)) &&
+            dirEnum != oppDirEnum) {
+            // if the map has a 'getExitDir' function, then we are using
+            // a custom algorithm to choose the next direction.
+            // Currently, procedurally-generated maps use this function
+            // to ensure that ghosts can return home without looping forever.
+        }
+        else {
+            // edit openTiles to reflect the current map's special contraints
+            if (map.constrainGhostTurns)
+                map.constrainGhostTurns(this.tile, openTiles);
 
-        // choose direction that minimizes distance to target
-        dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
+            // choose direction that minimizes distance to target
+            dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
+        }
     }
 
     // commit the direction

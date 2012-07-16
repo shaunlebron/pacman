@@ -12,6 +12,8 @@ var fruit = (function(){
         return scoreFramesLeft > 0;
     };
 
+    var fruitHistory = {};
+
     // fruit type for the current level
     var currentFruit;
 
@@ -286,6 +288,7 @@ var fruit = (function(){
 
     var onNewLevel = function() {
         getInterface().onNewLevel();
+        fruitHistory[level] = currentFruit;
     };
 
     var reset = function() {
@@ -335,5 +338,7 @@ var fruit = (function(){
         testCollide: testCollide,
         getPoints: getPoints,
         onNewLevel: onNewLevel,
+        getFruitHistory: function() { return fruitHistory; },
+        getCurrentFruit: function() { return currentFruit; },
     };
 })();

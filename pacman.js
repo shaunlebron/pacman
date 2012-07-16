@@ -2217,96 +2217,149 @@ var mapgen = (function(){
         return '#'+('00000'+(Math.random()*(1<<24)|0).toString(16)).slice(-6);
     };
 
-    var makeFruitPaths = (function(){
-        var getShortestDistGraph = function(map,x0,y0,isNodeTile) {
-            // dijkstra's algorithm to find shortest path to all tiles from (x0,y0)
-            // we also remove (destroyX,destroyY) from the map to try to constrain the path
-            // from going a certain way from the start.
+    // dijkstra's algorithm to find shortest path to all tiles from (x0,y0)
+    // we also remove (destroyX,destroyY) from the map to try to constrain the path
+    // from going a certain way from the start.
+    // (We created this because the ghost's minimum distance direction is not always sufficient in procedural maps)
+    var getShortestDistGraph = function(map,x0,y0,isNodeTile) {
 
-            // build graph
-            var graph = {};
-            var x,y,i,j;
-            for (y=0; y<36; y++) {
-                for (x=0; x<28; x++) {
-                    if (isNodeTile(x,y)) {
-                        i = x+y*28;
-                        graph[i] = {'x':x, 'y':y, 'dist':Infinity, 'penult':undefined, 'neighbors':[], 'completed':false};
-                        if (isNodeTile(x-1,y)) {
-                            j = i-1;
-                            graph[i].neighbors.push(graph[j]);
-                            graph[j].neighbors.push(graph[i]);
-                        }
-                        if (isNodeTile(x,y-1)) {
-                            j = i-28;
-                            graph[i].neighbors.push(graph[j]);
-                            graph[j].neighbors.push(graph[i]);
-                        }
+        // build graph
+        var graph = {};
+        var x,y,i,j;
+        for (y=0; y<36; y++) {
+            for (x=0; x<28; x++) {
+                if (isNodeTile(x,y)) {
+                    i = x+y*28;
+                    graph[i] = {'x':x, 'y':y, 'dist':Infinity, 'penult':undefined, 'neighbors':[], 'completed':false};
+                    if (isNodeTile(x-1,y)) {
+                        j = i-1;
+                        graph[i].neighbors.push(graph[j]);
+                        graph[j].neighbors.push(graph[i]);
+                    }
+                    if (isNodeTile(x,y-1)) {
+                        j = i-28;
+                        graph[i].neighbors.push(graph[j]);
+                        graph[j].neighbors.push(graph[i]);
                     }
                 }
             }
+        }
 
-            var node = graph[x0+y0*28];
-            node.completed = true;
-            node.dist = 0;
-            var d;
-            var next_node,min_dist,dist;
-            while (true) {
+        var node = graph[x0+y0*28];
+        node.completed = true;
+        node.dist = 0;
+        var d;
+        var next_node,min_dist,dist;
+        while (true) {
 
-                // update distances of current node's neighbors
-                for (i=0; i<4; i++) {
-                    d = node.neighbors[i];
-                    if (d && !d.completed) {
-                        dist = node.dist+1;
-                        if (dist == d.dist) {
-                            if (Math.random() < 0.5) {
-                                d.penult = node;
-                            }
-                        }
-                        else if (dist < d.dist) {
-                            d.dist = dist;
+            // update distances of current node's neighbors
+            for (i=0; i<4; i++) {
+                d = node.neighbors[i];
+                if (d && !d.completed) {
+                    dist = node.dist+1;
+                    if (dist == d.dist) {
+                        if (Math.random() < 0.5) {
                             d.penult = node;
                         }
                     }
-                }
-
-                // find next node to process (closest fringe node)
-                next_node = undefined;
-                min_dist = Infinity;
-                for (i=0; i<28*36; i++) {
-                    d = graph[i];
-                    if (d && !d.completed) {
-                        if (d.dist < min_dist) { 
-                            next_node = d;
-                            min_dist = d.dist;
-                        }
+                    else if (dist < d.dist) {
+                        d.dist = dist;
+                        d.penult = node;
                     }
                 }
-
-                if (!next_node) {
-                    break;
-                }
-
-                node = next_node;
-                node.completed = true;
             }
 
-            return graph;
-        };
+            // find next node to process (closest fringe node)
+            next_node = undefined;
+            min_dist = Infinity;
+            for (i=0; i<28*36; i++) {
+                d = graph[i];
+                if (d && !d.completed) {
+                    if (d.dist < min_dist) { 
+                        next_node = d;
+                        min_dist = d.dist;
+                    }
+                }
+            }
 
+            if (!next_node) {
+                break;
+            }
+
+            node = next_node;
+            node.completed = true;
+        }
+
+        return graph;
+    };
+
+    // retrieves the direction enum from a node's penultimate node to itself.
+    var getDirFromPenult = function(node) {
+        if (!node.penult) {
+            return undefined;
+        }
+        var dx = node.x - node.penult.x;
+        var dy = node.y - node.penult.y;
+        if (dy == -1) {
+            return DIR_UP;
+        }
+        else if (dy == 1) {
+            return DIR_DOWN;
+        }
+        else if (dx == -1) {
+            return DIR_LEFT;
+        }
+        else if (dx == 1) {
+            return DIR_RIGHT;
+        }
+    };
+
+    // sometimes the ghosts can get stuck in loops when trying to return home
+    // so we build a path from all tiles to the ghost door tile
+    var makeExitPaths = function(map) {
+        var isNodeTile = function(x,y) {
+            if (x<0 || x>=28 || y<0 || y>=36) {
+                return false;
+            }
+            return map.isFloorTile(x,y);
+        };
+        var graph = getShortestDistGraph(map,map.doorTile.x,map.doorTile.y,isNodeTile);
+
+        // give the map a function that tells the ghost which direction to go to return home
+        map.getExitDir = function(x,y) {
+            if (x<0 || x>=28 || y<0 || y>=36) {
+                return undefined;
+            }
+            var node = graph[x+y*28];
+            var dirEnum = getDirFromPenult(node);
+            if (dirEnum != undefined) {
+                return (dirEnum+2)%4; // reverse direction (door->ghost to door<-ghost)
+            }
+        };
+    };
+
+    // add fruit paths to a map
+    var makeFruitPaths = (function(){
+        var reversed = {
+            'v':'^',
+            '^':'v',
+            '<':'>',
+            '>':'<',
+        };
         var reversePath = function(path) {
             var rpath = "";
             var i;
-            var reversed = {
-                '>':'<',
-                '<':'>',
-                '^':'v',
-                'v':'^',
-            };
             for (i=path.length-1; i>=0; i--) {
                 rpath += reversed[path[i]];
             }
             return rpath;
         };
+
+        var dirChars = {};
+        dirChars[DIR_UP] = '^';
+        dirChars[DIR_DOWN] = 'v';
+        dirChars[DIR_LEFT] = '<';
+        dirChars[DIR_RIGHT] = '>';
 
         var getPathFromGraph = function(graph,x0,y0,x1,y1,reverse) {
             // from (x0,y0) to (x1,y1)
@@ -2315,20 +2368,7 @@ var mapgen = (function(){
             var path = "";
             var node;
             for (node=graph[x1+y1*28]; node!=start_node; node=node.penult) {
-                dx = node.x - node.penult.x;
-                dy = node.y - node.penult.y;
-                if (dy == -1) {
-                    path = '^' + path;
-                }
-                else if (dy == 1) {
-                    path = 'v' + path;
-                }
-                else if (dx == -1) {
-                    path = '<' + path;
-                }
-                else if (dx == 1) {
-                    path = '>' + path;
-                }
+                path = dirChars[getDirFromPenult(node)] + path;
             }
             return reverse ? reversePath(path) : path;
         }
@@ -2380,11 +2420,15 @@ var mapgen = (function(){
     return function() {
         genRandom();
         var map = new Map(28,36,getTiles());
+
         makeFruitPaths(map);
+        makeExitPaths(map);
+
         map.name = "Random Map";
         map.wallFillColor = randomColor();
         map.wallStrokeColor = rgbString(hslToRgb(Math.random(), Math.random(), Math.random() * 0.4 + 0.6));
         map.pelletColor = "#ffb8ae";
+
         return map;
     };
 })();
@@ -2998,6 +3042,30 @@ var switchRenderer = function(i) {
                 this.refreshPellet(x,y);
             }
 
+            // draw level fruit
+            var fruits = fruit.getFruitHistory();
+            var i,j;
+            var f,drawFunc;
+            var startLevel = Math.max(6,level);
+            var scale = 0.85;
+            for (i=0, j=startLevel-5; i<6; j++, i++) {
+                f = fruits[j];
+                if (f) {
+                    drawFunc = getSpriteFuncFromFruitName(f.name);
+                    if (gameMode == GAME_COOKIE) {
+                        // all he wants are cookies
+                        drawFunc = drawCookie;
+                    }
+                    if (drawFunc) {
+                        bgCtx.save();
+                        bgCtx.translate((map.numCols-2)*tileSize - i*16*scale, (map.numRows-1)*tileSize);
+                        bgCtx.scale(scale,scale);
+                        drawFunc(bgCtx,0,0);
+                        bgCtx.restore();
+                    }
+                }
+            }
+
             endMapFrame();
         },
 
@@ -3061,12 +3129,6 @@ var switchRenderer = function(i) {
 
         // draw the current level indicator
         drawLevelIcons: function() {
-            var i;
-            ctx.fillStyle = "rgba(255,255,255,0.5)";
-            var w = 2;
-            var h = this.actorSize;
-            for (i=0; i<level; i++)
-                ctx.fillRect((map.numCols-2)*tileSize - i*2*w, (map.numRows-1)*tileSize-h/2, w, h);
         },
 
         // draw ghost
@@ -3186,10 +3248,12 @@ var switchRenderer = function(i) {
         // draw fruit
         drawFruit: function() {
             if (fruit.isPresent()) {
-                ctx.beginPath();
-                ctx.arc(fruit.pixel.x-1,fruit.pixel.y-1,this.energizerSize/2,0,Math.PI*2);
-                ctx.fillStyle = "#0F0";
-                ctx.fill();
+                var drawFunc = getSpriteFuncFromFruitName(fruit.getCurrentFruit().name);
+                if (gameMode == GAME_COOKIE) {
+                    // all he wants are cookies
+                    drawFunc = drawCookie;
+                }
+                drawFunc(ctx,fruit.pixel.x, fruit.pixel.y);
             }
             else if (fruit.isScorePresent()) {
                 ctx.font = this.pointsEarnedTextSize + "px sans-serif";
@@ -3450,6 +3514,7 @@ var drawGhostSprite = (function(){
                 ctx.lineTo(coords[i],coords[i+1]);
             ctx.closePath();
             ctx.fill();
+            ctx.lineJoin = 'round';
             ctx.stroke();
             ctx.translate(-0.5,-0.5);
             //ctx.fillRect(1,0,2,5); // left
@@ -3466,6 +3531,7 @@ var drawGhostSprite = (function(){
         ctx.fillStyle = "#FFF";
         ctx.strokeStyle = "#FFF";
         ctx.lineWidth = 1.0;
+        ctx.lineJoin = 'round';
         drawEyeball();
         ctx.translate(6,0);
         drawEyeball();
@@ -3528,7 +3594,7 @@ var drawGhostSprite = (function(){
     };
 
 
-    return function(ctx,frame,dirEnum,scared,flash,eyes_only,color) {
+    return function(ctx,frame,dirEnum,scared,flash,eyes_only,color,glowColor) {
         if (scared)
             color = energizer.isFlash() ? "#FFF" : "#2121ff";
 
@@ -3541,6 +3607,12 @@ var drawGhostSprite = (function(){
             else
                 addFeet2(ctx);
             ctx.closePath();
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            ctx.lineWidth = 1;
             ctx.fillStyle = color;
             ctx.fill();
         }
@@ -3582,6 +3654,8 @@ var drawPacmanSprite = function(ctx,dirEnum,angle,mouthShift,scale,centerShift,a
     ctx.arc(centerShift,0,6.5*scale,angle,2*Math.PI-angle);
     ctx.closePath();
 
+    //ctx.strokeStyle = color;
+    //ctx.stroke();
     ctx.fillStyle = color;
     ctx.fill();
 
@@ -3786,6 +3860,625 @@ var drawCookiemanSprite = (function(){
 
     };
 })();
+
+////////////////////////////////////////////////////////////////////
+// FRUIT SPRITES
+
+var drawCherry = function(ctx,x,y) {
+
+    // cherry
+    var cherry = function(x,y) {
+        ctx.save();
+        ctx.translate(x,y);
+
+        // red fruit
+        ctx.beginPath();
+        ctx.arc(2.5,2.5,3,0,Math.PI*2);
+        ctx.lineWidth = 1.0;
+        ctx.strokeStyle = "#000";
+        ctx.stroke();
+        ctx.fillStyle = "#ff0000";
+        ctx.fill();
+
+        // white shine
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(1,3);
+        ctx.lineTo(2,4);
+        ctx.strokeStyle = "#fff";
+        ctx.stroke();
+        ctx.restore();
+    };
+
+    ctx.save();
+    ctx.translate(x,y);
+
+    // draw both cherries
+    cherry(-6,-1);
+    cherry(-1,1);
+
+    // draw stems
+    ctx.beginPath();
+    ctx.moveTo(-3,0);
+    ctx.bezierCurveTo(-1,-2, 2,-4, 5,-5);
+    ctx.lineTo(5,-4);
+    ctx.bezierCurveTo(3,-4, 1,0, 1,2);
+    ctx.strokeStyle = "#ff9900";
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawStrawberry = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // red body
+    ctx.beginPath();
+    ctx.moveTo(-1,-4);
+    ctx.bezierCurveTo(-3,-4,-5,-3, -5,-1);
+    ctx.bezierCurveTo(-5,3,-2,5, 0,6);
+    ctx.bezierCurveTo(3,5, 5,2, 5,0);
+    ctx.bezierCurveTo(5,-3, 3,-4, 0,-4);
+    ctx.fillStyle = "#f00";
+    ctx.fill();
+    ctx.strokeStyle = "#f00";
+    ctx.stroke();
+
+    // white spots
+    var spots = [
+        {x:-4,y:-1},
+        {x:-3,y:2 },
+        {x:-2,y:0 },
+        {x:-1,y:4 },
+        {x:0, y:2 },
+        {x:0, y:0 },
+        {x:2, y:4 },
+        {x:2, y:-1 },
+        {x:3, y:1 },
+        {x:4, y:-2 } ];
+
+    ctx.fillStyle = "#fff";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i++) {
+        var s = spots[i];
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,0.75,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    // green leaf
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.lineTo(-3,-4);
+    ctx.lineTo(0,-4);
+    ctx.lineTo(-2,-3);
+    ctx.lineTo(-1,-3);
+    ctx.lineTo(0,-4);
+    ctx.lineTo(0,-2);
+    ctx.lineTo(0,-4);
+    ctx.lineTo(1,-3);
+    ctx.lineTo(2,-3);
+    ctx.lineTo(0,-4);
+    ctx.lineTo(3,-4);
+    ctx.closePath();
+    ctx.strokeStyle = "#00ff00";
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // stem
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.lineTo(0,-5);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#fff";
+    ctx.stroke();
+    ctx.restore();
+};
+
+var drawOrange = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // orange body
+    ctx.beginPath();
+    ctx.moveTo(-2,-2);
+    ctx.bezierCurveTo(-3,-2, -5,-1, -5,1);
+    ctx.bezierCurveTo(-5,4, -3,6, 0,6);
+    ctx.bezierCurveTo(3,6, 5,4, 5,1);
+    ctx.bezierCurveTo(5,-1, 3,-2, 2,-2);
+    ctx.closePath();
+    ctx.fillStyle="#ffcc33";
+    ctx.fill();
+    ctx.strokeStyle = "#ffcc33";
+    ctx.stroke();
+
+    // stem
+    ctx.beginPath();
+    ctx.moveTo(-1,-1);
+    ctx.quadraticCurveTo(-1,-2,-2,-2);
+    ctx.quadraticCurveTo(-1,-2,-1,-4);
+    ctx.quadraticCurveTo(-1,-2,0,-2);
+    ctx.quadraticCurveTo(-1,-2,-1,-1);
+    ctx.strokeStyle = "#ff9900";
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // green leaf
+    ctx.beginPath();
+    ctx.moveTo(-0.5,-4);
+    ctx.quadraticCurveTo(0,-5,1,-5);
+    ctx.bezierCurveTo(2,-5, 3,-4,4,-4);
+    ctx.bezierCurveTo(3,-4, 3,-3, 2,-3);
+    ctx.bezierCurveTo(1,-3,1,-4,-0.5,-4);
+    ctx.strokeStyle = "#00ff00";
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.fillStyle = "#00ff00";
+    ctx.fill();
+
+    ctx.restore();
+};
+
+var drawApple = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // red fruit
+    ctx.beginPath();
+    ctx.moveTo(-2,-3);
+    ctx.bezierCurveTo(-2,-4,-3,-4,-4,-4);
+    ctx.bezierCurveTo(-5,-4,-6,-3,-6,0);
+    ctx.bezierCurveTo(-6,3,-4,6,-2.5,6);
+    ctx.quadraticCurveTo(-1,6,-1,5);
+    ctx.bezierCurveTo(-1,6,0,6,1,6);
+    ctx.bezierCurveTo(3,6, 5,3, 5,0);
+    ctx.bezierCurveTo(5,-3, 3,-4, 2,-4);
+    ctx.quadraticCurveTo(0,-4,0,-3);
+    ctx.closePath();
+    ctx.fillStyle = "#ff0000";
+    ctx.fill();
+
+    // stem
+    ctx.beginPath();
+    ctx.moveTo(-1,-3);
+    ctx.quadraticCurveTo(-1,-5, 0,-5);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#ff9900';
+    ctx.stroke();
+
+    // shine
+    ctx.beginPath();
+    ctx.moveTo(2,3);
+    ctx.quadraticCurveTo(3,3, 3,1);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#fff";
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawMelon = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // draw body
+    ctx.beginPath();
+    ctx.arc(0,2,5.5,0,Math.PI*2);
+    ctx.fillStyle = "#7bf331";
+    ctx.fill();
+
+    // draw stem
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.lineTo(0,-5);
+    ctx.moveTo(2,-5);
+    ctx.quadraticCurveTo(-3,-5,-3,-6);
+    ctx.strokeStyle="#69b4af";
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // dark lines
+    /*
+    ctx.beginPath();
+    ctx.moveTo(0,-2);
+    ctx.lineTo(-4,2);
+    ctx.lineTo(-1,5);
+    ctx.moveTo(-3,-1);
+    ctx.lineTo(-2,0);
+    ctx.moveTo(-2,6);
+    ctx.lineTo(1,3);
+    ctx.moveTo(1,7);
+    ctx.lineTo(3,5);
+    ctx.lineTo(0,2);
+    ctx.lineTo(3,-1);
+    ctx.moveTo(2,0);
+    ctx.lineTo(4,2);
+    ctx.strokeStyle="#69b4af";
+    ctx.lineCap = "round";
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    */
+    // dark spots
+    var spots = [
+        0,-2,
+        -1,-1,
+        -2,0,
+        -3,1,
+        -4,2,
+        -3,3,
+        -2,4,
+        -1,5,
+        -2,6,
+        -3,-1,
+        1,7,
+        2,6,
+        3,5,
+        2,4,
+        1,3,
+        0,2,
+        1,1,
+        2,0,
+        3,-1,
+        3,1,
+        4,2,
+         ];
+
+    ctx.fillStyle="#69b4af";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i+=2) {
+        var x = spots[i];
+        var y = spots[i+1];
+        ctx.beginPath();
+        ctx.arc(x,y,0.65,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    // white spots
+    var spots = [
+        {x: 0,y:-3},
+        {x:-2,y:-1},
+        {x:-4,y: 1},
+        {x:-3,y: 3},
+        {x: 1,y: 0},
+        {x:-1,y: 2},
+        {x:-1,y: 4},
+        {x: 3,y: 2},
+        {x: 1,y: 4},
+         ];
+
+    ctx.fillStyle = "#fff";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i++) {
+        var s = spots[i];
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,0.65,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
+var drawGalaxian = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // draw yellow body
+    ctx.beginPath();
+    ctx.moveTo(-4,-2);
+    ctx.lineTo(4,-2);
+    ctx.lineTo(4,-1);
+    ctx.lineTo(2,1);
+    ctx.lineTo(1,0);
+    ctx.lineTo(0,0);
+    ctx.lineTo(0,5);
+    ctx.lineTo(0,0);
+    ctx.lineTo(-1,0);
+    ctx.lineTo(-2,1);
+    ctx.lineTo(-4,-1);
+    ctx.closePath();
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = ctx.fillStyle = '#fffa36';
+    ctx.fill();
+    ctx.stroke();
+
+    // draw red arrow head
+    ctx.beginPath();
+    ctx.moveTo(0,-5);
+    ctx.lineTo(-3,-2);
+    ctx.lineTo(-2,-2);
+    ctx.lineTo(-1,-3);
+    ctx.lineTo(0,-3);
+    ctx.lineTo(0,-1);
+    ctx.lineTo(0,-3);
+    ctx.lineTo(1,-3);
+    ctx.lineTo(2,-2);
+    ctx.lineTo(3,-2);
+    ctx.closePath();
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = ctx.fillStyle = "#f00";
+    ctx.fill();
+    ctx.stroke();
+
+    // draw blue wings
+    ctx.beginPath();
+    ctx.moveTo(-5,-4);
+    ctx.lineTo(-5,-1);
+    ctx.lineTo(-2,2);
+    ctx.moveTo(5,-4);
+    ctx.lineTo(5,-1);
+    ctx.lineTo(2,2);
+    ctx.strokeStyle = "#00f";
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawBell = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // bell body
+    ctx.beginPath();
+    ctx.moveTo(-1,-5);
+    ctx.bezierCurveTo(-4,-5,-6,1,-6,6);
+    ctx.lineTo(5,6);
+    ctx.bezierCurveTo(5,1,3,-5,0,-5);
+    ctx.closePath();
+    ctx.fillStyle = ctx.strokeStyle = "#fffa37";
+    ctx.stroke();
+    ctx.fill();
+
+    // marks
+    ctx.beginPath();
+    ctx.moveTo(-4,4);
+    ctx.lineTo(-4,3);
+    ctx.moveTo(-3,1);
+    ctx.quadraticCurveTo(-3,-2,-2,-2);
+    ctx.moveTo(-1,-4);
+    ctx.lineTo(0,-4);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000';
+    ctx.stroke();
+
+    // bell bottom
+    ctx.beginPath();
+    ctx.rect(-5.5,6,10,2);
+    ctx.fillStyle = "#68b9fc";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(-0.5,6,2,2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+
+    ctx.restore();
+};
+
+var drawKey = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // draw key metal
+    ctx.beginPath();
+    ctx.moveTo(-1,-2);
+    ctx.lineTo(-1,5);
+    ctx.moveTo(0,6);
+    ctx.quadraticCurveTo(1,6,1,3);
+    ctx.moveTo(1,4);
+    ctx.lineTo(2,4);
+    ctx.moveTo(1,1);
+    ctx.lineTo(1,-2);
+    ctx.moveTo(1,0);
+    ctx.lineTo(2,0);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+
+    // draw key top
+    ctx.beginPath();
+    ctx.moveTo(0,-6);
+    ctx.quadraticCurveTo(-3,-6,-3,-4);
+    ctx.lineTo(-3,-2);
+    ctx.lineTo(3,-2);
+    ctx.lineTo(3,-4);
+    ctx.quadraticCurveTo(3,-6, 0,-6);
+    ctx.strokeStyle = ctx.fillStyle = "#68b9fc";
+    ctx.fill();
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(1,-5);
+    ctx.lineTo(-1,-5);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#000";
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawPretzel = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // bread
+    ctx.beginPath();
+    ctx.moveTo(-2,-5);
+    ctx.quadraticCurveTo(-4,-6,-6,-4);
+    ctx.quadraticCurveTo(-7,-2,-5,1);
+    ctx.quadraticCurveTo(-3,4,0,5);
+    ctx.quadraticCurveTo(5,5,5,-1);
+    ctx.quadraticCurveTo(6,-5,3,-5);
+    ctx.quadraticCurveTo(1,-5,0,-2);
+    ctx.quadraticCurveTo(-2,3,-5,5);
+    ctx.moveTo(1,1);
+    ctx.quadraticCurveTo(3,4,4,6);
+    ctx.lineWidth = 2.0;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#ffcc33";
+    ctx.stroke();
+
+    // salt
+    var spots = [
+        -5,-6,
+        1,-6,
+        4,-4,
+        -5,0,
+        -2,0,
+        6,1,
+        -4,6,
+        5,5,
+         ];
+
+    ctx.fillStyle = "#fff";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i+=2) {
+        var x = spots[i];
+        var y = spots[i+1];
+        ctx.beginPath();
+        ctx.arc(x,y,0.65,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
+var drawPear = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // body
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.bezierCurveTo(-1,-4,-2,-3,-2,-1);
+    ctx.bezierCurveTo(-2,1,-4,2,-4,4);
+    ctx.bezierCurveTo(-4,6,-2,7,0,7);
+    ctx.bezierCurveTo(2,7,4,6,4,4);
+    ctx.bezierCurveTo(4,2,2,1,2,-1);
+    ctx.bezierCurveTo(2,-3,1,-4,0,-4);
+    ctx.fillStyle = ctx.strokeStyle = "#00ff00";
+    ctx.stroke();
+    ctx.fill();
+
+    // blue shine
+    ctx.beginPath();
+    ctx.moveTo(-2,3);
+    ctx.quadraticCurveTo(-2,5,-1,5);
+    ctx.strokeStyle = "#0033ff";
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // white stem
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.quadraticCurveTo(0,-6,2,-6);
+    ctx.strokeStyle = "#fff";
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawBanana = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // body
+    ctx.beginPath();
+    ctx.moveTo(-5,5);
+    ctx.quadraticCurveTo(-4,5,-2,6);
+    ctx.bezierCurveTo(2,6,6,2,6,-4);
+    ctx.lineTo(3,-3);
+    ctx.lineTo(3,-2);
+    ctx.lineTo(-4,5);
+    ctx.closePath();
+    ctx.fillStyle = ctx.strokeStyle = "#ffff00";
+    ctx.stroke();
+    ctx.fill();
+
+    // stem
+    ctx.beginPath();
+    ctx.moveTo(4,-5);
+    ctx.lineTo(5,-6);
+    ctx.strokeStyle="#ffff00";
+    ctx.lineCap='round';
+    ctx.stroke();
+
+    // black mark
+    ctx.beginPath();
+    ctx.moveTo(3,-1);
+    ctx.lineTo(-2,4);
+    ctx.strokeStyle = "#000";
+    ctx.lineCap='round';
+    ctx.stroke();
+
+    // shine
+    ctx.beginPath();
+    ctx.moveTo(2,3);
+    ctx.lineTo(0,5);
+    ctx.strokeStyle = "#fff";
+    ctx.lineCap='round';
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawCookie = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // body
+    ctx.beginPath();
+    ctx.arc(0,0,6,0,Math.PI*2);
+    ctx.fillStyle = "#f9bd6d";
+    //ctx.fillStyle = "#dfab68";
+    ctx.fill();
+
+    // chocolate chips
+    var spots = [
+        0,-3,
+        -4,-1,
+        0,2,
+        3,0,
+        3,3,
+         ];
+
+    ctx.fillStyle = "#000";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i+=2) {
+        var x = spots[i];
+        var y = spots[i+1];
+        ctx.beginPath();
+        ctx.arc(x,y,0.75,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
+var getSpriteFuncFromFruitName = function(name) {
+    var funcs = {
+        'cherry': drawCherry,
+        'strawberry': drawStrawberry,
+        'orange': drawOrange,
+        'apple': drawApple,
+        'melon': drawMelon,
+        'galaxian': drawGalaxian,
+        'bell': drawBell,
+        'key': drawKey,
+        'pretzel': drawPretzel,
+        'pear': drawPear,
+        'banana': drawBanana,
+        'cookie': drawCookie,
+    };
+
+    return funcs[name];
+};
+
 //@line 1 "src/gui.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // GUI
@@ -4418,12 +5111,23 @@ Ghost.prototype.steer = function() {
         else
             this.setTarget();
 
-        // edit openTiles to reflect the current map's special contraints
-        if (map.constrainGhostTurns)
-            map.constrainGhostTurns(this.tile, openTiles);
+        if (this.mode == GHOST_GOING_HOME &&
+            map.getExitDir && 
+            (dirEnum=map.getExitDir(this.tile.x,this.tile.y)) != undefined &&
+            dirEnum != oppDirEnum) {
+            // if the map has a 'getExitDir' function, then we are using
+            // a custom algorithm to choose the next direction.
+            // Currently, procedurally-generated maps use this function
+            // to ensure that ghosts can return home without looping forever.
+        }
+        else {
+            // edit openTiles to reflect the current map's special contraints
+            if (map.constrainGhostTurns)
+                map.constrainGhostTurns(this.tile, openTiles);
 
-        // choose direction that minimizes distance to target
-        dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
+            // choose direction that minimizes distance to target
+            dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
+        }
     }
 
     // commit the direction
@@ -5282,6 +5986,8 @@ var fruit = (function(){
         return scoreFramesLeft > 0;
     };
 
+    var fruitHistory = {};
+
     // fruit type for the current level
     var currentFruit;
 
@@ -5556,6 +6262,7 @@ var fruit = (function(){
 
     var onNewLevel = function() {
         getInterface().onNewLevel();
+        fruitHistory[level] = currentFruit;
     };
 
     var reset = function() {
@@ -5605,6 +6312,8 @@ var fruit = (function(){
         testCollide: testCollide,
         getPoints: getPoints,
         onNewLevel: onNewLevel,
+        getFruitHistory: function() { return fruitHistory; },
+        getCurrentFruit: function() { return currentFruit; },
     };
 })();
 //@line 1 "src/executive.js"
@@ -5869,12 +6578,12 @@ var readyNewState = {
             map = mapgen();
         }
         map.resetCurrent();
+        fruit.onNewLevel();
         renderer.drawMap();
 
         // notify other objects of new level
         ghostReleaser.onNewLevel();
         elroyTimer.onNewLevel();
-        fruit.onNewLevel();
 
         // inherit attributes from readyState
         readyState.init.call(this);

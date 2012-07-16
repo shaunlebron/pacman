@@ -1090,3 +1090,23 @@ var drawCookie = function(ctx,x,y) {
 
     ctx.restore();
 };
+
+var getSpriteFuncFromFruitName = function(name) {
+    var funcs = {
+        'cherry': drawCherry,
+        'strawberry': drawStrawberry,
+        'orange': drawOrange,
+        'apple': drawApple,
+        'melon': drawMelon,
+        'galaxian': drawGalaxian,
+        'bell': drawBell,
+        'key': drawKey,
+        'pretzel': drawPretzel,
+        'pear': drawPear,
+        'banana': drawBanana,
+        'cookie': drawCookie,
+    };
+
+    return funcs[name];
+};
+

@@ -607,6 +607,30 @@ var switchRenderer = function(i) {
                 this.refreshPellet(x,y);
             }
 
+            // draw level fruit
+            var fruits = fruit.getFruitHistory();
+            var i,j;
+            var f,drawFunc;
+            var startLevel = Math.max(6,level);
+            var scale = 0.85;
+            for (i=0, j=startLevel-5; i<6; j++, i++) {
+                f = fruits[j];
+                if (f) {
+                    drawFunc = getSpriteFuncFromFruitName(f.name);
+                    if (gameMode == GAME_COOKIE) {
+                        // all he wants are cookies
+                        drawFunc = drawCookie;
+                    }
+                    if (drawFunc) {
+                        bgCtx.save();
+                        bgCtx.translate((map.numCols-2)*tileSize - i*16*scale, (map.numRows-1)*tileSize);
+                        bgCtx.scale(scale,scale);
+                        drawFunc(bgCtx,0,0);
+                        bgCtx.restore();
+                    }
+                }
+            }
+
             endMapFrame();
         },
 
@@ -670,12 +694,6 @@ var switchRenderer = function(i) {
 
         // draw the current level indicator
         drawLevelIcons: function() {
-            var i;
-            ctx.fillStyle = "rgba(255,255,255,0.5)";
-            var w = 2;
-            var h = this.actorSize;
-            for (i=0; i<level; i++)
-                ctx.fillRect((map.numCols-2)*tileSize - i*2*w, (map.numRows-1)*tileSize-h/2, w, h);
         },
 
         // draw ghost
@@ -795,10 +813,12 @@ var switchRenderer = function(i) {
         // draw fruit
         drawFruit: function() {
             if (fruit.isPresent()) {
-                ctx.beginPath();
-                ctx.arc(fruit.pixel.x-1,fruit.pixel.y-1,this.energizerSize/2,0,Math.PI*2);
-                ctx.fillStyle = "#0F0";
-                ctx.fill();
+                var drawFunc = getSpriteFuncFromFruitName(fruit.getCurrentFruit().name);
+                if (gameMode == GAME_COOKIE) {
+                    // all he wants are cookies
+                    drawFunc = drawCookie;
+                }
+                drawFunc(ctx,fruit.pixel.x, fruit.pixel.y);
             }
             else if (fruit.isScorePresent()) {
                 ctx.font = this.pointsEarnedTextSize + "px sans-serif";

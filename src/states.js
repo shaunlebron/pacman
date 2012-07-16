@@ -172,12 +172,12 @@ var readyNewState = {
             map = mapgen();
         }
         map.resetCurrent();
+        fruit.onNewLevel();
         renderer.drawMap();
 
         // notify other objects of new level
         ghostReleaser.onNewLevel();
         elroyTimer.onNewLevel();
-        fruit.onNewLevel();
 
         // inherit attributes from readyState
         readyState.init.call(this);

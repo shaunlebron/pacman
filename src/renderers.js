@@ -617,8 +617,8 @@ var switchRenderer = function(i) {
                 f = fruits[j];
                 if (f) {
                     drawFunc = getSpriteFuncFromFruitName(f.name);
-                    if (gameMode == GAME_COOKIE) {
-                        // all he wants are cookies
+                    if (gameMode == GAME_COOKIE && drawFunc == drawBanana) {
+                        // replace banana with cookie
                         drawFunc = drawCookie;
                     }
                     if (drawFunc) {
@@ -814,8 +814,8 @@ var switchRenderer = function(i) {
         drawFruit: function() {
             if (fruit.isPresent()) {
                 var drawFunc = getSpriteFuncFromFruitName(fruit.getCurrentFruit().name);
-                if (gameMode == GAME_COOKIE) {
-                    // all he wants are cookies
+                if (gameMode == GAME_COOKIE && drawFunc == drawBanana) {
+                    // replace banana with cookie
                     drawFunc = drawCookie;
                 }
                 drawFunc(ctx,fruit.pixel.x, fruit.pixel.y);

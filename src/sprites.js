@@ -145,6 +145,7 @@ var drawGhostSprite = (function(){
                 ctx.lineTo(coords[i],coords[i+1]);
             ctx.closePath();
             ctx.fill();
+            ctx.lineJoin = 'round';
             ctx.stroke();
             ctx.translate(-0.5,-0.5);
             //ctx.fillRect(1,0,2,5); // left
@@ -161,6 +162,7 @@ var drawGhostSprite = (function(){
         ctx.fillStyle = "#FFF";
         ctx.strokeStyle = "#FFF";
         ctx.lineWidth = 1.0;
+        ctx.lineJoin = 'round';
         drawEyeball();
         ctx.translate(6,0);
         drawEyeball();
@@ -223,7 +225,7 @@ var drawGhostSprite = (function(){
     };
 
 
-    return function(ctx,frame,dirEnum,scared,flash,eyes_only,color) {
+    return function(ctx,frame,dirEnum,scared,flash,eyes_only,color,glowColor) {
         if (scared)
             color = energizer.isFlash() ? "#FFF" : "#2121ff";
 
@@ -236,6 +238,12 @@ var drawGhostSprite = (function(){
             else
                 addFeet2(ctx);
             ctx.closePath();
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            ctx.lineWidth = 1;
             ctx.fillStyle = color;
             ctx.fill();
         }
@@ -277,6 +285,8 @@ var drawPacmanSprite = function(ctx,dirEnum,angle,mouthShift,scale,centerShift,a
     ctx.arc(centerShift,0,6.5*scale,angle,2*Math.PI-angle);
     ctx.closePath();
 
+    //ctx.strokeStyle = color;
+    //ctx.stroke();
     ctx.fillStyle = color;
     ctx.fill();
 
@@ -481,3 +491,602 @@ var drawCookiemanSprite = (function(){
 
     };
 })();
+
+////////////////////////////////////////////////////////////////////
+// FRUIT SPRITES
+
+var drawCherry = function(ctx,x,y) {
+
+    // cherry
+    var cherry = function(x,y) {
+        ctx.save();
+        ctx.translate(x,y);
+
+        // red fruit
+        ctx.beginPath();
+        ctx.arc(2.5,2.5,3,0,Math.PI*2);
+        ctx.lineWidth = 1.0;
+        ctx.strokeStyle = "#000";
+        ctx.stroke();
+        ctx.fillStyle = "#ff0000";
+        ctx.fill();
+
+        // white shine
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(1,3);
+        ctx.lineTo(2,4);
+        ctx.strokeStyle = "#fff";
+        ctx.stroke();
+        ctx.restore();
+    };
+
+    ctx.save();
+    ctx.translate(x,y);
+
+    // draw both cherries
+    cherry(-6,-1);
+    cherry(-1,1);
+
+    // draw stems
+    ctx.beginPath();
+    ctx.moveTo(-3,0);
+    ctx.bezierCurveTo(-1,-2, 2,-4, 5,-5);
+    ctx.lineTo(5,-4);
+    ctx.bezierCurveTo(3,-4, 1,0, 1,2);
+    ctx.strokeStyle = "#ff9900";
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawStrawberry = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // red body
+    ctx.beginPath();
+    ctx.moveTo(-1,-4);
+    ctx.bezierCurveTo(-3,-4,-5,-3, -5,-1);
+    ctx.bezierCurveTo(-5,3,-2,5, 0,6);
+    ctx.bezierCurveTo(3,5, 5,2, 5,0);
+    ctx.bezierCurveTo(5,-3, 3,-4, 0,-4);
+    ctx.fillStyle = "#f00";
+    ctx.fill();
+    ctx.strokeStyle = "#f00";
+    ctx.stroke();
+
+    // white spots
+    var spots = [
+        {x:-4,y:-1},
+        {x:-3,y:2 },
+        {x:-2,y:0 },
+        {x:-1,y:4 },
+        {x:0, y:2 },
+        {x:0, y:0 },
+        {x:2, y:4 },
+        {x:2, y:-1 },
+        {x:3, y:1 },
+        {x:4, y:-2 } ];
+
+    ctx.fillStyle = "#fff";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i++) {
+        var s = spots[i];
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,0.75,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    // green leaf
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.lineTo(-3,-4);
+    ctx.lineTo(0,-4);
+    ctx.lineTo(-2,-3);
+    ctx.lineTo(-1,-3);
+    ctx.lineTo(0,-4);
+    ctx.lineTo(0,-2);
+    ctx.lineTo(0,-4);
+    ctx.lineTo(1,-3);
+    ctx.lineTo(2,-3);
+    ctx.lineTo(0,-4);
+    ctx.lineTo(3,-4);
+    ctx.closePath();
+    ctx.strokeStyle = "#00ff00";
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // stem
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.lineTo(0,-5);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#fff";
+    ctx.stroke();
+    ctx.restore();
+};
+
+var drawOrange = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // orange body
+    ctx.beginPath();
+    ctx.moveTo(-2,-2);
+    ctx.bezierCurveTo(-3,-2, -5,-1, -5,1);
+    ctx.bezierCurveTo(-5,4, -3,6, 0,6);
+    ctx.bezierCurveTo(3,6, 5,4, 5,1);
+    ctx.bezierCurveTo(5,-1, 3,-2, 2,-2);
+    ctx.closePath();
+    ctx.fillStyle="#ffcc33";
+    ctx.fill();
+    ctx.strokeStyle = "#ffcc33";
+    ctx.stroke();
+
+    // stem
+    ctx.beginPath();
+    ctx.moveTo(-1,-1);
+    ctx.quadraticCurveTo(-1,-2,-2,-2);
+    ctx.quadraticCurveTo(-1,-2,-1,-4);
+    ctx.quadraticCurveTo(-1,-2,0,-2);
+    ctx.quadraticCurveTo(-1,-2,-1,-1);
+    ctx.strokeStyle = "#ff9900";
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // green leaf
+    ctx.beginPath();
+    ctx.moveTo(-0.5,-4);
+    ctx.quadraticCurveTo(0,-5,1,-5);
+    ctx.bezierCurveTo(2,-5, 3,-4,4,-4);
+    ctx.bezierCurveTo(3,-4, 3,-3, 2,-3);
+    ctx.bezierCurveTo(1,-3,1,-4,-0.5,-4);
+    ctx.strokeStyle = "#00ff00";
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.fillStyle = "#00ff00";
+    ctx.fill();
+
+    ctx.restore();
+};
+
+var drawApple = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // red fruit
+    ctx.beginPath();
+    ctx.moveTo(-2,-3);
+    ctx.bezierCurveTo(-2,-4,-3,-4,-4,-4);
+    ctx.bezierCurveTo(-5,-4,-6,-3,-6,0);
+    ctx.bezierCurveTo(-6,3,-4,6,-2.5,6);
+    ctx.quadraticCurveTo(-1,6,-1,5);
+    ctx.bezierCurveTo(-1,6,0,6,1,6);
+    ctx.bezierCurveTo(3,6, 5,3, 5,0);
+    ctx.bezierCurveTo(5,-3, 3,-4, 2,-4);
+    ctx.quadraticCurveTo(0,-4,0,-3);
+    ctx.closePath();
+    ctx.fillStyle = "#ff0000";
+    ctx.fill();
+
+    // stem
+    ctx.beginPath();
+    ctx.moveTo(-1,-3);
+    ctx.quadraticCurveTo(-1,-5, 0,-5);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#ff9900';
+    ctx.stroke();
+
+    // shine
+    ctx.beginPath();
+    ctx.moveTo(2,3);
+    ctx.quadraticCurveTo(3,3, 3,1);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#fff";
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawMelon = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // draw body
+    ctx.beginPath();
+    ctx.arc(0,2,5.5,0,Math.PI*2);
+    ctx.fillStyle = "#7bf331";
+    ctx.fill();
+
+    // draw stem
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.lineTo(0,-5);
+    ctx.moveTo(2,-5);
+    ctx.quadraticCurveTo(-3,-5,-3,-6);
+    ctx.strokeStyle="#69b4af";
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // dark lines
+    /*
+    ctx.beginPath();
+    ctx.moveTo(0,-2);
+    ctx.lineTo(-4,2);
+    ctx.lineTo(-1,5);
+    ctx.moveTo(-3,-1);
+    ctx.lineTo(-2,0);
+    ctx.moveTo(-2,6);
+    ctx.lineTo(1,3);
+    ctx.moveTo(1,7);
+    ctx.lineTo(3,5);
+    ctx.lineTo(0,2);
+    ctx.lineTo(3,-1);
+    ctx.moveTo(2,0);
+    ctx.lineTo(4,2);
+    ctx.strokeStyle="#69b4af";
+    ctx.lineCap = "round";
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    */
+    // dark spots
+    var spots = [
+        0,-2,
+        -1,-1,
+        -2,0,
+        -3,1,
+        -4,2,
+        -3,3,
+        -2,4,
+        -1,5,
+        -2,6,
+        -3,-1,
+        1,7,
+        2,6,
+        3,5,
+        2,4,
+        1,3,
+        0,2,
+        1,1,
+        2,0,
+        3,-1,
+        3,1,
+        4,2,
+         ];
+
+    ctx.fillStyle="#69b4af";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i+=2) {
+        var x = spots[i];
+        var y = spots[i+1];
+        ctx.beginPath();
+        ctx.arc(x,y,0.65,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    // white spots
+    var spots = [
+        {x: 0,y:-3},
+        {x:-2,y:-1},
+        {x:-4,y: 1},
+        {x:-3,y: 3},
+        {x: 1,y: 0},
+        {x:-1,y: 2},
+        {x:-1,y: 4},
+        {x: 3,y: 2},
+        {x: 1,y: 4},
+         ];
+
+    ctx.fillStyle = "#fff";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i++) {
+        var s = spots[i];
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,0.65,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
+var drawGalaxian = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // draw yellow body
+    ctx.beginPath();
+    ctx.moveTo(-4,-2);
+    ctx.lineTo(4,-2);
+    ctx.lineTo(4,-1);
+    ctx.lineTo(2,1);
+    ctx.lineTo(1,0);
+    ctx.lineTo(0,0);
+    ctx.lineTo(0,5);
+    ctx.lineTo(0,0);
+    ctx.lineTo(-1,0);
+    ctx.lineTo(-2,1);
+    ctx.lineTo(-4,-1);
+    ctx.closePath();
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = ctx.fillStyle = '#fffa36';
+    ctx.fill();
+    ctx.stroke();
+
+    // draw red arrow head
+    ctx.beginPath();
+    ctx.moveTo(0,-5);
+    ctx.lineTo(-3,-2);
+    ctx.lineTo(-2,-2);
+    ctx.lineTo(-1,-3);
+    ctx.lineTo(0,-3);
+    ctx.lineTo(0,-1);
+    ctx.lineTo(0,-3);
+    ctx.lineTo(1,-3);
+    ctx.lineTo(2,-2);
+    ctx.lineTo(3,-2);
+    ctx.closePath();
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = ctx.fillStyle = "#f00";
+    ctx.fill();
+    ctx.stroke();
+
+    // draw blue wings
+    ctx.beginPath();
+    ctx.moveTo(-5,-4);
+    ctx.lineTo(-5,-1);
+    ctx.lineTo(-2,2);
+    ctx.moveTo(5,-4);
+    ctx.lineTo(5,-1);
+    ctx.lineTo(2,2);
+    ctx.strokeStyle = "#00f";
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawBell = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // bell body
+    ctx.beginPath();
+    ctx.moveTo(-1,-5);
+    ctx.bezierCurveTo(-4,-5,-6,1,-6,6);
+    ctx.lineTo(5,6);
+    ctx.bezierCurveTo(5,1,3,-5,0,-5);
+    ctx.closePath();
+    ctx.fillStyle = ctx.strokeStyle = "#fffa37";
+    ctx.stroke();
+    ctx.fill();
+
+    // marks
+    ctx.beginPath();
+    ctx.moveTo(-4,4);
+    ctx.lineTo(-4,3);
+    ctx.moveTo(-3,1);
+    ctx.quadraticCurveTo(-3,-2,-2,-2);
+    ctx.moveTo(-1,-4);
+    ctx.lineTo(0,-4);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000';
+    ctx.stroke();
+
+    // bell bottom
+    ctx.beginPath();
+    ctx.rect(-5.5,6,10,2);
+    ctx.fillStyle = "#68b9fc";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(-0.5,6,2,2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+
+    ctx.restore();
+};
+
+var drawKey = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // draw key metal
+    ctx.beginPath();
+    ctx.moveTo(-1,-2);
+    ctx.lineTo(-1,5);
+    ctx.moveTo(0,6);
+    ctx.quadraticCurveTo(1,6,1,3);
+    ctx.moveTo(1,4);
+    ctx.lineTo(2,4);
+    ctx.moveTo(1,1);
+    ctx.lineTo(1,-2);
+    ctx.moveTo(1,0);
+    ctx.lineTo(2,0);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+
+    // draw key top
+    ctx.beginPath();
+    ctx.moveTo(0,-6);
+    ctx.quadraticCurveTo(-3,-6,-3,-4);
+    ctx.lineTo(-3,-2);
+    ctx.lineTo(3,-2);
+    ctx.lineTo(3,-4);
+    ctx.quadraticCurveTo(3,-6, 0,-6);
+    ctx.strokeStyle = ctx.fillStyle = "#68b9fc";
+    ctx.fill();
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(1,-5);
+    ctx.lineTo(-1,-5);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#000";
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawPretzel = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // bread
+    ctx.beginPath();
+    ctx.moveTo(-2,-5);
+    ctx.quadraticCurveTo(-4,-6,-6,-4);
+    ctx.quadraticCurveTo(-7,-2,-5,1);
+    ctx.quadraticCurveTo(-3,4,0,5);
+    ctx.quadraticCurveTo(5,5,5,-1);
+    ctx.quadraticCurveTo(6,-5,3,-5);
+    ctx.quadraticCurveTo(1,-5,0,-2);
+    ctx.quadraticCurveTo(-2,3,-5,5);
+    ctx.moveTo(1,1);
+    ctx.quadraticCurveTo(3,4,4,6);
+    ctx.lineWidth = 2.0;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "#ffcc33";
+    ctx.stroke();
+
+    // salt
+    var spots = [
+        -5,-6,
+        1,-6,
+        4,-4,
+        -5,0,
+        -2,0,
+        6,1,
+        -4,6,
+        5,5,
+         ];
+
+    ctx.fillStyle = "#fff";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i+=2) {
+        var x = spots[i];
+        var y = spots[i+1];
+        ctx.beginPath();
+        ctx.arc(x,y,0.65,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
+var drawPear = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // body
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.bezierCurveTo(-1,-4,-2,-3,-2,-1);
+    ctx.bezierCurveTo(-2,1,-4,2,-4,4);
+    ctx.bezierCurveTo(-4,6,-2,7,0,7);
+    ctx.bezierCurveTo(2,7,4,6,4,4);
+    ctx.bezierCurveTo(4,2,2,1,2,-1);
+    ctx.bezierCurveTo(2,-3,1,-4,0,-4);
+    ctx.fillStyle = ctx.strokeStyle = "#00ff00";
+    ctx.stroke();
+    ctx.fill();
+
+    // blue shine
+    ctx.beginPath();
+    ctx.moveTo(-2,3);
+    ctx.quadraticCurveTo(-2,5,-1,5);
+    ctx.strokeStyle = "#0033ff";
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // white stem
+    ctx.beginPath();
+    ctx.moveTo(0,-4);
+    ctx.quadraticCurveTo(0,-6,2,-6);
+    ctx.strokeStyle = "#fff";
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawBanana = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // body
+    ctx.beginPath();
+    ctx.moveTo(-5,5);
+    ctx.quadraticCurveTo(-4,5,-2,6);
+    ctx.bezierCurveTo(2,6,6,2,6,-4);
+    ctx.lineTo(3,-3);
+    ctx.lineTo(3,-2);
+    ctx.lineTo(-4,5);
+    ctx.closePath();
+    ctx.fillStyle = ctx.strokeStyle = "#ffff00";
+    ctx.stroke();
+    ctx.fill();
+
+    // stem
+    ctx.beginPath();
+    ctx.moveTo(4,-5);
+    ctx.lineTo(5,-6);
+    ctx.strokeStyle="#ffff00";
+    ctx.lineCap='round';
+    ctx.stroke();
+
+    // black mark
+    ctx.beginPath();
+    ctx.moveTo(3,-1);
+    ctx.lineTo(-2,4);
+    ctx.strokeStyle = "#000";
+    ctx.lineCap='round';
+    ctx.stroke();
+
+    // shine
+    ctx.beginPath();
+    ctx.moveTo(2,3);
+    ctx.lineTo(0,5);
+    ctx.strokeStyle = "#fff";
+    ctx.lineCap='round';
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+var drawCookie = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // body
+    ctx.beginPath();
+    ctx.arc(0,0,6,0,Math.PI*2);
+    ctx.fillStyle = "#f9bd6d";
+    //ctx.fillStyle = "#dfab68";
+    ctx.fill();
+
+    // chocolate chips
+    var spots = [
+        0,-3,
+        -4,-1,
+        0,2,
+        3,0,
+        3,3,
+         ];
+
+    ctx.fillStyle = "#000";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i+=2) {
+        var x = spots[i];
+        var y = spots[i+1];
+        ctx.beginPath();
+        ctx.arc(x,y,0.75,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};

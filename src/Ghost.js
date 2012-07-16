@@ -289,7 +289,7 @@ Ghost.prototype.steer = function() {
 
         if (this.mode == GHOST_GOING_HOME &&
             map.getExitDir && 
-            (dirEnum=map.getExitDir(this.tile.x,this.tile.y)) &&
+            (dirEnum=map.getExitDir(this.tile.x,this.tile.y)) != undefined &&
             dirEnum != oppDirEnum) {
             // if the map has a 'getExitDir' function, then we are using
             // a custom algorithm to choose the next direction.

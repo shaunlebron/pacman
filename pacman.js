@@ -4949,8 +4949,8 @@ Ghost.prototype.leaveHome = function() {
 
 // function called when pacman eats an energizer
 Ghost.prototype.onEnergized = function() {
-    // only reverse if we are in an active targetting mode
-    if (this.mode == GHOST_OUTSIDE)
+    // only reverse if we are in an active targetting mode or going home
+    if (this.mode == GHOST_OUTSIDE || this.mode == GHOST_GOING_HOME)
         this.reverse();
 
     // only scare me if not already going home
@@ -5061,7 +5061,7 @@ Ghost.prototype.steer = function() {
     var actor;                           // actor whose corner we will target
 
     // reverse direction if commanded
-    if (this.sigReverse && this.mode == GHOST_OUTSIDE) {
+    if (this.sigReverse && (this.mode == GHOST_OUTSIDE || this.mode == GHOST_GOING_HOME)) {
         // reverse direction only if we've reached a new tile
         if ((this.dirEnum == DIR_UP && this.tilePixel.y == tileSize-1) ||
             (this.dirEnum == DIR_DOWN && this.tilePixel.y == 0) ||
@@ -6951,17 +6951,17 @@ var finishState = (function(){
             } },
             60:  { draw: function() { flashFloorAndDraw(false); } },
             120: { draw: function() { flashFloorAndDraw(true); } },
-            135: { draw: function() { flashFloorAndDraw(false); } },
-            150: { draw: function() { flashFloorAndDraw(true); } },
-            165: { draw: function() { flashFloorAndDraw(false); } },
+            130: { draw: function() { flashFloorAndDraw(false); } },
+            140: { draw: function() { flashFloorAndDraw(true); } },
+            150: { draw: function() { flashFloorAndDraw(false); } },
+            160: { draw: function() { flashFloorAndDraw(true); } },
+            170: { draw: function() { flashFloorAndDraw(false); } },
             180: { draw: function() { flashFloorAndDraw(true); } },
-            195: { draw: function() { flashFloorAndDraw(false); } },
-            210: { draw: function() { flashFloorAndDraw(true); } },
-            225: { draw: function() { flashFloorAndDraw(false); } },
-            255: {
+            190: { draw: function() { flashFloorAndDraw(false); } },
+            220: {
                 draw: function() { flashFloorAndDraw(false); },
                 init: function() {
-                    switchState(readyNewState,60);
+                    switchState(readyNewState,30);
                 }
             },
         },

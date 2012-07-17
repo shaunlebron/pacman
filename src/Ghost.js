@@ -119,8 +119,8 @@ Ghost.prototype.leaveHome = function() {
 
 // function called when pacman eats an energizer
 Ghost.prototype.onEnergized = function() {
-    // only reverse if we are in an active targetting mode
-    if (this.mode == GHOST_OUTSIDE)
+    // only reverse if we are in an active targetting mode or going home
+    if (this.mode == GHOST_OUTSIDE || this.mode == GHOST_GOING_HOME)
         this.reverse();
 
     // only scare me if not already going home
@@ -231,7 +231,7 @@ Ghost.prototype.steer = function() {
     var actor;                           // actor whose corner we will target
 
     // reverse direction if commanded
-    if (this.sigReverse && this.mode == GHOST_OUTSIDE) {
+    if (this.sigReverse && (this.mode == GHOST_OUTSIDE || this.mode == GHOST_GOING_HOME)) {
         // reverse direction only if we've reached a new tile
         if ((this.dirEnum == DIR_UP && this.tilePixel.y == tileSize-1) ||
             (this.dirEnum == DIR_DOWN && this.tilePixel.y == 0) ||

@@ -529,17 +529,17 @@ var finishState = (function(){
             } },
             60:  { draw: function() { flashFloorAndDraw(false); } },
             120: { draw: function() { flashFloorAndDraw(true); } },
-            135: { draw: function() { flashFloorAndDraw(false); } },
-            150: { draw: function() { flashFloorAndDraw(true); } },
-            165: { draw: function() { flashFloorAndDraw(false); } },
+            130: { draw: function() { flashFloorAndDraw(false); } },
+            140: { draw: function() { flashFloorAndDraw(true); } },
+            150: { draw: function() { flashFloorAndDraw(false); } },
+            160: { draw: function() { flashFloorAndDraw(true); } },
+            170: { draw: function() { flashFloorAndDraw(false); } },
             180: { draw: function() { flashFloorAndDraw(true); } },
-            195: { draw: function() { flashFloorAndDraw(false); } },
-            210: { draw: function() { flashFloorAndDraw(true); } },
-            225: { draw: function() { flashFloorAndDraw(false); } },
-            255: {
+            190: { draw: function() { flashFloorAndDraw(false); } },
+            220: {
                 draw: function() { flashFloorAndDraw(false); },
                 init: function() {
-                    switchState(readyNewState,60);
+                    switchState(readyNewState,30);
                 }
             },
         },

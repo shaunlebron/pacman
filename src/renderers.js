@@ -613,7 +613,7 @@ var switchRenderer = function(i) {
             var f,drawFunc;
             var startLevel = Math.max(6,level);
             var scale = 0.85;
-            for (i=0, j=startLevel-5; i<6; j++, i++) {
+            for (i=0, j=startLevel-5; i<6 && j<=level; j++, i++) {
                 f = fruits[j];
                 if (f) {
                     drawFunc = getSpriteFuncFromFruitName(f.name);

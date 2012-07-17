@@ -6591,7 +6591,7 @@ var readyNewState = {
             setNextMsPacMap();
         }
         else if (gameMode == GAME_COOKIE) {
-            map = mapgen();
+            setNextCookieMap();
         }
         map.resetCurrent();
         fruit.onNewLevel();
@@ -7108,6 +7108,13 @@ mapPacman.constrainGhostTurns = function(tile,openTiles) {
     // prevent ghost from turning up at these tiles
     if ((tile.x == 12 || tile.x == 15) && (tile.y == 14 || tile.y == 26)) {
         openTiles[DIR_UP] = false;
+    }
+};
+
+var setNextCookieMap = function() {
+    // change map every other level
+    if (level % 2 == 1) {
+        map = mapgen();
     }
 };
 

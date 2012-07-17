@@ -169,7 +169,7 @@ var readyNewState = {
             setNextMsPacMap();
         }
         else if (gameMode == GAME_COOKIE) {
-            map = mapgen();
+            setNextCookieMap();
         }
         map.resetCurrent();
         fruit.onNewLevel();

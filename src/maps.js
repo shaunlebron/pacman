@@ -113,6 +113,13 @@ mapPacman.constrainGhostTurns = function(tile,openTiles) {
     }
 };
 
+var setNextCookieMap = function() {
+    // change map every other level
+    if (level % 2 == 1) {
+        map = mapgen();
+    }
+};
+
 // Ms. Pac-Man map 1
 
 var setNextMsPacMap = (function() {

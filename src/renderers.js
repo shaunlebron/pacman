@@ -611,9 +611,15 @@ var switchRenderer = function(i) {
             var fruits = fruit.getFruitHistory();
             var i,j;
             var f,drawFunc;
-            var startLevel = Math.max(6,level);
+            var numFruit = 7;
+            var startLevel = Math.max(numFruit,level);
+            if (gameMode != GAME_PACMAN) {
+                // for the Pac-Man game, display the last 7 fruit
+                // for the Ms Pac-Man game, display stop after the 7th fruit
+                startLevel = Math.min(numFruit,startLevel);
+            }
             var scale = 0.85;
-            for (i=0, j=startLevel-5; i<6 && j<=level; j++, i++) {
+            for (i=0, j=startLevel-numFruit+1; i<numFruit && j<=level; j++, i++) {
                 f = fruits[j];
                 if (f) {
                     drawFunc = getSpriteFuncFromFruitName(f.name);

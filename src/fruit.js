@@ -49,11 +49,18 @@ var fruit = (function(){
         var sprite; // what to draw
         var points; // amount of points the fruit is worth
 
+        var shouldRandomizeFruit = function() {
+            return level > 7;
+        };
+
         var getRandomInt = function(min,max) {
             return Math.floor(Math.random() * (max-min+1)) + min;
         };
         var onNewLevel = function() {
-            currentFruit = fruits[level <= 7 ? level-1 : getRandomInt(0,6)];
+            if (!shouldRandomizeFruit()) {
+                currentFruit = fruits[level-1];
+                fruitHistory[level] = currentFruit;
+            }
         };
 
         var reset = function() {
@@ -68,6 +75,9 @@ var fruit = (function(){
             path = p;
         };
         var initiate = function() {
+            if (shouldRandomizeFruit()) {
+                currentFruit = fruits[getRandomInt(0,6)];
+            }
             var entrances = map.fruitPaths.entrances;
             var e = entrances[getRandomInt(0,entrances.length-1)];
             initiatePath(e.path);
@@ -214,6 +224,7 @@ var fruit = (function(){
                 }
                 i--;
                 currentFruit = fruits[order[i]];
+                fruitHistory[level] = currentFruit;
             };
         })();
 
@@ -288,7 +299,6 @@ var fruit = (function(){
 
     var onNewLevel = function() {
         getInterface().onNewLevel();
-        fruitHistory[level] = currentFruit;
     };
 
     var reset = function() {

@@ -3046,9 +3046,15 @@ var switchRenderer = function(i) {
             var fruits = fruit.getFruitHistory();
             var i,j;
             var f,drawFunc;
-            var startLevel = Math.max(6,level);
+            var numFruit = 7;
+            var startLevel = Math.max(numFruit,level);
+            if (gameMode != GAME_PACMAN) {
+                // for the Pac-Man game, display the last 7 fruit
+                // for the Ms Pac-Man game, display stop after the 7th fruit
+                startLevel = Math.min(numFruit,startLevel);
+            }
             var scale = 0.85;
-            for (i=0, j=startLevel-5; i<6; j++, i++) {
+            for (i=0, j=startLevel-numFruit+1; i<numFruit && j<=level; j++, i++) {
                 f = fruits[j];
                 if (f) {
                     drawFunc = getSpriteFuncFromFruitName(f.name);
@@ -6023,11 +6029,18 @@ var fruit = (function(){
         var sprite; // what to draw
         var points; // amount of points the fruit is worth
 
+        var shouldRandomizeFruit = function() {
+            return level > 7;
+        };
+
         var getRandomInt = function(min,max) {
             return Math.floor(Math.random() * (max-min+1)) + min;
         };
         var onNewLevel = function() {
-            currentFruit = fruits[level <= 7 ? level-1 : getRandomInt(0,6)];
+            if (!shouldRandomizeFruit()) {
+                currentFruit = fruits[level-1];
+                fruitHistory[level] = currentFruit;
+            }
         };
 
         var reset = function() {
@@ -6042,6 +6055,9 @@ var fruit = (function(){
             path = p;
         };
         var initiate = function() {
+            if (shouldRandomizeFruit()) {
+                currentFruit = fruits[getRandomInt(0,6)];
+            }
             var entrances = map.fruitPaths.entrances;
             var e = entrances[getRandomInt(0,entrances.length-1)];
             initiatePath(e.path);
@@ -6188,6 +6204,7 @@ var fruit = (function(){
                 }
                 i--;
                 currentFruit = fruits[order[i]];
+                fruitHistory[level] = currentFruit;
             };
         })();
 
@@ -6262,7 +6279,6 @@ var fruit = (function(){
 
     var onNewLevel = function() {
         getInterface().onNewLevel();
-        fruitHistory[level] = currentFruit;
     };
 
     var reset = function() {

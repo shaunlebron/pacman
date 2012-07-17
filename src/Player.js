@@ -27,7 +27,7 @@ Player.prototype.save = function(t) {
 };
 
 Player.prototype.load = function(t) {
-    this.nextDirEnum = this.savedNextDirEnum[t];
+    this.setNextDir(this.savedNextDirEnum[t]);
     this.eatPauseFramesLeft = this.savedEatPauseFramesLeft[t];
 
     Actor.prototype.load.call(this,t);

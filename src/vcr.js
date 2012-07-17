@@ -22,15 +22,15 @@ var vcr = (function() {
     var speedIndex;
     var speeds = [-8,-4,-2,-1,0,1,2,4,8];
     var speedColors = [
+        "rgba(255,255,0,0.25)",
         "rgba(255,255,0,0.20)",
         "rgba(255,255,0,0.15)",
         "rgba(255,255,0,0.10)",
-        "rgba(255,255,0,0.05)",
         "rgba(0,0,0,0)",
-        "rgba(0,0,255,0.05)",
         "rgba(0,0,255,0.10)",
         "rgba(0,0,255,0.15)",
         "rgba(0,0,255,0.20)",
+        "rgba(0,0,255,0.25)",
     ];
 
     // current frame associated with current time
@@ -178,18 +178,19 @@ var vcr = (function() {
             renderer.setOverlayColor(speedColors[speedIndex]);
 
             // draw the speed
-            ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
+            ctx.font = (tileSize-1) + "px ArcadeR";
             ctx.textBaseline = "top";
             ctx.textAlign = "right";
             ctx.fillStyle = "#FFF";
-            ctx.fillText(speeds[speedIndex]+"x", screenWidth-2*tileSize, tileSize*1.5);
+            ctx.fillText("TIME", mapWidth-tileSize, 0);
+            ctx.fillText(speeds[speedIndex]+"x", mapWidth-2*tileSize, tileSize);
 
             // draw up/down arrows
             var s = tileSize/2;
             ctx.fillStyle = "#AAA";
             ctx.save();
 
-            ctx.translate(screenWidth-1.65*tileSize, tileSize+2);
+            ctx.translate(mapWidth-1.65*tileSize, tileSize-2);
             ctx.beginPath();
             ctx.moveTo(0,s);
             ctx.lineTo(s/2,0);

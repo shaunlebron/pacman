@@ -104,7 +104,7 @@ var newGameState = (function() {
             renderer.drawExtraLives();
             renderer.drawLevelIcons();
             renderer.drawScore();
-            renderer.drawMessage("ready","#FF0");
+            renderer.drawMessage("READY!","#FF0");
         },
         update: function() {
             if (frames == duration*60) {
@@ -562,7 +562,7 @@ var overState = (function() {
             renderer.drawExtraLives();
             renderer.drawLevelIcons();
             renderer.drawScore();
-            renderer.drawMessage("game over", "#F00");
+            renderer.drawMessage("GAME OVER", "#F00");
         },
         update: function() {
             if (frames == 120) {

@@ -1,6 +1,10 @@
 body {
     margin:0;
 }
+@font-face {
+    font-family: 'ArcadeR';
+    src: url('font/Arcade-Rounded.otf');
+}
 #pacman-controls {
     margin:0;
     float:left;

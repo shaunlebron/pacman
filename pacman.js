@@ -142,15 +142,15 @@ var vcr = (function() {
     var speedIndex;
     var speeds = [-8,-4,-2,-1,0,1,2,4,8];
     var speedColors = [
+        "rgba(255,255,0,0.25)",
         "rgba(255,255,0,0.20)",
         "rgba(255,255,0,0.15)",
         "rgba(255,255,0,0.10)",
-        "rgba(255,255,0,0.05)",
         "rgba(0,0,0,0)",
-        "rgba(0,0,255,0.05)",
         "rgba(0,0,255,0.10)",
         "rgba(0,0,255,0.15)",
         "rgba(0,0,255,0.20)",
+        "rgba(0,0,255,0.25)",
     ];
 
     // current frame associated with current time
@@ -298,18 +298,19 @@ var vcr = (function() {
             renderer.setOverlayColor(speedColors[speedIndex]);
 
             // draw the speed
-            ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
+            ctx.font = (tileSize-1) + "px ArcadeR";
             ctx.textBaseline = "top";
             ctx.textAlign = "right";
             ctx.fillStyle = "#FFF";
-            ctx.fillText(speeds[speedIndex]+"x", screenWidth-2*tileSize, tileSize*1.5);
+            ctx.fillText("TIME", mapWidth-tileSize, 0);
+            ctx.fillText(speeds[speedIndex]+"x", mapWidth-2*tileSize, tileSize);
 
             // draw up/down arrows
             var s = tileSize/2;
             ctx.fillStyle = "#AAA";
             ctx.save();
 
-            ctx.translate(screenWidth-1.65*tileSize, tileSize+2);
+            ctx.translate(mapWidth-1.65*tileSize, tileSize-2);
             ctx.beginPath();
             ctx.moveTo(0,s);
             ctx.lineTo(s/2,0);
@@ -2446,13 +2447,13 @@ var renderer_list;
 var renderer;
 
 var renderScale;
-var screenWidth = 30*tileSize;
-var screenHeight = 38*tileSize;
+var screenWidth = 36*tileSize;
+var screenHeight = 44*tileSize;
 
 var mapWidth = 28*tileSize;
 var mapHeight = 36*tileSize;
-var mapLeft = tileSize;
-var mapTop = tileSize;
+var mapLeft = 4*tileSize;
+var mapTop = 4*tileSize;
 
 // all rendering will be shown on this canvas
 var canvas;
@@ -2747,7 +2748,7 @@ var switchRenderer = function(i) {
 
         // draw a center screen message (e.g. "start", "ready", "game over")
         drawMessage: function(text, color) {
-            ctx.font = "bold " + 2*tileSize + "px sans-serif";
+            ctx.font = tileSize + "px ArcadeR";
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillStyle = color;
@@ -3091,17 +3092,17 @@ var switchRenderer = function(i) {
 
         // draw the current score and high score
         drawScore: function() {
-            ctx.font = 1.25*tileSize + "px sans-serif";
+            ctx.font = (tileSize-1) + "px ArcadeR";
             ctx.textBaseline = "top";
-            ctx.textAlign = "left";
             ctx.fillStyle = "#FFF";
-            ctx.fillText(score, tileSize, tileSize*1.5);
 
-            ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
-            ctx.textBaseline = "top";
-            ctx.textAlign = "center";
-            ctx.fillText("high score", tileSize*map.numCols/2, 1.5);
-            ctx.fillText(highScore, tileSize*map.numCols/2, tileSize*1.5);
+            ctx.textAlign = "left";
+            ctx.fillText("1UP", 3*tileSize, 0);
+            ctx.fillText("HIGH SCORE", 9*tileSize, 0);
+
+            ctx.textAlign = "right";
+            ctx.fillText(score, 7*tileSize, tileSize);
+            ctx.fillText(highScore, 17*tileSize, tileSize);
         },
 
         // draw the extra lives indicator
@@ -3288,9 +3289,9 @@ menu = (function() {
     var w = 20*tileSize;
     var h = 7*tileSize;
 
-    var pacmanRect =   {x:screenWidth/2-w/2,y:screenHeight/2-h/2-h,w:w,h:h};
-    var mspacmanRect = {x:screenWidth/2-w/2,y:screenHeight/2-h/2,w:w,h:h};
-    var cookieRect =   {x:screenWidth/2-w/2,y:screenHeight/2+h/2,w:w,h:h};
+    var pacmanRect =   {x:mapWidth/2-w/2,y:mapHeight/2-h/2-h,w:w,h:h};
+    var mspacmanRect = {x:mapWidth/2-w/2,y:mapHeight/2-h/2,w:w,h:h};
+    var cookieRect =   {x:mapWidth/2-w/2,y:mapHeight/2+h/2,w:w,h:h};
 
     var drawButton = function(ctx,rect,title,color) {
 
@@ -3341,8 +3342,15 @@ menu = (function() {
         var mouseX = evt.clientX - left + window.pageXOffset;
         var mouseY = evt.clientY - top + window.pageYOffset;
 
-        // return scale-independent mouse coordinate
-        return { x: mouseX/renderScale, y: mouseY/renderScale };
+        // make independent of scale
+        mouseX /= renderScale;
+        mouseY /= renderScale;
+
+        // offset
+        mouseX -= mapLeft;
+        mouseY -= mapTop;
+
+        return { x: mouseX, y: mouseY };
     };
 
     return {
@@ -3355,13 +3363,13 @@ menu = (function() {
             ctx.fillRect(0,0,screenWidth,screenHeight);
 
             // set text size and alignment
-            ctx.font = "bold " + Math.floor(h/5) + "px sans-serif";
+            ctx.font = (tileSize-1) + "px ArcadeR";
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
 
-            drawButton(ctx, pacmanRect, "Pac-Man (1980)", "#FF0");
-            drawButton(ctx, mspacmanRect, "Ms. Pac-Man (1982)", "#FFB8AE");
-            drawButton(ctx, cookieRect, "Cookie-Man (2012)", "#47b8ff");
+            drawButton(ctx, pacmanRect, "PAC-MAN (1980)", "#FF0");
+            drawButton(ctx, mspacmanRect, "MS. PAC-MAN (1981)", "#FFB8AE");
+            drawButton(ctx, cookieRect, "COOKIE-MAN (2012)", "#47b8ff");
 
             // TODO: draw previous and high score next to each game type.
             /*
@@ -6526,7 +6534,7 @@ var newGameState = (function() {
             renderer.drawExtraLives();
             renderer.drawLevelIcons();
             renderer.drawScore();
-            renderer.drawMessage("ready","#FF0");
+            renderer.drawMessage("READY!","#FF0");
         },
         update: function() {
             if (frames == duration*60) {
@@ -6984,7 +6992,7 @@ var overState = (function() {
             renderer.drawExtraLives();
             renderer.drawLevelIcons();
             renderer.drawScore();
-            renderer.drawMessage("game over", "#F00");
+            renderer.drawMessage("GAME OVER", "#F00");
         },
         update: function() {
             if (frames == 120) {
@@ -7113,8 +7121,21 @@ mapPacman.constrainGhostTurns = function(tile,openTiles) {
 
 var setNextCookieMap = function() {
     // change map every other level
+    var colors = [
+        "#12bc76", "#b4e671", // green
+        "#86669c", "#f2c1db", // purple
+        "#939473", "#fdfdf4", // grey
+        "#2067c1", "#63e0b6", // blue
+        "#ed0a04", "#e8b4cd", // red
+        "#c2b853", "#e6f1e7", // yellow
+        "#c55994", "#fd61c3", // pink
+        "#5036d9", "#618dd4", // violet
+    ];
     if (level % 2 == 1) {
         map = mapgen();
+        var i = (level-1) % colors.length;
+        map.wallFillColor = colors[i];
+        map.wallStrokeColor = colors[i+1];
     }
 };
 

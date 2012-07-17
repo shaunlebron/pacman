@@ -1,0 +1,49 @@
+<html>
+<head>
+    <style>
+        @font-face {
+            font-family: 'PressStart2P';
+            src: url('PressStart2P.ttf');
+        }
+        @font-face {
+            font-family: 'ArcadeR';
+            src: url('Arcade-Rounded.otf');
+        }
+    </style>
+</head>
+
+<body>
+    <div style='font-family: PressStart2P'> </div>
+    <div style='font-family: ArcadeR'> </div>
+<canvas id='canvas' width=800 height=800 style='background:black'></canvas>
+<script>
+
+    var hi = function() {
+        console.log('hi');
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+
+        ctx.font = "30px PressStart2P";
+        ctx.fillStyle = "red";
+        ctx.textBaseline = 'top';
+        ctx.fillText('GAME OVER',10,10);
+        ctx.fillStyle = "yellow";
+        ctx.fillText('READY!',10,50);
+
+        ctx.font = "30px ArcadeR";
+        ctx.fillStyle = "red";
+        ctx.fillText('GAME OVER',10,90);
+        ctx.fillStyle = "yellow";
+        ctx.fillText('READY!',10,130);
+        //setTimeout(hi,1000);
+    };
+
+    window.onload = function() {
+        console.log('yo');
+        //setTimeout(hi,1000);
+        hi();
+    };
+
+</script>
+</body>
+</html>

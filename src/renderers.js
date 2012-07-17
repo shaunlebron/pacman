@@ -11,13 +11,13 @@ var renderer_list;
 var renderer;
 
 var renderScale;
-var screenWidth = 30*tileSize;
-var screenHeight = 38*tileSize;
+var screenWidth = 36*tileSize;
+var screenHeight = 44*tileSize;
 
 var mapWidth = 28*tileSize;
 var mapHeight = 36*tileSize;
-var mapLeft = tileSize;
-var mapTop = tileSize;
+var mapLeft = 4*tileSize;
+var mapTop = 4*tileSize;
 
 // all rendering will be shown on this canvas
 var canvas;
@@ -312,7 +312,7 @@ var switchRenderer = function(i) {
 
         // draw a center screen message (e.g. "start", "ready", "game over")
         drawMessage: function(text, color) {
-            ctx.font = "bold " + 2*tileSize + "px sans-serif";
+            ctx.font = tileSize + "px ArcadeR";
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillStyle = color;
@@ -656,17 +656,17 @@ var switchRenderer = function(i) {
 
         // draw the current score and high score
         drawScore: function() {
-            ctx.font = 1.25*tileSize + "px sans-serif";
+            ctx.font = (tileSize-1) + "px ArcadeR";
             ctx.textBaseline = "top";
-            ctx.textAlign = "left";
             ctx.fillStyle = "#FFF";
-            ctx.fillText(score, tileSize, tileSize*1.5);
 
-            ctx.font = "bold " + 1.25*tileSize + "px sans-serif";
-            ctx.textBaseline = "top";
-            ctx.textAlign = "center";
-            ctx.fillText("high score", tileSize*map.numCols/2, 1.5);
-            ctx.fillText(highScore, tileSize*map.numCols/2, tileSize*1.5);
+            ctx.textAlign = "left";
+            ctx.fillText("1UP", 3*tileSize, 0);
+            ctx.fillText("HIGH SCORE", 9*tileSize, 0);
+
+            ctx.textAlign = "right";
+            ctx.fillText(score, 7*tileSize, tileSize);
+            ctx.fillText(highScore, 17*tileSize, tileSize);
         },
 
         // draw the extra lives indicator

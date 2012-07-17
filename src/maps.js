@@ -115,8 +115,21 @@ mapPacman.constrainGhostTurns = function(tile,openTiles) {
 
 var setNextCookieMap = function() {
     // change map every other level
+    var colors = [
+        "#12bc76", "#b4e671", // green
+        "#86669c", "#f2c1db", // purple
+        "#939473", "#fdfdf4", // grey
+        "#2067c1", "#63e0b6", // blue
+        "#ed0a04", "#e8b4cd", // red
+        "#c2b853", "#e6f1e7", // yellow
+        "#c55994", "#fd61c3", // pink
+        "#5036d9", "#618dd4", // violet
+    ];
     if (level % 2 == 1) {
         map = mapgen();
+        var i = (level-1) % colors.length;
+        map.wallFillColor = colors[i];
+        map.wallStrokeColor = colors[i+1];
     }
 };
 

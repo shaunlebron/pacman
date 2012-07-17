@@ -3,9 +3,9 @@ menu = (function() {
     var w = 20*tileSize;
     var h = 7*tileSize;
 
-    var pacmanRect =   {x:screenWidth/2-w/2,y:screenHeight/2-h/2-h,w:w,h:h};
-    var mspacmanRect = {x:screenWidth/2-w/2,y:screenHeight/2-h/2,w:w,h:h};
-    var cookieRect =   {x:screenWidth/2-w/2,y:screenHeight/2+h/2,w:w,h:h};
+    var pacmanRect =   {x:mapWidth/2-w/2,y:mapHeight/2-h/2-h,w:w,h:h};
+    var mspacmanRect = {x:mapWidth/2-w/2,y:mapHeight/2-h/2,w:w,h:h};
+    var cookieRect =   {x:mapWidth/2-w/2,y:mapHeight/2+h/2,w:w,h:h};
 
     var drawButton = function(ctx,rect,title,color) {
 
@@ -56,8 +56,15 @@ menu = (function() {
         var mouseX = evt.clientX - left + window.pageXOffset;
         var mouseY = evt.clientY - top + window.pageYOffset;
 
-        // return scale-independent mouse coordinate
-        return { x: mouseX/renderScale, y: mouseY/renderScale };
+        // make independent of scale
+        mouseX /= renderScale;
+        mouseY /= renderScale;
+
+        // offset
+        mouseX -= mapLeft;
+        mouseY -= mapTop;
+
+        return { x: mouseX, y: mouseY };
     };
 
     return {
@@ -70,13 +77,13 @@ menu = (function() {
             ctx.fillRect(0,0,screenWidth,screenHeight);
 
             // set text size and alignment
-            ctx.font = "bold " + Math.floor(h/5) + "px sans-serif";
+            ctx.font = (tileSize-1) + "px ArcadeR";
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
 
-            drawButton(ctx, pacmanRect, "Pac-Man (1980)", "#FF0");
-            drawButton(ctx, mspacmanRect, "Ms. Pac-Man (1982)", "#FFB8AE");
-            drawButton(ctx, cookieRect, "Cookie-Man (2012)", "#47b8ff");
+            drawButton(ctx, pacmanRect, "PAC-MAN (1980)", "#FF0");
+            drawButton(ctx, mspacmanRect, "MS. PAC-MAN (1981)", "#FFB8AE");
+            drawButton(ctx, cookieRect, "COOKIE-MAN (2012)", "#47b8ff");
 
             // TODO: draw previous and high score next to each game type.
             /*

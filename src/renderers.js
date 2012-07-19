@@ -34,7 +34,7 @@ var switchRenderer = function(i) {
     var ctx, bgCtx;
 
     // drawing scale
-    var scale = 1.5;        // scale everything by this amount
+    var scale = 2;        // scale everything by this amount
 
     // (temporary global version of scale just to get things quickly working)
     renderScale = scale; 
@@ -679,19 +679,19 @@ var switchRenderer = function(i) {
             ctx.scale(0.85, 0.85);
             if (gameMode == GAME_PACMAN) {
                 for (i=0; i<extraLives; i++) {
-                    drawPacmanSprite(ctx, DIR_LEFT, Math.PI/6);
+                    drawPacmanSprite(ctx, 0,0, DIR_LEFT, Math.PI/6);
                     ctx.translate(2*tileSize,0);
                 }
             }
             else if (gameMode == GAME_MSPACMAN) {
                 for (i=0; i<extraLives; i++) {
-                    drawMsPacmanSprite(ctx, DIR_RIGHT, 1);
+                    drawMsPacmanSprite(ctx, 0,0, DIR_RIGHT, 1);
                     ctx.translate(2*tileSize,0);
                 }
             }
             else if (gameMode == GAME_COOKIE) {
                 for (i=0; i<extraLives; i++) {
-                    drawCookiemanSprite(ctx, DIR_RIGHT, 1, false);
+                    drawCookiemanSprite(ctx, 0,0, DIR_RIGHT, 1, false);
                     ctx.translate(2*tileSize,0);
                 }
             }
@@ -706,12 +706,9 @@ var switchRenderer = function(i) {
         drawGhost: function(g) {
             if (g.mode == GHOST_EATEN)
                 return;
-            ctx.save();
-            ctx.translate(g.pixel.x-this.actorSize/2, g.pixel.y-this.actorSize/2);
             var frame = Math.floor(g.frames/6)%2; // toggle frame every 6 ticks
             var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
-            drawGhostSprite(ctx,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
-            ctx.restore();
+            drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
         },
 
         // get animation frame for player
@@ -729,20 +726,16 @@ var switchRenderer = function(i) {
 
         // draw pacman
         drawPlayer: function() {
-            ctx.save();
-            ctx.translate(pacman.pixel.x, pacman.pixel.y);
             var frame = this.getPlayerAnimFrame();
             if (gameMode == GAME_PACMAN) {
-                drawPacmanSprite(ctx, pacman.dirEnum, frame*Math.PI/6);
+                drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame*Math.PI/6);
             }
             else if (gameMode == GAME_MSPACMAN) {
-                drawMsPacmanSprite(ctx,pacman.dirEnum,frame);
+                drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
             }
             else if (gameMode == GAME_COOKIE) {
-                drawCookiemanSprite(ctx,pacman.dirEnum,frame,true);
+                drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame,true);
             }
-
-            ctx.restore();
         },
 
         // draw dying pacman animation (with 0<=t<=1)
@@ -756,11 +749,8 @@ var switchRenderer = function(i) {
                 if (f <= 60) {
                     // open mouth all the way while shifting corner of mouth forward
                     t = f/60;
-                    ctx.save();
-                    ctx.translate(pacman.pixel.x, pacman.pixel.y);
                     var a = frame*Math.PI/6;
-                    drawPacmanSprite(ctx, pacman.dirEnum, a + t*(Math.PI-a),4*t);
-                    ctx.restore();
+                    drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, a + t*(Math.PI-a),4*t);
                 }
                 else {
                     // explode
@@ -770,33 +760,24 @@ var switchRenderer = function(i) {
             }
             else if (gameMode == GAME_MSPACMAN) {
                 // spin 540 degrees
-                ctx.save();
-                ctx.translate(pacman.pixel.x, pacman.pixel.y);
                 var maxAngle = Math.PI*5;
                 var step = (Math.PI/4) / maxAngle; // 45 degree steps
                 ctx.rotate(Math.floor(t/step)*step*maxAngle);
-                drawMsPacmanSprite(ctx, pacman.dirEnum, frame);
-                ctx.restore();
+                drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
             }
             else if (gameMode == GAME_COOKIE) {
                 // spin 540 degrees
-                ctx.save();
-                ctx.translate(pacman.pixel.x, pacman.pixel.y);
                 var maxAngle = Math.PI*5;
                 var step = (Math.PI/4) / maxAngle; // 45 degree steps
                 ctx.rotate(Math.floor(t/step)*step*maxAngle);
-                drawCookiemanSprite(ctx, pacman.dirEnum, frame);
-                ctx.restore();
+                drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
             }
         },
 
         // draw exploding pacman animation (with 0<=t<=1)
         drawExplodingPlayer: function(t) {
-            ctx.save();
             var frame = this.getPlayerAnimFrame();
-            ctx.translate(pacman.pixel.x, pacman.pixel.y);
-            drawPacmanSprite(ctx, pacman.dirEnum, 0, 0, t,-3,1-t);
-            ctx.restore();
+            drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, 0, 0, t,-3,1-t);
         },
 
         // draw energizer items on foreground

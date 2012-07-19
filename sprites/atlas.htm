@@ -1,0 +1,163 @@
+<html>
+<head>
+    <style>
+        body {
+            background: black;
+            color: white;
+        }
+        canvas {
+            position: absolute;
+            left:0;
+            top:50px;
+        }
+    </style>
+</head>
+<body>
+<div>
+Scale: <input type='text' id='scaleInput' onkeydown="if (event.keyCode == 13) refresh()"></input>
+</div>
+<canvas id='canvas'></canvas>
+<canvas id='gridcanvas'></canvas>
+
+<script src="../src/direction.js"></script>
+<script src="../src/sprites.js"></script>
+<script>
+
+var refresh = function() {
+    var scale = parseFloat(document.getElementById('scaleInput').value);
+    if (isNaN(scale) || !(scale > 0 && scale <= 20) ) {
+        alert('not a valid scale (0 < scale <= 20');
+        return;
+    }
+    draw(scale);
+};
+
+var draw = function(scale) {
+    var size = 18;
+    var cols = 12;
+    var rows = 12;
+    var w = size*cols*scale;
+    var h = size*rows*scale;
+
+    // draw grid overlay
+    var canvas = document.getElementById('gridcanvas');
+    canvas.width = w;
+    canvas.height = h;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,w,h);
+    var x,y;
+    var step = size*scale;
+    ctx.beginPath();
+    for (x=0; x<=w; x+=step) {
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,h);
+    }
+    for (y=0; y<=h; y+=step) {
+        ctx.moveTo(0,y);
+        ctx.lineTo(w,y);
+    }
+    ctx.lineWidth = "1px";
+    ctx.lineCap = "square";
+    ctx.strokeStyle="rgba(255,255,255,0.5)";
+    ctx.stroke();
+
+    // draw sprites
+    canvas = document.getElementById('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,w,h);
+    ctx.scale(scale,scale);
+
+    var drawAtCell = function(f,row,col) {
+        var x = col*size + size/2;
+        var y = row*size + size/2;
+        f(x,y);
+    };
+
+    var row = 0;
+    drawAtCell(function(x,y) { drawCherry(ctx,x,y); },      row,0);
+    drawAtCell(function(x,y) { drawStrawberry(ctx,x,y); },  row,1);
+    drawAtCell(function(x,y) { drawOrange(ctx,x,y); },      row,2);
+    drawAtCell(function(x,y) { drawApple(ctx,x,y); },       row,3);
+    drawAtCell(function(x,y) { drawMelon(ctx,x,y); },       row,4);
+    drawAtCell(function(x,y) { drawGalaxian(ctx,x,y); },    row,5);
+    drawAtCell(function(x,y) { drawBell(ctx,x,y); },        row,6);
+    drawAtCell(function(x,y) { drawKey(ctx,x,y); },         row,7);
+    drawAtCell(function(x,y) { drawPretzel(ctx,x,y); },     row,8);
+    drawAtCell(function(x,y) { drawPear(ctx,x,y); },        row,9);
+    drawAtCell(function(x,y) { drawBanana(ctx,x,y); },      row,10);
+    drawAtCell(function(x,y) { drawCookie(ctx,x,y); },      row,11);
+
+    var drawGhostCells = function(row,color) {
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, false, false, false, color); },   row,1);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_RIGHT, false, false, false, color) },  row,2);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_RIGHT, false, false, false, color) },  row,3);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_DOWN, false, false, false, color) },  row,4);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_DOWN, false, false, false, color) },  row,5);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_LEFT, false, false, false, color) }, row,6);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_LEFT, false, false, false, color) }, row,7);
+    };
+
+    row++;
+    drawGhostCells(row, "#FF0000");
+    row++;
+    drawGhostCells(row, "#FFB8FF");
+    row++;
+    drawGhostCells(row, "#00FFFF");
+    row++;
+    drawGhostCells(row, "#FFB851");
+
+    row++;
+    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, true, "#fff"); },     row,0);
+    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_RIGHT, false, false, true, "#fff"); },  row,1);
+    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_DOWN, false, false, true, "#fff"); },   row,2);
+    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_LEFT, false, false, true, "#fff"); },   row,3);
+    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
+    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
+    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
+    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
+
+    var drawPacCells = function(row,col,dir) {
+        drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/6); }, row, col);
+        drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/3); }, row, col+1);
+    };
+    row++;
+    drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, DIR_RIGHT, 0); }, row, 0);
+    drawPacCells(row,1,DIR_UP);
+    drawPacCells(row,3,DIR_RIGHT);
+    drawPacCells(row,5,DIR_DOWN);
+    drawPacCells(row,7,DIR_LEFT);
+
+    var drawMsPacCells = function(row,col,dir) {
+        drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 0); }, row, col);
+        drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 1); }, row, col+1);
+        drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 2); }, row, col+2);
+    };
+    row++;
+    drawMsPacCells(row,0, DIR_UP);
+    drawMsPacCells(row,3, DIR_RIGHT);
+    drawMsPacCells(row,6, DIR_DOWN);
+    drawMsPacCells(row,9, DIR_LEFT);
+
+    var drawCookieCells = function(row,col,dir) {
+        drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 0, true); }, row, col);
+        drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 1, true); }, row, col+1);
+        drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 2, true); }, row, col+2);
+    };
+    row++;
+    drawCookieCells(row,0, DIR_UP);
+    drawCookieCells(row,3, DIR_RIGHT);
+    drawCookieCells(row,6, DIR_DOWN);
+    drawCookieCells(row,9, DIR_LEFT);
+};
+
+window.onload = function() {
+    var defaultScale = 5;
+    draw(defaultScale);
+    document.getElementById('scaleInput').value = defaultScale.toString();
+};
+</script>
+</body>
+</html>

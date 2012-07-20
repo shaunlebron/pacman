@@ -262,7 +262,7 @@ var drawGhostSprite = (function(){
 })();
 
 // draw pacman body
-var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShift,alpha,color) {
+var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShift,alpha,color,rot_angle) {
 
     if (mouthShift == undefined) mouthShift = 0;
     if (centerShift == undefined) centerShift = 0;
@@ -275,6 +275,9 @@ var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShi
 
     ctx.save();
     ctx.translate(x,y);
+    if (rot_angle) {
+        ctx.rotate(rot_angle);
+    }
 
     // rotate to current heading direction
     var d90 = Math.PI/2;
@@ -299,29 +302,32 @@ var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShi
     ctx.restore();
 };
 
-var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame) {
+var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
     var angle = 0;
 
     // draw body
     if (frame == 0) {
         // closed
-        drawPacmanSprite(ctx,x,y,dirEnum,0);
+        drawPacmanSprite(ctx,x,y,dirEnum,0,undefined,undefined,undefined,undefined,undefined,rot_angle);
     }
     else if (frame == 1) {
         // open
         angle = Math.atan(4/5);
-        drawPacmanSprite(ctx,x,y,dirEnum,angle);
+        drawPacmanSprite(ctx,x,y,dirEnum,angle,undefined,undefined,undefined,undefined,undefined,rot_angle);
         angle = Math.atan(4/8); // angle for drawing eye
     }
     else if (frame == 2) {
         // wide
         angle = Math.atan(6/3);
-        drawPacmanSprite(ctx,x,y,dirEnum,angle);
+        drawPacmanSprite(ctx,x,y,dirEnum,angle,undefined,undefined,undefined,undefined,undefined,rot_angle);
         angle = Math.atan(6/6); // angle for drawing eye
     }
 
     ctx.save();
     ctx.translate(x,y);
+    if (rot_angle) {
+        ctx.rotate(rot_angle);
+    }
 
     // reflect or rotate sprite according to current direction
     var d90 = Math.PI/2;
@@ -420,13 +426,13 @@ var drawCookiemanSprite = (function(){
         sy2 = Math.sin(a2)*r2;
     };
 
-    return function(ctx,x,y,dirEnum,frame,shake) {
+    return function(ctx,x,y,dirEnum,frame,shake,rot_angle) {
         var angle = 0;
 
         // draw body
         var draw = function(angle) {
             //angle = Math.PI/6*frame;
-            drawPacmanSprite(ctx,x,y,dirEnum,angle,undefined,undefined,undefined,undefined,"#47b8ff");
+            drawPacmanSprite(ctx,x,y,dirEnum,angle,undefined,undefined,undefined,undefined,"#47b8ff",rot_angle);
         };
         if (frame == 0) {
             // closed
@@ -447,6 +453,9 @@ var drawCookiemanSprite = (function(){
 
         ctx.save();
         ctx.translate(x,y);
+        if (rot_angle) {
+            ctx.rotate(rot_angle);
+        }
 
         // reflect or rotate sprite according to current direction
         var d90 = Math.PI/2;

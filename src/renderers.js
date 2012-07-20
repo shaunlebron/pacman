@@ -762,15 +762,15 @@ var switchRenderer = function(i) {
                 // spin 540 degrees
                 var maxAngle = Math.PI*5;
                 var step = (Math.PI/4) / maxAngle; // 45 degree steps
-                ctx.rotate(Math.floor(t/step)*step*maxAngle);
-                drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
+                var angle = Math.floor(t/step)*step*maxAngle;
+                drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame, angle);
             }
             else if (gameMode == GAME_COOKIE) {
                 // spin 540 degrees
                 var maxAngle = Math.PI*5;
                 var step = (Math.PI/4) / maxAngle; // 45 degree steps
-                ctx.rotate(Math.floor(t/step)*step*maxAngle);
-                drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
+                var angle = Math.floor(t/step)*step*maxAngle;
+                drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame, false, angle);
             }
         },
 

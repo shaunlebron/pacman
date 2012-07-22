@@ -175,6 +175,9 @@ var gui = (function() {
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
             addControls();
+            //var atlasCanvas = atlas.getCanvas();
+            //atlasCanvas.style.background = "#000";
+            //divContainer.appendChild(atlasCanvas);
         },
     };
 })();

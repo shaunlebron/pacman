@@ -2433,6 +2433,213 @@ var mapgen = (function(){
         return map;
     };
 })();
+//@line 1 "src/atlas.js"
+
+var atlas = (function(){
+
+    var canvas = document.createElement("canvas");
+    var ctx = canvas.getContext("2d");
+    var size = 20;
+    var cols = 12;
+    var rows = 12;
+
+    var create = function() {
+        var w = size*cols*renderScale;
+        var h = size*rows*renderScale;
+        canvas.width = w;
+        canvas.height = h;
+
+        ctx.clearRect(0,0,w,h);
+        ctx.scale(renderScale,renderScale);
+
+        var drawAtCell = function(f,row,col) {
+            var x = col*size + size/2;
+            var y = row*size + size/2;
+            f(x,y);
+        };
+
+        var row = 0;
+        drawAtCell(function(x,y) { drawCherry(ctx,x,y); },      row,0);
+        drawAtCell(function(x,y) { drawStrawberry(ctx,x,y); },  row,1);
+        drawAtCell(function(x,y) { drawOrange(ctx,x,y); },      row,2);
+        drawAtCell(function(x,y) { drawApple(ctx,x,y); },       row,3);
+        drawAtCell(function(x,y) { drawMelon(ctx,x,y); },       row,4);
+        drawAtCell(function(x,y) { drawGalaxian(ctx,x,y); },    row,5);
+        drawAtCell(function(x,y) { drawBell(ctx,x,y); },        row,6);
+        drawAtCell(function(x,y) { drawKey(ctx,x,y); },         row,7);
+        drawAtCell(function(x,y) { drawPretzel(ctx,x,y); },     row,8);
+        drawAtCell(function(x,y) { drawPear(ctx,x,y); },        row,9);
+        drawAtCell(function(x,y) { drawBanana(ctx,x,y); },      row,10);
+        drawAtCell(function(x,y) { drawCookie(ctx,x,y); },      row,11);
+
+        var drawGhostCells = function(row,color) {
+            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
+            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, false, false, false, color); },   row,1);
+            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_RIGHT, false, false, false, color) },  row,2);
+            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_RIGHT, false, false, false, color) },  row,3);
+            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_DOWN, false, false, false, color) },  row,4);
+            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_DOWN, false, false, false, color) },  row,5);
+            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_LEFT, false, false, false, color) }, row,6);
+            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_LEFT, false, false, false, color) }, row,7);
+        };
+
+        row++;
+        drawGhostCells(row, "#FF0000");
+        row++;
+        drawGhostCells(row, "#FFB8FF");
+        row++;
+        drawGhostCells(row, "#00FFFF");
+        row++;
+        drawGhostCells(row, "#FFB851");
+
+        row++;
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, true, "#fff"); },     row,0);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_RIGHT, false, false, true, "#fff"); },  row,1);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_DOWN, false, false, true, "#fff"); },   row,2);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_LEFT, false, false, true, "#fff"); },   row,3);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
+        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
+
+        var drawPacCells = function(row,col,dir) {
+            drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/6); }, row, col);
+            drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/3); }, row, col+1);
+        };
+        row++;
+        drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, DIR_RIGHT, 0); }, row, 0);
+        drawPacCells(row,1,DIR_UP);
+        drawPacCells(row,3,DIR_RIGHT);
+        drawPacCells(row,5,DIR_DOWN);
+        drawPacCells(row,7,DIR_LEFT);
+
+        var drawMsPacCells = function(row,col,dir) {
+            drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 0); }, row, col);
+            drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 1); }, row, col+1);
+            drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 2); }, row, col+2);
+        };
+        row++;
+        drawMsPacCells(row,0, DIR_UP);
+        drawMsPacCells(row,3, DIR_RIGHT);
+        drawMsPacCells(row,6, DIR_DOWN);
+        drawMsPacCells(row,9, DIR_LEFT);
+
+        var drawCookieCells = function(row,col,dir) {
+            drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 0, true); }, row, col);
+            drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 1, true); }, row, col+1);
+            drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 2, true); }, row, col+2);
+        };
+        row++;
+        drawCookieCells(row,0, DIR_UP);
+        drawCookieCells(row,3, DIR_RIGHT);
+        drawCookieCells(row,6, DIR_DOWN);
+        drawCookieCells(row,9, DIR_LEFT);
+    };
+
+    var copyCellTo = function(row, col, destCtx, x, y) {
+        var sx = col*size*renderScale;
+        var sy = row*size*renderScale;
+        var sw = renderScale*size;
+        var sh = renderScale*size;
+
+        var dx = x - size/2;
+        var dy = y - size/2;
+        var dw = size;
+        var dh = size;
+
+        destCtx.drawImage(canvas,sx,sy,sw,sh,dx,dy,dw,dh);
+    };
+
+    var copyGhostSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        var row,col;
+        if (eyes_only) {
+            row = 5;
+            col = dirEnum;
+        }
+        else if (scared) {
+            row = 5;
+            col = flash ? 6 : 4;
+            col += frame;
+        }
+        else {
+            col = dirEnum*2 + frame;
+            if (color == blinky.color) {
+                row = 1;
+            }
+            else if (color == pinky.color) {
+                row = 2;
+            }
+            else if (color == inky.color) {
+                row = 3;
+            }
+            else if (color == clyde.color) {
+                row = 4;
+            }
+            else {
+                row = 5;
+            }
+        }
+
+
+        copyCellTo(row, col, destCtx, x, y);
+    };
+
+    var copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
+        var row = 6;
+        var col;
+        if (frame == 0) {
+            col = 0;
+        }
+        else {
+           col = dirEnum*2+1+(frame-1);
+        }
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
+    var copyMsPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
+        // TODO: determine row, col
+        //copyCellTo(row,col,destCtx,x,y);
+        var row = 7;
+        var col = dirEnum*3+frame;
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
+    var copyCookiemanSprite = function(destCtx,x,y,dirEnum,frame) {
+        var row = 8;
+        var col = dirEnum*3+frame;
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
+    var copyFruitSprite = function(destCtx,x,y,name) {
+        var row = 0;
+        var col = {
+            "cherry": 0,
+            "strawberry": 1,
+            "orange": 2,
+            "apple": 3,
+            "melon": 4,
+            "galaxian": 5,
+            "bell": 6,
+            "key": 7,
+            "pretzel": 8,
+            "pear": 9,
+            "banana": 10,
+            "cookie": 11,
+        }[name];
+
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
+    return {
+        create: create,
+        getCanvas: function() { return canvas; },
+        drawGhostSprite: copyGhostSprite,
+        drawPacmanSprite: copyPacmanSprite,
+        drawMsPacmanSprite: copyMsPacmanSprite,
+        drawCookiemanSprite: copyCookiemanSprite,
+        drawFruitSprite: copyFruitSprite,
+    };
+})();
 //@line 1 "src/renderers.js"
 //////////////////////////////////////////////////////////////
 // Renderers
@@ -3059,10 +3266,6 @@ var switchRenderer = function(i) {
                 f = fruits[j];
                 if (f) {
                     drawFunc = getSpriteFuncFromFruitName(f.name);
-                    if (gameMode == GAME_COOKIE && drawFunc == drawBanana) {
-                        // replace banana with cookie
-                        drawFunc = drawCookie;
-                    }
                     if (drawFunc) {
                         bgCtx.save();
                         bgCtx.translate((map.numCols-2)*tileSize - i*16*scale, (map.numRows-1)*tileSize);
@@ -3072,6 +3275,42 @@ var switchRenderer = function(i) {
                     }
                 }
             }
+
+            // draw extra lives
+            var i;
+            bgCtx.fillStyle = pacman.color;
+
+            bgCtx.save();
+            bgCtx.translate(3*tileSize, (map.numRows-1)*tileSize);
+            bgCtx.scale(0.85, 0.85);
+            if (gameMode == GAME_PACMAN) {
+                for (i=0; i<extraLives; i++) {
+                    drawPacmanSprite(bgCtx, 0,0, DIR_LEFT, Math.PI/6);
+                    bgCtx.translate(2*tileSize,0);
+                }
+            }
+            else if (gameMode == GAME_MSPACMAN) {
+                for (i=0; i<extraLives; i++) {
+                    drawMsPacmanSprite(bgCtx, 0,0, DIR_RIGHT, 1);
+                    bgCtx.translate(2*tileSize,0);
+                }
+            }
+            else if (gameMode == GAME_COOKIE) {
+                for (i=0; i<extraLives; i++) {
+                    drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
+                    bgCtx.translate(2*tileSize,0);
+                }
+            }
+            bgCtx.restore();
+
+            // draw text
+            bgCtx.font = (tileSize-1) + "px ArcadeR";
+            bgCtx.textBaseline = "top";
+            bgCtx.fillStyle = "#FFF";
+
+            bgCtx.textAlign = "left";
+            bgCtx.fillText("1UP", 3*tileSize, 2);
+            bgCtx.fillText("HIGH SCORE", 9*tileSize, 2);
 
             endMapFrame();
         },
@@ -3096,42 +3335,13 @@ var switchRenderer = function(i) {
             ctx.textBaseline = "top";
             ctx.fillStyle = "#FFF";
 
-            ctx.textAlign = "left";
-            ctx.fillText("1UP", 3*tileSize, 0);
-            ctx.fillText("HIGH SCORE", 9*tileSize, 0);
-
             ctx.textAlign = "right";
-            ctx.fillText(score, 7*tileSize, tileSize);
-            ctx.fillText(highScore, 17*tileSize, tileSize);
+            ctx.fillText(score, 7*tileSize, tileSize+2);
+            ctx.fillText(highScore, 17*tileSize, tileSize+2);
         },
 
         // draw the extra lives indicator
         drawExtraLives: function() {
-            var i;
-            ctx.fillStyle = pacman.color;
-
-            ctx.save();
-            ctx.translate(3*tileSize, (map.numRows-1)*tileSize);
-            ctx.scale(0.85, 0.85);
-            if (gameMode == GAME_PACMAN) {
-                for (i=0; i<extraLives; i++) {
-                    drawPacmanSprite(ctx, 0,0, DIR_LEFT, Math.PI/6);
-                    ctx.translate(2*tileSize,0);
-                }
-            }
-            else if (gameMode == GAME_MSPACMAN) {
-                for (i=0; i<extraLives; i++) {
-                    drawMsPacmanSprite(ctx, 0,0, DIR_RIGHT, 1);
-                    ctx.translate(2*tileSize,0);
-                }
-            }
-            else if (gameMode == GAME_COOKIE) {
-                for (i=0; i<extraLives; i++) {
-                    drawCookiemanSprite(ctx, 0,0, DIR_RIGHT, 1, false);
-                    ctx.translate(2*tileSize,0);
-                }
-            }
-            ctx.restore();
         },
 
         // draw the current level indicator
@@ -3144,7 +3354,8 @@ var switchRenderer = function(i) {
                 return;
             var frame = Math.floor(g.frames/6)%2; // toggle frame every 6 ticks
             var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
-            drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            //drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
         },
 
         // get animation frame for player
@@ -3164,13 +3375,16 @@ var switchRenderer = function(i) {
         drawPlayer: function() {
             var frame = this.getPlayerAnimFrame();
             if (gameMode == GAME_PACMAN) {
-                drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame*Math.PI/6);
+                //drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame*Math.PI/6);
+                atlas.drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
             }
             else if (gameMode == GAME_MSPACMAN) {
-                drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
+                //drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
+                atlas.drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
             }
             else if (gameMode == GAME_COOKIE) {
-                drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame,true);
+                //drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame,true);
+                atlas.drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
             }
         },
 
@@ -3236,12 +3450,10 @@ var switchRenderer = function(i) {
         // draw fruit
         drawFruit: function() {
             if (fruit.isPresent()) {
-                var drawFunc = getSpriteFuncFromFruitName(fruit.getCurrentFruit().name);
-                if (gameMode == GAME_COOKIE && drawFunc == drawBanana) {
-                    // replace banana with cookie
-                    drawFunc = drawCookie;
-                }
-                drawFunc(ctx,fruit.pixel.x, fruit.pixel.y);
+                var name = fruit.getCurrentFruit().name;
+                var drawFunc = getSpriteFuncFromFruitName(name);
+                //drawFunc(ctx,fruit.pixel.x, fruit.pixel.y);
+                atlas.drawFruitSprite(ctx,fruit.pixel.x, fruit.pixel.y, name);
             }
             else if (fruit.isScorePresent()) {
                 ctx.font = this.pointsEarnedTextSize + "px sans-serif";
@@ -4669,6 +4881,9 @@ var gui = (function() {
             divContainer = document.getElementById('pacman');
             divContainer.appendChild(canvas);
             addControls();
+            //var atlasCanvas = atlas.getCanvas();
+            //atlasCanvas.style.background = "#000";
+            //divContainer.appendChild(atlasCanvas);
         },
     };
 })();
@@ -6003,11 +6218,6 @@ var fruit = (function(){
     // fruit type for the current level
     var currentFruit;
 
-    var cookieFruit = (function() {
-        return {
-        };
-    })();
-
     // ms. pac-man specific
     var mspacFruit = (function() {
         var fruits = [
@@ -6322,6 +6532,13 @@ var fruit = (function(){
         return getInterface().isPresent();
     };
 
+    var getCurrentFruit = function() {
+        if (gameMode == GAME_COOKIE && currentFruit.name == "banana") {
+            return { name:"cookie", points:5000 };
+        }
+        return currentFruit;
+    };
+
     return {
         save: save,
         load: load,
@@ -6335,7 +6552,7 @@ var fruit = (function(){
         getPoints: getPoints,
         onNewLevel: onNewLevel,
         getFruitHistory: function() { return fruitHistory; },
-        getCurrentFruit: function() { return currentFruit; },
+        getCurrentFruit: getCurrentFruit,
     };
 })();
 //@line 1 "src/executive.js"
@@ -6520,9 +6737,9 @@ var newGameState = (function() {
         init: function() {
             frames = 0;
             level = 0;
-            readyNewState.init();
             extraLives = 3;
             score = 0;
+            readyNewState.init();
         },
         draw: function() {
             if (!map)
@@ -6538,6 +6755,7 @@ var newGameState = (function() {
             if (frames == duration*60) {
                 extraLives--;
                 state = readyNewState;
+                renderer.drawMap();
             }
             else 
                 frames++;
@@ -6625,6 +6843,7 @@ var readyRestartState = {
         extraLives--;
         ghostReleaser.onRestartLevel();
         elroyTimer.onRestartLevel();
+        renderer.drawMap();
 
         // inherit attributes from readyState
         readyState.init.call(this);
@@ -7404,6 +7623,7 @@ mapMsPacman4.fruitPaths = {
 // Entry Point
 
 window.onload = function() {
+    atlas.create();
     gui.create();
     switchState(menuState);
     executive.init();

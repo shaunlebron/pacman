@@ -17,11 +17,6 @@ var fruit = (function(){
     // fruit type for the current level
     var currentFruit;
 
-    var cookieFruit = (function() {
-        return {
-        };
-    })();
-
     // ms. pac-man specific
     var mspacFruit = (function() {
         var fruits = [
@@ -336,6 +331,13 @@ var fruit = (function(){
         return getInterface().isPresent();
     };
 
+    var getCurrentFruit = function() {
+        if (gameMode == GAME_COOKIE && currentFruit.name == "banana") {
+            return { name:"cookie", points:5000 };
+        }
+        return currentFruit;
+    };
+
     return {
         save: save,
         load: load,
@@ -349,6 +351,6 @@ var fruit = (function(){
         getPoints: getPoints,
         onNewLevel: onNewLevel,
         getFruitHistory: function() { return fruitHistory; },
-        getCurrentFruit: function() { return currentFruit; },
+        getCurrentFruit: getCurrentFruit,
     };
 })();

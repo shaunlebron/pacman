@@ -29,6 +29,7 @@ for file in \
     Map.js \
     colors.js \
     mapgen.js \
+    atlas.js \
     renderers.js  \
     menu.js \
     sprites.js \

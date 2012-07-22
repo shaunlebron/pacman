@@ -623,10 +623,6 @@ var switchRenderer = function(i) {
                 f = fruits[j];
                 if (f) {
                     drawFunc = getSpriteFuncFromFruitName(f.name);
-                    if (gameMode == GAME_COOKIE && drawFunc == drawBanana) {
-                        // replace banana with cookie
-                        drawFunc = drawCookie;
-                    }
                     if (drawFunc) {
                         bgCtx.save();
                         bgCtx.translate((map.numCols-2)*tileSize - i*16*scale, (map.numRows-1)*tileSize);
@@ -636,6 +632,42 @@ var switchRenderer = function(i) {
                     }
                 }
             }
+
+            // draw extra lives
+            var i;
+            bgCtx.fillStyle = pacman.color;
+
+            bgCtx.save();
+            bgCtx.translate(3*tileSize, (map.numRows-1)*tileSize);
+            bgCtx.scale(0.85, 0.85);
+            if (gameMode == GAME_PACMAN) {
+                for (i=0; i<extraLives; i++) {
+                    drawPacmanSprite(bgCtx, 0,0, DIR_LEFT, Math.PI/6);
+                    bgCtx.translate(2*tileSize,0);
+                }
+            }
+            else if (gameMode == GAME_MSPACMAN) {
+                for (i=0; i<extraLives; i++) {
+                    drawMsPacmanSprite(bgCtx, 0,0, DIR_RIGHT, 1);
+                    bgCtx.translate(2*tileSize,0);
+                }
+            }
+            else if (gameMode == GAME_COOKIE) {
+                for (i=0; i<extraLives; i++) {
+                    drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
+                    bgCtx.translate(2*tileSize,0);
+                }
+            }
+            bgCtx.restore();
+
+            // draw text
+            bgCtx.font = (tileSize-1) + "px ArcadeR";
+            bgCtx.textBaseline = "top";
+            bgCtx.fillStyle = "#FFF";
+
+            bgCtx.textAlign = "left";
+            bgCtx.fillText("1UP", 3*tileSize, 2);
+            bgCtx.fillText("HIGH SCORE", 9*tileSize, 2);
 
             endMapFrame();
         },
@@ -660,42 +692,13 @@ var switchRenderer = function(i) {
             ctx.textBaseline = "top";
             ctx.fillStyle = "#FFF";
 
-            ctx.textAlign = "left";
-            ctx.fillText("1UP", 3*tileSize, 0);
-            ctx.fillText("HIGH SCORE", 9*tileSize, 0);
-
             ctx.textAlign = "right";
-            ctx.fillText(score, 7*tileSize, tileSize);
-            ctx.fillText(highScore, 17*tileSize, tileSize);
+            ctx.fillText(score, 7*tileSize, tileSize+2);
+            ctx.fillText(highScore, 17*tileSize, tileSize+2);
         },
 
         // draw the extra lives indicator
         drawExtraLives: function() {
-            var i;
-            ctx.fillStyle = pacman.color;
-
-            ctx.save();
-            ctx.translate(3*tileSize, (map.numRows-1)*tileSize);
-            ctx.scale(0.85, 0.85);
-            if (gameMode == GAME_PACMAN) {
-                for (i=0; i<extraLives; i++) {
-                    drawPacmanSprite(ctx, 0,0, DIR_LEFT, Math.PI/6);
-                    ctx.translate(2*tileSize,0);
-                }
-            }
-            else if (gameMode == GAME_MSPACMAN) {
-                for (i=0; i<extraLives; i++) {
-                    drawMsPacmanSprite(ctx, 0,0, DIR_RIGHT, 1);
-                    ctx.translate(2*tileSize,0);
-                }
-            }
-            else if (gameMode == GAME_COOKIE) {
-                for (i=0; i<extraLives; i++) {
-                    drawCookiemanSprite(ctx, 0,0, DIR_RIGHT, 1, false);
-                    ctx.translate(2*tileSize,0);
-                }
-            }
-            ctx.restore();
         },
 
         // draw the current level indicator
@@ -708,7 +711,8 @@ var switchRenderer = function(i) {
                 return;
             var frame = Math.floor(g.frames/6)%2; // toggle frame every 6 ticks
             var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
-            drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            //drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
         },
 
         // get animation frame for player
@@ -728,13 +732,16 @@ var switchRenderer = function(i) {
         drawPlayer: function() {
             var frame = this.getPlayerAnimFrame();
             if (gameMode == GAME_PACMAN) {
-                drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame*Math.PI/6);
+                //drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame*Math.PI/6);
+                atlas.drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
             }
             else if (gameMode == GAME_MSPACMAN) {
-                drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
+                //drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
+                atlas.drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
             }
             else if (gameMode == GAME_COOKIE) {
-                drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame,true);
+                //drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame,true);
+                atlas.drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
             }
         },
 
@@ -800,12 +807,10 @@ var switchRenderer = function(i) {
         // draw fruit
         drawFruit: function() {
             if (fruit.isPresent()) {
-                var drawFunc = getSpriteFuncFromFruitName(fruit.getCurrentFruit().name);
-                if (gameMode == GAME_COOKIE && drawFunc == drawBanana) {
-                    // replace banana with cookie
-                    drawFunc = drawCookie;
-                }
-                drawFunc(ctx,fruit.pixel.x, fruit.pixel.y);
+                var name = fruit.getCurrentFruit().name;
+                var drawFunc = getSpriteFuncFromFruitName(name);
+                //drawFunc(ctx,fruit.pixel.x, fruit.pixel.y);
+                atlas.drawFruitSprite(ctx,fruit.pixel.x, fruit.pixel.y, name);
             }
             else if (fruit.isScorePresent()) {
                 ctx.font = this.pointsEarnedTextSize + "px sans-serif";

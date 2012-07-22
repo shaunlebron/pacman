@@ -92,9 +92,9 @@ var newGameState = (function() {
         init: function() {
             frames = 0;
             level = 0;
-            readyNewState.init();
             extraLives = 3;
             score = 0;
+            readyNewState.init();
         },
         draw: function() {
             if (!map)
@@ -110,6 +110,7 @@ var newGameState = (function() {
             if (frames == duration*60) {
                 extraLives--;
                 state = readyNewState;
+                renderer.drawMap();
             }
             else 
                 frames++;
@@ -197,6 +198,7 @@ var readyRestartState = {
         extraLives--;
         ghostReleaser.onRestartLevel();
         elroyTimer.onRestartLevel();
+        renderer.drawMap();
 
         // inherit attributes from readyState
         readyState.init.call(this);

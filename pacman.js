@@ -102,7 +102,10 @@ var saveGame = function(t) {
 
 var loadGame = function(t) {
     level = savedLevel[t];
-    extraLives = savedExtraLives[t];
+    if (extraLives != savedExtraLives[t]) {
+        extraLives = savedExtraLives[t];
+        renderer.drawMap();
+    }
     highScore = savedHighScore[t];
     score = savedScore[t];
     state = savedState[t];
@@ -111,8 +114,10 @@ var loadGame = function(t) {
 // TODO: have a high score for each game type
 
 var addScore = function(p) {
-    if (score < 10000 && score+p >= 10000)
+    if (score < 10000 && score+p >= 10000) {
         extraLives++;
+        renderer.drawMap();
+    }
     score += p;
     if (score > highScore)
         highScore = score;
@@ -2657,6 +2662,11 @@ var renderScale;
 var screenWidth = 36*tileSize;
 var screenHeight = 44*tileSize;
 
+var absScreenLeft;
+var absScreenTop;
+var absScreenWidth;
+var absScreenHeight;
+
 var mapWidth = 28*tileSize;
 var mapHeight = 36*tileSize;
 var mapLeft = 4*tileSize;
@@ -2671,7 +2681,7 @@ var switchRenderer = function(i) {
     renderer.drawMap();
 };
 
-(function(){
+var initRenderer = function(){
 
     var mapCanvas;
     var ctx, bgCtx;
@@ -2696,10 +2706,55 @@ var switchRenderer = function(i) {
         return c;
     };
 
+    // thanks to zachstronaut from https://gist.github.com/1184900
+    function fullscreenify(canvas) {
+        var style = canvas.getAttribute('style') || '';
+        
+        window.addEventListener('resize', function () {resize(canvas);}, false);
+
+        resize(canvas);
+
+        function resize(canvas) {
+            var scale = {x: 1, y: 1};
+            scale.x = (window.innerWidth - 10) / canvas.width;
+            scale.y = (window.innerHeight - 10) / canvas.height;
+            
+            if (scale.x < 1 || scale.y < 1) {
+                scale = '1, 1';
+            } else if (scale.x < scale.y) {
+                scale = scale.x + ', ' + scale.x;
+            } else {
+                scale = scale.y + ', ' + scale.y;
+            }
+            
+            canvas.setAttribute('style', style + ' ' + '-ms-transform-origin: center top; -webkit-transform-origin: center top; -moz-transform-origin: center top; -o-transform-origin: center top; transform-origin: center top; -ms-transform: scale(' + scale + '); -webkit-transform: scale3d(' + scale + ', 1); -moz-transform: scale(' + scale + '); -o-transform: scale(' + scale + '); transform: scale(' + scale + ');');
+        }
+    }
+
+    function centerCanvas(canvas) {
+        window.addEventListener('resize', function () {center(canvas);}, false);
+
+        center(canvas);
+
+        function center(canvas) {
+            var x = Math.max(0,(window.innerWidth-10)/2 - canvas.width/2);
+            var y = 0;
+            canvas.style.left = x;
+            canvas.style.top = y;
+        }
+    }
+
     // create foreground and background canvases
-    canvas = makeCanvas(screenWidth, screenHeight);
-    mapCanvas = makeCanvas(mapWidth, mapHeight);
+    canvas = document.getElementById('canvas');
+    canvas.style.position = "absolute";
+    canvas.width = screenWidth*scale;
+    canvas.height = screenHeight*scale;
     ctx = canvas.getContext("2d");
+    ctx.scale(scale,scale);
+    fullscreenify(canvas);
+    centerCanvas(canvas);
+
+    mapCanvas = makeCanvas(mapWidth, mapHeight);
     bgCtx = mapCanvas.getContext("2d");
 
     var beginMapFrame = function() {
@@ -3475,7 +3530,7 @@ var switchRenderer = function(i) {
     ];
     renderer = renderer_list[1];
 
-})();
+};
 //@line 1 "src/menu.js"
 menu = (function() {
 
@@ -4878,9 +4933,9 @@ var gui = (function() {
         create: function() {
 
             // add canvas and controls to our div
-            divContainer = document.getElementById('pacman');
-            divContainer.appendChild(canvas);
-            addControls();
+            //divContainer = document.getElementById('pacman');
+            //divContainer.appendChild(canvas);
+            //addControls();
             //var atlasCanvas = atlas.getCanvas();
             //atlasCanvas.style.background = "#000";
             //divContainer.appendChild(atlasCanvas);
@@ -7623,6 +7678,7 @@ mapMsPacman4.fruitPaths = {
 // Entry Point
 
 window.onload = function() {
+    initRenderer();
     atlas.create();
     gui.create();
     switchState(menuState);

@@ -172,9 +172,9 @@ var gui = (function() {
         create: function() {
 
             // add canvas and controls to our div
-            divContainer = document.getElementById('pacman');
-            divContainer.appendChild(canvas);
-            addControls();
+            //divContainer = document.getElementById('pacman');
+            //divContainer.appendChild(canvas);
+            //addControls();
             //var atlasCanvas = atlas.getCanvas();
             //atlasCanvas.style.background = "#000";
             //divContainer.appendChild(atlasCanvas);

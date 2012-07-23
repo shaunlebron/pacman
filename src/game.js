@@ -31,7 +31,10 @@ var saveGame = function(t) {
 
 var loadGame = function(t) {
     level = savedLevel[t];
-    extraLives = savedExtraLives[t];
+    if (extraLives != savedExtraLives[t]) {
+        extraLives = savedExtraLives[t];
+        renderer.drawMap();
+    }
     highScore = savedHighScore[t];
     score = savedScore[t];
     state = savedState[t];
@@ -40,8 +43,10 @@ var loadGame = function(t) {
 // TODO: have a high score for each game type
 
 var addScore = function(p) {
-    if (score < 10000 && score+p >= 10000)
+    if (score < 10000 && score+p >= 10000) {
         extraLives++;
+        renderer.drawMap();
+    }
     score += p;
     if (score > highScore)
         highScore = score;

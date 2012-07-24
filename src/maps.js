@@ -116,14 +116,15 @@ mapPacman.constrainGhostTurns = function(tile,openTiles) {
 var setNextCookieMap = function() {
     // change map every other level
     var colors = [
-        "#12bc76", "#b4e671", // green
-        "#86669c", "#f2c1db", // purple
-        "#939473", "#fdfdf4", // grey
-        "#2067c1", "#63e0b6", // blue
-        "#ed0a04", "#e8b4cd", // red
+        "#359c9c", "#80d8fc", // turqoise
         "#c2b853", "#e6f1e7", // yellow
+        "#86669c", "#f2c1db", // purple
+        "#ed0a04", "#e8b4cd", // red
+        "#2067c1", "#63e0b6", // blue
         "#c55994", "#fd61c3", // pink
+        "#12bc76", "#b4e671", // green
         "#5036d9", "#618dd4", // violet
+        "#939473", "#fdfdf4", // grey
     ];
     if (level % 2 == 1) {
         map = mapgen();

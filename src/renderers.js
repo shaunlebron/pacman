@@ -14,11 +14,6 @@ var renderScale;
 var screenWidth = 36*tileSize;
 var screenHeight = 44*tileSize;
 
-var absScreenLeft;
-var absScreenTop;
-var absScreenWidth;
-var absScreenHeight;
-
 var mapWidth = 28*tileSize;
 var mapHeight = 36*tileSize;
 var mapLeft = 4*tileSize;
@@ -44,70 +39,68 @@ var initRenderer = function(){
     // (temporary global version of scale just to get things quickly working)
     renderScale = scale; 
 
-    // creates a canvas
-    var makeCanvas = function(w,h) {
-        var c = document.createElement("canvas");
-
-        // use conventional pacman map size
-        c.width = w * scale;
-        c.height = h * scale;
-
-        // transform to scale
-        var ctx = c.getContext("2d");
+    // rescale the canvases
+    var resetCanvasSizes = function() {
+        canvas.width = screenWidth * scale;
+        canvas.height = screenHeight * scale;
+        ctx.restore();
+        ctx.save();
         ctx.scale(scale,scale);
-        return c;
+
+        mapCanvas.width = mapWidth * scale;
+        mapCanvas.height = mapHeight * scale;
+        bgCtx.restore();
+        bgCtx.save();
+        bgCtx.scale(scale,scale);
     };
 
-    // thanks to zachstronaut from https://gist.github.com/1184900
-    function fullscreenify(canvas) {
-        var style = canvas.getAttribute('style') || '';
-        
-        window.addEventListener('resize', function () {resize(canvas);}, false);
+    // get the target scale that will cause the canvas to fit the window
+    var getTargetScale = function() {
+        var sx = (window.innerWidth - 10) / screenWidth;
+        var sy = (window.innerHeight - 10) / screenHeight;
+        return Math.min(sx,sy);
+    };
 
-        resize(canvas);
-
-        function resize(canvas) {
-            var scale = {x: 1, y: 1};
-            scale.x = (window.innerWidth - 10) / canvas.width;
-            scale.y = (window.innerHeight - 10) / canvas.height;
-            
-            if (scale.x < 1 || scale.y < 1) {
-                scale = '1, 1';
-            } else if (scale.x < scale.y) {
-                scale = scale.x + ', ' + scale.x;
-            } else {
-                scale = scale.y + ', ' + scale.y;
-            }
-            
-            canvas.setAttribute('style', style + ' ' + '-ms-transform-origin: center top; -webkit-transform-origin: center top; -moz-transform-origin: center top; -o-transform-origin: center top; transform-origin: center top; -ms-transform: scale(' + scale + '); -webkit-transform: scale3d(' + scale + ', 1); -moz-transform: scale(' + scale + '); -o-transform: scale(' + scale + '); transform: scale(' + scale + ');');
+    // maximize the scale to fit the window
+    var fullscreen = function() {
+        // NOTE: css-scaling alternative at https://gist.github.com/1184900
+        renderScale = scale = getTargetScale();
+        resetCanvasSizes();
+        atlas.create();
+        if (renderer) {
+            renderer.drawMap();
         }
-    }
+    };
 
-    function centerCanvas(canvas) {
-        window.addEventListener('resize', function () {center(canvas);}, false);
-
-        center(canvas);
-
-        function center(canvas) {
-            var x = Math.max(0,(window.innerWidth-10)/2 - canvas.width/2);
-            var y = 0;
-            canvas.style.left = x;
-            canvas.style.top = y;
-        }
-    }
+    // center the canvas in the window
+    var center = function() {
+        var w = screenWidth*getTargetScale();
+        var x = Math.max(0,(window.innerWidth-10)/2 - w/2);
+        var y = 0;
+        canvas.style.left = x;
+        canvas.style.top = y;
+        canvas.style.position = "absolute";
+    };
 
     // create foreground and background canvases
     canvas = document.getElementById('canvas');
-    canvas.style.position = "absolute";
-    canvas.width = screenWidth*scale;
-    canvas.height = screenHeight*scale;
+    mapCanvas = document.createElement('canvas');
     ctx = canvas.getContext("2d");
-    ctx.scale(scale,scale);
-    fullscreenify(canvas);
-    centerCanvas(canvas);
-
-    mapCanvas = makeCanvas(mapWidth, mapHeight);
     bgCtx = mapCanvas.getContext("2d");
+
+    // initialize placement and size
+    fullscreen();
+    center();
+
+    // adapt placement and size to window resizes
+    var resizeTimeout;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(fullscreen, 100);
+    }, false);
+    window.addEventListener('resize', function () {center(canvas);}, false);
+
+    //////////////////////
 
     var beginMapFrame = function() {
         bgCtx.fillStyle = "#000";
@@ -881,5 +874,4 @@ var initRenderer = function(){
         new ArcadeRenderer(),
     ];
     renderer = renderer_list[1];
-
 };

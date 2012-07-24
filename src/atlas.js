@@ -13,6 +13,8 @@ var atlas = (function(){
         canvas.width = w;
         canvas.height = h;
 
+        ctx.restore();
+        ctx.save();
         ctx.clearRect(0,0,w,h);
         ctx.scale(renderScale,renderScale);
 

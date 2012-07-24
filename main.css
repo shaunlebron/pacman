@@ -6,34 +6,3 @@ body {
     font-family: 'ArcadeR';
     src: url('font/Arcade-Rounded.otf');
 }
-#pacman-controls {
-    margin:0;
-    float:left;
-    height:100%;
-}
-#pacman {
-}
-form {
-    margin: 3px;
-}
-legend {
-}
-fieldset {
-    margin-top: 3px;
-    border:1px solid #CCC;
-}
-label {
-    font-size:0.9em;
-    color: #333;
-}
-#links {
-}
-#date {
-    position:absolute;
-    right:0;
-    bottom:0;
-    font-size:0.8em;
-    color:#999;
-    margin:5px;
-    text-align:right;
-}

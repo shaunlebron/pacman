@@ -11,13 +11,15 @@ var renderer_list;
 var renderer;
 
 var renderScale;
-var screenWidth = 36*tileSize;
-var screenHeight = 44*tileSize;
 
-var mapWidth = 28*tileSize;
-var mapHeight = 36*tileSize;
-var mapLeft = 4*tileSize;
-var mapTop = 4*tileSize;
+var mapMargin = 4*tileSize; // margin between the map and the screen
+var mapPad = tileSize/8; // padding between the map and its clipping
+
+var mapWidth = 28*tileSize+mapPad*2;
+var mapHeight = 36*tileSize+mapPad*2;
+
+var screenWidth = mapWidth+mapMargin*2;
+var screenHeight = mapHeight+mapMargin*2;
 
 // all rendering will be shown on this canvas
 var canvas;
@@ -112,9 +114,11 @@ var initRenderer = function(){
     var beginMapFrame = function() {
         bgCtx.fillStyle = "#000";
         bgCtx.fillRect(0,0,mapWidth,mapHeight);
+        bgCtx.translate(mapPad, mapPad);
     };
 
     var endMapFrame = function() {
+        bgCtx.translate(-mapPad, -mapPad);
     };
 
     //////////////////////////////////////////////////////////////
@@ -142,7 +146,7 @@ var initRenderer = function(){
         beginMapClip: function() {
             ctx.save();
             ctx.beginPath();
-            ctx.rect(0,0,mapWidth,mapHeight);
+            ctx.rect(-mapPad,-mapPad,mapWidth,mapHeight);
             ctx.clip();
         },
 
@@ -155,7 +159,7 @@ var initRenderer = function(){
             ctx.save();
             ctx.fillStyle = "#000";
             ctx.fillRect(0,0,screenWidth,screenHeight);
-            ctx.translate(mapLeft, mapTop);
+            ctx.translate(mapMargin+mapPad, mapMargin+mapPad);
         },
 
         endFrame: function() {
@@ -169,7 +173,7 @@ var initRenderer = function(){
         // copy background canvas to the foreground canvas
         blitMap: function() {
             ctx.scale(1/scale,1/scale);
-            ctx.drawImage(mapCanvas,0,0);
+            ctx.drawImage(mapCanvas,-mapPad*scale,-mapPad*scale);
             ctx.scale(scale,scale);
         },
 
@@ -348,6 +352,7 @@ var initRenderer = function(){
 
         // erase pellet from background
         erasePellet: function(x,y) {
+            bgCtx.translate(mapPad,mapPad);
             bgCtx.fillStyle = this.floorColor;
             this.drawNoGroutTile(bgCtx,x,y,tileSize);
 
@@ -357,7 +362,9 @@ var initRenderer = function(){
             if (map.getTile(x,y+1)==' ') this.drawNoGroutTile(bgCtx,x,y+1,tileSize);
             if (map.getTile(x,y-1)==' ') this.drawNoGroutTile(bgCtx,x,y-1,tileSize);
 
-            // fill in adjacent wall tiles?
+            // TODO: fill in adjacent wall tiles?
+
+            bgCtx.translate(-mapPad,-mapPad);
         },
 
         // draw a center screen message (e.g. "start", "ready", "game over")
@@ -596,7 +603,7 @@ var initRenderer = function(){
         // copy background canvas to the foreground canvas
         blitMap: function() {
             ctx.scale(1/scale,1/scale);
-            ctx.drawImage(mapCanvas,-1,-1); // offset map to compenstate for misalignment
+            ctx.drawImage(mapCanvas,-1-mapPad*scale,-1-mapPad*scale); // offset map to compenstate for misalignment
             ctx.scale(scale,scale);
         },
 
@@ -658,7 +665,7 @@ var initRenderer = function(){
                     this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
                 }
                 */
-                this.refreshPellet(x,y);
+                this.refreshPellet(x,y,true);
             }
 
             // draw level fruit
@@ -720,13 +727,16 @@ var initRenderer = function(){
             bgCtx.fillStyle = "#FFF";
 
             bgCtx.textAlign = "left";
-            bgCtx.fillText("1UP", 3*tileSize, 2);
-            bgCtx.fillText("HIGH SCORE", 9*tileSize, 2);
+            bgCtx.fillText("1UP", 3*tileSize, 0);
+            bgCtx.fillText("HIGH SCORE", 9*tileSize, 0);
 
             endMapFrame();
         },
 
-        refreshPellet: function(x,y) {
+        refreshPellet: function(x,y,isTranslated) {
+            if (!isTranslated) {
+                bgCtx.translate(mapPad,mapPad);
+            }
             var i = map.posToIndex(x,y);
             var tile = map.currentTiles[i];
             if (tile == ' ') {
@@ -738,6 +748,9 @@ var initRenderer = function(){
                 this.drawCenterTileSq(bgCtx,x,y,this.pelletSize);
                 bgCtx.translate(-0.5, -0.5);
             }
+            if (!isTranslated) {
+                bgCtx.translate(-mapPad,-mapPad);
+            }
         },
 
         // draw the current score and high score
@@ -747,8 +760,8 @@ var initRenderer = function(){
             ctx.fillStyle = "#FFF";
 
             ctx.textAlign = "right";
-            ctx.fillText(score, 7*tileSize, tileSize+2);
-            ctx.fillText(highScore, 17*tileSize, tileSize+2);
+            ctx.fillText(score, 7*tileSize, tileSize);
+            ctx.fillText(highScore, 17*tileSize, tileSize);
         },
 
         // draw the extra lives indicator

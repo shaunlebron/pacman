@@ -61,8 +61,8 @@ menu = (function() {
         mouseY /= renderScale;
 
         // offset
-        mouseX -= mapLeft;
-        mouseY -= mapTop;
+        mouseX -= mapMargin;
+        mouseY -= mapMargin;
 
         return { x: mouseX, y: mouseY };
     };

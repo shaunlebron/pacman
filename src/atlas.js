@@ -1,19 +1,30 @@
 
 var atlas = (function(){
 
-    var canvas = document.createElement("canvas");
-    var ctx = canvas.getContext("2d");
+    var canvas,ctx;
     var size = 20;
-    var cols = 12;
-    var rows = 12;
+    var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
+    var rows = 13; // one more for good measure like cols
+
+    var creates = 0;
 
     var create = function() {
+        canvas = document.getElementById('atlas');
+        ctx = canvas.getContext("2d");
+        canvas.style.left = 0;
+        canvas.style.top = 0;
+        canvas.style.position = "absolute";
+
         var w = size*cols*renderScale;
         var h = size*rows*renderScale;
         canvas.width = w;
         canvas.height = h;
 
-        ctx.restore();
+        if (creates > 0) {
+            ctx.restore();
+        }
+        creates++;
+
         ctx.save();
         ctx.clearRect(0,0,w,h);
         ctx.scale(renderScale,renderScale);
@@ -102,7 +113,7 @@ var atlas = (function(){
         drawCookieCells(row,9, DIR_LEFT);
     };
 
-    var copyCellTo = function(row, col, destCtx, x, y) {
+    var copyCellTo = function(row, col, destCtx, x, y,display) {
         var sx = col*size*renderScale;
         var sy = row*size*renderScale;
         var sw = renderScale*size;
@@ -112,6 +123,10 @@ var atlas = (function(){
         var dy = y - size/2;
         var dw = size;
         var dh = size;
+
+        if (display) {
+            console.log(sx,sy,sw,sh,dw,dy,dw,dh);
+        }
 
         destCtx.drawImage(canvas,sx,sy,sw,sh,dx,dy,dw,dh);
     };

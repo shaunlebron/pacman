@@ -39,19 +39,27 @@ var initRenderer = function(){
     // (temporary global version of scale just to get things quickly working)
     renderScale = scale; 
 
+    var resets = 0;
+
     // rescale the canvases
     var resetCanvasSizes = function() {
         canvas.width = screenWidth * scale;
         canvas.height = screenHeight * scale;
-        ctx.restore();
+        if (resets > 0) {
+            ctx.restore();
+        }
         ctx.save();
         ctx.scale(scale,scale);
 
         mapCanvas.width = mapWidth * scale;
         mapCanvas.height = mapHeight * scale;
-        bgCtx.restore();
+        if (resets > 0) {
+            bgCtx.restore();
+        }
         bgCtx.save();
         bgCtx.scale(scale,scale);
+
+        resets++;
     };
 
     // get the target scale that will cause the canvas to fit the window
@@ -70,6 +78,7 @@ var initRenderer = function(){
         if (renderer) {
             renderer.drawMap();
         }
+        center();
     };
 
     // center the canvas in the window
@@ -90,7 +99,6 @@ var initRenderer = function(){
 
     // initialize placement and size
     fullscreen();
-    center();
 
     // adapt placement and size to window resizes
     var resizeTimeout;
@@ -98,7 +106,6 @@ var initRenderer = function(){
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(fullscreen, 100);
     }, false);
-    window.addEventListener('resize', function () {center(canvas);}, false);
 
     //////////////////////
 
@@ -594,6 +601,10 @@ var initRenderer = function(){
         },
 
         drawMap: function() {
+
+            if (!map) {
+                return;
+            }
 
             // fill background
             beginMapFrame();

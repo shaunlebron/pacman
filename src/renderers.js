@@ -643,11 +643,11 @@ var initRenderer = function(){
             i=0;
             for (y=0; y<map.numRows; y++)
             for (x=0; x<map.numCols; x++) {
-                tile = map.currentTiles[i++];
-                if (tile == '-') {
-                    bgCtx.fillStyle = "#FFF";
-                    bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize,2);
+                if (map.currentTiles[i] == '-' && map.currentTiles[i+1] == '-') {
+                    bgCtx.fillStyle = "#ffb8de";
+                    bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize*2,2);
                 }
+                i++;
             }
 
             if (this.flashLevel) {

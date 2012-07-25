@@ -146,7 +146,11 @@ var initRenderer = function(){
         beginMapClip: function() {
             ctx.save();
             ctx.beginPath();
-            ctx.rect(-mapPad,-mapPad,mapWidth,mapHeight);
+
+            // subtract one from size due to shift done for sprite realignment?
+            // (this fixes a bug that leaves unerased artifacts after actors use right-side tunnel
+            ctx.rect(-mapPad,-mapPad,mapWidth-1,mapHeight-1); 
+
             ctx.clip();
         },
 
@@ -158,9 +162,12 @@ var initRenderer = function(){
             this.setOverlayColor(undefined);
             ctx.save();
 
-            // clear
+            // clear margin area
             ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,screenWidth,screenHeight);
+            ctx.fillRect(0,0,screenWidth,mapMargin);
+            ctx.fillRect(0,mapMargin,mapMargin,screenHeight-2*mapMargin);
+            ctx.fillRect(screenWidth-mapMargin-1,mapMargin,mapMargin+1,screenHeight-2*mapMargin);
+            ctx.fillRect(0,screenHeight-1-mapMargin,screenWidth,mapMargin+1);
 
             // draw fps
             ctx.font = (tileSize-2) + "px ArcadeR";

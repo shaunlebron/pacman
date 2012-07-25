@@ -1,4 +1,18 @@
+<html>
+
 <head>
+
+    <style>
+        body {
+            margin:0;
+            background: #000;
+        }
+        @font-face {
+            font-family: 'ArcadeR';
+            src: url('font/Arcade-Rounded.otf');
+        }
+    </style>
+
 
 <script src="src/input.js"></script>
 <script src="src/game.js"></script>
@@ -11,7 +25,6 @@
 <script src="src/renderers.js"></script>
 <script src="src/menu.js"></script>
 <script src="src/sprites.js"></script>
-<script src="src/gui.js"></script>
 <script src="src/Actor.js"></script>
 <script src="src/Ghost.js"></script>
 <script src="src/Player.js"></script>
@@ -27,10 +40,13 @@
 <script src="src/maps.js"></script>
 <script src="src/main.js"></script>
 
-<link rel="stylesheet" href="main.css"/>
+
 </head>
+
 <body>
-<div style='font-family: ArcadeR'> </div>
-<canvas id='canvas'></canvas>
-<canvas id='atlas' style="visibility:hidden"></canvas>
+    <div style='font-family: ArcadeR'> </div>
+    <canvas id='canvas'></canvas>
+    <canvas id='atlas' style="visibility:hidden"></canvas>
 </body>
+
+</html>

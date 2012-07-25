@@ -33,7 +33,6 @@ for file in \
     renderers.js  \
     menu.js \
     sprites.js \
-    gui.js \
     Actor.js \
     Ghost.js \
     Player.js \

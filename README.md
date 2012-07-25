@@ -1,13 +1,7 @@
 Pac-Man
 =======
 
-A historical tribute and accurate remake of the original Pac-Man arcade game.  Includes the remakes of Pac-Man and Ms. Pac-Man.
-
-<img src="http://shaunew.github.com/Pac-Man/shots/preview.png" width="100%"/>
-
-A new game mode 'Cookie-Man' generates a random maze for every level, allowing for extended play.
-
-<img src="http://shaunew.github.com/Pac-Man/shots/preview2.png" width="100%"/>
+A historical tribute and accurate remake of the original Pac-Man arcade game.
 
 Play
 ----
@@ -18,8 +12,8 @@ Features
 
 - same coordinate space, movement physics, ghost behavior, timers, and update rate as the original arcade game
 - extra sandbox controls for visualizing ghost behavior, slowing down the game, and other adjustments
-- Pac-Man, Ms. Pac-Man game modes
-- new Cookie-Man mode, with random map generator
+- original Pac-Man and Ms. Pac-Man game modes
+- new Cookie-Man game mode with procedural map generator
 - hold **shift** in-game to rewind/replay the game, a la Braid.
 
 Navigating the Repository

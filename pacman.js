@@ -2822,8 +2822,19 @@ var initRenderer = function(){
         beginFrame: function() {
             this.setOverlayColor(undefined);
             ctx.save();
+
+            // clear
             ctx.fillStyle = "#000";
             ctx.fillRect(0,0,screenWidth,screenHeight);
+
+            // draw fps
+            ctx.font = (tileSize-2) + "px ArcadeR";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#777";
+            ctx.fillText(executive.getFps().toFixed(2)+" fps", 2, 2);
+
+            // translate to map space
             ctx.translate(mapMargin+mapPad, mapMargin+mapPad);
         },
 
@@ -3270,6 +3281,7 @@ var initRenderer = function(){
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(mapCanvas,-1-mapPad*scale,-1-mapPad*scale); // offset map to compenstate for misalignment
             ctx.scale(scale,scale);
+            //ctx.clearRect(-mapPad,-mapPad,mapWidth,mapHeight);
         },
 
         drawMap: function() {
@@ -3641,7 +3653,7 @@ menu = (function() {
         draw: function(ctx) {
             // clear screen
             ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,screenWidth,screenHeight);
+            ctx.fillRect(0,0,mapWidth,mapHeight);
 
             // set text size and alignment
             ctx.font = (tileSize-1) + "px ArcadeR";
@@ -6685,8 +6697,42 @@ var executive = (function(){
     }());
     /**********/
     var reqFrame;
+    var fps;
+    var updateFps = (function(){
+        var length = 60;
+        var times = [];
+        var startIndex = 0;
+        var endIndex = -1;
+        var filled = false;
+
+        return function(now) {
+            if (filled) {
+                startIndex = (startIndex+1) % length;
+            }
+            endIndex = (endIndex+1) % length;
+            if (endIndex == length-1) {
+                filled = true;
+            }
+
+            times[endIndex] = now;
+
+            var seconds = (now - times[startIndex]) / 1000;
+            var frames = endIndex - startIndex;
+            if (frames < 0) {
+                frames += length;
+            }
+            fps = frames / seconds;
+            
+            if (state == finishState) {
+                //console.log(fps);
+            }
+        };
+    })();
+        
 
     var tick = function(now) {
+        updateFps(now);
+
         // call update for every frame period that has elapsed
         var maxFrameSkip = 5;
         var frames = 0;
@@ -6728,6 +6774,7 @@ var executive = (function(){
             cancelAnimationFrame(reqFrame);
             running = false;
         },
+        getFps: function() { return fps; },
     };
 })();
 //@line 1 "src/states.js"

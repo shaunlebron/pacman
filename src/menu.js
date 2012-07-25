@@ -74,7 +74,7 @@ menu = (function() {
         draw: function(ctx) {
             // clear screen
             ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,screenWidth,screenHeight);
+            ctx.fillRect(0,0,mapWidth,mapHeight);
 
             // set text size and alignment
             ctx.font = (tileSize-1) + "px ArcadeR";

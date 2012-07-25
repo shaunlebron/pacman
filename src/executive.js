@@ -39,8 +39,42 @@ var executive = (function(){
     }());
     /**********/
     var reqFrame;
+    var fps;
+    var updateFps = (function(){
+        var length = 60;
+        var times = [];
+        var startIndex = 0;
+        var endIndex = -1;
+        var filled = false;
+
+        return function(now) {
+            if (filled) {
+                startIndex = (startIndex+1) % length;
+            }
+            endIndex = (endIndex+1) % length;
+            if (endIndex == length-1) {
+                filled = true;
+            }
+
+            times[endIndex] = now;
+
+            var seconds = (now - times[startIndex]) / 1000;
+            var frames = endIndex - startIndex;
+            if (frames < 0) {
+                frames += length;
+            }
+            fps = frames / seconds;
+            
+            if (state == finishState) {
+                //console.log(fps);
+            }
+        };
+    })();
+        
 
     var tick = function(now) {
+        updateFps(now);
+
         // call update for every frame period that has elapsed
         var maxFrameSkip = 5;
         var frames = 0;
@@ -82,5 +116,6 @@ var executive = (function(){
             cancelAnimationFrame(reqFrame);
             running = false;
         },
+        getFps: function() { return fps; },
     };
 })();

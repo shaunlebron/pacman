@@ -11,7 +11,9 @@ Controls
 --------
 
 - **arrows**: steer pacman
-- **shift**: rewind (a la Braid)
+- **shift**: hold down to rewind (a la Braid)
+- **ctrl**: hold down to slow down the game to 0.5x
+- **alt**: hold down to slow down the game to 0.25x
 - **spacebar**: pause/unpause the game
 - **o**: toggle pacman turbo mode
 - **p**: toggle pacman attract mode (autoplay)

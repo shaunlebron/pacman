@@ -36,6 +36,12 @@ document.onkeydown = function(e) {
             }
             break;
         default: return;
+
+        // CTRL
+        case 17: executive.setUpdatesPerSecond(30); break;
+
+        // ALT
+        case 18: executive.setUpdatesPerSecond(15); break;
     }
     // prevent default action for arrow keys
     // (don't scroll page with arrow keys)
@@ -54,6 +60,10 @@ document.onkeyup = function(e) {
         case 16:
             vcr.startRecording();
             break;
+
+        // CTRL or ALT
+        case 17:
+        case 18: executive.setUpdatesPerSecond(60); break;
 
         // n (next level)
         case 78:

@@ -15,6 +15,8 @@ var Player = function() {
     // determines if this player should be AI controlled
     this.ai = false;
 
+    this.invincible = false;
+
     this.savedNextDirEnum = {};
     this.savedEatPauseFramesLeft = {};
 };

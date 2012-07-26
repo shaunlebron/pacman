@@ -7,6 +7,19 @@ Play
 ----
 [Click here to play the current version](http://shaunew.github.com/Pac-Man)
 
+Controls
+--------
+
+- **arrows**: steer pacman
+- **shift**: rewind (a la Braid)
+- **spacebar**: pause/unpause the game
+- **o**: toggle pacman turbo mode
+- **p**: toggle pacman attract mode (autoplay)
+- **i**: toggle pacman invincibility
+- **n**: go to next level
+- **q,w,e,r,t**: toggle target graphic for blinky, pinky, inky, clyde, and pacman, respectively.
+- **a,s,d,f,g**: toggle path graphic for blinky, pinky, inky, clyde, and pacman, respectively.
+
 Features
 --------
 
@@ -14,7 +27,6 @@ Features
 - extra sandbox controls for visualizing ghost behavior, slowing down the game, and other adjustments
 - original Pac-Man and Ms. Pac-Man game modes
 - new Cookie-Man game mode with procedural map generator
-- hold **shift** in-game to rewind/replay the game, a la Braid.
 
 Navigating the Repository
 -------------------------

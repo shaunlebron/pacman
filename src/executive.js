@@ -72,12 +72,17 @@ var executive = (function(){
     })();
         
 
+    var paused = false;
     var tick = function(now) {
         updateFps(now);
 
         // call update for every frame period that has elapsed
         var maxFrameSkip = 5;
         var frames = 0;
+
+        if (paused) {
+            nextFrameTime = now;
+        }
         if (framePeriod != Infinity) {
             while (frames < maxFrameSkip && (now > nextFrameTime)) {
                 state.update();
@@ -116,6 +121,8 @@ var executive = (function(){
             cancelAnimationFrame(reqFrame);
             running = false;
         },
+        togglePause: function() { paused = !paused; },
+        isPaused: function() { return paused; },
         getFps: function() { return fps; },
     };
 })();

@@ -27,7 +27,6 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
     return {
         init: function() {
             frames = 0;
-            canvas.onmousedown = undefined; // remove all click events from previous state
             initialized = true;
         },
         draw: function() {
@@ -100,9 +99,6 @@ var newGameState = (function() {
             if (!map)
                 return;
             renderer.blitMap();
-            renderer.drawEnergizers();
-            renderer.drawExtraLives();
-            renderer.drawLevelIcons();
             renderer.drawScore();
             renderer.drawMessage("READY!","#FF0");
         },
@@ -213,9 +209,6 @@ var playState = {
     init: function() { vcr.reset(); },
     draw: function() {
         renderer.blitMap();
-        renderer.drawEnergizers();
-        renderer.drawExtraLives();
-        renderer.drawLevelIcons();
         renderer.drawScore();
 
         renderer.beginMapClip();
@@ -297,7 +290,7 @@ var playState = {
 
                     // finish level if all dots have been eaten
                     if (map.allDotsEaten()) {
-                        this.draw();
+                        //this.draw();
                         switchState(finishState);
                         break;
                     }
@@ -419,9 +412,6 @@ var deadState = (function() {
     // this state will always have these drawn
     var commonDraw = function() {
         renderer.blitMap();
-        renderer.drawEnergizers();
-        renderer.drawExtraLives();
-        renderer.drawLevelIcons();
         renderer.drawScore();
     };
 
@@ -494,9 +484,6 @@ var finishState = (function(){
     // this state will always have these drawn
     var commonDraw = function() {
         renderer.blitMap();
-        renderer.drawEnergizers();
-        renderer.drawExtraLives();
-        renderer.drawLevelIcons();
         renderer.drawScore();
 
         renderer.beginMapClip();
@@ -519,15 +506,12 @@ var finishState = (function(){
         triggers: {
             0:   { draw: function() {
                     renderer.blitMap();
-                    renderer.drawEnergizers();
-                    renderer.drawExtraLives();
-                    renderer.drawLevelIcons();
                     renderer.drawScore();
                     renderer.beginMapClip();
                     renderer.drawFruit();
                     renderer.drawActors();
-                    renderer.endMapClip();
                     renderer.drawTargets();
+                    renderer.endMapClip();
             } },
             60:  { draw: function() { flashFloorAndDraw(false); } },
             120: { draw: function() { flashFloorAndDraw(true); } },
@@ -560,9 +544,6 @@ var overState = (function() {
         },
         draw: function() {
             renderer.blitMap();
-            renderer.drawEnergizers();
-            renderer.drawExtraLives();
-            renderer.drawLevelIcons();
             renderer.drawScore();
             renderer.drawMessage("GAME OVER", "#F00");
         },

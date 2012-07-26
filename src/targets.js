@@ -158,8 +158,21 @@ clyde.drawTarget = function(ctx) {
 
     if (this.targetting == 'pacman') {
         ctx.beginPath();
-        ctx.arc(pacman.pixel.x, pacman.pixel.y, tileSize*8,0, 2*Math.PI);
-        ctx.closePath();
+        if (true) {
+            // draw a radius
+            ctx.arc(pacman.pixel.x, pacman.pixel.y, tileSize*8,0, 2*Math.PI);
+            ctx.closePath();
+        }
+        else {
+            // draw a distance stick
+            ctx.moveTo(pacman.pixel.x, pacman.pixel.y);
+            var dx = clyde.pixel.x - pacman.pixel.x;
+            var dy = clyde.pixel.y - pacman.pixel.y;
+            var dist = Math.sqrt(dx*dx+dy*dy);
+            dx = dx/dist*tileSize*8;
+            dy = dy/dist*tileSize*8;
+            ctx.lineTo(pacman.pixel.x + dx, pacman.pixel.y + dy);
+        }
         ctx.stroke();
         renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
     }

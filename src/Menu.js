@@ -14,8 +14,8 @@ var Menu = function(x,y,w,h,pad,font,fontcolor) {
 Menu.prototype = {
 
     addTextButton: function(msg,onclick) {
-        var x = this.pad;
-        var y = this.pad + (this.pad + this.h) * this.buttonCount;
+        var x = this.x + this.pad;
+        var y = this.y + this.pad + (this.pad + this.h) * this.buttonCount;
         this.buttons.push(new TextButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor));
         this.buttonCount++;
     },

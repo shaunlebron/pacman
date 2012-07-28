@@ -80,7 +80,7 @@ document.onkeyup = function(e) {
 
         // n (next level)
         case 78:
-            if (state != menuState) {
+            if (state != homeState) {
                 //map.skipSignal = true;
                 switchState(readyNewState,60);
             }
@@ -3768,8 +3768,8 @@ var Menu = function(x,y,w,h,pad,font,fontcolor) {
 Menu.prototype = {
 
     addTextButton: function(msg,onclick) {
-        var x = this.pad;
-        var y = this.pad + (this.pad + this.h) * this.buttonCount;
+        var x = this.x + this.pad;
+        var y = this.y + this.pad + (this.pad + this.h) * this.buttonCount;
         this.buttons.push(new TextButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor));
         this.buttonCount++;
     },
@@ -6822,7 +6822,7 @@ var homeState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu(0,0,20*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu(2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("PAC-MAN", function() { gameMode = GAME_PACMAN; exitTo(newGameState); });
     menu.addTextButton("MS. PAC-MAN", function() { gameMode = GAME_MSPACMAN; exitTo(newGameState); });
     menu.addTextButton("COOKIE-MAN", function() { gameMode = GAME_COOKIE; exitTo(newGameState); });

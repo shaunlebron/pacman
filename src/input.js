@@ -67,7 +67,7 @@ document.onkeyup = function(e) {
 
         // n (next level)
         case 78:
-            if (state != menuState) {
+            if (state != homeState) {
                 //map.skipSignal = true;
                 switchState(readyNewState,60);
             }

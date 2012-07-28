@@ -130,6 +130,8 @@ var GAME_PACMAN = 0;
 var GAME_MSPACMAN = 1;
 var GAME_COOKIE = 2;
 
+var practiceMode = false;
+
 // current game mode
 var gameMode = GAME_PACMAN;
 
@@ -2911,8 +2913,13 @@ var initRenderer = function(){
             }
         },
 
-        renderFunc: function(f) {
-            f(ctx);
+        renderFunc: function(f,that) {
+            if (that) {
+                f.call(that,ctx);
+            }
+            else {
+                f(ctx);
+            }
         },
 
         // scaling the canvas can incur floating point roundoff errors
@@ -3636,103 +3643,158 @@ var initRenderer = function(){
     ];
     renderer = renderer_list[1];
 };
-//@line 1 "src/menu.js"
-menu = (function() {
+//@line 1 "src/gui.js"
+var getmousepos = function(evt) {
+    var obj = canvas;
+    var top = 0;
+    var left = 0;
+    while (obj.tagName != 'BODY') {
+        top += obj.offsetTop;
+        left += obj.offsetLeft;
+        obj = obj.offsetParent;
+    }
 
-    var w = 20*tileSize;
-    var h = 7*tileSize;
+    // calculate relative mouse position
+    var mouseX = evt.clientX - left + window.pageXOffset;
+    var mouseY = evt.clientY - top + window.pageYOffset;
 
-    var pacmanRect =   {x:mapWidth/2-w/2,y:mapHeight/2-h/2-h,w:w,h:h};
-    var mspacmanRect = {x:mapWidth/2-w/2,y:mapHeight/2-h/2,w:w,h:h};
-    var cookieRect =   {x:mapWidth/2-w/2,y:mapHeight/2+h/2,w:w,h:h};
+    // make independent of scale
+    mouseX /= renderScale;
+    mouseY /= renderScale;
 
-    var drawButton = function(ctx,rect,title,color) {
+    // offset
+    mouseX -= mapMargin;
+    mouseY -= mapMargin;
 
-        // draw button outline
-        //ctx.strokeStyle = "#FFF";
-        //ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);
+    return { x: mouseX, y: mouseY };
+};
 
-        // draw caption
-        ctx.fillStyle = color;
-        ctx.fillText(title, rect.x + rect.w/2, rect.y + rect.h/2);
-    };
+var Button = function(x,y,w,h,onclick) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.onclick = onclick;
 
-    var inRect = function(pos, rect) {
-        return pos.x >= rect.x && pos.x <= rect.x+rect.w &&
-               pos.y >= rect.y && pos.y <= rect.y+rect.h;
-    };
+    this.borderBlurColor = "#555";
+    this.borderFocusColor = "#EEE";
+    this.borderColor = this.borderBlurColor;
 
-    var onmousedown = function(evt) {
-
+    var that = this;
+    var click = function(evt) {
         var pos = getmousepos(evt);
-        if (inRect(pos,pacmanRect)) {
-            gameMode = GAME_PACMAN;
+        if (that.onclick && that.contains(pos.x, pos.y)) {
+            that.onclick();
         }
-        else if (inRect(pos,mspacmanRect)) {
-            gameMode = GAME_MSPACMAN;
-        }
-        else if (inRect(pos,cookieRect)) {
-            gameMode = GAME_COOKIE;
-        }
-        else {
-            return;
-        }
-        switchState(newGameState,60,true,false);
-        canvas.removeEventListener('mousedown', onmousedown);
+    };
+    var mousemove = function(evt) {
+        var pos = getmousepos(evt);
+        that.contains(pos.x, pos.y) ? that.focus() : that.blur();
+    };
+    var mouseleave = function(evt) {
+        that.blur();
     };
 
-    var getmousepos = function(evt) {
-        var obj = canvas;
-        var top = 0;
-        var left = 0;
-        while (obj.tagName != 'BODY') {
-            top += obj.offsetTop;
-            left += obj.offsetLeft;
-            obj = obj.offsetParent;
+    this.enable = function() {
+        canvas.addEventListener('click', click);
+        canvas.addEventListener('mousemove', mousemove);
+        canvas.addEventListener('mouseleave', mouseleave);
+    };
+
+    this.disable = function() {
+        canvas.removeEventListener('click', click);
+        canvas.removeEventListener('mousemove', mousemove);
+        canvas.removeEventListener('mouseleave', mouseleave);
+    };
+};
+
+Button.prototype = {
+
+    contains: function(x,y) {
+        return x >= this.x && x <= this.x+this.w &&
+               y >= this.y && y <= this.y+this.h;
+    },
+
+    focus: function() {
+        this.borderColor = this.borderFocusColor;
+    },
+
+    blur: function() {
+        this.borderColor = this.borderBlurColor;
+    },
+
+    draw: function(ctx) {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(this.x,this.y,this.w,this.h);
+        ctx.strokeStyle = this.borderColor;
+        ctx.strokeRect(this.x,this.y,this.w,this.h);
+    },
+};
+
+var TextButton = function(x,y,w,h,onclick,msg,font,fontcolor) {
+    Button.call(this,x,y,w,h,onclick);
+    this.msg = msg;
+    this.font = font;
+    this.fontcolor = fontcolor;
+    this.pad = tileSize;
+};
+
+TextButton.prototype = {
+
+    __proto__: Button.prototype,
+
+    draw: function(ctx) {
+        Button.prototype.draw.call(this,ctx);
+        ctx.font = this.font;
+        ctx.fillStyle = this.fontcolor;
+        ctx.textBaseline = "middle";
+        ctx.fillText(this.msg, this.pad+this.x, this.y + this.h/2);
+    },
+};
+//@line 1 "src/Menu.js"
+var Menu = function(x,y,w,h,pad,font,fontcolor) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.pad = pad;
+    this.buttons = [];
+    this.buttonCount = 0;
+
+    this.font = font;
+    this.fontcolor = fontcolor;
+};
+
+Menu.prototype = {
+
+    addTextButton: function(msg,onclick) {
+        var x = this.pad;
+        var y = this.pad + (this.pad + this.h) * this.buttonCount;
+        this.buttons.push(new TextButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor));
+        this.buttonCount++;
+    },
+
+    enable: function() {
+        var i;
+        for (i=0; i<this.buttonCount; i++) {
+            this.buttons[i].enable();
         }
+    },
 
-        // calculate relative mouse position
-        var mouseX = evt.clientX - left + window.pageXOffset;
-        var mouseY = evt.clientY - top + window.pageYOffset;
+    disable: function() {
+        var i;
+        for (i=0; i<this.buttonCount; i++) {
+            this.buttons[i].disable();
+        }
+    },
 
-        // make independent of scale
-        mouseX /= renderScale;
-        mouseY /= renderScale;
-
-        // offset
-        mouseX -= mapMargin;
-        mouseY -= mapMargin;
-
-        return { x: mouseX, y: mouseY };
-    };
-
-    return {
-        setInput: function() {
-            canvas.addEventListener('mousedown', onmousedown);
-        },
-        draw: function(ctx) {
-            // clear screen
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,mapWidth,mapHeight);
-
-            // set text size and alignment
-            ctx.font = (tileSize-1) + "px ArcadeR";
-            ctx.textBaseline = "middle";
-            ctx.textAlign = "center";
-
-            drawButton(ctx, pacmanRect, "PAC-MAN (1980)", "#FF0");
-            drawButton(ctx, mspacmanRect, "MS. PAC-MAN (1981)", "#FFB8AE");
-            drawButton(ctx, cookieRect, "COOKIE-MAN (2012)", "#47b8ff");
-
-            // TODO: draw previous and high score next to each game type.
-            /*
-            if (score != 0 && highScore != 0)
-                this.drawScore();
-            */
-        },
-    };
-
-})();
+    draw: function(ctx) {
+        var i;
+        for (i=0; i<this.buttonCount; i++) {
+            this.buttons[i].draw(ctx);
+        }
+    },
+};
 //@line 1 "src/sprites.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Sprites
@@ -4892,6 +4954,7 @@ var Actor = function() {
     this.savedDirEnum = {};
     this.savedPixel = {};
     this.savedTargetting = {};
+    this.savedTargetTile = {};
 };
 
 // save state at time t
@@ -4901,6 +4964,7 @@ Actor.prototype.save = function(t) {
     this.savedDirEnum[t] = this.dirEnum;
     this.savedPixel[t] = { x:this.pixel.x, y:this.pixel.y };
     this.savedTargetting[t] = this.targetting;
+    this.savedTargetTile[t] = { x: this.targetTile.x, y: this.targetTile.y };
 };
 
 // load state at time t
@@ -4910,6 +4974,8 @@ Actor.prototype.load = function(t) {
     this.setDir(this.savedDirEnum[t]);
     this.setPos(this.savedPixel[t].x, this.savedPixel[t].y);
     this.targetting = this.savedTargetting[t];
+    this.targetTile.x = this.savedTargetTile[t].x;
+    this.targetTile.y = this.savedTargetTile[t].y;
 };
 
 
@@ -5108,9 +5174,7 @@ Ghost.prototype.getNumSteps = function() {
 
     var pattern = STEP_GHOST;
 
-    if (state == menuState)
-        pattern = STEP_GHOST;
-    else if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
+    if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
     else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME)
         pattern = STEP_GHOST_TUNNEL;
@@ -6748,19 +6812,33 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
-// Menu State
+// Home State
 // (the home title screen state)
 
-var menuState = {
-    init: function() {
-        menu.setInput();
-    },
-    draw: function() {
-        renderer.renderFunc(menu.draw);
-    },
-    update: function() {
-    },
-};
+var homeState = (function(){
+
+    var exitTo = function(s) {
+        switchState(s,60);
+        menu.disable();
+    };
+
+    var menu = new Menu(0,0,20*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    menu.addTextButton("PAC-MAN", function() { gameMode = GAME_PACMAN; exitTo(newGameState); });
+    menu.addTextButton("MS. PAC-MAN", function() { gameMode = GAME_MSPACMAN; exitTo(newGameState); });
+    menu.addTextButton("COOKIE-MAN", function() { gameMode = GAME_COOKIE; exitTo(newGameState); });
+
+    return {
+        init: function() {
+            menu.enable();
+        },
+        draw: function() {
+            renderer.renderFunc(menu.draw,menu);
+        },
+        update: function() {
+        },
+    };
+
+})();
 
 ////////////////////////////////////////////////////
 // New Game state
@@ -7232,7 +7310,7 @@ var overState = (function() {
         },
         update: function() {
             if (frames == 120) {
-                switchState(menuState,60);
+                switchState(homeState,60);
             }
             else
                 frames++;
@@ -7645,7 +7723,7 @@ mapMsPacman4.fruitPaths = {
 window.onload = function() {
     initRenderer();
     atlas.create();
-    switchState(menuState);
+    switchState(homeState);
     executive.init();
 };
 })();

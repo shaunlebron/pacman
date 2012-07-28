@@ -65,19 +65,33 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
-// Menu State
+// Home State
 // (the home title screen state)
 
-var menuState = {
-    init: function() {
-        menu.setInput();
-    },
-    draw: function() {
-        renderer.renderFunc(menu.draw);
-    },
-    update: function() {
-    },
-};
+var homeState = (function(){
+
+    var exitTo = function(s) {
+        switchState(s,60);
+        menu.disable();
+    };
+
+    var menu = new Menu(0,0,20*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    menu.addTextButton("PAC-MAN", function() { gameMode = GAME_PACMAN; exitTo(newGameState); });
+    menu.addTextButton("MS. PAC-MAN", function() { gameMode = GAME_MSPACMAN; exitTo(newGameState); });
+    menu.addTextButton("COOKIE-MAN", function() { gameMode = GAME_COOKIE; exitTo(newGameState); });
+
+    return {
+        init: function() {
+            menu.enable();
+        },
+        draw: function() {
+            renderer.renderFunc(menu.draw,menu);
+        },
+        update: function() {
+        },
+    };
+
+})();
 
 ////////////////////////////////////////////////////
 // New Game state
@@ -549,7 +563,7 @@ var overState = (function() {
         },
         update: function() {
             if (frames == 120) {
-                switchState(menuState,60);
+                switchState(homeState,60);
             }
             else
                 frames++;

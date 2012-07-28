@@ -193,8 +193,13 @@ var initRenderer = function(){
             }
         },
 
-        renderFunc: function(f) {
-            f(ctx);
+        renderFunc: function(f,that) {
+            if (that) {
+                f.call(that,ctx);
+            }
+            else {
+                f(ctx);
+            }
         },
 
         // scaling the canvas can incur floating point roundoff errors

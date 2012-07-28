@@ -4,6 +4,6 @@
 window.onload = function() {
     initRenderer();
     atlas.create();
-    switchState(menuState);
+    switchState(homeState);
     executive.init();
 };

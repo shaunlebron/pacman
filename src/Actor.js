@@ -26,6 +26,7 @@ var Actor = function() {
     this.savedDirEnum = {};
     this.savedPixel = {};
     this.savedTargetting = {};
+    this.savedTargetTile = {};
 };
 
 // save state at time t
@@ -35,6 +36,7 @@ Actor.prototype.save = function(t) {
     this.savedDirEnum[t] = this.dirEnum;
     this.savedPixel[t] = { x:this.pixel.x, y:this.pixel.y };
     this.savedTargetting[t] = this.targetting;
+    this.savedTargetTile[t] = { x: this.targetTile.x, y: this.targetTile.y };
 };
 
 // load state at time t
@@ -44,6 +46,8 @@ Actor.prototype.load = function(t) {
     this.setDir(this.savedDirEnum[t]);
     this.setPos(this.savedPixel[t].x, this.savedPixel[t].y);
     this.targetting = this.savedTargetting[t];
+    this.targetTile.x = this.savedTargetTile[t].x;
+    this.targetTile.y = this.savedTargetTile[t].y;
 };
 
 

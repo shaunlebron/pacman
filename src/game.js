@@ -6,6 +6,8 @@ var GAME_PACMAN = 0;
 var GAME_MSPACMAN = 1;
 var GAME_COOKIE = 2;
 
+var practiceMode = false;
+
 // current game mode
 var gameMode = GAME_PACMAN;
 

@@ -31,7 +31,8 @@ for file in \
     mapgen.js \
     atlas.js \
     renderers.js  \
-    menu.js \
+    gui.js \
+    Menu.js \
     sprites.js \
     Actor.js \
     Ghost.js \

@@ -260,6 +260,7 @@ Ghost.prototype.steer = function() {
         if (isOnNewTile) {
                 this.sigReverse = false;
                 this.setDir(oppDirEnum);
+                this.faceDirEnum = this.dirEnum;
                 return;
         }
     }

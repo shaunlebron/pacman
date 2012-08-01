@@ -539,7 +539,9 @@ var finishState = (function(){
             234: {
                 draw: function() { flashFloorAndDraw(false); },
                 init: function() {
-                    switchState(readyNewState,60);
+                    if (!triggerCutsceneAtEndLevel()) {
+                        switchState(readyNewState,60);
+                    }
                 }
             },
         },

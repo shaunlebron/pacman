@@ -113,8 +113,31 @@ mapPacman.constrainGhostTurns = function(tile,openTiles) {
     }
 };
 
+// Levels are grouped into "acts."
+// In Ms. Pac-Man (and Cookie-Man) a map only changes after the end of an act.
+// The levels within an act progress in difficulty.
+// But the beginning of an act is generally easier than the end of the previous act to stave frustration.
+// Completing an act results in a cutscene.
+var getLevelAct = function(level) {
+    // Act 1: (levels 1,2)
+    // Act 2: (levels 3,4,5)
+    // Act 3: (levels 6,7,8,9)
+    // Act 4: (levels 10,11,12,13)
+    // Act 5: (levels 14,15,16,17)
+    // ...
+    if (level <= 2) {
+        return 1;
+    }
+    else if (level <= 5) {
+        return 2;
+    }
+    else {
+        return 3 + Math.floor((level - 6)/4);
+    }
+};
+
 var setNextCookieMap = function() {
-    // change map every other level
+    // cycle the colors
     var colors = [
         "#359c9c", "#80d8fc", // turqoise
         "#c2b853", "#e6f1e7", // yellow
@@ -126,9 +149,11 @@ var setNextCookieMap = function() {
         "#5036d9", "#618dd4", // violet
         "#939473", "#fdfdf4", // grey
     ];
-    if (level % 2 == 1) {
+    var i;
+    var act = getLevelAct(level);
+    if (level == 1 || act != getLevelAct(level-1)) {
         map = mapgen();
-        var i = (level-1) % colors.length;
+        i = ((act-1)*2) % colors.length;
         map.wallFillColor = colors[i];
         map.wallStrokeColor = colors[i+1];
     }
@@ -136,32 +161,18 @@ var setNextCookieMap = function() {
 
 // Ms. Pac-Man map 1
 
-var setNextMsPacMap = (function() {
-    var order = [
-        0, // level 1
-        0, // level 2
-        1, // level 3
-        1, // level 4
-        1, // level 5
-        2, // level 6,14,22...
-        2, // level 7,15,23...
-        2, // level 8,16,24...
-        2, // level 9,17,25...
-        3, // level 10,18,26...
-        3, // level 11,19,27...
-        3, // level 12,20,28...
-        3, // level 13,21,29...
-    ];
-    return function() {
-        var maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
-        var i = level-1;
-        if (level > 13) {
-            var cycle = 8;
-            i = ((i-cycle)%cycle)+5;
-        }
-        map = maps[order[i]];
+var setNextMsPacMap = function() {
+    var maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
+
+    // The third and fourth maps repeat indefinitely after the second map.
+    // (i.e. act1=map1, act2=map2, act3=map3, act4=map4, act5=map3, act6=map4, ...)
+    var i = getLevelAct(level)-1;
+    if (i > 1) {
+        i = (i%2)+2;
     }
-})();
+    map = maps[i];
+    // TODO: add random color bug from arcade?
+};
 
 var mapMsPacman1 = new Map(28, 36, (
     "____________________________" +

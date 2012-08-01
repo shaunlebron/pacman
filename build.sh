@@ -46,6 +46,7 @@ for file in \
     fruit.js \
     executive.js \
     states.js \
+    cutscenes.js \
     maps.js \
     main.js
 do

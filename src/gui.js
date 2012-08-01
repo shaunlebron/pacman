@@ -23,6 +23,28 @@ var getmousepos = function(evt) {
     return { x: mouseX, y: mouseY };
 };
 
+var ComboBox = function(x,y,w,h,options) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+
+    this.options = options;
+
+    this.enable = function() {
+    };
+
+    this.disable = function() {
+    };
+};
+
+ComboBox.prototype = {
+
+    draw: function(ctx) {
+    },
+
+};
+
 var Button = function(x,y,w,h,onclick) {
     this.x = x;
     this.y = y;
@@ -83,6 +105,7 @@ Button.prototype = {
         ctx.strokeStyle = this.borderColor;
         ctx.strokeRect(this.x,this.y,this.w,this.h);
     },
+
 };
 
 var TextButton = function(x,y,w,h,onclick,msg,font,fontcolor) {

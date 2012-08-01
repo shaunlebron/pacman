@@ -3700,7 +3700,8 @@ var Button = function(x,y,w,h,onclick) {
 
     this.borderBlurColor = "#555";
     this.borderFocusColor = "#EEE";
-    this.borderColor = this.borderBlurColor;
+
+    this.isHover = false;
 
     var that = this;
     var click = function(evt) {
@@ -3738,20 +3739,38 @@ Button.prototype = {
     },
 
     focus: function() {
-        this.borderColor = this.borderFocusColor;
+        this.isHover = true;
     },
 
     blur: function() {
-        this.borderColor = this.borderBlurColor;
+        this.isHover = false;
     },
 
     draw: function(ctx) {
         ctx.fillStyle = "#000";
+        ctx.strokeStyle = "#000";
         ctx.fillRect(this.x,this.y,this.w,this.h);
-        ctx.strokeStyle = this.borderColor;
         ctx.strokeRect(this.x,this.y,this.w,this.h);
+
+        ctx.strokeStyle = this.isHover ? this.borderFocusColor : this.borderBlurColor;
+        //ctx.strokeRect(this.x,this.y,this.w,this.h);
+        ctx.beginPath();
+        var x=this.x, y=this.y, w=this.w, h=this.h;
+        var r=h/4;
+        ctx.moveTo(x,y+r);
+        ctx.quadraticCurveTo(x,y,x+r,y);
+        ctx.lineTo(x+w-r,y);
+        ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+        ctx.lineTo(x+w,y+h-r);
+        ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+        ctx.lineTo(x+r,y+h);
+        ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+        ctx.closePath();
+        ctx.stroke();
     },
 
+    update: function() {
+    },
 };
 
 var TextButton = function(x,y,w,h,onclick,msg,font,fontcolor) {
@@ -3769,9 +3788,33 @@ TextButton.prototype = {
     draw: function(ctx) {
         Button.prototype.draw.call(this,ctx);
         ctx.font = this.font;
-        ctx.fillStyle = this.fontcolor;
+        ctx.fillStyle = this.isHover ? this.fontcolor : "#777";
         ctx.textBaseline = "middle";
-        ctx.fillText(this.msg, this.pad+this.x, this.y + this.h/2);
+        ctx.textAlign = "center";
+        //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
+        ctx.fillText(this.msg, this.x + this.w/2, this.y + this.h/2 + 1);
+
+    },
+};
+
+var TextIconButton = function(x,y,w,h,onclick,msg,font,fontcolor,drawIcon) {
+    TextButton.call(this,x,y,w,h,onclick,msg,font,fontcolor);
+    this.drawIcon = drawIcon;
+    this.frame = 0;
+};
+
+TextIconButton.prototype = {
+
+    __proto__: TextButton.prototype,
+
+    draw: function(ctx) {
+        TextButton.prototype.draw.call(this,ctx);
+        this.drawIcon(ctx,this.x+this.pad+tileSize,this.y+this.h/2,this.frame);
+    },
+
+    update: function() {
+        TextButton.prototype.update.call(this);
+        this.frame = this.isHover ? this.frame+1 : 0;
     },
 };
 //@line 1 "src/Menu.js"
@@ -3797,6 +3840,13 @@ Menu.prototype = {
         this.buttonCount++;
     },
 
+    addTextIconButton: function(msg,onclick,drawIcon) {
+        var x = this.x + this.pad;
+        var y = this.y + this.pad + (this.pad + this.h) * this.buttonCount;
+        this.buttons.push(new TextIconButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor,drawIcon));
+        this.buttonCount++;
+    },
+
     enable: function() {
         var i;
         for (i=0; i<this.buttonCount; i++) {
@@ -3815,6 +3865,13 @@ Menu.prototype = {
         var i;
         for (i=0; i<this.buttonCount; i++) {
             this.buttons[i].draw(ctx);
+        }
+    },
+
+    update: function() {
+        var i;
+        for (i=0; i<this.buttonCount; i++) {
+            this.buttons[i].update();
         }
     },
 };
@@ -5381,6 +5438,7 @@ Ghost.prototype.steer = function() {
         if (isOnNewTile) {
                 this.sigReverse = false;
                 this.setDir(oppDirEnum);
+                this.faceDirEnum = this.dirEnum;
                 return;
         }
     }
@@ -6871,9 +6929,55 @@ var homeState = (function(){
     };
 
     var menu = new Menu(2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-    menu.addTextButton("PAC-MAN", function() { gameMode = GAME_PACMAN; exitTo(newGameState); });
-    menu.addTextButton("MS. PAC-MAN", function() { gameMode = GAME_MSPACMAN; exitTo(newGameState); });
-    menu.addTextButton("COOKIE-MAN", function() { gameMode = GAME_COOKIE; exitTo(newGameState); });
+    var getIconAnimFrame = function(frame) {
+        frame = Math.floor(frame/3)+1;
+        frame %= 4;
+        if (frame == 3) {
+            frame = 1;
+        }
+        return frame;
+    };
+    menu.addTextIconButton("PAC-MAN",
+        function() {
+            gameMode = GAME_PACMAN;
+            exitTo(newGameState);
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+        });
+    menu.addTextIconButton("MS. PAC-MAN", 
+        function() {
+            gameMode = GAME_MSPACMAN;
+            exitTo(newGameState);
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+        });
+    menu.addTextIconButton("COOKIE-MAN",
+        function() {
+            gameMode = GAME_COOKIE;
+            exitTo(newGameState);
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawCookiemanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+        });
+    menu.addTextIconButton("CHALLENGES",
+        function() {
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawGhostSprite(ctx,x,y,Math.floor(frame/8)%2,DIR_RIGHT,false,false,false,blinky.color);
+        });
+    menu.addTextIconButton("HELP",
+        function() {
+        },
+        function(ctx,x,y,frame) {
+            var animFrame = Math.floor(frame/8)%2;
+            var flash = Math.floor(frame/24)%2;
+            atlas.drawGhostSprite(ctx,x,y,animFrame,DIR_RIGHT,true,flash,false,blinky.color);
+        });
+    menu.addTextButton("ABOUT",
+        function() {
+        });
 
     return {
         init: function() {
@@ -6883,6 +6987,7 @@ var homeState = (function(){
             renderer.renderFunc(menu.draw,menu);
         },
         update: function() {
+            menu.update();
         },
     };
 

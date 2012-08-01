@@ -54,7 +54,8 @@ var Button = function(x,y,w,h,onclick) {
 
     this.borderBlurColor = "#555";
     this.borderFocusColor = "#EEE";
-    this.borderColor = this.borderBlurColor;
+
+    this.isHover = false;
 
     var that = this;
     var click = function(evt) {
@@ -92,20 +93,38 @@ Button.prototype = {
     },
 
     focus: function() {
-        this.borderColor = this.borderFocusColor;
+        this.isHover = true;
     },
 
     blur: function() {
-        this.borderColor = this.borderBlurColor;
+        this.isHover = false;
     },
 
     draw: function(ctx) {
         ctx.fillStyle = "#000";
+        ctx.strokeStyle = "#000";
         ctx.fillRect(this.x,this.y,this.w,this.h);
-        ctx.strokeStyle = this.borderColor;
         ctx.strokeRect(this.x,this.y,this.w,this.h);
+
+        ctx.strokeStyle = this.isHover ? this.borderFocusColor : this.borderBlurColor;
+        //ctx.strokeRect(this.x,this.y,this.w,this.h);
+        ctx.beginPath();
+        var x=this.x, y=this.y, w=this.w, h=this.h;
+        var r=h/4;
+        ctx.moveTo(x,y+r);
+        ctx.quadraticCurveTo(x,y,x+r,y);
+        ctx.lineTo(x+w-r,y);
+        ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+        ctx.lineTo(x+w,y+h-r);
+        ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+        ctx.lineTo(x+r,y+h);
+        ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+        ctx.closePath();
+        ctx.stroke();
     },
 
+    update: function() {
+    },
 };
 
 var TextButton = function(x,y,w,h,onclick,msg,font,fontcolor) {
@@ -123,8 +142,32 @@ TextButton.prototype = {
     draw: function(ctx) {
         Button.prototype.draw.call(this,ctx);
         ctx.font = this.font;
-        ctx.fillStyle = this.fontcolor;
+        ctx.fillStyle = this.isHover ? this.fontcolor : "#777";
         ctx.textBaseline = "middle";
-        ctx.fillText(this.msg, this.pad+this.x, this.y + this.h/2);
+        ctx.textAlign = "center";
+        //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
+        ctx.fillText(this.msg, this.x + this.w/2, this.y + this.h/2 + 1);
+
+    },
+};
+
+var TextIconButton = function(x,y,w,h,onclick,msg,font,fontcolor,drawIcon) {
+    TextButton.call(this,x,y,w,h,onclick,msg,font,fontcolor);
+    this.drawIcon = drawIcon;
+    this.frame = 0;
+};
+
+TextIconButton.prototype = {
+
+    __proto__: TextButton.prototype,
+
+    draw: function(ctx) {
+        TextButton.prototype.draw.call(this,ctx);
+        this.drawIcon(ctx,this.x+this.pad+tileSize,this.y+this.h/2,this.frame);
+    },
+
+    update: function() {
+        TextButton.prototype.update.call(this);
+        this.frame = this.isHover ? this.frame+1 : 0;
     },
 };

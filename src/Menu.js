@@ -20,6 +20,13 @@ Menu.prototype = {
         this.buttonCount++;
     },
 
+    addTextIconButton: function(msg,onclick,drawIcon) {
+        var x = this.x + this.pad;
+        var y = this.y + this.pad + (this.pad + this.h) * this.buttonCount;
+        this.buttons.push(new TextIconButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor,drawIcon));
+        this.buttonCount++;
+    },
+
     enable: function() {
         var i;
         for (i=0; i<this.buttonCount; i++) {
@@ -38,6 +45,13 @@ Menu.prototype = {
         var i;
         for (i=0; i<this.buttonCount; i++) {
             this.buttons[i].draw(ctx);
+        }
+    },
+
+    update: function() {
+        var i;
+        for (i=0; i<this.buttonCount; i++) {
+            this.buttons[i].update();
         }
     },
 };

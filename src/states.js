@@ -76,9 +76,55 @@ var homeState = (function(){
     };
 
     var menu = new Menu(2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-    menu.addTextButton("PAC-MAN", function() { gameMode = GAME_PACMAN; exitTo(newGameState); });
-    menu.addTextButton("MS. PAC-MAN", function() { gameMode = GAME_MSPACMAN; exitTo(newGameState); });
-    menu.addTextButton("COOKIE-MAN", function() { gameMode = GAME_COOKIE; exitTo(newGameState); });
+    var getIconAnimFrame = function(frame) {
+        frame = Math.floor(frame/3)+1;
+        frame %= 4;
+        if (frame == 3) {
+            frame = 1;
+        }
+        return frame;
+    };
+    menu.addTextIconButton("PAC-MAN",
+        function() {
+            gameMode = GAME_PACMAN;
+            exitTo(newGameState);
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+        });
+    menu.addTextIconButton("MS. PAC-MAN", 
+        function() {
+            gameMode = GAME_MSPACMAN;
+            exitTo(newGameState);
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+        });
+    menu.addTextIconButton("COOKIE-MAN",
+        function() {
+            gameMode = GAME_COOKIE;
+            exitTo(newGameState);
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawCookiemanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+        });
+    menu.addTextIconButton("CHALLENGES",
+        function() {
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawGhostSprite(ctx,x,y,Math.floor(frame/8)%2,DIR_RIGHT,false,false,false,blinky.color);
+        });
+    menu.addTextIconButton("HELP",
+        function() {
+        },
+        function(ctx,x,y,frame) {
+            var animFrame = Math.floor(frame/8)%2;
+            var flash = Math.floor(frame/24)%2;
+            atlas.drawGhostSprite(ctx,x,y,animFrame,DIR_RIGHT,true,flash,false,blinky.color);
+        });
+    menu.addTextButton("ABOUT",
+        function() {
+        });
 
     return {
         init: function() {
@@ -88,6 +134,7 @@ var homeState = (function(){
             renderer.renderFunc(menu.draw,menu);
         },
         update: function() {
+            menu.update();
         },
     };
 

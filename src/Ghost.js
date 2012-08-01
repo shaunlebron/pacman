@@ -13,7 +13,9 @@ var GHOST_LEAVING_HOME = 5;
 var Ghost = function() {
     // inherit data from Actor
     Actor.apply(this);
+
     this.randomScatter = false;
+    this.faceDirEnum = this.dirEnum;
 };
 
 // inherit functions from Actor class
@@ -35,9 +37,15 @@ Ghost.prototype.reset = function() {
     this.savedMode = {};
     this.savedScared = {};
     this.savedElroy = {};
+    this.savedFaceDirEnum = {};
 
     // call Actor's reset function to reset position and direction
     Actor.prototype.reset.apply(this);
+
+    // faceDirEnum  = direction the ghost is facing
+    // dirEnum      = direction the ghost is moving
+    // (faceDirEnum represents what dirEnum will be once the ghost reaches the middle of the tile)
+    this.faceDirEnum = this.dirEnum;
 };
 
 Ghost.prototype.save = function(t) {
@@ -48,6 +56,7 @@ Ghost.prototype.save = function(t) {
     if (this == blinky) {
         this.savedElroy[t] = this.elroy;
     }
+    this.savedFaceDirEnum[t] = this.faceDirEnum;
     Actor.prototype.save.call(this,t);
 };
 
@@ -59,6 +68,7 @@ Ghost.prototype.load = function(t) {
     if (this == blinky) {
         this.elroy = this.savedElroy[t];
     }
+    this.faceDirEnum = this.savedFaceDirEnum[t];
     Actor.prototype.load.call(this,t);
 };
 
@@ -149,27 +159,34 @@ Ghost.prototype.homeSteer = (function(){
     steerFuncs[GHOST_GOING_HOME] = function() {
         // at the doormat
         if (this.tile.x == map.doorTile.x && this.tile.y == map.doorTile.y) {
+            this.faceDirEnum = DIR_DOWN;
             this.targetting = false;
             // walk to the door, or go through if already there
             if (this.pixel.x == map.doorPixel.x) {
                 this.mode = GHOST_ENTERING_HOME;
                 this.setDir(DIR_DOWN);
+                this.faceDirEnum = this.dirEnum;
             }
-            else
+            else {
                 this.setDir(DIR_RIGHT);
+                this.faceDirEnum = this.dirEnum;
+            }
         }
     };
 
     steerFuncs[GHOST_ENTERING_HOME] = function() {
-        if (this.pixel.y == map.homeBottomPixel)
+        if (this.pixel.y == map.homeBottomPixel) {
             // revive if reached its seat
             if (this.pixel.x == this.startPixel.x) {
                 this.setDir(DIR_UP);
                 this.mode = this.arriveHomeMode;
             }
             // sidestep to its seat
-            else
+            else {
                 this.setDir(this.startPixel.x < this.pixel.x ? DIR_LEFT : DIR_RIGHT);
+            }
+            this.faceDirEnum = this.dirEnum;
+        }
     };
 
     steerFuncs[GHOST_PACING_HOME] = function() {
@@ -189,18 +206,22 @@ Ghost.prototype.homeSteer = (function(){
             else if (this.pixel.y == map.homeBottomPixel)
                 this.setDir(DIR_UP);
         }
+        this.faceDirEnum = this.dirEnum;
     };
 
     steerFuncs[GHOST_LEAVING_HOME] = function() {
-        if (this.pixel.x == map.doorPixel.x)
+        if (this.pixel.x == map.doorPixel.x) {
             // reached door
             if (this.pixel.y == map.doorPixel.y) {
                 this.mode = GHOST_OUTSIDE;
                 this.setDir(DIR_LEFT); // always turn left at door?
             }
             // keep walking up to the door
-            else
+            else {
                 this.setDir(DIR_UP);
+            }
+            this.faceDirEnum = this.dirEnum;
+        }
     };
 
     // return a function to execute appropriate steering function for a given ghost
@@ -228,13 +249,15 @@ Ghost.prototype.steer = function() {
     var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
     var actor;                           // actor whose corner we will target
 
+    var isOnNewTile = ((this.dirEnum == DIR_UP && this.tilePixel.y == tileSize-1) ||
+                (this.dirEnum == DIR_DOWN && this.tilePixel.y == 0) ||
+                (this.dirEnum == DIR_LEFT && this.tilePixel.x == tileSize-1) ||
+                (this.dirEnum == DIR_RIGHT && this.tilePixel.x == 0));
+
     // reverse direction if commanded
     if (this.sigReverse && (this.mode == GHOST_OUTSIDE || this.mode == GHOST_GOING_HOME)) {
         // reverse direction only if we've reached a new tile
-        if ((this.dirEnum == DIR_UP && this.tilePixel.y == tileSize-1) ||
-            (this.dirEnum == DIR_DOWN && this.tilePixel.y == 0) ||
-            (this.dirEnum == DIR_LEFT && this.tilePixel.x == tileSize-1) ||
-            (this.dirEnum == DIR_RIGHT && this.tilePixel.x == 0)) {
+        if (isOnNewTile) {
                 this.sigReverse = false;
                 this.setDir(oppDirEnum);
                 return;
@@ -252,59 +275,64 @@ Ghost.prototype.steer = function() {
         return;
     }
 
-    // don't steer if we're not at the middle of the tile
-    if (this.distToMid.x != 0 || this.distToMid.y != 0)
-        return;
+    // If we have just reached a new tile, then update the next direction.
+    if (isOnNewTile) {
 
-    // get surrounding tiles and their open indication
-    openTiles = getOpenTiles(this.tile, this.dirEnum);
+        // get surrounding tiles and their open indication
+        openTiles = getOpenTiles(this.tile, this.dirEnum);
 
-    if (this.scared) {
-        // choose a random turn
-        dirEnum = Math.floor(Math.random()*4);
-        while (!openTiles[dirEnum])
-            dirEnum = (dirEnum+1)%4;
-        this.targetting = false;
-    }
-    else {
-        // target ghost door
-        if (this.mode == GHOST_GOING_HOME) {
-            this.targetTile.x = map.doorTile.x;
-            this.targetTile.y = map.doorTile.y;
-        }
-        // target corner when scattering
-        else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
-
-            actor = this.isScatterBrain() ? actors[Math.floor(Math.random()*4)] : this;
-
-            this.targetTile.x = actor.cornerTile.x;
-            this.targetTile.y = actor.cornerTile.y;
-            this.targetting = 'corner';
-        }
-        // use custom function for each ghost when in attack mode
-        else
-            this.setTarget();
-
-        if (this.mode == GHOST_GOING_HOME &&
-            map.getExitDir && 
-            (dirEnum=map.getExitDir(this.tile.x,this.tile.y)) != undefined &&
-            dirEnum != oppDirEnum) {
-            // if the map has a 'getExitDir' function, then we are using
-            // a custom algorithm to choose the next direction.
-            // Currently, procedurally-generated maps use this function
-            // to ensure that ghosts can return home without looping forever.
+        if (this.scared) {
+            // choose a random turn
+            dirEnum = Math.floor(Math.random()*4);
+            while (!openTiles[dirEnum])
+                dirEnum = (dirEnum+1)%4;
+            this.targetting = false;
         }
         else {
-            // edit openTiles to reflect the current map's special contraints
-            if (map.constrainGhostTurns)
-                map.constrainGhostTurns(this.tile, openTiles);
+            // target ghost door
+            if (this.mode == GHOST_GOING_HOME) {
+                this.targetTile.x = map.doorTile.x;
+                this.targetTile.y = map.doorTile.y;
+            }
+            // target corner when scattering
+            else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
 
-            // choose direction that minimizes distance to target
-            dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
+                actor = this.isScatterBrain() ? actors[Math.floor(Math.random()*4)] : this;
+
+                this.targetTile.x = actor.cornerTile.x;
+                this.targetTile.y = actor.cornerTile.y;
+                this.targetting = 'corner';
+            }
+            // use custom function for each ghost when in attack mode
+            else
+                this.setTarget();
+
+            if (this.mode == GHOST_GOING_HOME &&
+                map.getExitDir && 
+                (dirEnum=map.getExitDir(this.tile.x,this.tile.y)) != undefined &&
+                dirEnum != oppDirEnum) {
+                // if the map has a 'getExitDir' function, then we are using
+                // a custom algorithm to choose the next direction.
+                // Currently, procedurally-generated maps use this function
+                // to ensure that ghosts can return home without looping forever.
+            }
+            else {
+                // edit openTiles to reflect the current map's special contraints
+                if (map.constrainGhostTurns)
+                    map.constrainGhostTurns(this.tile, openTiles);
+
+                // choose direction that minimizes distance to target
+                dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
+            }
         }
+
+        // Point eyeballs to the determined direction.
+        this.faceDirEnum = dirEnum;
+    }
+    else if (this.distToMid.x == 0 && this.distToMid.y == 0) {
+        // Once we have reached the middle of the tile, then we start travelling in the direction that we are looking.
+        this.setDir(this.faceDirEnum);
     }
 
-    // commit the direction
-    this.setDir(dirEnum);
 };
 

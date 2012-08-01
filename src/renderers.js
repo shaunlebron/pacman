@@ -814,7 +814,7 @@ var initRenderer = function(){
             var frame = Math.floor(g.frames/8)%2; // toggle frame every 8 ticks
             var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
             //drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
-            atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
         },
 
         // get animation frame for player

@@ -332,9 +332,6 @@ var fruit = (function(){
     };
 
     var getCurrentFruit = function() {
-        if (gameMode == GAME_COOKIE && currentFruit.name == "banana") {
-            return { name:"cookie", points:5000 };
-        }
         return currentFruit;
     };
 

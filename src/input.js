@@ -145,7 +145,7 @@ var initSwipe = function() {
 
     function touchStart(event) {
             // disable the standard ability to select the touched object
-            event.preventDefault();
+            //event.preventDefault();
             // get the total number of fingers touching the screen
             fingerCount = event.touches.length;
             // since we're looking for a swipe (single finger) and not a gesture (multiple fingers),
@@ -161,7 +161,7 @@ var initSwipe = function() {
     }
 
     function touchMove(event) {
-            event.preventDefault();
+            //event.preventDefault();
             if ( event.touches.length == 1 ) {
                     curX = event.touches[0].pageX;
                     curY = event.touches[0].pageY;
@@ -171,7 +171,7 @@ var initSwipe = function() {
     }
     
     function touchEnd(event) {
-            event.preventDefault();
+            //event.preventDefault();
             // check to see if more than one finger was used and that there is an ending coordinate
             if ( fingerCount == 1 && curX != 0 ) {
                     // use the Distance Formula to determine the length of the swipe

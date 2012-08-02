@@ -10,15 +10,27 @@ Play
 Controls
 --------
 
+### Movement
+
+- **swipe**: steer pacman on mobile browsers
 - **arrows**: steer pacman
+
+### Time Manipulation
+
+- **spacebar**: pause/unpause the game
 - **shift**: hold down to rewind (a la Braid)
 - **ctrl**: hold down to slow down the game to 0.5x
 - **alt**: hold down to slow down the game to 0.25x
-- **spacebar**: pause/unpause the game
+
+### Misc.
+
 - **o**: toggle pacman turbo mode
 - **p**: toggle pacman attract mode (autoplay)
 - **i**: toggle pacman invincibility
 - **n**: go to next level
+
+### Ghost Visualizers
+
 - **q,w,e,r,t**: toggle target graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 - **a,s,d,f,g**: toggle path graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 
@@ -26,8 +38,7 @@ Features
 --------
 
 - same coordinate space, movement physics, ghost behavior, timers, and update rate as the original arcade game
-- extra sandbox controls for visualizing ghost behavior, slowing down the game, and other adjustments
-- original Pac-Man and Ms. Pac-Man game modes
+- remake of the original Pac-Man and Ms. Pac-Man game modes
 - new Cookie-Man game mode with procedural map generator
 
 Navigating the Repository
@@ -35,7 +46,11 @@ Navigating the Repository
 - all javascript source files are located in the "src/" directory
 - "build.sh" file concatenates all the source files into "pacman.js" in the top directory
 - "debug.htm" displays the game by using the "src/*.js" files
-- "index.htm" displays the game by using the "pacman.js" file only.
+- "index.htm" displays the game by using the "pacman.js" file only
+- the "fruit" directory contains notes and diagrams on Ms. Pac-Man fruit paths
+- the "mapgen" directory contains notes, diagrams, and experiments on procedural Pac-Man maze generation
+- the "sprites" directory contains references sprite sheets and an atlas viewer "atlas.htm" for viewing the scalable game sprites.
+- the "font" directory contains font resources used in the game.
 
 Credits
 -------

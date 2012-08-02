@@ -124,6 +124,7 @@ var homeState = (function(){
         });
     menu.addTextButton("ABOUT",
         function() {
+            exitTo(aboutState);
         });
 
     return {
@@ -131,6 +132,86 @@ var homeState = (function(){
             menu.enable();
         },
         draw: function() {
+            renderer.renderFunc(menu.draw,menu);
+        },
+        update: function() {
+            menu.update();
+        },
+    };
+
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
+// About State
+// (the about screen state)
+
+var aboutState = (function(){
+
+    var exitTo = function(s) {
+        switchState(s,60);
+        menu.disable();
+    };
+
+    var menu = new Menu(2*tileSize,mapHeight-5*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    menu.addTextButton("BACK",
+        function() {
+            gameMode = GAME_PACMAN;
+            exitTo(homeState);
+        });
+
+    var drawBody = function(ctx) {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0,0,mapWidth,mapHeight);
+        ctx.font = tileSize+"px ArcadeR";
+        ctx.textBaseline = "top";
+        ctx.textAlign = "left";
+
+        var x,y;
+        x = 4*tileSize;
+        y = 0*tileSize;
+        ctx.fillStyle = "#0FF";
+        ctx.fillText("DEVELOPER", x,y);
+        y += tileSize*2;
+        ctx.fillStyle = "#777";
+        ctx.fillText("SHAUN WILLIAMS", x,y);
+
+        y += tileSize*4;
+        ctx.fillStyle = "#0FF";
+        ctx.fillText("REVERSE-ENGINEERS",x,y);
+        y += tileSize*2;
+        ctx.fillStyle = "#777";
+        ctx.fillText("JAMEY PITTMAN",x,y);
+        y += tileSize*2;
+        ctx.fillText("BART GRANTHAM",x,y);
+
+        y += tileSize*4;
+        ctx.fillStyle = "#FF0";
+        ctx.fillText("ORIGINAL PAC-MAN",x,y);
+        y += tileSize*2;
+        ctx.fillStyle = "#777";
+        ctx.fillText("NAMCO",x,y);
+
+        y += tileSize*4;
+        ctx.fillStyle = "#FF0";
+        ctx.fillText("ORIGINAL MS. PAC-MAN",x,y);
+        y += tileSize*2;
+        ctx.fillStyle = "#777";
+        ctx.fillText("GENERAL COMPUTING",x,y);
+
+        y += tileSize*4;
+        ctx.fillStyle = "#0F0";
+        ctx.fillText("PROJECT SITE",x,y);
+        y += tileSize*2;
+        ctx.fillStyle = "#777";
+        ctx.fillText("GITHUB.COM/SHAUNEW/PAC-MAN",x,y);
+    };
+
+    return {
+        init: function() {
+            menu.enable();
+        },
+        draw: function() {
+            renderer.renderFunc(drawBody);
             renderer.renderFunc(menu.draw,menu);
         },
         update: function() {

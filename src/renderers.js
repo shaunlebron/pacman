@@ -745,15 +745,6 @@ var initRenderer = function(){
             }
             bgCtx.restore();
 
-            // draw text
-            bgCtx.font = (tileSize-1) + "px ArcadeR";
-            bgCtx.textBaseline = "top";
-            bgCtx.fillStyle = "#FFF";
-
-            bgCtx.textAlign = "left";
-            bgCtx.fillText("1UP", 3*tileSize, 0);
-            bgCtx.fillText("HIGH SCORE", 9*tileSize, 0);
-
             endMapFrame();
         },
 
@@ -798,13 +789,19 @@ var initRenderer = function(){
 
         // draw the current score and high score
         drawScore: function() {
-            ctx.font = (tileSize-1) + "px ArcadeR";
+            ctx.font = tileSize + "px ArcadeR";
             ctx.textBaseline = "top";
             ctx.fillStyle = "#FFF";
 
             ctx.textAlign = "right";
-            ctx.fillText(score, 7*tileSize, tileSize);
-            ctx.fillText(highScore, 17*tileSize, tileSize);
+            ctx.fillText("1UP", 6*tileSize, 0);
+            ctx.fillText("HIGH SCORE", 19*tileSize, 0);
+
+            var score_str = score == 0 ? "00" : score;
+            var high_str = highScore == 0 ? "00" : highScore;
+
+            ctx.fillText(score_str, 7*tileSize, tileSize);
+            ctx.fillText(high_str, 17*tileSize, tileSize);
         },
 
         // draw ghost

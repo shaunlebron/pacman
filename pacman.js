@@ -144,6 +144,7 @@ var initSwipe = function() {
     var r = tileSize;
     
     var touchStart = function(event) {
+        event.preventDefault();
         var fingerCount = event.touches.length;
         if (fingerCount == 1) {
 
@@ -158,6 +159,7 @@ var initSwipe = function() {
     };
 
     var touchMove = function(event) {
+        event.preventDefault();
         var fingerCount = event.touches.length;
         if (fingerCount == 1) {
 
@@ -187,9 +189,11 @@ var initSwipe = function() {
     };
 
     var touchEnd = function(event) {
+        event.preventDefault();
     };
 
     var touchCancel = function(event) {
+        event.preventDefault();
         x=y=dx=dy=0;
     };
     
@@ -3779,6 +3783,18 @@ var Button = function(x,y,w,h,onclick) {
     this.isHover = false;
 
     var that = this;
+    var touchstart = function(evt) {
+        evt.preventDefault();
+    };
+    var touchmove = function(evt) {
+        evt.preventDefault();
+    };
+    var touchend = function(evt) {
+        evt.preventDefault();
+    };
+    var touchcancel = function(evt) {
+        evt.preventDefault();
+    };
     var click = function(evt) {
         var pos = getmousepos(evt);
         if (that.onclick && that.contains(pos.x, pos.y)) {
@@ -3797,12 +3813,20 @@ var Button = function(x,y,w,h,onclick) {
         canvas.addEventListener('click', click);
         canvas.addEventListener('mousemove', mousemove);
         canvas.addEventListener('mouseleave', mouseleave);
+        canvas.addEventListener('touchstart', touchstart);
+        canvas.addEventListener('touchmove', touchmove);
+        canvas.addEventListener('touchend', touchend);
+        canvas.addEventListener('touchcancel', touchcancel);
     };
 
     this.disable = function() {
         canvas.removeEventListener('click', click);
         canvas.removeEventListener('mousemove', mousemove);
         canvas.removeEventListener('mouseleave', mouseleave);
+        canvas.removeEventListener('touchstart', touchstart);
+        canvas.removeEventListener('touchmove', touchmove);
+        canvas.removeEventListener('touchend', touchend);
+        canvas.removeEventListener('touchcancel', touchcancel);
     };
 };
 
@@ -7617,7 +7641,7 @@ var overState = (function() {
         draw: function() {
             renderer.blitMap();
             renderer.drawScore();
-            renderer.drawMessage("GAME OVER", "#F00");
+            renderer.drawMessage("GAME  OVER", "#F00");
         },
         update: function() {
             if (frames == 120) {

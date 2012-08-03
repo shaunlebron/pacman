@@ -689,7 +689,7 @@ var overState = (function() {
         draw: function() {
             renderer.blitMap();
             renderer.drawScore();
-            renderer.drawMessage("GAME OVER", "#F00");
+            renderer.drawMessage("GAME  OVER", "#F00");
         },
         update: function() {
             if (frames == 120) {

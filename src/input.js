@@ -128,7 +128,7 @@ var initSwipe = function() {
     var dy = 0;
 
     // minimum distance from anchor before direction is registered
-    var r = tileSize;
+    var r = 2;
     
     var touchStart = function(event) {
         event.preventDefault();

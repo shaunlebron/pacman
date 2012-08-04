@@ -68,7 +68,7 @@ var Button = function(x,y,w,h,onclick) {
             (that.startedInside=that.contains(pos.x,pos.y)) ? that.focus() : that.blur();
         }
         else {
-            touchCancel(evt);
+            touchcancel(evt);
         }
     };
     var touchmove = function(evt) {
@@ -81,7 +81,7 @@ var Button = function(x,y,w,h,onclick) {
             }
         }
         else {
-            touchCancel(evt);
+            touchcancel(evt);
         }
     };
     var touchend = function(evt) {
@@ -93,10 +93,11 @@ var Button = function(x,y,w,h,onclick) {
                 that.onclick();
             }
         }
-        touchCancel(evt);
+        touchcancel(evt);
     };
     var touchcancel = function(evt) {
         evt.preventDefault();
+        this.startedInside = false;
         that.blur();
     };
 
@@ -150,7 +151,6 @@ Button.prototype = {
 
     blur: function() {
         this.isHover = false;
-        this.startedInside = false;
     },
 
     draw: function(ctx) {

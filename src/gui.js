@@ -86,12 +86,8 @@ var Button = function(x,y,w,h,onclick) {
     };
     var touchend = function(evt) {
         evt.preventDefault();
-        var fingerCount = evt.touches.length;
-        if (fingerCount == 1) {
-            var pos = getPointerPos(evt.touches[0]);
-            if (that.onclick && that.startedInside && that.contains(pos.x,pos.y)) {
-                that.onclick();
-            }
+        if (that.onclick && that.startedInside && that.isHover) {
+            that.onclick();
         }
         touchcancel(evt);
     };

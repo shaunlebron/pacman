@@ -3723,7 +3723,7 @@ var initRenderer = function(){
     renderer = renderer_list[1];
 };
 //@line 1 "src/gui.js"
-var getmousepos = function(evt) {
+var getPointerPos = function(evt) {
     var obj = canvas;
     var top = 0;
     var left = 0;
@@ -3734,8 +3734,8 @@ var getmousepos = function(evt) {
     }
 
     // calculate relative mouse position
-    var mouseX = evt.clientX - left + window.pageXOffset;
-    var mouseY = evt.clientY - top + window.pageYOffset;
+    var mouseX = evt.pageX - left;
+    var mouseY = evt.pageY - top;
 
     // make independent of scale
     mouseX /= renderScale;
@@ -3782,27 +3782,59 @@ var Button = function(x,y,w,h,onclick) {
 
     this.isHover = false;
 
+    // touch events
+    this.startedInside = false;
     var that = this;
     var touchstart = function(evt) {
         evt.preventDefault();
+        var fingerCount = evt.touches.length;
+        if (fingerCount == 1) {
+            var pos = getPointerPos(evt.touches[0]);
+            (that.startedInside=that.contains(pos.x,pos.y)) ? that.focus() : that.blur();
+        }
+        else {
+            touchCancel(evt);
+        }
     };
     var touchmove = function(evt) {
         evt.preventDefault();
+        var fingerCount = evt.touches.length;
+        if (fingerCount == 1) {
+            if (that.startedInside) {
+                var pos = getPointerPos(evt.touches[0]);
+                that.contains(pos.x, pos.y) ? that.focus() : that.blur();
+            }
+        }
+        else {
+            touchCancel(evt);
+        }
     };
     var touchend = function(evt) {
         evt.preventDefault();
+        var fingerCount = evt.touches.length;
+        if (fingerCount == 1) {
+            var pos = getPointerPos(evt.touches[0]);
+            if (that.onclick && that.startedInside && that.contains(pos.x,pos.y)) {
+                that.onclick();
+            }
+        }
+        touchCancel(evt);
     };
     var touchcancel = function(evt) {
         evt.preventDefault();
+        that.blur();
     };
+
+
+    // mouse events
     var click = function(evt) {
-        var pos = getmousepos(evt);
+        var pos = getPointerPos(evt);
         if (that.onclick && that.contains(pos.x, pos.y)) {
             that.onclick();
         }
     };
     var mousemove = function(evt) {
-        var pos = getmousepos(evt);
+        var pos = getPointerPos(evt);
         that.contains(pos.x, pos.y) ? that.focus() : that.blur();
     };
     var mouseleave = function(evt) {
@@ -3843,6 +3875,7 @@ Button.prototype = {
 
     blur: function() {
         this.isHover = false;
+        this.startedInside = false;
     },
 
     draw: function(ctx) {
@@ -8107,11 +8140,11 @@ mapMsPacman4.fruitPaths = {
 //////////////////////////////////////////////////////////////////////////////////////
 // Entry Point
 
-window.onload = function() {
+window.addEventListener("load", function() {
     initRenderer();
     atlas.create();
     initSwipe();
     switchState(homeState);
     executive.init();
-};
+});
 })();

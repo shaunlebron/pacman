@@ -131,6 +131,7 @@ var initSwipe = function() {
     var r = tileSize;
     
     var touchStart = function(event) {
+        event.preventDefault();
         var fingerCount = event.touches.length;
         if (fingerCount == 1) {
 
@@ -145,6 +146,7 @@ var initSwipe = function() {
     };
 
     var touchMove = function(event) {
+        event.preventDefault();
         var fingerCount = event.touches.length;
         if (fingerCount == 1) {
 
@@ -174,9 +176,11 @@ var initSwipe = function() {
     };
 
     var touchEnd = function(event) {
+        event.preventDefault();
     };
 
     var touchCancel = function(event) {
+        event.preventDefault();
         x=y=dx=dy=0;
     };
     

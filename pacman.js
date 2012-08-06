@@ -36,6 +36,7 @@ var pressUp = function() {
 
 document.onkeydown = function(e) {
     var key = (e||window.event).keyCode;
+    var isCustomKey = true;
     switch (key) {
 
         // LEFT
@@ -50,84 +51,100 @@ document.onkeydown = function(e) {
         // DOWN
         case 40: pressDown(); break;
 
-        // SHIFT
-        case 16:
-            if (vcr.getMode() == VCR_RECORD) {
-                vcr.startSeeking();
-            }
-            break;
-        default: return;
-
-        // CTRL
-        case 17: executive.setUpdatesPerSecond(30); break;
-
-        // ALT
-        case 18: executive.setUpdatesPerSecond(15); break;
+        default: isCustomKey = false;
     }
-    // prevent default action for arrow keys
-    // (don't scroll page with arrow keys)
-    e.preventDefault();
+
+    // controls for practice-mode only
+    if (practiceMode) {
+        switch (key) {
+            // SHIFT
+            case 16:
+                if (vcr.getMode() == VCR_RECORD) {
+                    vcr.startSeeking();
+                }
+                break;
+
+            // CTRL
+            case 17: executive.setUpdatesPerSecond(30); break;
+
+            // ALT
+            case 18: executive.setUpdatesPerSecond(15); break;
+
+            default: isCustomKey |= false;
+        }
+    }
+
+    // prevent default actions for our keys
+    if (isCustomKey) {
+        e.preventDefault();
+    }
 };
 
 document.onkeyup = function(e) {
     var key = (e||window.event).keyCode;
-    switch (key) {
 
+    var isCustomKey = true;
+    switch (key) {
         // spacebar
         case 32: executive.togglePause(); break;
+        default: isCustomKey = false;
+    };
 
-            break;
-        // SHIFT
-        case 16:
-            vcr.startRecording();
-            break;
+    // controls for practice-mode only
+    if (practiceMode) {
+        switch (key) {
+            // SHIFT
+            case 16: vcr.startRecording(); break;
 
-        // CTRL or ALT
-        case 17:
-        case 18: executive.setUpdatesPerSecond(60); break;
+            // CTRL or ALT
+            case 17:
+            case 18: executive.setUpdatesPerSecond(60); break;
 
-        // n (next level)
-        case 78:
-            if (state != homeState) {
-                //map.skipSignal = true;
-                switchState(readyNewState,60);
-            }
-            break;
+            // n (next level)
+            case 78:
+                if (state in [newGameState, readyNewState, readyRestartState, playState, deadState, finishState, overState]) {
+                    switchState(readyNewState,60);
+                }
+                break;
 
-        // q
-        case 81: blinky.isDrawTarget = !blinky.isDrawTarget; break;
-        // w
-        case 87: pinky.isDrawTarget = !pinky.isDrawTarget; break;
-        // e
-        case 69: inky.isDrawTarget = !inky.isDrawTarget; break;
-        // r
-        case 82: clyde.isDrawTarget = !clyde.isDrawTarget; break;
-        // t 
-        case 84: pacman.isDrawTarget = !pacman.isDrawTarget; break;
+            // q
+            case 81: blinky.isDrawTarget = !blinky.isDrawTarget; break;
+            // w
+            case 87: pinky.isDrawTarget = !pinky.isDrawTarget; break;
+            // e
+            case 69: inky.isDrawTarget = !inky.isDrawTarget; break;
+            // r
+            case 82: clyde.isDrawTarget = !clyde.isDrawTarget; break;
+            // t 
+            case 84: pacman.isDrawTarget = !pacman.isDrawTarget; break;
 
-        // a
-        case 65: blinky.isDrawPath = !blinky.isDrawPath; break;
-        // s
-        case 83: pinky.isDrawPath = !pinky.isDrawPath; break;
-        // d
-        case 68: inky.isDrawPath = !inky.isDrawPath; break;
-        // f
-        case 70: clyde.isDrawPath = !clyde.isDrawPath; break;
-        // g
-        case 71: pacman.isDrawPath = !pacman.isDrawPath; break;
+            // a
+            case 65: blinky.isDrawPath = !blinky.isDrawPath; break;
+            // s
+            case 83: pinky.isDrawPath = !pinky.isDrawPath; break;
+            // d
+            case 68: inky.isDrawPath = !inky.isDrawPath; break;
+            // f
+            case 70: clyde.isDrawPath = !clyde.isDrawPath; break;
+            // g
+            case 71: pacman.isDrawPath = !pacman.isDrawPath; break;
 
-        // i (invincible)
-        case 73: pacman.invincible = !pacman.invincible; break;
+            // i (invincible)
+            case 73: pacman.invincible = !pacman.invincible; break;
 
-        // o (turbO)
-        case 79: pacman.doubleSpeed = !pacman.doubleSpeed; break;
+            // o (turbO)
+            case 79: turboMode = !turboMode; break;
 
-        // p (auto-Play)
-        case 80: pacman.ai = !pacman.ai; break;
+            // p (auto-Play)
+            case 80: pacman.ai = !pacman.ai; break;
 
-        default: return;
+            default: isCustomKey |= false;
+        }
     }
-    e.preventDefault();
+
+    if (isCustomKey) {
+        e.preventDefault();
+    }
 };
 
 var initSwipe = function() {
@@ -213,16 +230,19 @@ var GAME_MSPACMAN = 1;
 var GAME_COOKIE = 2;
 
 var practiceMode = false;
+var turboMode = false;
 
 // current game mode
 var gameMode = GAME_PACMAN;
+var getGameName = function() {
+    return ["PAC-MAN", "MS. PAC-MAN", "COOKIE-MAN"][gameMode];
+};
 
 // current level, lives, and score
 var level = 1;
 var extraLives = 0;
-var highScore = 0;
-var score = 0;
 
+// handle vcr-seeking
 var savedLevel = {};
 var savedExtraLives = {};
 var savedHighScore = {};
@@ -232,32 +252,76 @@ var savedState = {};
 var saveGame = function(t) {
     savedLevel[t] = level;
     savedExtraLives[t] = extraLives;
-    savedHighScore[t] = highScore;
-    savedScore[t] = score;
+    savedHighScore[t] = getHighScore();
+    savedScore[t] = getScore();
     savedState[t] = state;
 };
-
 var loadGame = function(t) {
     level = savedLevel[t];
     if (extraLives != savedExtraLives[t]) {
         extraLives = savedExtraLives[t];
         renderer.drawMap();
     }
-    highScore = savedHighScore[t];
-    score = savedScore[t];
+    setHighScore(savedHighScore[t]);
+    setScore(savedScore[t]);
     state = savedState[t];
 };
 
-// TODO: have a high score for each game type
+/// SCORING
+// (manages scores and high scores for each game type)
 
+var scores =     [ 0,0,0,0,0,0,0 ];
+var highScores = [ 0,0,0,0,0,0,0 ];
+
+var getScoreIndex = function() {
+    if (practiceMode) {
+        return 6;
+    }
+    return gameMode*2 + (turboMode ? 1 : 0);
+};
+
+// handle a score increment
 var addScore = function(p) {
+
+    // get current scores
+    var score = getScore();
+
+    // handle extra life at 10000 points
     if (score < 10000 && score+p >= 10000) {
         extraLives++;
         renderer.drawMap();
     }
+
     score += p;
-    if (score > highScore)
-        highScore = score;
+    setScore(score);
+
+    if (!practiceMode) {
+        if (score > getHighScore()) {
+            setHighScore(score);
+        }
+    }
+};
+
+var getScore = function() {
+    return scores[getScoreIndex()];
+};
+var setScore = function(score) {
+    scores[getScoreIndex()] = score;
+};
+
+var getHighScore = function() {
+    return highScores[getScoreIndex()];
+};
+var setHighScore = function(highScore) {
+    highScores[getScoreIndex()] = highScore;
+};
+
+var clearCheats = function() {
+    pacman.invincible = false;
+    for (i=0; i<4; i++) {
+        ghosts[i].isDrawPath = false;
+        ghosts[i].isDrawTarget = false;
+    }
 };
 //@line 1 "src/vcr.js"
 //////////////////////////////////////////////////////////////////////////////////////
@@ -2995,6 +3059,11 @@ var initRenderer = function(){
             }
         },
 
+        clearMapFrame: function() {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0,0,mapWidth,mapHeight);
+        },
+
         renderFunc: function(f,that) {
             if (that) {
                 f.call(that,ctx);
@@ -3309,13 +3378,13 @@ var initRenderer = function(){
             ctx.textBaseline = "top";
             ctx.textAlign = "left";
             ctx.fillStyle = "#FFF";
-            ctx.fillText(score, tileSize, tileSize*2);
+            ctx.fillText(getScore(), tileSize, tileSize*2);
 
             ctx.font = "bold " + 1.5*tileSize + "px sans-serif";
             ctx.textBaseline = "top";
             ctx.textAlign = "center";
             ctx.fillText("high score", tileSize*map.numCols/2, 3);
-            ctx.fillText(highScore, tileSize*map.numCols/2, tileSize*2);
+            ctx.fillText(getHighScore(), tileSize*map.numCols/2, tileSize*2);
         },
 
         // draw the extra lives indicator
@@ -3597,13 +3666,23 @@ var initRenderer = function(){
 
             ctx.textAlign = "right";
             ctx.fillText("1UP", 6*tileSize, 0);
-            ctx.fillText("HIGH SCORE", 19*tileSize, 0);
+            ctx.fillText(practiceMode ? "PRACTICE" : "HIGH SCORE", 19*tileSize, 0);
+            //ctx.fillText("2UP", 25*tileSize, 0);
 
-            var score_str = score == 0 ? "00" : score;
-            var high_str = highScore == 0 ? "00" : highScore;
+            // TODO: player two score
+            var score = getScore();
+            if (score == 0) {
+                score = "00";
+            }
+            ctx.fillText(score, 7*tileSize, tileSize);
 
-            ctx.fillText(score_str, 7*tileSize, tileSize);
-            ctx.fillText(high_str, 17*tileSize, tileSize);
+            if (!practiceMode) {
+                var highScore = getHighScore();
+                if (highScore == 0) {
+                    highScore = "00";
+                }
+                ctx.fillText(highScore, 17*tileSize, tileSize);
+            }
         },
 
         // draw ghost
@@ -3856,6 +3935,7 @@ var Button = function(x,y,w,h,onclick) {
         canvas.removeEventListener('touchmove', touchmove);
         canvas.removeEventListener('touchend', touchend);
         canvas.removeEventListener('touchcancel', touchcancel);
+        that.blur();
     };
 };
 
@@ -3875,12 +3955,8 @@ Button.prototype = {
     },
 
     draw: function(ctx) {
-        ctx.fillStyle = "#000";
-        ctx.strokeStyle = "#000";
-        ctx.fillRect(this.x,this.y,this.w,this.h);
-        ctx.strokeRect(this.x,this.y,this.w,this.h);
-
-        ctx.strokeStyle = this.isHover ? this.borderFocusColor : this.borderBlurColor;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = this.isHover && this.onclick ? this.borderFocusColor : this.borderBlurColor;
         //ctx.strokeRect(this.x,this.y,this.w,this.h);
         ctx.beginPath();
         var x=this.x, y=this.y, w=this.w, h=this.h;
@@ -3916,7 +3992,7 @@ TextButton.prototype = {
     draw: function(ctx) {
         Button.prototype.draw.call(this,ctx);
         ctx.font = this.font;
-        ctx.fillStyle = this.isHover ? this.fontcolor : "#777";
+        ctx.fillStyle = this.isHover && this.onclick ? this.fontcolor : "#777";
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
@@ -3946,7 +4022,8 @@ TextIconButton.prototype = {
     },
 };
 //@line 1 "src/Menu.js"
-var Menu = function(x,y,w,h,pad,font,fontcolor) {
+var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
+    this.title = title;
     this.x = x;
     this.y = y;
     this.w = w;
@@ -3954,6 +4031,11 @@ var Menu = function(x,y,w,h,pad,font,fontcolor) {
     this.pad = pad;
     this.buttons = [];
     this.buttonCount = 0;
+    this.currentY = this.y+this.pad;
+
+    if (title) {
+        this.currentY += 1.5*(this.h + this.pad);
+    }
 
     this.font = font;
     this.fontcolor = fontcolor;
@@ -3962,17 +4044,22 @@ var Menu = function(x,y,w,h,pad,font,fontcolor) {
 Menu.prototype = {
 
     addTextButton: function(msg,onclick) {
-        var x = this.x + this.pad;
-        var y = this.y + this.pad + (this.pad + this.h) * this.buttonCount;
-        this.buttons.push(new TextButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor));
+        this.buttons.push(new TextButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor));
         this.buttonCount++;
+        this.currentY += this.pad + this.h;
     },
 
     addTextIconButton: function(msg,onclick,drawIcon) {
-        var x = this.x + this.pad;
-        var y = this.y + this.pad + (this.pad + this.h) * this.buttonCount;
-        this.buttons.push(new TextIconButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor,drawIcon));
+        this.buttons.push(new TextIconButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor,drawIcon));
         this.buttonCount++;
+        this.currentY += this.pad + this.h;
+    },
+
+    addSpacer: function(count) {
+        if (count == undefined) {
+            count = 1;
+        }
+        this.currentY += count*(this.pad + this.h);
     },
 
     enable: function() {
@@ -3990,6 +4077,13 @@ Menu.prototype = {
     },
 
     draw: function(ctx) {
+        if (this.title) {
+            ctx.font = tileSize+"px ArcadeR";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#FFF";
+            ctx.fillText(this.title,this.x + this.w/2, this.y+this.pad+this.h/2);
+        }
         var i;
         for (i=0; i<this.buttonCount; i++) {
             this.buttons[i].draw(ctx);
@@ -5703,7 +5797,7 @@ Player.prototype.setNextDir = function(nextDirEnum) {
 
 // gets the number of steps to move in this frame
 Player.prototype.getNumSteps = function() {
-    if (this.doubleSpeed)
+    if (turboMode)
         return 2;
 
     var pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
@@ -7037,8 +7131,9 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
                 initialized = false;
             }
             else {
-                if (frames == frameDuration/2)
+                if (frames == frameDuration/2) {
                     nextState.init();
+                }
                 frames++;
             }
         },
@@ -7052,11 +7147,11 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
 var homeState = (function(){
 
     var exitTo = function(s) {
-        switchState(s,60);
+        switchState(s);
         menu.disable();
     };
 
-    var menu = new Menu(2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("ARCADE",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     var getIconAnimFrame = function(frame) {
         frame = Math.floor(frame/3)+1;
         frame %= 4;
@@ -7068,7 +7163,7 @@ var homeState = (function(){
     menu.addTextIconButton("PAC-MAN",
         function() {
             gameMode = GAME_PACMAN;
-            exitTo(newGameState);
+            exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
             atlas.drawPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
@@ -7076,7 +7171,7 @@ var homeState = (function(){
     menu.addTextIconButton("MS. PAC-MAN", 
         function() {
             gameMode = GAME_MSPACMAN;
-            exitTo(newGameState);
+            exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
             atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
@@ -7084,11 +7179,12 @@ var homeState = (function(){
     menu.addTextIconButton("COOKIE-MAN",
         function() {
             gameMode = GAME_COOKIE;
-            exitTo(newGameState);
+            exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
             atlas.drawCookiemanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
+    /*
     menu.addTextIconButton("CHALLENGES",
         function() {
         },
@@ -7103,7 +7199,9 @@ var homeState = (function(){
             var flash = Math.floor(frame/24)%2;
             atlas.drawGhostSprite(ctx,x,y,animFrame,DIR_RIGHT,true,flash,false,blinky.color);
         });
-    menu.addTextButton("ABOUT",
+    */
+    menu.addSpacer();
+    menu.addTextButton("CREDITS",
         function() {
             exitTo(aboutState);
         });
@@ -7113,6 +7211,7 @@ var homeState = (function(){
             menu.enable();
         },
         draw: function() {
+            renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
         },
         update: function() {
@@ -7123,20 +7222,73 @@ var homeState = (function(){
 })();
 
 //////////////////////////////////////////////////////////////////////////////////////
+// Pre New Game State
+// (the screen shown to select final options before starting a game)
+
+var preNewGameState = (function() {
+
+    var exitTo = function(s,fade) {
+        switchState(s,fade);
+        menu.disable();
+    };
+
+    var menu = new Menu("GAMENAME",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+
+    menu.addTextButton("PLAY",
+        function() { 
+            clearCheats();
+            practiceMode = false;
+            turboMode = false;
+            exitTo(newGameState, 60);
+        });
+    menu.addTextButton("PLAY TURBO",
+        function() { 
+            clearCheats();
+            practiceMode = false;
+            turboMode = true;
+            exitTo(newGameState, 60);
+        });
+    menu.addTextButton("PRACTICE",
+        function() { 
+            clearCheats();
+            practiceMode = true;
+            turboMode = false;
+            exitTo(newGameState, 60);
+        });
+    menu.addSpacer();
+    menu.addTextButton("BACK",
+        function() {
+            exitTo(homeState);
+        });
+
+    return {
+        init: function() {
+            menu.title = getGameName();
+            menu.enable();
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.renderFunc(menu.draw,menu);
+        },
+        update: function() {
+        },
+    };
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
 // About State
 // (the about screen state)
 
 var aboutState = (function(){
 
     var exitTo = function(s) {
-        switchState(s,60);
+        switchState(s);
         menu.disable();
     };
 
-    var menu = new Menu(2*tileSize,mapHeight-5*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("", 2*tileSize,mapHeight-5*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("BACK",
         function() {
-            gameMode = GAME_PACMAN;
             exitTo(homeState);
         });
 
@@ -7192,6 +7344,7 @@ var aboutState = (function(){
             menu.enable();
         },
         draw: function() {
+            renderer.clearMapFrame();
             renderer.renderFunc(drawBody);
             renderer.renderFunc(menu.draw,menu);
         },
@@ -7215,7 +7368,7 @@ var newGameState = (function() {
             frames = 0;
             level = 0;
             extraLives = 3;
-            score = 0;
+            setScore(0);
             readyNewState.init();
         },
         draw: function() {

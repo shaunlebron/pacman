@@ -131,6 +131,7 @@ var Button = function(x,y,w,h,onclick) {
         canvas.removeEventListener('touchmove', touchmove);
         canvas.removeEventListener('touchend', touchend);
         canvas.removeEventListener('touchcancel', touchcancel);
+        that.blur();
     };
 };
 
@@ -150,12 +151,8 @@ Button.prototype = {
     },
 
     draw: function(ctx) {
-        ctx.fillStyle = "#000";
-        ctx.strokeStyle = "#000";
-        ctx.fillRect(this.x,this.y,this.w,this.h);
-        ctx.strokeRect(this.x,this.y,this.w,this.h);
-
-        ctx.strokeStyle = this.isHover ? this.borderFocusColor : this.borderBlurColor;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = this.isHover && this.onclick ? this.borderFocusColor : this.borderBlurColor;
         //ctx.strokeRect(this.x,this.y,this.w,this.h);
         ctx.beginPath();
         var x=this.x, y=this.y, w=this.w, h=this.h;
@@ -191,7 +188,7 @@ TextButton.prototype = {
     draw: function(ctx) {
         Button.prototype.draw.call(this,ctx);
         ctx.font = this.font;
-        ctx.fillStyle = this.isHover ? this.fontcolor : "#777";
+        ctx.fillStyle = this.isHover && this.onclick ? this.fontcolor : "#777";
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);

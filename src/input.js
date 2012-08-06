@@ -23,6 +23,7 @@ var pressUp = function() {
 
 document.onkeydown = function(e) {
     var key = (e||window.event).keyCode;
+    var isCustomKey = true;
     switch (key) {
 
         // LEFT
@@ -37,84 +38,100 @@ document.onkeydown = function(e) {
         // DOWN
         case 40: pressDown(); break;
 
-        // SHIFT
-        case 16:
-            if (vcr.getMode() == VCR_RECORD) {
-                vcr.startSeeking();
-            }
-            break;
-        default: return;
-
-        // CTRL
-        case 17: executive.setUpdatesPerSecond(30); break;
-
-        // ALT
-        case 18: executive.setUpdatesPerSecond(15); break;
+        default: isCustomKey = false;
     }
-    // prevent default action for arrow keys
-    // (don't scroll page with arrow keys)
-    e.preventDefault();
+
+    // controls for practice-mode only
+    if (practiceMode) {
+        switch (key) {
+            // SHIFT
+            case 16:
+                if (vcr.getMode() == VCR_RECORD) {
+                    vcr.startSeeking();
+                }
+                break;
+
+            // CTRL
+            case 17: executive.setUpdatesPerSecond(30); break;
+
+            // ALT
+            case 18: executive.setUpdatesPerSecond(15); break;
+
+            default: isCustomKey |= false;
+        }
+    }
+
+    // prevent default actions for our keys
+    if (isCustomKey) {
+        e.preventDefault();
+    }
 };
 
 document.onkeyup = function(e) {
     var key = (e||window.event).keyCode;
-    switch (key) {
 
+    var isCustomKey = true;
+    switch (key) {
         // spacebar
         case 32: executive.togglePause(); break;
+        default: isCustomKey = false;
+    };
 
-            break;
-        // SHIFT
-        case 16:
-            vcr.startRecording();
-            break;
+    // controls for practice-mode only
+    if (practiceMode) {
+        switch (key) {
+            // SHIFT
+            case 16: vcr.startRecording(); break;
 
-        // CTRL or ALT
-        case 17:
-        case 18: executive.setUpdatesPerSecond(60); break;
+            // CTRL or ALT
+            case 17:
+            case 18: executive.setUpdatesPerSecond(60); break;
 
-        // n (next level)
-        case 78:
-            if (state != homeState) {
-                //map.skipSignal = true;
-                switchState(readyNewState,60);
-            }
-            break;
+            // n (next level)
+            case 78:
+                if (state in [newGameState, readyNewState, readyRestartState, playState, deadState, finishState, overState]) {
+                    switchState(readyNewState,60);
+                }
+                break;
 
-        // q
-        case 81: blinky.isDrawTarget = !blinky.isDrawTarget; break;
-        // w
-        case 87: pinky.isDrawTarget = !pinky.isDrawTarget; break;
-        // e
-        case 69: inky.isDrawTarget = !inky.isDrawTarget; break;
-        // r
-        case 82: clyde.isDrawTarget = !clyde.isDrawTarget; break;
-        // t 
-        case 84: pacman.isDrawTarget = !pacman.isDrawTarget; break;
+            // q
+            case 81: blinky.isDrawTarget = !blinky.isDrawTarget; break;
+            // w
+            case 87: pinky.isDrawTarget = !pinky.isDrawTarget; break;
+            // e
+            case 69: inky.isDrawTarget = !inky.isDrawTarget; break;
+            // r
+            case 82: clyde.isDrawTarget = !clyde.isDrawTarget; break;
+            // t 
+            case 84: pacman.isDrawTarget = !pacman.isDrawTarget; break;
 
-        // a
-        case 65: blinky.isDrawPath = !blinky.isDrawPath; break;
-        // s
-        case 83: pinky.isDrawPath = !pinky.isDrawPath; break;
-        // d
-        case 68: inky.isDrawPath = !inky.isDrawPath; break;
-        // f
-        case 70: clyde.isDrawPath = !clyde.isDrawPath; break;
-        // g
-        case 71: pacman.isDrawPath = !pacman.isDrawPath; break;
+            // a
+            case 65: blinky.isDrawPath = !blinky.isDrawPath; break;
+            // s
+            case 83: pinky.isDrawPath = !pinky.isDrawPath; break;
+            // d
+            case 68: inky.isDrawPath = !inky.isDrawPath; break;
+            // f
+            case 70: clyde.isDrawPath = !clyde.isDrawPath; break;
+            // g
+            case 71: pacman.isDrawPath = !pacman.isDrawPath; break;
 
-        // i (invincible)
-        case 73: pacman.invincible = !pacman.invincible; break;
+            // i (invincible)
+            case 73: pacman.invincible = !pacman.invincible; break;
 
-        // o (turbO)
-        case 79: pacman.doubleSpeed = !pacman.doubleSpeed; break;
+            // o (turbO)
+            case 79: turboMode = !turboMode; break;
 
-        // p (auto-Play)
-        case 80: pacman.ai = !pacman.ai; break;
+            // p (auto-Play)
+            case 80: pacman.ai = !pacman.ai; break;
 
-        default: return;
+            default: isCustomKey |= false;
+        }
     }
-    e.preventDefault();
+
+    if (isCustomKey) {
+        e.preventDefault();
+    }
 };
 
 var initSwipe = function() {

@@ -1,4 +1,5 @@
-var Menu = function(x,y,w,h,pad,font,fontcolor) {
+var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
+    this.title = title;
     this.x = x;
     this.y = y;
     this.w = w;
@@ -6,6 +7,11 @@ var Menu = function(x,y,w,h,pad,font,fontcolor) {
     this.pad = pad;
     this.buttons = [];
     this.buttonCount = 0;
+    this.currentY = this.y+this.pad;
+
+    if (title) {
+        this.currentY += 1.5*(this.h + this.pad);
+    }
 
     this.font = font;
     this.fontcolor = fontcolor;
@@ -14,17 +20,22 @@ var Menu = function(x,y,w,h,pad,font,fontcolor) {
 Menu.prototype = {
 
     addTextButton: function(msg,onclick) {
-        var x = this.x + this.pad;
-        var y = this.y + this.pad + (this.pad + this.h) * this.buttonCount;
-        this.buttons.push(new TextButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor));
+        this.buttons.push(new TextButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor));
         this.buttonCount++;
+        this.currentY += this.pad + this.h;
     },
 
     addTextIconButton: function(msg,onclick,drawIcon) {
-        var x = this.x + this.pad;
-        var y = this.y + this.pad + (this.pad + this.h) * this.buttonCount;
-        this.buttons.push(new TextIconButton(x,y,this.w,this.h,onclick,msg,this.font,this.fontcolor,drawIcon));
+        this.buttons.push(new TextIconButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor,drawIcon));
         this.buttonCount++;
+        this.currentY += this.pad + this.h;
+    },
+
+    addSpacer: function(count) {
+        if (count == undefined) {
+            count = 1;
+        }
+        this.currentY += count*(this.pad + this.h);
     },
 
     enable: function() {
@@ -42,6 +53,13 @@ Menu.prototype = {
     },
 
     draw: function(ctx) {
+        if (this.title) {
+            ctx.font = tileSize+"px ArcadeR";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#FFF";
+            ctx.fillText(this.title,this.x + this.w/2, this.y+this.pad+this.h/2);
+        }
         var i;
         for (i=0; i<this.buttonCount; i++) {
             this.buttons[i].draw(ctx);

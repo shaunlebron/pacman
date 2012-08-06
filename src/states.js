@@ -56,8 +56,9 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
                 initialized = false;
             }
             else {
-                if (frames == frameDuration/2)
+                if (frames == frameDuration/2) {
                     nextState.init();
+                }
                 frames++;
             }
         },
@@ -71,11 +72,11 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
 var homeState = (function(){
 
     var exitTo = function(s) {
-        switchState(s,60);
+        switchState(s);
         menu.disable();
     };
 
-    var menu = new Menu(2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("ARCADE",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     var getIconAnimFrame = function(frame) {
         frame = Math.floor(frame/3)+1;
         frame %= 4;
@@ -87,7 +88,7 @@ var homeState = (function(){
     menu.addTextIconButton("PAC-MAN",
         function() {
             gameMode = GAME_PACMAN;
-            exitTo(newGameState);
+            exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
             atlas.drawPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
@@ -95,7 +96,7 @@ var homeState = (function(){
     menu.addTextIconButton("MS. PAC-MAN", 
         function() {
             gameMode = GAME_MSPACMAN;
-            exitTo(newGameState);
+            exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
             atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
@@ -103,11 +104,12 @@ var homeState = (function(){
     menu.addTextIconButton("COOKIE-MAN",
         function() {
             gameMode = GAME_COOKIE;
-            exitTo(newGameState);
+            exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
             atlas.drawCookiemanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
+    /*
     menu.addTextIconButton("CHALLENGES",
         function() {
         },
@@ -122,7 +124,9 @@ var homeState = (function(){
             var flash = Math.floor(frame/24)%2;
             atlas.drawGhostSprite(ctx,x,y,animFrame,DIR_RIGHT,true,flash,false,blinky.color);
         });
-    menu.addTextButton("ABOUT",
+    */
+    menu.addSpacer();
+    menu.addTextButton("CREDITS",
         function() {
             exitTo(aboutState);
         });
@@ -132,6 +136,7 @@ var homeState = (function(){
             menu.enable();
         },
         draw: function() {
+            renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
         },
         update: function() {
@@ -142,20 +147,73 @@ var homeState = (function(){
 })();
 
 //////////////////////////////////////////////////////////////////////////////////////
+// Pre New Game State
+// (the screen shown to select final options before starting a game)
+
+var preNewGameState = (function() {
+
+    var exitTo = function(s,fade) {
+        switchState(s,fade);
+        menu.disable();
+    };
+
+    var menu = new Menu("GAMENAME",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+
+    menu.addTextButton("PLAY",
+        function() { 
+            clearCheats();
+            practiceMode = false;
+            turboMode = false;
+            exitTo(newGameState, 60);
+        });
+    menu.addTextButton("PLAY TURBO",
+        function() { 
+            clearCheats();
+            practiceMode = false;
+            turboMode = true;
+            exitTo(newGameState, 60);
+        });
+    menu.addTextButton("PRACTICE",
+        function() { 
+            clearCheats();
+            practiceMode = true;
+            turboMode = false;
+            exitTo(newGameState, 60);
+        });
+    menu.addSpacer();
+    menu.addTextButton("BACK",
+        function() {
+            exitTo(homeState);
+        });
+
+    return {
+        init: function() {
+            menu.title = getGameName();
+            menu.enable();
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.renderFunc(menu.draw,menu);
+        },
+        update: function() {
+        },
+    };
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
 // About State
 // (the about screen state)
 
 var aboutState = (function(){
 
     var exitTo = function(s) {
-        switchState(s,60);
+        switchState(s);
         menu.disable();
     };
 
-    var menu = new Menu(2*tileSize,mapHeight-5*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("", 2*tileSize,mapHeight-5*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("BACK",
         function() {
-            gameMode = GAME_PACMAN;
             exitTo(homeState);
         });
 
@@ -211,6 +269,7 @@ var aboutState = (function(){
             menu.enable();
         },
         draw: function() {
+            renderer.clearMapFrame();
             renderer.renderFunc(drawBody);
             renderer.renderFunc(menu.draw,menu);
         },
@@ -234,7 +293,7 @@ var newGameState = (function() {
             frames = 0;
             level = 0;
             extraLives = 3;
-            score = 0;
+            setScore(0);
             readyNewState.init();
         },
         draw: function() {

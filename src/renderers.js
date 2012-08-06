@@ -193,6 +193,11 @@ var initRenderer = function(){
             }
         },
 
+        clearMapFrame: function() {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0,0,mapWidth,mapHeight);
+        },
+
         renderFunc: function(f,that) {
             if (that) {
                 f.call(that,ctx);
@@ -507,13 +512,13 @@ var initRenderer = function(){
             ctx.textBaseline = "top";
             ctx.textAlign = "left";
             ctx.fillStyle = "#FFF";
-            ctx.fillText(score, tileSize, tileSize*2);
+            ctx.fillText(getScore(), tileSize, tileSize*2);
 
             ctx.font = "bold " + 1.5*tileSize + "px sans-serif";
             ctx.textBaseline = "top";
             ctx.textAlign = "center";
             ctx.fillText("high score", tileSize*map.numCols/2, 3);
-            ctx.fillText(highScore, tileSize*map.numCols/2, tileSize*2);
+            ctx.fillText(getHighScore(), tileSize*map.numCols/2, tileSize*2);
         },
 
         // draw the extra lives indicator
@@ -795,13 +800,23 @@ var initRenderer = function(){
 
             ctx.textAlign = "right";
             ctx.fillText("1UP", 6*tileSize, 0);
-            ctx.fillText("HIGH SCORE", 19*tileSize, 0);
+            ctx.fillText(practiceMode ? "PRACTICE" : "HIGH SCORE", 19*tileSize, 0);
+            //ctx.fillText("2UP", 25*tileSize, 0);
 
-            var score_str = score == 0 ? "00" : score;
-            var high_str = highScore == 0 ? "00" : highScore;
+            // TODO: player two score
+            var score = getScore();
+            if (score == 0) {
+                score = "00";
+            }
+            ctx.fillText(score, 7*tileSize, tileSize);
 
-            ctx.fillText(score_str, 7*tileSize, tileSize);
-            ctx.fillText(high_str, 17*tileSize, tileSize);
+            if (!practiceMode) {
+                var highScore = getHighScore();
+                if (highScore == 0) {
+                    highScore = "00";
+                }
+                ctx.fillText(highScore, 17*tileSize, tileSize);
+            }
         },
 
         // draw ghost

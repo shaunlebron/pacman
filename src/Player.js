@@ -135,7 +135,11 @@ Player.prototype.update = function(j) {
     // eat something
     var t = map.getTile(this.tile.x, this.tile.y);
     if (t == '.' || t == 'o') {
-        this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
+
+        // apply eating drag (unless in turbo mode)
+        if (!turboMode) {
+            this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
+        }
 
         map.onDotEat(this.tile.x, this.tile.y);
         ghostReleaser.onDotEat();

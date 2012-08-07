@@ -24,12 +24,10 @@ Controls
 - **shift**: hold down to rewind (a la Braid)
 - **ctrl**: hold down to slow down the game to 0.5x
 - **alt**: hold down to slow down the game to 0.25x
-
 - **o**: toggle pacman turbo mode
 - **p**: toggle pacman attract mode (autoplay)
 - **i**: toggle pacman invincibility
 - **n**: go to next level
-
 - **q,w,e,r,t**: toggle target graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 - **a,s,d,f,g**: toggle path graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 

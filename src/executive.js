@@ -1,10 +1,10 @@
 var executive = (function(){
 
-    var interval; // used by setInterval and clearInterval to execute the game loop
-    var timeout;
     var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
-    var nextFrameTime;
-    var running = false;
+    var gameTime; // virtual time of the last game update
+
+    var paused = false; // flag for pausing the state updates, while still drawing
+    var running = false; // flag for truly stopping everything
 
     /**********/
     // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
@@ -38,9 +38,10 @@ var executive = (function(){
             };
     }());
     /**********/
-    var reqFrame;
+
     var fps;
     var updateFps = (function(){
+        // TODO: fix this to reflect the average rate of the last n frames, where 0 < n < 60
         var length = 60;
         var times = [];
         var startIndex = 0;
@@ -64,36 +65,37 @@ var executive = (function(){
                 frames += length;
             }
             fps = frames / seconds;
-            
-            if (state == finishState) {
-                //console.log(fps);
-            }
         };
     })();
         
 
-    var paused = false;
+    var reqFrame; // id of requestAnimationFrame object
     var tick = function(now) {
+
+        // Update fps counter.
         updateFps(now);
 
-        // call update for every frame period that has elapsed
-        var maxFrameSkip = 5;
-        var frames = 0;
+        // Control frame-skipping by only allowing gameTime to lag behind the current time by some amount.
+        var maxFrameSkip = 3;
+        gameTime = Math.max(gameTime, now-maxFrameSkip*framePeriod);
 
+        // Prevent any updates from being called when paused.
         if (paused) {
-            nextFrameTime = now;
+            gameTime = now;
         }
-        if (framePeriod != Infinity) {
-            while (frames < maxFrameSkip && (now > nextFrameTime)) {
-                state.update();
-                nextFrameTime += framePeriod;
-                frames++;
-            }
+
+        // Update the game until the gameTime surpasses the current time.
+        while (gameTime < now) {
+            state.update();
+            gameTime += framePeriod;
         }
-        // draw after updates are caught up
+
+        // Draw.
         renderer.beginFrame();
         state.draw();
         renderer.endFrame();
+
+        // Schedule the next tick.
         reqFrame = requestAnimationFrame(tick);
     };
 
@@ -102,7 +104,7 @@ var executive = (function(){
         // scheduling
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
-            nextFrameTime = (new Date).getTime();
+            gameTime = (new Date).getTime();
         },
         init: function() {
             var that = this;
@@ -111,15 +113,17 @@ var executive = (function(){
             this.start();
         },
         start: function() {
-            if (running) return;
-            nextFrameTime = (new Date).getTime();
-            reqFrame = requestAnimationFrame(tick);
-            running = true;
+            if (!running) {
+                gameTime = (new Date).getTime();
+                reqFrame = requestAnimationFrame(tick);
+                running = true;
+            }
         },
         stop: function() {
-            if (!running) return;
-            cancelAnimationFrame(reqFrame);
-            running = false;
+            if (running) {
+                cancelAnimationFrame(reqFrame);
+                running = false;
+            }
         },
         togglePause: function() { paused = !paused; },
         isPaused: function() { return paused; },

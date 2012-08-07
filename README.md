@@ -5,31 +5,30 @@ A historical tribute and accurate remake of the original Pac-Man arcade game.
 
 Play
 ----
+
+You can play the game on all canvas-enabled browsers.  Touch interface is
+enabled for mobile browsers.  The game is resolution-independent and scales to
+fit the size of your window.  Performance may increase by shrinking the window.
+
 [Click here to play the current version](http://shaunew.github.com/Pac-Man)
 
 Controls
 --------
 
-### Movement
-
 - **swipe**: steer pacman on mobile browsers
 - **arrows**: steer pacman
-
-### Time Manipulation
-
 - **spacebar**: pause/unpause the game
+
+### Practice Mode
+
 - **shift**: hold down to rewind (a la Braid)
 - **ctrl**: hold down to slow down the game to 0.5x
 - **alt**: hold down to slow down the game to 0.25x
-
-### Misc.
 
 - **o**: toggle pacman turbo mode
 - **p**: toggle pacman attract mode (autoplay)
 - **i**: toggle pacman invincibility
 - **n**: go to next level
-
-### Ghost Visualizers
 
 - **q,w,e,r,t**: toggle target graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 - **a,s,d,f,g**: toggle path graphic for blinky, pinky, inky, clyde, and pacman, respectively.
@@ -38,8 +37,10 @@ Features
 --------
 
 - same coordinate space, movement physics, ghost behavior, timers, and update rate as the original arcade game
-- remake of the original Pac-Man and Ms. Pac-Man game modes
-- new Cookie-Man game mode with procedural map generator
+- scalable, resolution-independent graphics
+- playable on mobile browsers
+- original Pac-Man and Ms. Pac-Man game modes, including the original popular turbo modes.
+- new Cookie-Man game with procedural map generator
 
 Navigating the Repository
 -------------------------

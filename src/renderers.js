@@ -170,13 +170,15 @@ var initRenderer = function(){
             ctx.fillRect(screenWidth-mapMargin-1,mapMargin,mapMargin+1,screenHeight-2*mapMargin);
             ctx.fillRect(0,screenHeight-1-mapMargin,screenWidth,mapMargin+1);
 
-
             // draw fps
             ctx.font = (tileSize-2) + "px ArcadeR";
             ctx.textBaseline = "top";
             ctx.textAlign = "left";
             ctx.fillStyle = "#777";
             ctx.fillText(executive.getFps().toFixed(2)+" FPS", 2, 2);
+
+            // draw inGameMenu button
+            inGameMenu.drawButton(ctx);
 
             // translate to map space
             ctx.translate(mapMargin+mapPad, mapMargin+mapPad);

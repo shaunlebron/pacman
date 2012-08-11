@@ -3036,13 +3036,15 @@ var initRenderer = function(){
             ctx.fillRect(screenWidth-mapMargin-1,mapMargin,mapMargin+1,screenHeight-2*mapMargin);
             ctx.fillRect(0,screenHeight-1-mapMargin,screenWidth,mapMargin+1);
 
-
             // draw fps
             ctx.font = (tileSize-2) + "px ArcadeR";
             ctx.textBaseline = "top";
             ctx.textAlign = "left";
             ctx.fillStyle = "#777";
             ctx.fillText(executive.getFps().toFixed(2)+" FPS", 2, 2);
+
+            // draw inGameMenu button
+            inGameMenu.drawButton(ctx);
 
             // translate to map space
             ctx.translate(mapMargin+mapPad, mapMargin+mapPad);
@@ -3917,6 +3919,7 @@ var Button = function(x,y,w,h,onclick) {
         that.blur();
     };
 
+    this.isEnabled = false;
     this.enable = function() {
         canvas.addEventListener('click', click);
         canvas.addEventListener('mousemove', mousemove);
@@ -3925,6 +3928,7 @@ var Button = function(x,y,w,h,onclick) {
         canvas.addEventListener('touchmove', touchmove);
         canvas.addEventListener('touchend', touchend);
         canvas.addEventListener('touchcancel', touchcancel);
+        this.isEnabled = true;
     };
 
     this.disable = function() {
@@ -3936,6 +3940,7 @@ var Button = function(x,y,w,h,onclick) {
         canvas.removeEventListener('touchend', touchend);
         canvas.removeEventListener('touchcancel', touchcancel);
         that.blur();
+        this.isEnabled = false;
     };
 };
 
@@ -3956,8 +3961,6 @@ Button.prototype = {
 
     draw: function(ctx) {
         ctx.lineWidth = 2;
-        ctx.strokeStyle = this.isHover && this.onclick ? this.borderFocusColor : this.borderBlurColor;
-        //ctx.strokeRect(this.x,this.y,this.w,this.h);
         ctx.beginPath();
         var x=this.x, y=this.y, w=this.w, h=this.h;
         var r=h/4;
@@ -3970,7 +3973,12 @@ Button.prototype = {
         ctx.lineTo(x+r,y+h);
         ctx.quadraticCurveTo(x,y+h,x,y+h-r);
         ctx.closePath();
+
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fill();
+        ctx.strokeStyle = this.isHover && this.onclick ? this.borderFocusColor : this.borderBlurColor;
         ctx.stroke();
+
     },
 
     update: function() {
@@ -4039,6 +4047,7 @@ var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
 
     this.font = font;
     this.fontcolor = fontcolor;
+    this.enabled = false;
 };
 
 Menu.prototype = {
@@ -4067,6 +4076,7 @@ Menu.prototype = {
         for (i=0; i<this.buttonCount; i++) {
             this.buttons[i].enable();
         }
+        this.enabled = true;
     },
 
     disable: function() {
@@ -4074,6 +4084,11 @@ Menu.prototype = {
         for (i=0; i<this.buttonCount; i++) {
             this.buttons[i].disable();
         }
+        this.enabled = false;
+    },
+
+    isEnabled: function() {
+        return this.enabled;
     },
 
     draw: function(ctx) {
@@ -4097,6 +4112,83 @@ Menu.prototype = {
         }
     },
 };
+//@line 1 "src/inGameMenu.js"
+////////////////////////////////////////////////////
+// In-Game Menu
+var inGameMenu = (function() {
+
+    var w=tileSize*6,h=tileSize*2;
+
+    var showMenu = function() {
+        menu.enable();
+    };
+    var hideMenu = function() {
+        menu.disable();
+    };
+
+    var btn = new TextButton(mapWidth/2 - w/2,-1.5*h,w,h,showMenu,"MENU",(tileSize-2)+"px ArcadeR","#FFF");
+
+    var menu = new Menu("PAUSED",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    menu.addTextButton("RESUME", hideMenu);
+    menu.addTextButton("QUIT", function() {
+        hideMenu();
+        quitMenu.enable();
+    });
+
+    var quitMenu = new Menu("QUIT GAME?",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    quitMenu.addTextButton("YES", function() {
+        quitMenu.disable();
+        switchState(homeState,60);
+    });
+    quitMenu.addTextButton("NO", function() {
+        quitMenu.disable();
+        showMenu();
+    });
+    // returns true if menu button should be available in the current state
+    var isMenuBtnState = function() {
+        return state == playState || state == newGameState || state == readyNewState || state == readyRestartState || state == finishState || state == deadState || state == overState;
+    };
+
+    return {
+        update: function() {
+
+            // enable or disable menu activation button
+            if (btn.isEnabled) {
+                if (!isMenuBtnState()) {
+                    btn.disable();
+                }
+            }
+            else {
+                if (isMenuBtnState()) {
+                    btn.enable();
+                }
+            }
+            if (btn.isEnabled) {
+                btn.update();
+            }
+
+        },
+        drawButton: function(ctx) {
+            if (isMenuBtnState() && (!menu.isEnabled() && !quitMenu.isEnabled())) {
+                btn.draw(ctx);
+            }
+        },
+        drawMenu: function(ctx) {
+            if (menu.isEnabled() || quitMenu.isEnabled()) {
+                ctx.fillStyle = "rgba(0,0,0,0.8)";
+                ctx.fillRect(-mapPad-1,-mapPad-1,mapWidth+1,mapHeight+1);
+                menu.isEnabled() ? menu.draw(ctx) : quitMenu.draw(ctx);
+            }
+        },
+        isAllowed: function() {
+            return isMenuBtnState();
+        },
+        isOpen: function() {
+            return menu.isEnabled() || quitMenu.isEnabled();
+        },
+    };
+})();
+
 //@line 1 "src/sprites.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Sprites
@@ -7030,9 +7122,11 @@ var executive = (function(){
         gameTime = Math.max(gameTime, now-maxFrameSkip*framePeriod);
 
         // Prevent any updates from being called when paused.
-        if (paused) {
+        if (paused || inGameMenu.isOpen()) {
             gameTime = now;
         }
+
+        inGameMenu.update();
 
         // Update the game until the gameTime surpasses the current time.
         while (gameTime < now) {
@@ -7043,6 +7137,8 @@ var executive = (function(){
         // Draw.
         renderer.beginFrame();
         state.draw();
+        renderer.renderFunc(inGameMenu.drawButton);
+        renderer.renderFunc(inGameMenu.drawMenu);
         renderer.endFrame();
 
         // Schedule the next tick.
@@ -7494,7 +7590,6 @@ var playState = {
     draw: function() {
         renderer.blitMap();
         renderer.drawScore();
-
         renderer.beginMapClip();
         renderer.drawFruit();
         renderer.drawPaths();

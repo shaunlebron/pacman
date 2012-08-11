@@ -113,6 +113,7 @@ var Button = function(x,y,w,h,onclick) {
         that.blur();
     };
 
+    this.isEnabled = false;
     this.enable = function() {
         canvas.addEventListener('click', click);
         canvas.addEventListener('mousemove', mousemove);
@@ -121,6 +122,7 @@ var Button = function(x,y,w,h,onclick) {
         canvas.addEventListener('touchmove', touchmove);
         canvas.addEventListener('touchend', touchend);
         canvas.addEventListener('touchcancel', touchcancel);
+        this.isEnabled = true;
     };
 
     this.disable = function() {
@@ -132,6 +134,7 @@ var Button = function(x,y,w,h,onclick) {
         canvas.removeEventListener('touchend', touchend);
         canvas.removeEventListener('touchcancel', touchcancel);
         that.blur();
+        this.isEnabled = false;
     };
 };
 
@@ -152,8 +155,6 @@ Button.prototype = {
 
     draw: function(ctx) {
         ctx.lineWidth = 2;
-        ctx.strokeStyle = this.isHover && this.onclick ? this.borderFocusColor : this.borderBlurColor;
-        //ctx.strokeRect(this.x,this.y,this.w,this.h);
         ctx.beginPath();
         var x=this.x, y=this.y, w=this.w, h=this.h;
         var r=h/4;
@@ -166,7 +167,12 @@ Button.prototype = {
         ctx.lineTo(x+r,y+h);
         ctx.quadraticCurveTo(x,y+h,x,y+h-r);
         ctx.closePath();
+
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fill();
+        ctx.strokeStyle = this.isHover && this.onclick ? this.borderFocusColor : this.borderBlurColor;
         ctx.stroke();
+
     },
 
     update: function() {

@@ -411,7 +411,6 @@ var playState = {
     draw: function() {
         renderer.blitMap();
         renderer.drawScore();
-
         renderer.beginMapClip();
         renderer.drawFruit();
         renderer.drawPaths();

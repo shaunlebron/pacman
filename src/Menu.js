@@ -15,6 +15,7 @@ var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
 
     this.font = font;
     this.fontcolor = fontcolor;
+    this.enabled = false;
 };
 
 Menu.prototype = {
@@ -43,6 +44,7 @@ Menu.prototype = {
         for (i=0; i<this.buttonCount; i++) {
             this.buttons[i].enable();
         }
+        this.enabled = true;
     },
 
     disable: function() {
@@ -50,6 +52,11 @@ Menu.prototype = {
         for (i=0; i<this.buttonCount; i++) {
             this.buttons[i].disable();
         }
+        this.enabled = false;
+    },
+
+    isEnabled: function() {
+        return this.enabled;
     },
 
     draw: function(ctx) {

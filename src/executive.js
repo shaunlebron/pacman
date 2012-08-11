@@ -80,9 +80,11 @@ var executive = (function(){
         gameTime = Math.max(gameTime, now-maxFrameSkip*framePeriod);
 
         // Prevent any updates from being called when paused.
-        if (paused) {
+        if (paused || inGameMenu.isOpen()) {
             gameTime = now;
         }
+
+        inGameMenu.update();
 
         // Update the game until the gameTime surpasses the current time.
         while (gameTime < now) {
@@ -93,6 +95,8 @@ var executive = (function(){
         // Draw.
         renderer.beginFrame();
         state.draw();
+        renderer.renderFunc(inGameMenu.drawButton);
+        renderer.renderFunc(inGameMenu.drawMenu);
         renderer.endFrame();
 
         // Schedule the next tick.

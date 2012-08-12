@@ -31,6 +31,7 @@ for file in \
     mapgen.js \
     atlas.js \
     renderers.js  \
+    galagaStars.js \
     gui.js \
     Menu.js \
     inGameMenu.js \

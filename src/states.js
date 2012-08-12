@@ -137,7 +137,9 @@ var homeState = (function(){
         },
         draw: function() {
             renderer.clearMapFrame();
+            renderer.beginMapClip();
             renderer.renderFunc(menu.draw,menu);
+            renderer.endMapClip();
         },
         update: function() {
             menu.update();
@@ -211,21 +213,19 @@ var aboutState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu("", 2*tileSize,mapHeight-5*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("BACK",
         function() {
             exitTo(homeState);
         });
 
     var drawBody = function(ctx) {
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0,0,mapWidth,mapHeight);
         ctx.font = tileSize+"px ArcadeR";
         ctx.textBaseline = "top";
         ctx.textAlign = "left";
 
         var x,y;
-        x = 4*tileSize;
+        x = 2*tileSize;
         y = 0*tileSize;
         ctx.fillStyle = "#0FF";
         ctx.fillText("DEVELOPER", x,y);
@@ -267,13 +267,18 @@ var aboutState = (function(){
     return {
         init: function() {
             menu.enable();
+            galagaStars.init();
         },
         draw: function() {
             renderer.clearMapFrame();
+            renderer.beginMapClip();
+            renderer.renderFunc(galagaStars.draw);
             renderer.renderFunc(drawBody);
             renderer.renderFunc(menu.draw,menu);
+            renderer.endMapClip();
         },
         update: function() {
+            galagaStars.update();
             menu.update();
         },
     };

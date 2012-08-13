@@ -22,7 +22,6 @@ echo "
 " > $output
 
 for file in \
-    input.js \
     game.js \
     vcr.js \
     direction.js \
@@ -48,6 +47,7 @@ for file in \
     fruit.js \
     executive.js \
     states.js \
+    input.js \
     cutscenes.js \
     maps.js \
     main.js

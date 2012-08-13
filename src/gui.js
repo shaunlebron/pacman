@@ -52,7 +52,7 @@ var Button = function(x,y,w,h,onclick) {
     this.h = h;
     this.onclick = onclick;
 
-    this.borderBlurColor = "#555";
+    this.borderBlurColor = "#333";
     this.borderFocusColor = "#EEE";
 
     this.isHover = false;

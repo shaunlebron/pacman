@@ -10,7 +10,7 @@ var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
     this.currentY = this.y+this.pad;
 
     if (title) {
-        this.currentY += 1.5*(this.h + this.pad);
+        this.currentY += 1*(this.h + this.pad);
     }
 
     this.font = font;
@@ -65,7 +65,7 @@ Menu.prototype = {
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillStyle = "#FFF";
-            ctx.fillText(this.title,this.x + this.w/2, this.y+this.pad+this.h/2);
+            ctx.fillText(this.title,this.x + this.w/2, this.y+this.pad + this.h/2);
         }
         var i;
         for (i=0; i<this.buttonCount; i++) {

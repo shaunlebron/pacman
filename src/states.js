@@ -93,7 +93,7 @@ var homeState = (function(){
         function(ctx,x,y,frame) {
             atlas.drawPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
-    menu.addTextIconButton("MS. PAC-MAN", 
+    menu.addTextIconButton("MS PAC-MAN", 
         function() {
             gameMode = GAME_MSPACMAN;
             exitTo(preNewGameState);
@@ -125,7 +125,7 @@ var homeState = (function(){
             atlas.drawGhostSprite(ctx,x,y,animFrame,DIR_RIGHT,true,flash,false,blinky.color);
         });
     */
-    menu.addSpacer();
+    menu.addSpacer(1.5);
     menu.addTextButton("CREDITS",
         function() {
             exitTo(aboutState);

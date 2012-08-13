@@ -10,216 +10,6 @@
 
 (function(){
 
-//@line 1 "src/input.js"
-
-var pressLeft = function() {
-    pacman.setNextDir(DIR_LEFT);
-};
-
-var pressRight = function() {
-    pacman.setNextDir(DIR_RIGHT);
-};
-
-var pressDown = function() {
-    pacman.setNextDir(DIR_DOWN);
-    if (vcr.getMode() != VCR_RECORD) {
-        vcr.nextSpeed(-1);
-    }
-};
-
-var pressUp = function() {
-    pacman.setNextDir(DIR_UP);
-    if (vcr.getMode() != VCR_RECORD) {
-        vcr.nextSpeed(1);
-    }
-};
-
-document.onkeydown = function(e) {
-    var key = (e||window.event).keyCode;
-    var isCustomKey = true;
-    switch (key) {
-
-        // LEFT
-        case 37: pressLeft(); break;
-
-        // RIGHT
-        case 39: pressRight(); break;
-
-        // UP
-        case 38: pressUp(); break;
-
-        // DOWN
-        case 40: pressDown(); break;
-
-        default: isCustomKey = false;
-    }
-
-    // controls for practice-mode only
-    if (practiceMode) {
-        switch (key) {
-            // SHIFT
-            case 16:
-                if (vcr.getMode() == VCR_RECORD) {
-                    vcr.startSeeking();
-                }
-                break;
-
-            // CTRL
-            case 17: executive.setUpdatesPerSecond(30); break;
-
-            // ALT
-            case 18: executive.setUpdatesPerSecond(15); break;
-
-            default: isCustomKey |= false;
-        }
-    }
-
-    // prevent default actions for our keys
-    if (isCustomKey) {
-        e.preventDefault();
-    }
-};
-
-document.onkeyup = function(e) {
-    var key = (e||window.event).keyCode;
-
-    var isCustomKey = true;
-    switch (key) {
-        // spacebar
-        case 32: executive.togglePause(); break;
-        default: isCustomKey = false;
-    };
-
-    // controls for practice-mode only
-    if (practiceMode) {
-        switch (key) {
-            // SHIFT
-            case 16: vcr.startRecording(); break;
-
-            // CTRL or ALT
-            case 17:
-            case 18: executive.setUpdatesPerSecond(60); break;
-
-            // n (next level)
-            case 78:
-                if (state in [newGameState, readyNewState, readyRestartState, playState, deadState, finishState, overState]) {
-                    switchState(readyNewState,60);
-                }
-                break;
-
-            // q
-            case 81: blinky.isDrawTarget = !blinky.isDrawTarget; break;
-            // w
-            case 87: pinky.isDrawTarget = !pinky.isDrawTarget; break;
-            // e
-            case 69: inky.isDrawTarget = !inky.isDrawTarget; break;
-            // r
-            case 82: clyde.isDrawTarget = !clyde.isDrawTarget; break;
-            // t 
-            case 84: pacman.isDrawTarget = !pacman.isDrawTarget; break;
-
-            // a
-            case 65: blinky.isDrawPath = !blinky.isDrawPath; break;
-            // s
-            case 83: pinky.isDrawPath = !pinky.isDrawPath; break;
-            // d
-            case 68: inky.isDrawPath = !inky.isDrawPath; break;
-            // f
-            case 70: clyde.isDrawPath = !clyde.isDrawPath; break;
-            // g
-            case 71: pacman.isDrawPath = !pacman.isDrawPath; break;
-
-            // i (invincible)
-            case 73: pacman.invincible = !pacman.invincible; break;
-
-            // o (turbO)
-            case 79: turboMode = !turboMode; break;
-
-            // p (auto-Play)
-            case 80: pacman.ai = !pacman.ai; break;
-
-            default: isCustomKey |= false;
-        }
-    }
-
-    if (isCustomKey) {
-        e.preventDefault();
-    }
-};
-
-var initSwipe = function() {
-
-    // position of anchor
-    var x = 0;
-    var y = 0;
-
-    // current distance from anchor
-    var dx = 0;
-    var dy = 0;
-
-    // minimum distance from anchor before direction is registered
-    var r = 2;
-    
-    var touchStart = function(event) {
-        event.preventDefault();
-        var fingerCount = event.touches.length;
-        if (fingerCount == 1) {
-
-            // commit new anchor
-            x = event.touches[0].pageX;
-            y = event.touches[0].pageY;
-
-        }
-        else {
-            touchCancel(event);
-        }
-    };
-
-    var touchMove = function(event) {
-        event.preventDefault();
-        var fingerCount = event.touches.length;
-        if (fingerCount == 1) {
-
-            // get current distance from anchor
-            dx = event.touches[0].pageX - x;
-            dy = event.touches[0].pageY - y;
-
-            // if minimum move distance is reached
-            if (dx*dx+dy*dy >= r*r) {
-
-                // commit new anchor
-                x += dx;
-                y += dy;
-
-                // register direction
-                if (Math.abs(dx) >= Math.abs(dy)) {
-                    (dx > 0) ? pressRight() : pressLeft();
-                }
-                else {
-                    (dy > 0) ? pressDown() : pressUp();
-                }
-            }
-        }
-        else {
-            touchCancel(event);
-        }
-    };
-
-    var touchEnd = function(event) {
-        event.preventDefault();
-    };
-
-    var touchCancel = function(event) {
-        event.preventDefault();
-        x=y=dx=dy=0;
-    };
-    
-    // register touch events
-    document.ontouchstart = touchStart;
-    document.ontouchend = touchEnd;
-    document.ontouchmove = touchMove;
-    document.ontouchcancel = touchCancel;
-};
 //@line 1 "src/game.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Game
@@ -3063,7 +2853,7 @@ var initRenderer = function(){
 
         clearMapFrame: function() {
             ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,mapWidth,mapHeight);
+            ctx.fillRect(-1,-1,mapWidth+1,mapHeight+1);
         },
 
         renderFunc: function(f,that) {
@@ -3814,7 +3604,7 @@ var galagaStars = (function() {
     var height = Math.floor(mapHeight*1.5);
 
     var ypos;
-    var yspeed=0.5;
+    var yspeed=-0.5;
 
     var t;
     var flickerPeriod = 120;
@@ -3849,6 +3639,9 @@ var galagaStars = (function() {
 
         ypos += yspeed;
         ypos %= height;
+        if (ypos < 0) {
+            ypos += height;
+        }
     };
 
     var draw = function(ctx) {
@@ -3933,7 +3726,7 @@ var Button = function(x,y,w,h,onclick) {
     this.h = h;
     this.onclick = onclick;
 
-    this.borderBlurColor = "#555";
+    this.borderBlurColor = "#333";
     this.borderFocusColor = "#EEE";
 
     this.isHover = false;
@@ -4117,7 +3910,7 @@ var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
     this.currentY = this.y+this.pad;
 
     if (title) {
-        this.currentY += 1.5*(this.h + this.pad);
+        this.currentY += 1*(this.h + this.pad);
     }
 
     this.font = font;
@@ -4172,7 +3965,7 @@ Menu.prototype = {
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillStyle = "#FFF";
-            ctx.fillText(this.title,this.x + this.w/2, this.y+this.pad+this.h/2);
+            ctx.fillText(this.title,this.x + this.w/2, this.y+this.pad + this.h/2);
         }
         var i;
         for (i=0; i<this.buttonCount; i++) {
@@ -7347,7 +7140,7 @@ var homeState = (function(){
         function(ctx,x,y,frame) {
             atlas.drawPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
-    menu.addTextIconButton("MS. PAC-MAN", 
+    menu.addTextIconButton("MS PAC-MAN", 
         function() {
             gameMode = GAME_MSPACMAN;
             exitTo(preNewGameState);
@@ -7379,7 +7172,7 @@ var homeState = (function(){
             atlas.drawGhostSprite(ctx,x,y,animFrame,DIR_RIGHT,true,flash,false,blinky.color);
         });
     */
-    menu.addSpacer();
+    menu.addSpacer(1.5);
     menu.addTextButton("CREDITS",
         function() {
             exitTo(aboutState);
@@ -8017,6 +7810,223 @@ var overState = (function() {
         },
     };
 })();
+//@line 1 "src/input.js"
+
+var pressLeft = function() {
+    pacman.setNextDir(DIR_LEFT);
+};
+
+var pressRight = function() {
+    pacman.setNextDir(DIR_RIGHT);
+};
+
+var pressDown = function() {
+    pacman.setNextDir(DIR_DOWN);
+    if (vcr.getMode() != VCR_RECORD) {
+        vcr.nextSpeed(-1);
+    }
+};
+
+var pressUp = function() {
+    pacman.setNextDir(DIR_UP);
+    if (vcr.getMode() != VCR_RECORD) {
+        vcr.nextSpeed(1);
+    }
+};
+
+document.onkeydown = function(e) {
+    var key = (e||window.event).keyCode;
+    var isCustomKey = true;
+    switch (key) {
+
+        // LEFT
+        case 37: pressLeft(); break;
+
+        // RIGHT
+        case 39: pressRight(); break;
+
+        // UP
+        case 38: pressUp(); break;
+
+        // DOWN
+        case 40: pressDown(); break;
+
+        default: isCustomKey = false;
+    }
+
+    // controls for practice-mode only
+    if (practiceMode) {
+        switch (key) {
+            // SHIFT
+            case 16:
+                if (vcr.getMode() == VCR_RECORD) {
+                    vcr.startSeeking();
+                }
+                break;
+
+            // CTRL
+            case 17: executive.setUpdatesPerSecond(30); break;
+
+            // ALT
+            case 18: executive.setUpdatesPerSecond(15); break;
+
+            default: isCustomKey |= false;
+        }
+    }
+
+    // prevent default actions for our keys
+    if (isCustomKey) {
+        e.preventDefault();
+    }
+};
+
+document.onkeyup = function(e) {
+    var key = (e||window.event).keyCode;
+
+    var isCustomKey = true;
+    switch (key) {
+        // spacebar
+        case 32: executive.togglePause(); break;
+        default: isCustomKey = false;
+    };
+
+    // controls for practice-mode only
+    if (practiceMode) {
+        switch (key) {
+            // SHIFT
+            case 16: vcr.startRecording(); break;
+
+            // CTRL or ALT
+            case 17:
+            case 18: executive.setUpdatesPerSecond(60); break;
+
+            // n (next level)
+            case 78:
+                if (state == newGameState ||
+                    state == readyNewState ||
+                    state == readyRestartState ||
+                    state == playState ||
+                    state == deadState ||
+                    state == finishState ||
+                    state == overState) {
+
+                    switchState(readyNewState,60);
+                }
+                break;
+
+            // q
+            case 81: blinky.isDrawTarget = !blinky.isDrawTarget; break;
+            // w
+            case 87: pinky.isDrawTarget = !pinky.isDrawTarget; break;
+            // e
+            case 69: inky.isDrawTarget = !inky.isDrawTarget; break;
+            // r
+            case 82: clyde.isDrawTarget = !clyde.isDrawTarget; break;
+            // t 
+            case 84: pacman.isDrawTarget = !pacman.isDrawTarget; break;
+
+            // a
+            case 65: blinky.isDrawPath = !blinky.isDrawPath; break;
+            // s
+            case 83: pinky.isDrawPath = !pinky.isDrawPath; break;
+            // d
+            case 68: inky.isDrawPath = !inky.isDrawPath; break;
+            // f
+            case 70: clyde.isDrawPath = !clyde.isDrawPath; break;
+            // g
+            case 71: pacman.isDrawPath = !pacman.isDrawPath; break;
+
+            // i (invincible)
+            case 73: pacman.invincible = !pacman.invincible; break;
+
+            // o (turbO)
+            case 79: turboMode = !turboMode; break;
+
+            // p (auto-Play)
+            case 80: pacman.ai = !pacman.ai; break;
+
+            default: isCustomKey |= false;
+        }
+    }
+
+    if (isCustomKey) {
+        e.preventDefault();
+    }
+};
+
+var initSwipe = function() {
+
+    // position of anchor
+    var x = 0;
+    var y = 0;
+
+    // current distance from anchor
+    var dx = 0;
+    var dy = 0;
+
+    // minimum distance from anchor before direction is registered
+    var r = 2;
+    
+    var touchStart = function(event) {
+        event.preventDefault();
+        var fingerCount = event.touches.length;
+        if (fingerCount == 1) {
+
+            // commit new anchor
+            x = event.touches[0].pageX;
+            y = event.touches[0].pageY;
+
+        }
+        else {
+            touchCancel(event);
+        }
+    };
+
+    var touchMove = function(event) {
+        event.preventDefault();
+        var fingerCount = event.touches.length;
+        if (fingerCount == 1) {
+
+            // get current distance from anchor
+            dx = event.touches[0].pageX - x;
+            dy = event.touches[0].pageY - y;
+
+            // if minimum move distance is reached
+            if (dx*dx+dy*dy >= r*r) {
+
+                // commit new anchor
+                x += dx;
+                y += dy;
+
+                // register direction
+                if (Math.abs(dx) >= Math.abs(dy)) {
+                    (dx > 0) ? pressRight() : pressLeft();
+                }
+                else {
+                    (dy > 0) ? pressDown() : pressUp();
+                }
+            }
+        }
+        else {
+            touchCancel(event);
+        }
+    };
+
+    var touchEnd = function(event) {
+        event.preventDefault();
+    };
+
+    var touchCancel = function(event) {
+        event.preventDefault();
+        x=y=dx=dy=0;
+    };
+    
+    // register touch events
+    document.ontouchstart = touchStart;
+    document.ontouchend = touchEnd;
+    document.ontouchmove = touchMove;
+    document.ontouchcancel = touchCancel;
+};
 //@line 1 "src/cutscenes.js"
 ////////////////////////////////////////////////
 // Cutscenes

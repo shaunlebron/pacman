@@ -197,7 +197,7 @@ var initRenderer = function(){
 
         clearMapFrame: function() {
             ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,mapWidth,mapHeight);
+            ctx.fillRect(-1,-1,mapWidth+1,mapHeight+1);
         },
 
         renderFunc: function(f,that) {

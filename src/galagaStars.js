@@ -8,7 +8,7 @@ var galagaStars = (function() {
     var height = Math.floor(mapHeight*1.5);
 
     var ypos;
-    var yspeed=0.5;
+    var yspeed=-0.5;
 
     var t;
     var flickerPeriod = 120;
@@ -43,6 +43,9 @@ var galagaStars = (function() {
 
         ypos += yspeed;
         ypos %= height;
+        if (ypos < 0) {
+            ypos += height;
+        }
     };
 
     var draw = function(ctx) {

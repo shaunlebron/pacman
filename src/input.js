@@ -89,7 +89,14 @@ document.onkeyup = function(e) {
 
             // n (next level)
             case 78:
-                if (state in [newGameState, readyNewState, readyRestartState, playState, deadState, finishState, overState]) {
+                if (state == newGameState ||
+                    state == readyNewState ||
+                    state == readyRestartState ||
+                    state == playState ||
+                    state == deadState ||
+                    state == finishState ||
+                    state == overState) {
+
                     switchState(readyNewState,60);
                 }
                 break;

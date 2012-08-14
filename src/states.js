@@ -76,7 +76,7 @@ var homeState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu("ARCADE",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("ARCADE",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     var getIconAnimFrame = function(frame) {
         frame = Math.floor(frame/3)+1;
         frame %= 4;
@@ -85,7 +85,7 @@ var homeState = (function(){
         }
         return frame;
     };
-    menu.addTextIconButton("PAC-MAN",
+    menu.addTextIconButton(getGameName(GAME_PACMAN),
         function() {
             gameMode = GAME_PACMAN;
             exitTo(preNewGameState);
@@ -93,7 +93,7 @@ var homeState = (function(){
         function(ctx,x,y,frame) {
             atlas.drawPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
-    menu.addTextIconButton("MS PAC-MAN", 
+    menu.addTextIconButton(getGameName(GAME_MSPACMAN),
         function() {
             gameMode = GAME_MSPACMAN;
             exitTo(preNewGameState);
@@ -101,7 +101,7 @@ var homeState = (function(){
         function(ctx,x,y,frame) {
             atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
-    menu.addTextIconButton("COOKIE-MAN",
+    menu.addTextIconButton(getGameName(GAME_COOKIE),
         function() {
             gameMode = GAME_COOKIE;
             exitTo(preNewGameState);
@@ -126,6 +126,10 @@ var homeState = (function(){
         });
     */
     menu.addSpacer(1.5);
+    menu.addTextButton("HIGH SCORES",
+        function() {
+            exitTo(scoreState);
+        });
     menu.addTextButton("CREDITS",
         function() {
             exitTo(aboutState);
@@ -159,7 +163,7 @@ var preNewGameState = (function() {
         menu.disable();
     };
 
-    var menu = new Menu("GAMENAME",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("GAMENAME",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
 
     menu.addTextButton("PLAY",
         function() { 
@@ -203,6 +207,78 @@ var preNewGameState = (function() {
 })();
 
 //////////////////////////////////////////////////////////////////////////////////////
+// Score State
+// (the high score screen state)
+
+var scoreState = (function(){
+
+    var exitTo = function(s) {
+        switchState(s);
+        menu.disable();
+    };
+
+    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    menu.addTextButton("BACK",
+        function() {
+            exitTo(homeState);
+        });
+
+    var drawBody = function(ctx) {
+        ctx.font = tileSize+"px ArcadeR";
+        ctx.textBaseline = "top";
+        ctx.textAlign = "right";
+        var scoreColor = "#AAA";
+        var captionColor = "#444";
+
+        var x,y;
+        x = 14*tileSize;
+        y = 3*tileSize;
+        ctx.fillStyle = "#FF0"; ctx.fillText(getGameName(GAME_PACMAN), x+4*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[0], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[1], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+
+        y += tileSize*4;
+        ctx.fillStyle = "#FFB8AE"; ctx.fillText(getGameName(GAME_MSPACMAN), x+4*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[2], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[3], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+
+        y += tileSize*4;
+        ctx.fillStyle = "#359c9c"; ctx.fillText(getGameName(GAME_COOKIE), x+4*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[4], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[5], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+    };
+
+    return {
+        init: function() {
+            menu.enable();
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.beginMapClip();
+            renderer.renderFunc(drawBody);
+            renderer.renderFunc(menu.draw,menu);
+            renderer.endMapClip();
+        },
+        update: function() {
+            menu.update();
+        },
+    };
+
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
 // About State
 // (the about screen state)
 
@@ -213,7 +289,7 @@ var aboutState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("BACK",
         function() {
             exitTo(homeState);

@@ -24,15 +24,29 @@ var turboMode = false;
 
 // current game mode
 var gameMode = GAME_PACMAN;
-var getGameName = function() {
-    return ["PAC-MAN", "MS. PAC-MAN", "COOKIE-MAN"][gameMode];
+var getGameName = function(mode) {
+    if (mode == undefined) {
+        mode = gameMode;
+    }
+    return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN"][mode];
+};
+
+// clear cheats, useful when switching game modes
+
+var clearCheats = function() {
+    pacman.invincible = false;
+    for (i=0; i<4; i++) {
+        ghosts[i].isDrawPath = false;
+        ghosts[i].isDrawTarget = false;
+    }
 };
 
 // current level, lives, and score
 var level = 1;
 var extraLives = 0;
 
-// handle vcr-seeking
+// VCR functions
+
 var savedLevel = {};
 var savedExtraLives = {};
 var savedHighScore = {};
@@ -61,7 +75,7 @@ var loadGame = function(t) {
 // (manages scores and high scores for each game type)
 
 var scores =     [ 0,0,0,0,0,0,0 ];
-var highScores = [ 0,0,0,0,0,0,0 ];
+var highScores = [ 10000,10000,10000,10000,10000,10000,0 ];
 
 var getScoreIndex = function() {
     if (practiceMode) {
@@ -104,13 +118,18 @@ var getHighScore = function() {
 };
 var setHighScore = function(highScore) {
     highScores[getScoreIndex()] = highScore;
+    saveHighScores();
 };
+// High Score Persistence
 
-var clearCheats = function() {
-    pacman.invincible = false;
-    for (i=0; i<4; i++) {
-        ghosts[i].isDrawPath = false;
-        ghosts[i].isDrawTarget = false;
+var loadHighScores = function() {
+    if (localStorage && localStorage.highScores) {
+        highScores = JSON.parse(localStorage.highScores);
+    }
+};
+var saveHighScores = function() {
+    if (localStorage) {
+        localStorage.highScores = JSON.stringify(highScores);
     }
 };
 //@line 1 "src/vcr.js"
@@ -3996,14 +4015,14 @@ var inGameMenu = (function() {
 
     var btn = new TextButton(mapWidth/2 - w/2,-1.5*h,w,h,showMenu,"MENU",(tileSize-2)+"px ArcadeR","#FFF");
 
-    var menu = new Menu("PAUSED",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("PAUSED",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("RESUME", hideMenu);
     menu.addTextButton("QUIT", function() {
         hideMenu();
         quitMenu.enable();
     });
 
-    var quitMenu = new Menu("QUIT GAME?",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var quitMenu = new Menu("QUIT GAME?",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     quitMenu.addTextButton("YES", function() {
         quitMenu.disable();
         switchState(homeState,60);
@@ -7123,7 +7142,7 @@ var homeState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu("ARCADE",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("ARCADE",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     var getIconAnimFrame = function(frame) {
         frame = Math.floor(frame/3)+1;
         frame %= 4;
@@ -7132,7 +7151,7 @@ var homeState = (function(){
         }
         return frame;
     };
-    menu.addTextIconButton("PAC-MAN",
+    menu.addTextIconButton(getGameName(GAME_PACMAN),
         function() {
             gameMode = GAME_PACMAN;
             exitTo(preNewGameState);
@@ -7140,7 +7159,7 @@ var homeState = (function(){
         function(ctx,x,y,frame) {
             atlas.drawPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
-    menu.addTextIconButton("MS PAC-MAN", 
+    menu.addTextIconButton(getGameName(GAME_MSPACMAN),
         function() {
             gameMode = GAME_MSPACMAN;
             exitTo(preNewGameState);
@@ -7148,7 +7167,7 @@ var homeState = (function(){
         function(ctx,x,y,frame) {
             atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
-    menu.addTextIconButton("COOKIE-MAN",
+    menu.addTextIconButton(getGameName(GAME_COOKIE),
         function() {
             gameMode = GAME_COOKIE;
             exitTo(preNewGameState);
@@ -7173,6 +7192,10 @@ var homeState = (function(){
         });
     */
     menu.addSpacer(1.5);
+    menu.addTextButton("HIGH SCORES",
+        function() {
+            exitTo(scoreState);
+        });
     menu.addTextButton("CREDITS",
         function() {
             exitTo(aboutState);
@@ -7206,7 +7229,7 @@ var preNewGameState = (function() {
         menu.disable();
     };
 
-    var menu = new Menu("GAMENAME",2*tileSize,0,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("GAMENAME",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
 
     menu.addTextButton("PLAY",
         function() { 
@@ -7250,6 +7273,78 @@ var preNewGameState = (function() {
 })();
 
 //////////////////////////////////////////////////////////////////////////////////////
+// Score State
+// (the high score screen state)
+
+var scoreState = (function(){
+
+    var exitTo = function(s) {
+        switchState(s);
+        menu.disable();
+    };
+
+    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    menu.addTextButton("BACK",
+        function() {
+            exitTo(homeState);
+        });
+
+    var drawBody = function(ctx) {
+        ctx.font = tileSize+"px ArcadeR";
+        ctx.textBaseline = "top";
+        ctx.textAlign = "right";
+        var scoreColor = "#AAA";
+        var captionColor = "#444";
+
+        var x,y;
+        x = 14*tileSize;
+        y = 3*tileSize;
+        ctx.fillStyle = "#FF0"; ctx.fillText(getGameName(GAME_PACMAN), x+4*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[0], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[1], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+
+        y += tileSize*4;
+        ctx.fillStyle = "#FFB8AE"; ctx.fillText(getGameName(GAME_MSPACMAN), x+4*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[2], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[3], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+
+        y += tileSize*4;
+        ctx.fillStyle = "#359c9c"; ctx.fillText(getGameName(GAME_COOKIE), x+4*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[4], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[5], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+    };
+
+    return {
+        init: function() {
+            menu.enable();
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.beginMapClip();
+            renderer.renderFunc(drawBody);
+            renderer.renderFunc(menu.draw,menu);
+            renderer.endMapClip();
+        },
+        update: function() {
+            menu.update();
+        },
+    };
+
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
 // About State
 // (the about screen state)
 
@@ -7260,7 +7355,7 @@ var aboutState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,4*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("BACK",
         function() {
             exitTo(homeState);
@@ -8483,6 +8578,7 @@ mapMsPacman4.fruitPaths = {
 // Entry Point
 
 window.addEventListener("load", function() {
+    loadHighScores();
     initRenderer();
     atlas.create();
     initSwipe();

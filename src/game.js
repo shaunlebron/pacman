@@ -11,15 +11,29 @@ var turboMode = false;
 
 // current game mode
 var gameMode = GAME_PACMAN;
-var getGameName = function() {
-    return ["PAC-MAN", "MS. PAC-MAN", "COOKIE-MAN"][gameMode];
+var getGameName = function(mode) {
+    if (mode == undefined) {
+        mode = gameMode;
+    }
+    return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN"][mode];
+};
+
+// clear cheats, useful when switching game modes
+
+var clearCheats = function() {
+    pacman.invincible = false;
+    for (i=0; i<4; i++) {
+        ghosts[i].isDrawPath = false;
+        ghosts[i].isDrawTarget = false;
+    }
 };
 
 // current level, lives, and score
 var level = 1;
 var extraLives = 0;
 
-// handle vcr-seeking
+// VCR functions
+
 var savedLevel = {};
 var savedExtraLives = {};
 var savedHighScore = {};
@@ -48,7 +62,7 @@ var loadGame = function(t) {
 // (manages scores and high scores for each game type)
 
 var scores =     [ 0,0,0,0,0,0,0 ];
-var highScores = [ 0,0,0,0,0,0,0 ];
+var highScores = [ 10000,10000,10000,10000,10000,10000,0 ];
 
 var getScoreIndex = function() {
     if (practiceMode) {
@@ -91,12 +105,17 @@ var getHighScore = function() {
 };
 var setHighScore = function(highScore) {
     highScores[getScoreIndex()] = highScore;
+    saveHighScores();
 };
+// High Score Persistence
 
-var clearCheats = function() {
-    pacman.invincible = false;
-    for (i=0; i<4; i++) {
-        ghosts[i].isDrawPath = false;
-        ghosts[i].isDrawTarget = false;
+var loadHighScores = function() {
+    if (localStorage && localStorage.highScores) {
+        highScores = JSON.parse(localStorage.highScores);
+    }
+};
+var saveHighScores = function() {
+    if (localStorage) {
+        localStorage.highScores = JSON.stringify(highScores);
     }
 };

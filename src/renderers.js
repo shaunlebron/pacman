@@ -172,10 +172,10 @@ var initRenderer = function(){
 
             // draw fps
             ctx.font = (tileSize-2) + "px ArcadeR";
-            ctx.textBaseline = "top";
-            ctx.textAlign = "left";
-            ctx.fillStyle = "#777";
-            ctx.fillText(executive.getFps().toFixed(2)+" FPS", 2, 2);
+            ctx.textBaseline = "bottom";
+            ctx.textAlign = "right";
+            ctx.fillStyle = "#333";
+            ctx.fillText(executive.getFps().toFixed(2)+" FPS", screenWidth, screenHeight);
 
             // draw inGameMenu button
             inGameMenu.drawButton(ctx);
@@ -831,22 +831,9 @@ var initRenderer = function(){
             atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
         },
 
-        // get animation frame for player
-        getPlayerAnimFrame: function() {
-            var frame = Math.floor(pacman.steps/2)%4; // change animation frame every 2 steps
-            if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) { // ms. pacman starts with mouth open
-                frame = (frame+1)%4;
-                if (state == deadState)
-                    frame = 1; // hack to force this frame when dead
-            }
-            if (frame == 3) 
-                frame = 1;
-            return frame;
-        },
-
         // draw pacman
         drawPlayer: function() {
-            var frame = this.getPlayerAnimFrame();
+            var frame = pacman.getAnimFrame();
             if (pacman.invincible) {
                 ctx.globalAlpha = 0.6;
             }
@@ -869,7 +856,7 @@ var initRenderer = function(){
 
         // draw dying pacman animation (with 0<=t<=1)
         drawDyingPlayer: function(t) {
-            var frame = this.getPlayerAnimFrame();
+            var frame = pacman.getAnimFrame();
 
             if (gameMode == GAME_PACMAN) {
                 // 60 frames dying
@@ -905,7 +892,7 @@ var initRenderer = function(){
 
         // draw exploding pacman animation (with 0<=t<=1)
         drawExplodingPlayer: function(t) {
-            var frame = this.getPlayerAnimFrame();
+            var frame = pacman.getAnimFrame();
             drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, 0, 0, t,-3,1-t);
         },
 

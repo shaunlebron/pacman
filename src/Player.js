@@ -64,6 +64,24 @@ Player.prototype.getNumSteps = function() {
     return this.getStepSizeFromTable(level, pattern);
 };
 
+Player.prototype.getStepFrame = function() {
+    return Math.floor(this.steps/2)%4;
+};
+
+Player.prototype.getAnimFrame = function(frame) {
+    if (frame == undefined) {
+        frame = this.getStepFrame();
+    }
+    if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) { // ms. pacman starts with mouth open
+        frame = (frame+1)%4;
+        if (state == deadState)
+            frame = 1; // hack to force this frame when dead
+    }
+    if (frame == 3) 
+        frame = 1;
+    return frame;
+};
+
 // move forward one step
 Player.prototype.step = (function(){
 

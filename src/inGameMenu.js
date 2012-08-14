@@ -13,14 +13,14 @@ var inGameMenu = (function() {
 
     var btn = new TextButton(mapWidth/2 - w/2,-1.5*h,w,h,showMenu,"MENU",(tileSize-2)+"px ArcadeR","#FFF");
 
-    var menu = new Menu("PAUSED",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("PAUSED",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("RESUME", hideMenu);
     menu.addTextButton("QUIT", function() {
         hideMenu();
         quitMenu.enable();
     });
 
-    var quitMenu = new Menu("QUIT GAME?",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var quitMenu = new Menu("QUIT GAME?",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     quitMenu.addTextButton("YES", function() {
         quitMenu.disable();
         switchState(homeState,60);

@@ -223,7 +223,44 @@ var scoreState = (function(){
             exitTo(homeState);
         });
 
-    var drawBody = function(ctx) {
+    var frame = 0;
+
+    var bulbs = {};
+    var numBulbs;
+    (function(){
+        var x = -1.5*tileSize;
+        var y = -1*tileSize;
+        var w = 18*tileSize;
+        var h = 29*tileSize;
+        var s = 3;
+
+        var i=0;
+        var x0 = x;
+        var y0 = y;
+        var addBulb = function(x,y) { bulbs[i++] = { x:x, y:y }; };
+        for (; y0<y+h; y0+=s) { addBulb(x0,y0); }
+        for (; x0<x+w; x0+=s) { addBulb(x0,y0); }
+        for (; y0>y; y0-=s) { addBulb(x0,y0); }
+        for (; x0>x; x0-=s) { addBulb(x0,y0); }
+
+        numBulbs = i;
+    })();
+
+    var drawScoreBox = function(ctx) {
+
+        // draw chaser lights around the marquee
+        ctx.fillStyle = "#555";
+        var i,b,s=2;
+        for (i=0; i<numBulbs; i++) {
+            b = bulbs[i];
+            ctx.fillRect(b.x, b.y, s, s);
+        }
+        ctx.fillStyle = "#FFF";
+        for (i=0; i<63; i++) {
+            b = bulbs[(i*4+Math.floor(frame/2))%numBulbs];
+            ctx.fillRect(b.x, b.y, s, s);
+        }
+
         ctx.font = tileSize+"px ArcadeR";
         ctx.textBaseline = "top";
         ctx.textAlign = "right";
@@ -231,8 +268,11 @@ var scoreState = (function(){
         var captionColor = "#444";
 
         var x,y;
-        x = 14*tileSize;
-        y = 3*tileSize;
+        x = 7*tileSize;
+        y = 0;
+        ctx.fillStyle = "#FFF"; ctx.fillText("HIGH SCORES", x+6*tileSize,y);
+        y += tileSize*4;
+
         ctx.fillStyle = "#FF0"; ctx.fillText(getGameName(GAME_PACMAN), x+4*tileSize,y);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[0], x,y);
@@ -260,19 +300,112 @@ var scoreState = (function(){
         ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
     };
 
+    var drawFood = function(ctx) {
+        ctx.globalAlpha = 0.5;
+        ctx.font = tileSize + "px sans-serif";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "left";
+
+        var x = 20*tileSize;
+        var y = 0;
+
+        ctx.fillStyle = "#ffb8ae";
+        ctx.fillRect(x-1,y-1.5,2,2);
+        ctx.fillStyle = "#FFF";
+        ctx.fillText("10",x+tileSize,y);
+        y += 1.5*tileSize;
+
+        ctx.fillStyle = "#ffb8ae";
+        ctx.beginPath();
+        ctx.arc(x,y-0.5,tileSize/2,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = "#FFF";
+        ctx.fillText("50",x+tileSize,y);
+
+        y += 3*tileSize;
+        atlas.drawGhostSprite(ctx,x,y,0,DIR_RIGHT,true);
+        ctx.fillText("200",x+tileSize,y);
+
+        var alpha = ctx.globalAlpha;
+
+        y += 2*tileSize;
+        ctx.globalAlpha = alpha*0.5;
+        atlas.drawGhostSprite(ctx,x,y,0,DIR_RIGHT,true);
+        ctx.globalAlpha = alpha;
+        atlas.drawGhostSprite(ctx,x+2*tileSize,y,0,DIR_RIGHT,true);
+        ctx.fillText("400",x+3*tileSize,y);
+
+        y += 2*tileSize;
+        ctx.globalAlpha = alpha*0.5;
+        atlas.drawGhostSprite(ctx,x,y,0,DIR_RIGHT,true);
+        atlas.drawGhostSprite(ctx,x+2*tileSize,y,0,DIR_RIGHT,true);
+        ctx.globalAlpha = alpha;
+        atlas.drawGhostSprite(ctx,x+4*tileSize,y,0,DIR_RIGHT,true);
+        ctx.fillText("800",x+5*tileSize,y);
+
+        y += 2*tileSize;
+        ctx.globalAlpha = alpha*0.5;
+        atlas.drawGhostSprite(ctx,x,y,0,DIR_RIGHT,true);
+        atlas.drawGhostSprite(ctx,x+2*tileSize,y,0,DIR_RIGHT,true);
+        atlas.drawGhostSprite(ctx,x+4*tileSize,y,0,DIR_RIGHT,true);
+        ctx.globalAlpha = alpha;
+        atlas.drawGhostSprite(ctx,x+6*tileSize,y,0,DIR_RIGHT,true);
+        ctx.fillText("1600",x+7*tileSize,y);
+
+        var mspac_fruits = [
+            {name: 'cherry',     points: 100},
+            {name: 'strawberry', points: 200},
+            {name: 'orange',     points: 500},
+            {name: 'pretzel',    points: 700},
+            {name: 'apple',      points: 1000},
+            {name: 'pear',       points: 2000},
+            {name: 'banana',     points: 5000},
+        ];
+
+        var pac_fruits = [
+            {name:'cherry',     points:100},
+            {name:'strawberry', points:300},
+            {name:'orange',     points:500},
+            {name:'apple',      points:700},
+            {name:'melon',      points:1000},
+            {name:'galaxian',   points:2000},
+            {name:'bell',       points:3000},
+            {name:'key',        points:5000},
+        ];
+
+        var i,f;
+        y += 3*tileSize;
+        ctx.fillStyle = "#FFF";
+        for (i=0; i<pac_fruits.length; i++) {
+            f = pac_fruits[i];
+            atlas.drawFruitSprite(ctx,x,y,f.name);
+            ctx.fillText(f.points,x+tileSize,y);
+            y += 2*tileSize;
+        }
+        x += 6*tileSize;
+        y = 13.5*tileSize;
+        for (i=0; i<mspac_fruits.length; i++) {
+            f = mspac_fruits[i];
+            atlas.drawFruitSprite(ctx,x,y,f.name);
+            ctx.fillText(f.points,x+tileSize,y);
+            y += 2*tileSize;
+        }
+        ctx.globalAlpha = 1;
+    };
+
     return {
         init: function() {
             menu.enable();
         },
         draw: function() {
             renderer.clearMapFrame();
-            renderer.beginMapClip();
-            renderer.renderFunc(drawBody);
+            renderer.renderFunc(drawScoreBox);
+            renderer.renderFunc(drawFood);
             renderer.renderFunc(menu.draw,menu);
-            renderer.endMapClip();
         },
         update: function() {
             menu.update();
+            frame++;
         },
     };
 

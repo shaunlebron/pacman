@@ -527,6 +527,7 @@ var initRenderer = function(){
         drawExtraLives: function() {
             var i;
             ctx.fillStyle = "rgba(255,255,0,0.6)";
+            var lives = extraLives == Infinity ? 1 : extraLives;
             for (i=0; i<extraLives; i++)
                 this.drawCenterPixelSq(ctx, (2*i+3)*tileSize, (map.numRows-2)*tileSize+midTile.y,this.actorSize);
         },
@@ -732,23 +733,55 @@ var initRenderer = function(){
             bgCtx.save();
             bgCtx.translate(3*tileSize, (map.numRows-1)*tileSize);
             bgCtx.scale(0.85, 0.85);
+            var lives = extraLives == Infinity ? 1 : extraLives;
             if (gameMode == GAME_PACMAN) {
-                for (i=0; i<extraLives; i++) {
+                for (i=0; i<lives; i++) {
                     drawPacmanSprite(bgCtx, 0,0, DIR_LEFT, Math.PI/6);
                     bgCtx.translate(2*tileSize,0);
                 }
             }
             else if (gameMode == GAME_MSPACMAN) {
-                for (i=0; i<extraLives; i++) {
+                for (i=0; i<lives; i++) {
                     drawMsPacmanSprite(bgCtx, 0,0, DIR_RIGHT, 1);
                     bgCtx.translate(2*tileSize,0);
                 }
             }
             else if (gameMode == GAME_COOKIE) {
-                for (i=0; i<extraLives; i++) {
+                for (i=0; i<lives; i++) {
                     drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
                     bgCtx.translate(2*tileSize,0);
                 }
+            }
+            if (extraLives == Infinity) {
+
+                // draw X
+                /*
+                bgCtx.translate(-s*2,0);
+                var s = 2; // radius of each stroke
+                bgCtx.beginPath();
+                bgCtx.moveTo(-s,-s);
+                bgCtx.lineTo(s,s);
+                bgCtx.moveTo(-s,s);
+                bgCtx.lineTo(s,-s);
+                bgCtx.lineWidth = 1;
+                bgCtx.strokeStyle = "#777";
+                bgCtx.stroke();
+                */
+
+                // draw Infinity symbol
+                var r = 2; // radius of each half-circle
+                var d = 3; // distance between the two focal points
+                bgCtx.beginPath();
+                bgCtx.moveTo(-d-r,0);
+                bgCtx.quadraticCurveTo(-d-r,-r,-d,-r);
+                bgCtx.bezierCurveTo(-(d-r),-r,d-r,r,d,r);
+                bgCtx.quadraticCurveTo(d+r,r,d+r,0);
+                bgCtx.quadraticCurveTo(d+r,-r,d,-r);
+                bgCtx.bezierCurveTo(d-r,-r,-(d-r),r,-d,r);
+                bgCtx.quadraticCurveTo(-d-r,r,-d-r,0);
+                bgCtx.lineWidth = 1;
+                bgCtx.strokeStyle = "#FFF";
+                bgCtx.stroke();
             }
             bgCtx.restore();
 

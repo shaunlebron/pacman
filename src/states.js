@@ -506,7 +506,7 @@ var newGameState = (function() {
         init: function() {
             frames = 0;
             level = 0;
-            extraLives = 3;
+            extraLives = practiceMode ? Infinity : 3;
             setScore(0);
             readyNewState.init();
         },

@@ -753,6 +753,7 @@ var initRenderer = function(){
                 }
             }
             if (extraLives == Infinity) {
+                bgCtx.translate(-4*tileSize,0);
 
                 // draw X
                 /*

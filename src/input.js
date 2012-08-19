@@ -1,145 +1,155 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// Input
+// (Handles all key presses and touches)
 
-var pressLeft = function() {
-    pacman.setNextDir(DIR_LEFT);
-};
+(function(){
 
-var pressRight = function() {
-    pacman.setNextDir(DIR_RIGHT);
-};
-
-var pressDown = function() {
-    pacman.setNextDir(DIR_DOWN);
-    if (vcr.getMode() != VCR_RECORD) {
-        vcr.nextSpeed(-1);
-    }
-};
-
-var pressUp = function() {
-    pacman.setNextDir(DIR_UP);
-    if (vcr.getMode() != VCR_RECORD) {
-        vcr.nextSpeed(1);
-    }
-};
-
-document.onkeydown = function(e) {
-    var key = (e||window.event).keyCode;
-    var isCustomKey = true;
-    switch (key) {
-
-        // LEFT
-        case 37: pressLeft(); break;
-
-        // RIGHT
-        case 39: pressRight(); break;
-
-        // UP
-        case 38: pressUp(); break;
-
-        // DOWN
-        case 40: pressDown(); break;
-
-        default: isCustomKey = false;
-    }
-
-    // controls for practice-mode only
-    if (practiceMode) {
-        switch (key) {
-            // SHIFT
-            case 16:
-                if (vcr.getMode() == VCR_RECORD) {
-                    vcr.startSeeking();
+    // A Key Listener class (each key maps to an array of callbacks)
+    var KeyEventListener = function() {
+        this.listeners = {};
+    };
+    KeyEventListener.prototype = {
+        add: function(key, callback, isActive) {
+            this.listeners[key] = this.listeners[key] || [];
+            this.listeners[key].push({
+                isActive: isActive,
+                callback: callback,
+            });
+        },
+        exec: function(key, e) {
+            var keyListeners = this.listeners[key];
+            if (!keyListeners) {
+                return;
+            }
+            var i,l;
+            var numListeners = keyListeners.length;
+            for (i=0; i<numListeners; i++) {
+                l = keyListeners[i];
+                if (!l.isActive || l.isActive()) {
+                    l.callback();
+                    e.preventDefault();
                 }
-                break;
-
-            // CTRL
-            case 17: executive.setUpdatesPerSecond(30); break;
-
-            // ALT
-            case 18: executive.setUpdatesPerSecond(15); break;
-
-            default: isCustomKey |= false;
-        }
-    }
-
-    // prevent default actions for our keys
-    if (isCustomKey) {
-        e.preventDefault();
-    }
-};
-
-document.onkeyup = function(e) {
-    var key = (e||window.event).keyCode;
-
-    var isCustomKey = true;
-    switch (key) {
-        // spacebar
-        case 32: executive.togglePause(); break;
-        default: isCustomKey = false;
+            }
+        },
     };
 
-    // controls for practice-mode only
-    if (practiceMode) {
-        switch (key) {
-            // SHIFT
-            case 16: vcr.startRecording(); break;
+    // declare key event listeners
+    var keyDownListeners = new KeyEventListener();
+    var keyUpListeners = new KeyEventListener();
 
-            // CTRL or ALT
-            case 17:
-            case 18: executive.setUpdatesPerSecond(60); break;
+    // helper functions for adding custom key listeners
+    var addKeyDown = function(key,callback,isActive) { keyDownListeners.add(key,callback,isActive); };
+    var addKeyUp   = function(key,callback,isActive) { keyUpListeners.add(key,callback,isActive); };
 
-            // n (next level)
-            case 78:
-                if (state == newGameState ||
-                    state == readyNewState ||
-                    state == readyRestartState ||
-                    state == playState ||
-                    state == deadState ||
-                    state == finishState ||
-                    state == overState) {
+    // boolean states of each key
+    var keyStates = {};
 
-                    switchState(readyNewState,60);
-                }
-                break;
+    // hook my key listeners to the window's listeners
+    window.addEventListener("keydown", function(e) {
+        var key = (e||window.event).keyCode;
 
-            // q
-            case 81: blinky.isDrawTarget = !blinky.isDrawTarget; break;
-            // w
-            case 87: pinky.isDrawTarget = !pinky.isDrawTarget; break;
-            // e
-            case 69: inky.isDrawTarget = !inky.isDrawTarget; break;
-            // r
-            case 82: clyde.isDrawTarget = !clyde.isDrawTarget; break;
-            // t 
-            case 84: pacman.isDrawTarget = !pacman.isDrawTarget; break;
-
-            // a
-            case 65: blinky.isDrawPath = !blinky.isDrawPath; break;
-            // s
-            case 83: pinky.isDrawPath = !pinky.isDrawPath; break;
-            // d
-            case 68: inky.isDrawPath = !inky.isDrawPath; break;
-            // f
-            case 70: clyde.isDrawPath = !clyde.isDrawPath; break;
-            // g
-            case 71: pacman.isDrawPath = !pacman.isDrawPath; break;
-
-            // i (invincible)
-            case 73: pacman.invincible = !pacman.invincible; break;
-
-            // o (turbO)
-            case 79: turboMode = !turboMode; break;
-
-            // p (auto-Play)
-            case 80: pacman.ai = !pacman.ai; break;
-
-            default: isCustomKey |= false;
+        // only execute at first press event
+        if (!keyStates[key]) {
+            keyStates[key] = true;
+            keyDownListeners.exec(key, e);
         }
-    }
+    });
+    window.addEventListener("keyup",function(e) {
+        var key = (e||window.event).keyCode;
 
-    if (isCustomKey) {
-        e.preventDefault();
-    }
-};
+        keyStates[key] = false;
+        keyUpListeners.exec(key, e);
+    });
+
+
+    // key enumerations
+
+    var KEY_LEFT = 37;
+    var KEY_RIGHT = 39;
+    var KEY_UP = 38;
+    var KEY_DOWN = 40;
+
+    var KEY_SHIFT = 16;
+    var KEY_CTRL = 17;
+    var KEY_ALT = 18;
+
+    var KEY_SPACE = 32;
+
+    var KEY_N = 78;
+    var KEY_Q = 81;
+    var KEY_W = 87;
+    var KEY_E = 69;
+    var KEY_R = 82;
+    var KEY_T = 84;
+
+    var KEY_A = 65;
+    var KEY_S = 83;
+    var KEY_D = 68;
+    var KEY_F = 70;
+    var KEY_G = 71;
+
+    var KEY_I = 73;
+    var KEY_O = 79;
+    var KEY_P = 80;
+
+    // Custom Key Listeners
+
+    // Move Pac-Man
+    var isPlayState = function() { return state == playState; };
+    addKeyDown(KEY_LEFT,  function() { pacman.setNextDir(DIR_LEFT); },  isPlayState);
+    addKeyDown(KEY_RIGHT, function() { pacman.setNextDir(DIR_RIGHT); }, isPlayState);
+    addKeyDown(KEY_UP,    function() { pacman.setNextDir(DIR_UP); },    isPlayState);
+    addKeyDown(KEY_DOWN,  function() { pacman.setNextDir(DIR_DOWN); },  isPlayState);
+
+    // Slow-Motion
+    var isPracticeMode = function() { return practiceMode; };
+    addKeyDown(KEY_CTRL, function() { executive.setUpdatesPerSecond(30); }, isPracticeMode);
+    addKeyDown(KEY_ALT,  function() { executive.setUpdatesPerSecond(15); }, isPracticeMode);
+    addKeyUp  (KEY_CTRL, function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
+    addKeyUp  (KEY_ALT,  function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
+
+    // Toggle VCR
+    addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   isPracticeMode);
+    addKeyUp  (KEY_SHIFT, function() { vcr.startRecording(); }, isPracticeMode);
+
+    // Adjust VCR seeking
+    var isSeekState = function() { return vcr.getMode() != VCR_RECORD };
+    addKeyDown(KEY_UP,   function() { vcr.nextSpeed(1); },  isSeekState);
+    addKeyDown(KEY_DOWN, function() { vcr.nextSpeed(-1); }, isSeekState);
+
+    // Skip Level
+    var canSkip = function() {
+        return isPracticeMode() && 
+            (state == newGameState ||
+            state == readyNewState ||
+            state == readyRestartState ||
+            state == playState ||
+            state == deadState ||
+            state == finishState ||
+            state == overState);
+    };
+    addKeyDown(KEY_N, function() { switchState(readyNewState, 60); }, canSkip);
+
+    // Draw Actor Targets (fishpoles)
+    addKeyDown(KEY_Q, function() { blinky.isDrawTarget = !blinky.isDrawTarget; }, isPracticeMode);
+    addKeyDown(KEY_W, function() { pinky.isDrawTarget = !pinky.isDrawTarget; }, isPracticeMode);
+    addKeyDown(KEY_E, function() { inky.isDrawTarget = !inky.isDrawTarget; }, isPracticeMode);
+    addKeyDown(KEY_R, function() { clyde.isDrawTarget = !clyde.isDrawTarget; }, isPracticeMode);
+    addKeyDown(KEY_T, function() { pacman.isDrawTarget = !pacman.isDrawTarget; }, isPracticeMode);
+
+    // Draw Actor Paths
+    addKeyDown(KEY_A, function() { blinky.isDrawPath = !blinky.isDrawPath; }, isPracticeMode);
+    addKeyDown(KEY_S, function() { pinky.isDrawPath = !pinky.isDrawPath; }, isPracticeMode);
+    addKeyDown(KEY_D, function() { inky.isDrawPath = !inky.isDrawPath; }, isPracticeMode);
+    addKeyDown(KEY_F, function() { clyde.isDrawPath = !clyde.isDrawPath; }, isPracticeMode);
+    addKeyDown(KEY_G, function() { pacman.isDrawPath = !pacman.isDrawPath; }, isPracticeMode);
+
+    // Miscellaneous Cheats
+    addKeyDown(KEY_I, function() { pacman.invincible = !pacman.invincible; }, isPracticeMode);
+    addKeyDown(KEY_O, function() { turboMode = !turboMode; }, isPracticeMode);
+    addKeyDown(KEY_P, function() { pacman.ai = !pacman.ai; }, isPracticeMode);
+
+})();
 
 var initSwipe = function() {
 

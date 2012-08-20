@@ -220,10 +220,10 @@ var initSwipe = function() {
 
                 // register direction
                 if (Math.abs(dx) >= Math.abs(dy)) {
-                    (dx > 0) ? pressRight() : pressLeft();
+                    pacman.setNextDir(dx>0 ? DIR_RIGHT : DIR_LEFT);
                 }
                 else {
-                    (dy > 0) ? pressDown() : pressUp();
+                    pacman.setNextDir(dy>0 ? DIR_DOWN : DIR_UP);
                 }
             }
         }

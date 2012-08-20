@@ -148,6 +148,9 @@ var homeState = (function(){
         update: function() {
             menu.update();
         },
+        getMenu: function() {
+            return menu;
+        },
     };
 
 })();
@@ -191,6 +194,7 @@ var preNewGameState = (function() {
         function() {
             exitTo(homeState);
         });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
 
     return {
         init: function() {
@@ -202,6 +206,9 @@ var preNewGameState = (function() {
             renderer.renderFunc(menu.draw,menu);
         },
         update: function() {
+        },
+        getMenu: function() {
+            return menu;
         },
     };
 })();
@@ -222,6 +229,7 @@ var scoreState = (function(){
         function() {
             exitTo(homeState);
         });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
 
     var frame = 0;
 
@@ -407,6 +415,9 @@ var scoreState = (function(){
             menu.update();
             frame++;
         },
+        getMenu: function() {
+            return menu;
+        },
     };
 
 })();
@@ -427,6 +438,7 @@ var aboutState = (function(){
         function() {
             exitTo(homeState);
         });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
 
     var drawBody = function(ctx) {
         ctx.font = tileSize+"px ArcadeR";
@@ -489,6 +501,9 @@ var aboutState = (function(){
         update: function() {
             galagaStars.update();
             menu.update();
+        },
+        getMenu: function() {
+            return menu;
         },
     };
 

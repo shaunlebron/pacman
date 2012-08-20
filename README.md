@@ -17,7 +17,7 @@ Controls
 
 - **swipe**: steer pacman on mobile browsers
 - **arrows**: steer pacman
-- **spacebar**: pause/unpause the game
+- **escape**: pause the game
 
 ### Practice Mode
 

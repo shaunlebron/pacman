@@ -16,9 +16,49 @@ var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
     this.font = font;
     this.fontcolor = fontcolor;
     this.enabled = false;
+
+    this.backButton = undefined;
 };
 
 Menu.prototype = {
+
+    clickCurrentOption: function() {
+        var i;
+        for (i=0; i<this.buttonCount; i++) {
+            if (this.buttons[i].isSelected) {
+                this.buttons[i].onclick();
+                break;
+            }
+        }
+    },
+
+    selectNextOption: function() {
+        var i;
+        var nextBtn;
+        for (i=0; i<this.buttonCount; i++) {
+            if (this.buttons[i].isSelected) {
+                this.buttons[i].blur();
+                nextBtn = this.buttons[(i+1)%this.buttonCount];
+                break;
+            }
+        }
+        nextBtn = nextBtn || this.buttons[0];
+        nextBtn.focus();
+    },
+
+    selectPrevOption: function() {
+        var i;
+        var nextBtn;
+        for (i=0; i<this.buttonCount; i++) {
+            if (this.buttons[i].isSelected) {
+                this.buttons[i].blur();
+                nextBtn = this.buttons[i==0?this.buttonCount-1:i-1];
+                break;
+            }
+        }
+        nextBtn = nextBtn || this.buttons[this.buttonCount-1];
+        nextBtn.focus();
+    },
 
     addTextButton: function(msg,onclick) {
         this.buttons.push(new TextButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor));

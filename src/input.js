@@ -26,8 +26,10 @@
             for (i=0; i<numListeners; i++) {
                 l = keyListeners[i];
                 if (!l.isActive || l.isActive()) {
-                    l.callback();
                     e.preventDefault();
+                    if (l.callback()) { // do not propagate keys if returns true
+                        break;
+                    }
                 }
             }
         },
@@ -64,6 +66,9 @@
 
     // key enumerations
 
+    var KEY_ENTER = 13;
+    var KEY_ESC = 27;
+
     var KEY_LEFT = 37;
     var KEY_RIGHT = 39;
     var KEY_UP = 38;
@@ -93,6 +98,24 @@
     var KEY_P = 80;
 
     // Custom Key Listeners
+
+    // Menu Navigation Keys
+    var menu;
+    var isInMenu = function() {
+        menu = (state.getMenu && state.getMenu());
+        if (!menu && inGameMenu.isOpen()) {
+            menu = inGameMenu.getMenu();
+        }
+        return menu;
+    };
+    addKeyDown(KEY_ESC,   function(){ menu.backButton ? menu.backButton.onclick():0; return true; }, isInMenu);
+    addKeyDown(KEY_ENTER, function(){ menu.clickCurrentOption(); }, isInMenu);
+    addKeyDown(KEY_UP,    function(){ menu.selectPrevOption(); }, isInMenu);
+    addKeyDown(KEY_DOWN,  function(){ menu.selectNextOption(); }, isInMenu);
+    var isInGameMenuButtonClickable = function() {
+        return inGameMenu.isAllowed() && !inGameMenu.isOpen();
+    };
+    addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
     // Move Pac-Man
     var isPlayState = function() { return state == playState; };

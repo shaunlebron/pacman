@@ -3769,7 +3769,7 @@ var Button = function(x,y,w,h,onclick) {
     this.borderBlurColor = "#333";
     this.borderFocusColor = "#EEE";
 
-    this.isHover = false;
+    this.isSelected = false;
 
     // touch events
     this.startedInside = false;
@@ -3800,7 +3800,7 @@ var Button = function(x,y,w,h,onclick) {
     };
     var touchend = function(evt) {
         evt.preventDefault();
-        if (that.onclick && that.startedInside && that.isHover) {
+        if (that.onclick && that.startedInside && that.isSelected) {
             that.onclick();
         }
         touchcancel(evt);
@@ -3860,11 +3860,11 @@ Button.prototype = {
     },
 
     focus: function() {
-        this.isHover = true;
+        this.isSelected = true;
     },
 
     blur: function() {
-        this.isHover = false;
+        this.isSelected = false;
     },
 
     draw: function(ctx) {
@@ -3884,7 +3884,7 @@ Button.prototype = {
 
         ctx.fillStyle = "rgba(0,0,0,0.5)";
         ctx.fill();
-        ctx.strokeStyle = this.isHover && this.onclick ? this.borderFocusColor : this.borderBlurColor;
+        ctx.strokeStyle = this.isSelected && this.onclick ? this.borderFocusColor : this.borderBlurColor;
         ctx.stroke();
 
     },
@@ -3908,7 +3908,7 @@ TextButton.prototype = {
     draw: function(ctx) {
         Button.prototype.draw.call(this,ctx);
         ctx.font = this.font;
-        ctx.fillStyle = this.isHover && this.onclick ? this.fontcolor : "#777";
+        ctx.fillStyle = this.isSelected && this.onclick ? this.fontcolor : "#777";
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
@@ -3934,7 +3934,7 @@ TextIconButton.prototype = {
 
     update: function() {
         TextButton.prototype.update.call(this);
-        this.frame = this.isHover ? this.frame+1 : 0;
+        this.frame = this.isSelected ? this.frame+1 : 0;
     },
 };
 //@line 1 "src/Menu.js"
@@ -3956,9 +3956,49 @@ var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
     this.font = font;
     this.fontcolor = fontcolor;
     this.enabled = false;
+
+    this.backButton = undefined;
 };
 
 Menu.prototype = {
+
+    clickCurrentOption: function() {
+        var i;
+        for (i=0; i<this.buttonCount; i++) {
+            if (this.buttons[i].isSelected) {
+                this.buttons[i].onclick();
+                break;
+            }
+        }
+    },
+
+    selectNextOption: function() {
+        var i;
+        var nextBtn;
+        for (i=0; i<this.buttonCount; i++) {
+            if (this.buttons[i].isSelected) {
+                this.buttons[i].blur();
+                nextBtn = this.buttons[(i+1)%this.buttonCount];
+                break;
+            }
+        }
+        nextBtn = nextBtn || this.buttons[0];
+        nextBtn.focus();
+    },
+
+    selectPrevOption: function() {
+        var i;
+        var nextBtn;
+        for (i=0; i<this.buttonCount; i++) {
+            if (this.buttons[i].isSelected) {
+                this.buttons[i].blur();
+                nextBtn = this.buttons[i==0?this.buttonCount-1:i-1];
+                break;
+            }
+        }
+        nextBtn = nextBtn || this.buttons[this.buttonCount-1];
+        nextBtn.focus();
+    },
 
     addTextButton: function(msg,onclick) {
         this.buttons.push(new TextButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor));
@@ -4027,35 +4067,37 @@ var inGameMenu = (function() {
 
     var w=tileSize*6,h=tileSize*2;
 
-    var getMenu = function() {
+    var getMainMenu = function() {
         return practiceMode ? practiceMenu : menu;
     };
-    var showMenu = function() {
-        getMenu().enable();
+    var showMainMenu = function() {
+        getMainMenu().enable();
     };
-    var hideMenu = function() {
-        getMenu().disable();
+    var hideMainMenu = function() {
+        getMainMenu().disable();
     };
 
     // button to enable in-game menu
-    var btn = new TextButton(mapWidth/2 - w/2,-1.5*h,w,h, showMenu, "MENU",(tileSize-2)+"px ArcadeR","#FFF");
+    var btn = new TextButton(mapWidth/2 - w/2,-1.5*h,w,h, showMainMenu, "MENU",(tileSize-2)+"px ArcadeR","#FFF");
 
     // confirms a menu action
-    var confirmMenu = new Menu("<WHAT AM I CONFIRMING?>",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var confirmMenu = new Menu("QUESTION?",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     confirmMenu.addTextButton("YES", function() {
         confirmMenu.disable();
         confirmMenu.onConfirm();
     });
     confirmMenu.addTextButton("NO", function() {
         confirmMenu.disable();
-        showMenu();
+        showMainMenu();
     });
     confirmMenu.addTextButton("CANCEL", function() {
         confirmMenu.disable();
-        showMenu();
+        showMainMenu();
     });
+    confirmMenu.backButton = confirmMenu.buttons[confirmMenu.buttonCount-1];
+
     var showConfirm = function(title,onConfirm) {
-        hideMenu();
+        hideMainMenu();
         confirmMenu.title = title;
         confirmMenu.onConfirm = onConfirm;
         confirmMenu.enable();
@@ -4071,10 +4113,11 @@ var inGameMenu = (function() {
             switchState(homeState, 60);
         });
     });
+    menu.backButton = menu.buttons[0];
 
     // practice menu
     var practiceMenu = new Menu("PAUSED",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-    practiceMenu.addTextButton("RESUME", hideMenu);
+    practiceMenu.addTextButton("RESUME", hideMainMenu);
     practiceMenu.addTextButton("RESTART LEVEL", function() {
         showConfirm("RESTART LEVEL?", function() {
             level--;
@@ -4091,6 +4134,7 @@ var inGameMenu = (function() {
             switchState(homeState, 60);
         });
     });
+    practiceMenu.backButton = practiceMenu.buttons[0];
 
     // returns true if menu button should be available in the current state
     var isMenuBtnState = function() {
@@ -4117,22 +4161,33 @@ var inGameMenu = (function() {
 
         },
         drawButton: function(ctx) {
-            if (isMenuBtnState() && (!getMenu().isEnabled() && !confirmMenu.isEnabled())) {
+            if (isMenuBtnState() && (!getMainMenu().isEnabled() && !confirmMenu.isEnabled())) {
                 btn.draw(ctx);
             }
         },
         drawMenu: function(ctx) {
-            if (getMenu().isEnabled() || confirmMenu.isEnabled()) {
+            if (getMainMenu().isEnabled() || confirmMenu.isEnabled()) {
                 ctx.fillStyle = "rgba(0,0,0,0.8)";
                 ctx.fillRect(-mapPad-1,-mapPad-1,mapWidth+1,mapHeight+1);
-                getMenu().isEnabled() ? getMenu().draw(ctx) : confirmMenu.draw(ctx);
+                getMainMenu().isEnabled() ? getMainMenu().draw(ctx) : confirmMenu.draw(ctx);
             }
         },
         isAllowed: function() {
             return isMenuBtnState();
         },
         isOpen: function() {
-            return getMenu().isEnabled() || confirmMenu.isEnabled();
+            return getMainMenu().isEnabled() || confirmMenu.isEnabled();
+        },
+        getMenu: function() {
+            if (getMainMenu().isEnabled()) {
+                return getMainMenu();
+            }
+            else if (confirmMenu.isEnabled()) {
+                return confirmMenu;
+            }
+        },
+        getMenuButton: function() {
+            return btn;
         },
     };
 })();
@@ -7293,6 +7348,9 @@ var homeState = (function(){
         update: function() {
             menu.update();
         },
+        getMenu: function() {
+            return menu;
+        },
     };
 
 })();
@@ -7336,6 +7394,7 @@ var preNewGameState = (function() {
         function() {
             exitTo(homeState);
         });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
 
     return {
         init: function() {
@@ -7347,6 +7406,9 @@ var preNewGameState = (function() {
             renderer.renderFunc(menu.draw,menu);
         },
         update: function() {
+        },
+        getMenu: function() {
+            return menu;
         },
     };
 })();
@@ -7367,6 +7429,7 @@ var scoreState = (function(){
         function() {
             exitTo(homeState);
         });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
 
     var frame = 0;
 
@@ -7552,6 +7615,9 @@ var scoreState = (function(){
             menu.update();
             frame++;
         },
+        getMenu: function() {
+            return menu;
+        },
     };
 
 })();
@@ -7572,6 +7638,7 @@ var aboutState = (function(){
         function() {
             exitTo(homeState);
         });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
 
     var drawBody = function(ctx) {
         ctx.font = tileSize+"px ArcadeR";
@@ -7634,6 +7701,9 @@ var aboutState = (function(){
         update: function() {
             galagaStars.update();
             menu.update();
+        },
+        getMenu: function() {
+            return menu;
         },
     };
 
@@ -8146,8 +8216,10 @@ var overState = (function() {
             for (i=0; i<numListeners; i++) {
                 l = keyListeners[i];
                 if (!l.isActive || l.isActive()) {
-                    l.callback();
                     e.preventDefault();
+                    if (l.callback()) { // do not propagate keys if returns true
+                        break;
+                    }
                 }
             }
         },
@@ -8184,6 +8256,9 @@ var overState = (function() {
 
     // key enumerations
 
+    var KEY_ENTER = 13;
+    var KEY_ESC = 27;
+
     var KEY_LEFT = 37;
     var KEY_RIGHT = 39;
     var KEY_UP = 38;
@@ -8213,6 +8288,24 @@ var overState = (function() {
     var KEY_P = 80;
 
     // Custom Key Listeners
+
+    // Menu Navigation Keys
+    var menu;
+    var isInMenu = function() {
+        menu = (state.getMenu && state.getMenu());
+        if (!menu && inGameMenu.isOpen()) {
+            menu = inGameMenu.getMenu();
+        }
+        return menu;
+    };
+    addKeyDown(KEY_ESC,   function(){ menu.backButton ? menu.backButton.onclick():0; return true; }, isInMenu);
+    addKeyDown(KEY_ENTER, function(){ menu.clickCurrentOption(); }, isInMenu);
+    addKeyDown(KEY_UP,    function(){ menu.selectPrevOption(); }, isInMenu);
+    addKeyDown(KEY_DOWN,  function(){ menu.selectNextOption(); }, isInMenu);
+    var isInGameMenuButtonClickable = function() {
+        return inGameMenu.isAllowed() && !inGameMenu.isOpen();
+    };
+    addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
     // Move Pac-Man
     var isPlayState = function() { return state == playState; };

@@ -55,7 +55,7 @@ var Button = function(x,y,w,h,onclick) {
     this.borderBlurColor = "#333";
     this.borderFocusColor = "#EEE";
 
-    this.isHover = false;
+    this.isSelected = false;
 
     // touch events
     this.startedInside = false;
@@ -86,7 +86,7 @@ var Button = function(x,y,w,h,onclick) {
     };
     var touchend = function(evt) {
         evt.preventDefault();
-        if (that.onclick && that.startedInside && that.isHover) {
+        if (that.onclick && that.startedInside && that.isSelected) {
             that.onclick();
         }
         touchcancel(evt);
@@ -146,11 +146,11 @@ Button.prototype = {
     },
 
     focus: function() {
-        this.isHover = true;
+        this.isSelected = true;
     },
 
     blur: function() {
-        this.isHover = false;
+        this.isSelected = false;
     },
 
     draw: function(ctx) {
@@ -170,7 +170,7 @@ Button.prototype = {
 
         ctx.fillStyle = "rgba(0,0,0,0.5)";
         ctx.fill();
-        ctx.strokeStyle = this.isHover && this.onclick ? this.borderFocusColor : this.borderBlurColor;
+        ctx.strokeStyle = this.isSelected && this.onclick ? this.borderFocusColor : this.borderBlurColor;
         ctx.stroke();
 
     },
@@ -194,7 +194,7 @@ TextButton.prototype = {
     draw: function(ctx) {
         Button.prototype.draw.call(this,ctx);
         ctx.font = this.font;
-        ctx.fillStyle = this.isHover && this.onclick ? this.fontcolor : "#777";
+        ctx.fillStyle = this.isSelected && this.onclick ? this.fontcolor : "#777";
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
@@ -220,6 +220,6 @@ TextIconButton.prototype = {
 
     update: function() {
         TextButton.prototype.update.call(this);
-        this.frame = this.isHover ? this.frame+1 : 0;
+        this.frame = this.isSelected ? this.frame+1 : 0;
     },
 };

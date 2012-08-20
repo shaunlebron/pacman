@@ -4,35 +4,37 @@ var inGameMenu = (function() {
 
     var w=tileSize*6,h=tileSize*2;
 
-    var getMenu = function() {
+    var getMainMenu = function() {
         return practiceMode ? practiceMenu : menu;
     };
-    var showMenu = function() {
-        getMenu().enable();
+    var showMainMenu = function() {
+        getMainMenu().enable();
     };
-    var hideMenu = function() {
-        getMenu().disable();
+    var hideMainMenu = function() {
+        getMainMenu().disable();
     };
 
     // button to enable in-game menu
-    var btn = new TextButton(mapWidth/2 - w/2,-1.5*h,w,h, showMenu, "MENU",(tileSize-2)+"px ArcadeR","#FFF");
+    var btn = new TextButton(mapWidth/2 - w/2,-1.5*h,w,h, showMainMenu, "MENU",(tileSize-2)+"px ArcadeR","#FFF");
 
     // confirms a menu action
-    var confirmMenu = new Menu("<WHAT AM I CONFIRMING?>",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var confirmMenu = new Menu("QUESTION?",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     confirmMenu.addTextButton("YES", function() {
         confirmMenu.disable();
         confirmMenu.onConfirm();
     });
     confirmMenu.addTextButton("NO", function() {
         confirmMenu.disable();
-        showMenu();
+        showMainMenu();
     });
     confirmMenu.addTextButton("CANCEL", function() {
         confirmMenu.disable();
-        showMenu();
+        showMainMenu();
     });
+    confirmMenu.backButton = confirmMenu.buttons[confirmMenu.buttonCount-1];
+
     var showConfirm = function(title,onConfirm) {
-        hideMenu();
+        hideMainMenu();
         confirmMenu.title = title;
         confirmMenu.onConfirm = onConfirm;
         confirmMenu.enable();
@@ -48,10 +50,11 @@ var inGameMenu = (function() {
             switchState(homeState, 60);
         });
     });
+    menu.backButton = menu.buttons[0];
 
     // practice menu
     var practiceMenu = new Menu("PAUSED",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-    practiceMenu.addTextButton("RESUME", hideMenu);
+    practiceMenu.addTextButton("RESUME", hideMainMenu);
     practiceMenu.addTextButton("RESTART LEVEL", function() {
         showConfirm("RESTART LEVEL?", function() {
             level--;
@@ -68,6 +71,7 @@ var inGameMenu = (function() {
             switchState(homeState, 60);
         });
     });
+    practiceMenu.backButton = practiceMenu.buttons[0];
 
     // returns true if menu button should be available in the current state
     var isMenuBtnState = function() {
@@ -94,22 +98,33 @@ var inGameMenu = (function() {
 
         },
         drawButton: function(ctx) {
-            if (isMenuBtnState() && (!getMenu().isEnabled() && !confirmMenu.isEnabled())) {
+            if (isMenuBtnState() && (!getMainMenu().isEnabled() && !confirmMenu.isEnabled())) {
                 btn.draw(ctx);
             }
         },
         drawMenu: function(ctx) {
-            if (getMenu().isEnabled() || confirmMenu.isEnabled()) {
+            if (getMainMenu().isEnabled() || confirmMenu.isEnabled()) {
                 ctx.fillStyle = "rgba(0,0,0,0.8)";
                 ctx.fillRect(-mapPad-1,-mapPad-1,mapWidth+1,mapHeight+1);
-                getMenu().isEnabled() ? getMenu().draw(ctx) : confirmMenu.draw(ctx);
+                getMainMenu().isEnabled() ? getMainMenu().draw(ctx) : confirmMenu.draw(ctx);
             }
         },
         isAllowed: function() {
             return isMenuBtnState();
         },
         isOpen: function() {
-            return getMenu().isEnabled() || confirmMenu.isEnabled();
+            return getMainMenu().isEnabled() || confirmMenu.isEnabled();
+        },
+        getMenu: function() {
+            if (getMainMenu().isEnabled()) {
+                return getMainMenu();
+            }
+            else if (confirmMenu.isEnabled()) {
+                return confirmMenu;
+            }
+        },
+        getMenuButton: function() {
+            return btn;
         },
     };
 })();

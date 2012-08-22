@@ -62,8 +62,18 @@ var loadGame = function(t) {
 /// SCORING
 // (manages scores and high scores for each game type)
 
-var scores =     [ 0,0,0,0,0,0,0,0,0 ];
-var highScores = [ 10000,10000,10000,10000,10000,10000,10000,10000,0 ];
+var scores = [
+    0,0, // pacman
+    0,0, // mspac
+    0,0, // cookie
+    0,0, // otto
+    0 ];
+var highScores = [
+    10000,10000, // pacman
+    10000,10000, // mspac
+    10000,10000, // cookie
+    10000,10000, // otto
+    ];
 
 var getScoreIndex = function() {
     if (practiceMode) {
@@ -118,7 +128,7 @@ var loadHighScores = function() {
         hs = JSON.parse(localStorage.highScores);
         hslen = hs.length;
         for (i=0; i<hslen; i++) {
-            highScores[i] = hs[i];
+            highScores[i] = Math.max(highScores[i],hs[i]);
         }
     }
 };

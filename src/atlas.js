@@ -4,16 +4,48 @@ var atlas = (function(){
     var canvas,ctx;
     var size = 20;
     var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 13; // one more for good measure like cols
+    var rows = 15;
 
     var creates = 0;
 
+    var drawGrid = function() {
+        // draw grid overlay
+        var canvas = document.getElementById('gridcanvas');
+        if (!canvas) {
+            return;
+        }
+        var w = size*cols*renderScale;
+        var h = size*rows*renderScale;
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,w,h);
+        var x,y;
+        var step = size*renderScale;
+        ctx.beginPath();
+        for (x=0; x<=w; x+=step) {
+            ctx.moveTo(x,0);
+            ctx.lineTo(x,h);
+        }
+        for (y=0; y<=h; y+=step) {
+            ctx.moveTo(0,y);
+            ctx.lineTo(w,y);
+        }
+        ctx.lineWidth = "1px";
+        ctx.lineCap = "square";
+        ctx.strokeStyle="rgba(255,255,255,0.5)";
+        ctx.stroke();
+    };
+
     var create = function() {
+        drawGrid();
         canvas = document.getElementById('atlas');
         ctx = canvas.getContext("2d");
+        /*
         canvas.style.left = 0;
         canvas.style.top = 0;
         canvas.style.position = "absolute";
+        */
 
         var w = size*cols*renderScale;
         var h = size*rows*renderScale;
@@ -111,6 +143,36 @@ var atlas = (function(){
         drawCookieCells(row,3, DIR_RIGHT);
         drawCookieCells(row,6, DIR_DOWN);
         drawCookieCells(row,9, DIR_LEFT);
+
+        var drawMonsterCells = function(row,color) {
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, false, false, false, color); },   row,1);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_RIGHT, false, false, false, color) },  row,2);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_RIGHT, false, false, false, color) },  row,3);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_DOWN, false, false, false, color) },  row,4);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_DOWN, false, false, false, color) },  row,5);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_LEFT, false, false, false, color) }, row,6);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_LEFT, false, false, false, color) }, row,7);
+        };
+
+        row++;
+        drawMonsterCells(row, "#FF0000");
+        row++;
+        drawMonsterCells(row, "#FFB8FF");
+        row++;
+        drawMonsterCells(row, "#00FFFF");
+        row++;
+        drawMonsterCells(row, "#FFB851");
+
+        row++;
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, false, false, true, "#fff"); },     row,0);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_RIGHT, false, false, true, "#fff"); },  row,1);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_DOWN, false, false, true, "#fff"); },   row,2);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_LEFT, false, false, true, "#fff"); },   row,3);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -161,6 +223,38 @@ var atlas = (function(){
             }
         }
 
+        copyCellTo(row, col, destCtx, x, y);
+    };
+
+    var copyMonsterSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        var row,col;
+        if (eyes_only) {
+            row = 13;
+            col = dirEnum;
+        }
+        else if (scared) {
+            row = 13;
+            col = flash ? 6 : 4;
+            col += frame;
+        }
+        else {
+            col = dirEnum*2 + frame;
+            if (color == blinky.color) {
+                row = 9;
+            }
+            else if (color == pinky.color) {
+                row = 10;
+            }
+            else if (color == inky.color) {
+                row = 11;
+            }
+            else if (color == clyde.color) {
+                row = 12;
+            }
+            else {
+                row = 13;
+            }
+        }
 
         copyCellTo(row, col, destCtx, x, y);
     };
@@ -215,6 +309,7 @@ var atlas = (function(){
         create: create,
         getCanvas: function() { return canvas; },
         drawGhostSprite: copyGhostSprite,
+        drawMonsterSprite: copyMonsterSprite,
         drawPacmanSprite: copyPacmanSprite,
         drawMsPacmanSprite: copyMsPacmanSprite,
         drawCookiemanSprite: copyCookiemanSprite,

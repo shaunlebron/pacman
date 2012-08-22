@@ -89,9 +89,13 @@ var initRenderer = function(){
         var w = screenWidth*s;
         var x = Math.max(0,(window.innerWidth-10)/2 - w/2);
         var y = 0;
+        /*
+        canvas.style.position = "absolute";
         canvas.style.left = x;
         canvas.style.top = y;
-        canvas.style.position = "absolute";
+        console.log(canvas.style.left);
+        */
+        document.body.style.marginLeft = (window.innerWidth - w)/2 + "px";
     };
 
     // create foreground and background canvases
@@ -862,7 +866,12 @@ var initRenderer = function(){
             var frame = Math.floor(g.frames/8)%2; // toggle frame every 8 ticks
             var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
             //drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
-            atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            if (gameMode == GAME_OTTO) {
+                atlas.drawMonsterSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            }
+            else {
+                atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            }
         },
 
         // draw pacman

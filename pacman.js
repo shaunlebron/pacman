@@ -18,6 +18,7 @@
 var GAME_PACMAN = 0;
 var GAME_MSPACMAN = 1;
 var GAME_COOKIE = 2;
+var GAME_OTTO = 3;
 
 var practiceMode = false;
 var turboMode = false;
@@ -2455,16 +2456,48 @@ var atlas = (function(){
     var canvas,ctx;
     var size = 20;
     var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 13; // one more for good measure like cols
+    var rows = 15;
 
     var creates = 0;
 
+    var drawGrid = function() {
+        // draw grid overlay
+        var canvas = document.getElementById('gridcanvas');
+        if (!canvas) {
+            return;
+        }
+        var w = size*cols*renderScale;
+        var h = size*rows*renderScale;
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,w,h);
+        var x,y;
+        var step = size*renderScale;
+        ctx.beginPath();
+        for (x=0; x<=w; x+=step) {
+            ctx.moveTo(x,0);
+            ctx.lineTo(x,h);
+        }
+        for (y=0; y<=h; y+=step) {
+            ctx.moveTo(0,y);
+            ctx.lineTo(w,y);
+        }
+        ctx.lineWidth = "1px";
+        ctx.lineCap = "square";
+        ctx.strokeStyle="rgba(255,255,255,0.5)";
+        ctx.stroke();
+    };
+
     var create = function() {
+        drawGrid();
         canvas = document.getElementById('atlas');
         ctx = canvas.getContext("2d");
+        /*
         canvas.style.left = 0;
         canvas.style.top = 0;
         canvas.style.position = "absolute";
+        */
 
         var w = size*cols*renderScale;
         var h = size*rows*renderScale;
@@ -2562,6 +2595,36 @@ var atlas = (function(){
         drawCookieCells(row,3, DIR_RIGHT);
         drawCookieCells(row,6, DIR_DOWN);
         drawCookieCells(row,9, DIR_LEFT);
+
+        var drawMonsterCells = function(row,color) {
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, false, false, false, color); },   row,1);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_RIGHT, false, false, false, color) },  row,2);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_RIGHT, false, false, false, color) },  row,3);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_DOWN, false, false, false, color) },  row,4);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_DOWN, false, false, false, color) },  row,5);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_LEFT, false, false, false, color) }, row,6);
+            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_LEFT, false, false, false, color) }, row,7);
+        };
+
+        row++;
+        drawMonsterCells(row, "#FF0000");
+        row++;
+        drawMonsterCells(row, "#FFB8FF");
+        row++;
+        drawMonsterCells(row, "#00FFFF");
+        row++;
+        drawMonsterCells(row, "#FFB851");
+
+        row++;
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, false, false, true, "#fff"); },     row,0);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_RIGHT, false, false, true, "#fff"); },  row,1);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_DOWN, false, false, true, "#fff"); },   row,2);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_LEFT, false, false, true, "#fff"); },   row,3);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
+        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -2612,6 +2675,38 @@ var atlas = (function(){
             }
         }
 
+        copyCellTo(row, col, destCtx, x, y);
+    };
+
+    var copyMonsterSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        var row,col;
+        if (eyes_only) {
+            row = 13;
+            col = dirEnum;
+        }
+        else if (scared) {
+            row = 13;
+            col = flash ? 6 : 4;
+            col += frame;
+        }
+        else {
+            col = dirEnum*2 + frame;
+            if (color == blinky.color) {
+                row = 9;
+            }
+            else if (color == pinky.color) {
+                row = 10;
+            }
+            else if (color == inky.color) {
+                row = 11;
+            }
+            else if (color == clyde.color) {
+                row = 12;
+            }
+            else {
+                row = 13;
+            }
+        }
 
         copyCellTo(row, col, destCtx, x, y);
     };
@@ -2666,6 +2761,7 @@ var atlas = (function(){
         create: create,
         getCanvas: function() { return canvas; },
         drawGhostSprite: copyGhostSprite,
+        drawMonsterSprite: copyMonsterSprite,
         drawPacmanSprite: copyPacmanSprite,
         drawMsPacmanSprite: copyMsPacmanSprite,
         drawCookiemanSprite: copyCookiemanSprite,
@@ -2764,9 +2860,13 @@ var initRenderer = function(){
         var w = screenWidth*s;
         var x = Math.max(0,(window.innerWidth-10)/2 - w/2);
         var y = 0;
+        /*
+        canvas.style.position = "absolute";
         canvas.style.left = x;
         canvas.style.top = y;
-        canvas.style.position = "absolute";
+        console.log(canvas.style.left);
+        */
+        document.body.style.marginLeft = (window.innerWidth - w)/2 + "px";
     };
 
     // create foreground and background canvases
@@ -3537,7 +3637,12 @@ var initRenderer = function(){
             var frame = Math.floor(g.frames/8)%2; // toggle frame every 8 ticks
             var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
             //drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
-            atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            if (gameMode == GAME_OTTO) {
+                atlas.drawMonsterSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            }
+            else {
+                atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
+            }
         },
 
         // draw pacman
@@ -4451,6 +4556,374 @@ var drawGhostSprite = (function(){
             addScaredFace(ctx, flash);
         else
             addEyes(ctx,dirEnum);
+
+        ctx.restore();
+    };
+})();
+
+var drawMonsterSprite = (function(){
+    var ctx;
+    var color;
+
+    var plotOutline = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    };
+
+    var plotLine = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    };
+
+    var plotSolid = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineJoin = "round";
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.fill();
+        ctx.stroke();
+    };
+
+
+    // draw regular ghost eyes
+    var drawEye = function(dirEnum,x,y){
+        var i;
+
+        ctx.save();
+        ctx.translate(x,y);
+
+        plotSolid([
+            0,1,
+            1,0,
+            2,0,
+            3,1,
+            3,3,
+            2,4,
+            1,4,
+            0,3
+        ],"#FFF");
+
+        // translate pupil to correct position
+        if (dirEnum == DIR_LEFT) ctx.translate(0,2);
+        else if (dirEnum == DIR_RIGHT) ctx.translate(2,2);
+        else if (dirEnum == DIR_UP) ctx.translate(1,0);
+        else if (dirEnum == DIR_DOWN) ctx.translate(1,3);
+
+        // draw pupil
+        plotSolid([
+            0,0,
+            1,0,
+            1,1,
+            0,1,
+        ],"#00F");
+
+        ctx.restore();
+    };
+
+    var drawRightBody = function() {
+        plotSolid([
+            -7,-3,
+            -3,-7,
+            -1,-7,
+            -2,-6,
+            0,-4,
+            3,-7,
+            5,-7,
+            4,-7,
+            3,-6,
+            6,-3,
+            6,1,
+            5,3,
+            2,6,
+            -4,6,
+            -5,5,
+            -7,1,
+        ],color);
+    };
+
+    var drawRightShoe = function(x,y) {
+        ctx.save();
+        ctx.translate(x,y);
+        plotSolid([
+            0,0,
+            3,-3,
+            4,-3,
+            5,-2,
+            5,-1,
+            4,0,
+        ],"#00F");
+        ctx.restore();
+    };
+
+    var drawRight0 = function() {
+        // antenna tips
+        plotLine([-1,-7,0,-6],"#FFF");
+        plotLine([5,-7,6,-6],"#FFF");
+
+        drawRightBody();
+
+        drawRightShoe(1,6);
+        plotLine([-4,6,-1,6],"#00F");
+
+        drawEye(DIR_RIGHT,-4,-4);
+        drawEye(DIR_RIGHT,2,-4);
+    };
+
+    var drawRight1 = function() {
+        // antenna tips
+        plotLine([-1,-7,0,-7],"#FFF");
+        plotLine([5,-7,6,-7],"#FFF");
+
+        drawRightBody();
+
+        drawRightShoe(-4,6);
+        plotLine([2,6,5,6],"#00F");
+
+        drawEye(DIR_RIGHT,-4,-4);
+        drawEye(DIR_RIGHT,2,-4);
+    };
+
+    var drawLeft0 = function() {
+        ctx.scale(-1,1);
+        ctx.translate(1,0);
+        drawRight0();
+    };
+    
+    var drawLeft1 = function() {
+        ctx.scale(-1,1);
+        ctx.translate(1,0);
+        drawRight1();
+    };
+
+    var drawUpDownBody0 = function() {
+        plotLine([-6,-7,-7,-6],"#FFF");
+        plotLine([5,-7,6,-6],"#FFF");
+        plotSolid([
+            -7,-3,
+            -4,-6,
+            -5,-7,
+            -6,-7,
+            -4,-7,
+            -3,-6,
+            -2,-6,
+            -1,-5,
+            0,-5,
+            1,-6,
+            2,-6,
+            3,-7,
+            5,-7,
+            4,-7,
+            3,-6,
+            6,-3,
+            6,1,
+            5,3,
+            4,5,
+            3,6,
+            -4,6,
+            -5,5,
+            -6,3,
+            -7,1,
+        ],color);
+    };
+
+    var drawUpDownBody1 = function() {
+        plotLine([-6,-6,-7,-5],"#FFF");
+        plotLine([5,-6,6,-5],"#FFF");
+        plotSolid([
+            -7,-3,
+            -4,-6,
+            -5,-7,
+            -6,-6,
+            -5,-7,
+            -4,-7,
+            -3,-6,
+            -2,-6,
+            -1,-5,
+            0,-5,
+            1,-6,
+            2,-6,
+            3,-7,
+            4,-7,
+            5,-6,
+            4,-7,
+            3,-6,
+            6,-3,
+            6,1,
+            5,3,
+            4,5,
+            3,6,
+            -4,6,
+            -5,5,
+            -6,3,
+            -7,1,
+        ],color);
+    };
+
+    var drawUp0 = function() {
+        drawUpDownBody0();
+        drawEye(DIR_UP,-5,-5);
+        drawEye(DIR_UP,1,-5);
+        plotSolid([
+            -4,6,
+            -3,5,
+            -2,5,
+            -1,6,
+        ],"#00F");
+    };
+
+    var drawUp1 = function() {
+        drawUpDownBody1();
+        drawEye(DIR_UP,-5,-5);
+        drawEye(DIR_UP,1,-5);
+        plotSolid([
+            0,6,
+            1,5,
+            2,5,
+            3,6,
+        ],"#00F");
+    };
+
+    var drawDown0 = function() {
+        drawUpDownBody0();
+        drawEye(DIR_DOWN,-5,-4);
+        drawEye(DIR_DOWN,1,-4);
+        plotSolid([
+            0,6,
+            1,4,
+            2,3,
+            3,3,
+            4,4,
+            4,5,
+            3,6,
+        ],"#00F");
+        plotLine([-4,6,-2,6],"#00F");
+    };
+
+    var drawDown1 = function() {
+        drawUpDownBody1();
+        drawEye(DIR_DOWN,-5,-4);
+        drawEye(DIR_DOWN,1,-4);
+        plotSolid([
+            -1,6,
+            -2,4,
+            -3,3,
+            -4,3,
+            -5,4,
+            -5,5,
+            -4,6,
+        ],"#00F");
+        plotLine([1,6,3,6],"#00F");
+    };
+
+    var borderColor;
+    var faceColor;
+
+    var drawScaredBody = function() {
+        plotOutline([
+            -6,-2,
+            -2,-5,
+            -3,-6,
+            -5,-6,
+            -3,-6,
+            -1,-4,
+            1,-4,
+            3,-6,
+            5,-6,
+            3,-6,
+            2,-5,
+            6,-2,
+            6,4,
+            5,6,
+            4,7,
+            -4,7,
+            -5,6,
+            -6,4
+        ],borderColor);
+
+        plotLine([
+            -2,4,
+            -1,3,
+            1,3,
+            2,4
+        ],faceColor);
+    };
+
+
+    var drawScared0 = function(flash) {
+        plotLine([-2,-2,-2,0],faceColor);
+        plotLine([-3,-1,-1,-1],faceColor);
+        plotLine([2,-2,2,0],faceColor);
+        plotLine([3,-1,1,-1],faceColor);
+        plotLine([-5,-6,-6,-7],"#FFF");
+        plotLine([5,-6,6,-7],"#FFF");
+        drawScaredBody();
+    };
+
+    var drawScared1 = function(flash) {
+        plotLine([-3,-2,-1,0],faceColor);
+        plotLine([-3,0,-1,-2],faceColor);
+        plotLine([1,-2,3,0],faceColor);
+        plotLine([1,0,3,-2],faceColor);
+        plotLine([-5,-6,-6,-5],"#FFF");
+        plotLine([5,-6,6,-5],"#FFF");
+        drawScaredBody();
+    };
+
+    return function(_ctx,x,y,frame,dirEnum,scared,flash,eyes_only,_color) {
+        if (eyes_only) {
+            return; // invisible
+        }
+
+        ctx = _ctx;
+        color = _color;
+
+        ctx.save();
+        ctx.translate(x+0.5,y+0.5);
+
+        if (scared) {
+            ctx.translate(0,-1); // correct alignment error from my chosen coordinates
+            borderColor = flash ? "#FFF" : "#00F";
+            faceColor = flash ? "#F00" : "#FF0";
+            [drawScared0, drawScared1][frame]();
+        }
+        else if (dirEnum == DIR_RIGHT) {
+            [drawRight0, drawRight1][frame]();
+        }
+        else if (dirEnum == DIR_LEFT) {
+            [drawLeft0, drawLeft1][frame]();
+        }
+        else if (dirEnum == DIR_DOWN) {
+            [drawDown0, drawDown1][frame]();
+        }
+        else if (dirEnum == DIR_UP) {
+            [drawUp0, drawUp1][frame]();
+        }
 
         ctx.restore();
     };

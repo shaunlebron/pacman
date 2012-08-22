@@ -261,6 +261,374 @@ var drawGhostSprite = (function(){
     };
 })();
 
+var drawMonsterSprite = (function(){
+    var ctx;
+    var color;
+
+    var plotOutline = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    };
+
+    var plotLine = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    };
+
+    var plotSolid = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineJoin = "round";
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.fill();
+        ctx.stroke();
+    };
+
+
+    // draw regular ghost eyes
+    var drawEye = function(dirEnum,x,y){
+        var i;
+
+        ctx.save();
+        ctx.translate(x,y);
+
+        plotSolid([
+            0,1,
+            1,0,
+            2,0,
+            3,1,
+            3,3,
+            2,4,
+            1,4,
+            0,3
+        ],"#FFF");
+
+        // translate pupil to correct position
+        if (dirEnum == DIR_LEFT) ctx.translate(0,2);
+        else if (dirEnum == DIR_RIGHT) ctx.translate(2,2);
+        else if (dirEnum == DIR_UP) ctx.translate(1,0);
+        else if (dirEnum == DIR_DOWN) ctx.translate(1,3);
+
+        // draw pupil
+        plotSolid([
+            0,0,
+            1,0,
+            1,1,
+            0,1,
+        ],"#00F");
+
+        ctx.restore();
+    };
+
+    var drawRightBody = function() {
+        plotSolid([
+            -7,-3,
+            -3,-7,
+            -1,-7,
+            -2,-6,
+            0,-4,
+            3,-7,
+            5,-7,
+            4,-7,
+            3,-6,
+            6,-3,
+            6,1,
+            5,3,
+            2,6,
+            -4,6,
+            -5,5,
+            -7,1,
+        ],color);
+    };
+
+    var drawRightShoe = function(x,y) {
+        ctx.save();
+        ctx.translate(x,y);
+        plotSolid([
+            0,0,
+            3,-3,
+            4,-3,
+            5,-2,
+            5,-1,
+            4,0,
+        ],"#00F");
+        ctx.restore();
+    };
+
+    var drawRight0 = function() {
+        // antenna tips
+        plotLine([-1,-7,0,-6],"#FFF");
+        plotLine([5,-7,6,-6],"#FFF");
+
+        drawRightBody();
+
+        drawRightShoe(1,6);
+        plotLine([-4,6,-1,6],"#00F");
+
+        drawEye(DIR_RIGHT,-4,-4);
+        drawEye(DIR_RIGHT,2,-4);
+    };
+
+    var drawRight1 = function() {
+        // antenna tips
+        plotLine([-1,-7,0,-7],"#FFF");
+        plotLine([5,-7,6,-7],"#FFF");
+
+        drawRightBody();
+
+        drawRightShoe(-4,6);
+        plotLine([2,6,5,6],"#00F");
+
+        drawEye(DIR_RIGHT,-4,-4);
+        drawEye(DIR_RIGHT,2,-4);
+    };
+
+    var drawLeft0 = function() {
+        ctx.scale(-1,1);
+        ctx.translate(1,0);
+        drawRight0();
+    };
+    
+    var drawLeft1 = function() {
+        ctx.scale(-1,1);
+        ctx.translate(1,0);
+        drawRight1();
+    };
+
+    var drawUpDownBody0 = function() {
+        plotLine([-6,-7,-7,-6],"#FFF");
+        plotLine([5,-7,6,-6],"#FFF");
+        plotSolid([
+            -7,-3,
+            -4,-6,
+            -5,-7,
+            -6,-7,
+            -4,-7,
+            -3,-6,
+            -2,-6,
+            -1,-5,
+            0,-5,
+            1,-6,
+            2,-6,
+            3,-7,
+            5,-7,
+            4,-7,
+            3,-6,
+            6,-3,
+            6,1,
+            5,3,
+            4,5,
+            3,6,
+            -4,6,
+            -5,5,
+            -6,3,
+            -7,1,
+        ],color);
+    };
+
+    var drawUpDownBody1 = function() {
+        plotLine([-6,-6,-7,-5],"#FFF");
+        plotLine([5,-6,6,-5],"#FFF");
+        plotSolid([
+            -7,-3,
+            -4,-6,
+            -5,-7,
+            -6,-6,
+            -5,-7,
+            -4,-7,
+            -3,-6,
+            -2,-6,
+            -1,-5,
+            0,-5,
+            1,-6,
+            2,-6,
+            3,-7,
+            4,-7,
+            5,-6,
+            4,-7,
+            3,-6,
+            6,-3,
+            6,1,
+            5,3,
+            4,5,
+            3,6,
+            -4,6,
+            -5,5,
+            -6,3,
+            -7,1,
+        ],color);
+    };
+
+    var drawUp0 = function() {
+        drawUpDownBody0();
+        drawEye(DIR_UP,-5,-5);
+        drawEye(DIR_UP,1,-5);
+        plotSolid([
+            -4,6,
+            -3,5,
+            -2,5,
+            -1,6,
+        ],"#00F");
+    };
+
+    var drawUp1 = function() {
+        drawUpDownBody1();
+        drawEye(DIR_UP,-5,-5);
+        drawEye(DIR_UP,1,-5);
+        plotSolid([
+            0,6,
+            1,5,
+            2,5,
+            3,6,
+        ],"#00F");
+    };
+
+    var drawDown0 = function() {
+        drawUpDownBody0();
+        drawEye(DIR_DOWN,-5,-4);
+        drawEye(DIR_DOWN,1,-4);
+        plotSolid([
+            0,6,
+            1,4,
+            2,3,
+            3,3,
+            4,4,
+            4,5,
+            3,6,
+        ],"#00F");
+        plotLine([-4,6,-2,6],"#00F");
+    };
+
+    var drawDown1 = function() {
+        drawUpDownBody1();
+        drawEye(DIR_DOWN,-5,-4);
+        drawEye(DIR_DOWN,1,-4);
+        plotSolid([
+            -1,6,
+            -2,4,
+            -3,3,
+            -4,3,
+            -5,4,
+            -5,5,
+            -4,6,
+        ],"#00F");
+        plotLine([1,6,3,6],"#00F");
+    };
+
+    var borderColor;
+    var faceColor;
+
+    var drawScaredBody = function() {
+        plotOutline([
+            -6,-2,
+            -2,-5,
+            -3,-6,
+            -5,-6,
+            -3,-6,
+            -1,-4,
+            1,-4,
+            3,-6,
+            5,-6,
+            3,-6,
+            2,-5,
+            6,-2,
+            6,4,
+            5,6,
+            4,7,
+            -4,7,
+            -5,6,
+            -6,4
+        ],borderColor);
+
+        plotLine([
+            -2,4,
+            -1,3,
+            1,3,
+            2,4
+        ],faceColor);
+    };
+
+
+    var drawScared0 = function(flash) {
+        plotLine([-2,-2,-2,0],faceColor);
+        plotLine([-3,-1,-1,-1],faceColor);
+        plotLine([2,-2,2,0],faceColor);
+        plotLine([3,-1,1,-1],faceColor);
+        plotLine([-5,-6,-6,-7],"#FFF");
+        plotLine([5,-6,6,-7],"#FFF");
+        drawScaredBody();
+    };
+
+    var drawScared1 = function(flash) {
+        plotLine([-3,-2,-1,0],faceColor);
+        plotLine([-3,0,-1,-2],faceColor);
+        plotLine([1,-2,3,0],faceColor);
+        plotLine([1,0,3,-2],faceColor);
+        plotLine([-5,-6,-6,-5],"#FFF");
+        plotLine([5,-6,6,-5],"#FFF");
+        drawScaredBody();
+    };
+
+    return function(_ctx,x,y,frame,dirEnum,scared,flash,eyes_only,_color) {
+        if (eyes_only) {
+            return; // invisible
+        }
+
+        ctx = _ctx;
+        color = _color;
+
+        ctx.save();
+        ctx.translate(x+0.5,y+0.5);
+
+        if (scared) {
+            ctx.translate(0,-1); // correct alignment error from my chosen coordinates
+            borderColor = flash ? "#FFF" : "#00F";
+            faceColor = flash ? "#F00" : "#FF0";
+            [drawScared0, drawScared1][frame]();
+        }
+        else if (dirEnum == DIR_RIGHT) {
+            [drawRight0, drawRight1][frame]();
+        }
+        else if (dirEnum == DIR_LEFT) {
+            [drawLeft0, drawLeft1][frame]();
+        }
+        else if (dirEnum == DIR_DOWN) {
+            [drawDown0, drawDown1][frame]();
+        }
+        else if (dirEnum == DIR_UP) {
+            [drawUp0, drawUp1][frame]();
+        }
+
+        ctx.restore();
+    };
+})();
+
 // draw pacman body
 var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShift,alpha,color,rot_angle) {
 

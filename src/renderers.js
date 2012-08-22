@@ -650,6 +650,12 @@ var initRenderer = function(){
                 return;
             }
 
+            // Sometimes pressing escape during a flash can cause flash to be permanently enabled on maps.
+            // so just turn it off when not in the finish state.
+            if (state != finishState) {
+                this.flashLevel = false;
+            }
+
             // fill background
             beginMapFrame();
 
@@ -753,6 +759,12 @@ var initRenderer = function(){
             else if (gameMode == GAME_COOKIE) {
                 for (i=0; i<lives; i++) {
                     drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
+                    bgCtx.translate(2*tileSize,0);
+                }
+            }
+            else if (gameMode == GAME_OTTO) {
+                for (i=0; i<lives; i++) {
+                    drawOttoSprite(bgCtx, 0,0,DIR_RIGHT, 0);
                     bgCtx.translate(2*tileSize,0);
                 }
             }
@@ -892,6 +904,9 @@ var initRenderer = function(){
                 //drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame,true);
                 atlas.drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
             }
+            else if (gameMode == GAME_OTTO) {
+                atlas.drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
+            }
             if (pacman.invincible) {
                 ctx.globalAlpha = 1;
             }
@@ -915,6 +930,20 @@ var initRenderer = function(){
                     // explode
                     f -= 60;
                     this.drawExplodingPlayer(f/15);
+                }
+            }
+            else if (gameMode == GAME_OTTO) {
+                // TODO: spin around
+                if (t < 0.8) {
+                    var dirEnum = Math.floor((pacman.dirEnum + t*16))%4;
+                    drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
+                }
+                else if (t < 0.95) {
+                    var dirEnum = Math.floor((pacman.dirEnum + 0.8*16))%4;
+                    drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
+                }
+                else {
+                    drawDeadOttoSprite(ctx,pacman.pixel.x, pacman.pixel.y);
                 }
             }
             else if (gameMode == GAME_MSPACMAN) {

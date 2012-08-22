@@ -85,6 +85,11 @@ var homeState = (function(){
         }
         return frame;
     };
+    var getOttoAnimFrame = function(frame) {
+        frame = Math.floor(frame/3);
+        frame %= 4;
+        return frame;
+    };
     menu.addTextIconButton(getGameName(GAME_PACMAN),
         function() {
             gameMode = GAME_PACMAN;
@@ -100,6 +105,14 @@ var homeState = (function(){
         },
         function(ctx,x,y,frame) {
             atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+        });
+    menu.addTextIconButton(getGameName(GAME_OTTO),
+        function() {
+            gameMode = GAME_OTTO;
+            exitTo(preNewGameState);
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawOttoSprite(ctx,x,y,DIR_RIGHT,getOttoAnimFrame(frame));
         });
     menu.addTextIconButton(getGameName(GAME_COOKIE),
         function() {
@@ -279,7 +292,7 @@ var scoreState = (function(){
         x = 7*tileSize;
         y = 0;
         ctx.fillStyle = "#FFF"; ctx.fillText("HIGH SCORES", x+6*tileSize,y);
-        y += tileSize*4;
+        y += tileSize*2.2;
 
         ctx.fillStyle = "#FF0"; ctx.fillText(getGameName(GAME_PACMAN), x+4*tileSize,y);
         y += tileSize*2;
@@ -289,7 +302,7 @@ var scoreState = (function(){
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[1], x,y);
         ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
 
-        y += tileSize*4;
+        y += tileSize*2.2;
         ctx.fillStyle = "#FFB8AE"; ctx.fillText(getGameName(GAME_MSPACMAN), x+4*tileSize,y);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[2], x,y);
@@ -298,7 +311,16 @@ var scoreState = (function(){
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[3], x,y);
         ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
 
-        y += tileSize*4;
+        y += tileSize*2.2;
+        ctx.fillStyle = "#FA0"; ctx.fillText(getGameName(GAME_OTTO), x+4*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[6], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[7], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+
+        y += tileSize*2.2;
         ctx.fillStyle = "#359c9c"; ctx.fillText(getGameName(GAME_COOKIE), x+4*tileSize,y);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[4], x,y);
@@ -465,14 +487,14 @@ var aboutState = (function(){
 
         y += tileSize*4;
         ctx.fillStyle = "#FF0";
-        ctx.fillText("ORIGINAL PAC-MAN",x,y);
+        ctx.fillText("PAC-MAN",x,y);
         y += tileSize*2;
         ctx.fillStyle = "#777";
         ctx.fillText("NAMCO",x,y);
 
         y += tileSize*4;
         ctx.fillStyle = "#FF0";
-        ctx.fillText("ORIGINAL MS. PAC-MAN",x,y);
+        ctx.fillText("MS. PAC-MAN / CRAZY OTTO",x,y);
         y += tileSize*2;
         ctx.fillStyle = "#777";
         ctx.fillText("GENERAL COMPUTING",x,y);
@@ -592,7 +614,7 @@ var readyNewState = {
         if (gameMode == GAME_PACMAN) {
             map = mapPacman;
         }
-        else if (gameMode == GAME_MSPACMAN) {
+        else if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO) {
             setNextMsPacMap();
         }
         else if (gameMode == GAME_COOKIE) {

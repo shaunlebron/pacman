@@ -16,7 +16,7 @@ var getGameName = function(mode) {
     if (mode == undefined) {
         mode = gameMode;
     }
-    return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN"][mode];
+    return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"][mode];
 };
 
 // clear cheats, useful when switching game modes
@@ -62,12 +62,12 @@ var loadGame = function(t) {
 /// SCORING
 // (manages scores and high scores for each game type)
 
-var scores =     [ 0,0,0,0,0,0,0 ];
-var highScores = [ 10000,10000,10000,10000,10000,10000,0 ];
+var scores =     [ 0,0,0,0,0,0,0,0,0 ];
+var highScores = [ 10000,10000,10000,10000,10000,10000,10000,10000,0 ];
 
 var getScoreIndex = function() {
     if (practiceMode) {
-        return 6;
+        return 8;
     }
     return gameMode*2 + (turboMode ? 1 : 0);
 };
@@ -111,8 +111,15 @@ var setHighScore = function(highScore) {
 // High Score Persistence
 
 var loadHighScores = function() {
+    var hs;
+    var hslen;
+    var i;
     if (localStorage && localStorage.highScores) {
-        highScores = JSON.parse(localStorage.highScores);
+        hs = JSON.parse(localStorage.highScores);
+        hslen = hs.length;
+        for (i=0; i<hslen; i++) {
+            highScores[i] = hs[i];
+        }
     }
 };
 var saveHighScores = function() {

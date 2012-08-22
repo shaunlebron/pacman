@@ -29,7 +29,7 @@ var getGameName = function(mode) {
     if (mode == undefined) {
         mode = gameMode;
     }
-    return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN"][mode];
+    return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"][mode];
 };
 
 // clear cheats, useful when switching game modes
@@ -75,12 +75,12 @@ var loadGame = function(t) {
 /// SCORING
 // (manages scores and high scores for each game type)
 
-var scores =     [ 0,0,0,0,0,0,0 ];
-var highScores = [ 10000,10000,10000,10000,10000,10000,0 ];
+var scores =     [ 0,0,0,0,0,0,0,0,0 ];
+var highScores = [ 10000,10000,10000,10000,10000,10000,10000,10000,0 ];
 
 var getScoreIndex = function() {
     if (practiceMode) {
-        return 6;
+        return 8;
     }
     return gameMode*2 + (turboMode ? 1 : 0);
 };
@@ -124,8 +124,15 @@ var setHighScore = function(highScore) {
 // High Score Persistence
 
 var loadHighScores = function() {
+    var hs;
+    var hslen;
+    var i;
     if (localStorage && localStorage.highScores) {
-        highScores = JSON.parse(localStorage.highScores);
+        hs = JSON.parse(localStorage.highScores);
+        hslen = hs.length;
+        for (i=0; i<hslen; i++) {
+            highScores[i] = hs[i];
+        }
     }
 };
 var saveHighScores = function() {
@@ -2456,7 +2463,7 @@ var atlas = (function(){
     var canvas,ctx;
     var size = 20;
     var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 15;
+    var rows = 18;
 
     var creates = 0;
 
@@ -2625,6 +2632,19 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
+
+        var drawOttoCells = function(row,col,dir) {
+            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 0); }, row, col);
+            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 1); }, row, col+1);
+            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 2); }, row, col+2);
+            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 3); }, row, col+3);
+        };
+        row++;
+        drawOttoCells(row,0, DIR_UP);
+        drawOttoCells(row,4, DIR_RIGHT);
+        row++;
+        drawOttoCells(row,0, DIR_DOWN);
+        drawOttoCells(row,4, DIR_LEFT);
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -2711,6 +2731,27 @@ var atlas = (function(){
         copyCellTo(row, col, destCtx, x, y);
     };
 
+    var copyOttoSprite = function(destCtx,x,y,dirEnum,frame) {
+        var col,row;
+        if (dirEnum == DIR_UP) {
+            col = frame;
+            row = 14;
+        }
+        else if (dirEnum == DIR_RIGHT) {
+            col = frame+4;
+            row = 14;
+        }
+        else if (dirEnum == DIR_DOWN) {
+            col = frame;
+            row = 15;
+        }
+        else if (dirEnum == DIR_LEFT) {
+            col = frame+4;
+            row = 15;
+        }
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
     var copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
         var row = 6;
         var col;
@@ -2762,6 +2803,7 @@ var atlas = (function(){
         getCanvas: function() { return canvas; },
         drawGhostSprite: copyGhostSprite,
         drawMonsterSprite: copyMonsterSprite,
+        drawOttoSprite: copyOttoSprite,
         drawPacmanSprite: copyPacmanSprite,
         drawMsPacmanSprite: copyMsPacmanSprite,
         drawCookiemanSprite: copyCookiemanSprite,
@@ -3421,6 +3463,12 @@ var initRenderer = function(){
                 return;
             }
 
+            // Sometimes pressing escape during a flash can cause flash to be permanently enabled on maps.
+            // so just turn it off when not in the finish state.
+            if (state != finishState) {
+                this.flashLevel = false;
+            }
+
             // fill background
             beginMapFrame();
 
@@ -3524,6 +3572,12 @@ var initRenderer = function(){
             else if (gameMode == GAME_COOKIE) {
                 for (i=0; i<lives; i++) {
                     drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
+                    bgCtx.translate(2*tileSize,0);
+                }
+            }
+            else if (gameMode == GAME_OTTO) {
+                for (i=0; i<lives; i++) {
+                    drawOttoSprite(bgCtx, 0,0,DIR_RIGHT, 0);
                     bgCtx.translate(2*tileSize,0);
                 }
             }
@@ -3663,6 +3717,9 @@ var initRenderer = function(){
                 //drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame,true);
                 atlas.drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
             }
+            else if (gameMode == GAME_OTTO) {
+                atlas.drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
+            }
             if (pacman.invincible) {
                 ctx.globalAlpha = 1;
             }
@@ -3686,6 +3743,20 @@ var initRenderer = function(){
                     // explode
                     f -= 60;
                     this.drawExplodingPlayer(f/15);
+                }
+            }
+            else if (gameMode == GAME_OTTO) {
+                // TODO: spin around
+                if (t < 0.8) {
+                    var dirEnum = Math.floor((pacman.dirEnum + t*16))%4;
+                    drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
+                }
+                else if (t < 0.95) {
+                    var dirEnum = Math.floor((pacman.dirEnum + 0.8*16))%4;
+                    drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
+                }
+                else {
+                    drawDeadOttoSprite(ctx,pacman.pixel.x, pacman.pixel.y);
                 }
             }
             else if (gameMode == GAME_MSPACMAN) {
@@ -4929,6 +5000,357 @@ var drawMonsterSprite = (function(){
     };
 })();
 
+var drawOttoSprite = (function() {
+    var ctx;
+    var color = "#FF0";
+
+    var plotLine = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    };
+
+    var plotSolid = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineJoin = "round";
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.fill();
+        ctx.stroke();
+    };
+
+    var drawRightEye = function() {
+        plotSolid([
+            -4,-5,
+            -3,-6,
+            -2,-6,
+            -2,-5,
+            -3,-4,
+            -4,-4,
+        ],"#00F");
+    };
+
+    var drawRight0 = function() {
+        plotSolid([
+            -5,-4,
+            -3,-6,
+            2,-6,
+            3,-5,
+            -1,-3,
+            3,-1,
+            1,1,
+            1,3,
+            3,6,
+            5,4,
+            6,4,
+            6,5,
+            4,7,
+            2,7,
+            -1,1,
+            -4,4,
+            -3,6,
+            -3,7,
+            -4,7,
+            -6,5,
+            -6,4,
+            -3,1,
+            -5,-1,
+        ],color);
+        drawRightEye();
+    };
+    var drawRight1 = function() {
+        plotSolid([
+            -5,-4,
+            -3,-6,
+            1,-6,
+            3,-4,
+            3,-1,
+            1,1,
+            1,6,
+            4,6,
+            4,7,
+            0,7,
+            0,1,
+            -2,1,
+            -4,3,
+            -4,4,
+            -3,5,
+            -3,6,
+            -4,6,
+            -5,4,
+            -5,3,
+            -3,1,
+            -5,-1,
+        ],color);
+        drawRightEye();
+    };
+    var drawRight2 = function() {
+        plotSolid([
+            -5,-4,
+            -3,-6,
+            2,-6,
+            3,-5,
+            -1,-3,
+            3,-1,
+            1,1,
+            1,3,
+            4,3,
+            4,4,
+            0,4,
+            0,1,
+            -2,1,
+            -2,6,
+            1,6,
+            1,7,
+            -3,7,
+            -3,1,
+            -5,-1,
+        ],color);
+        drawRightEye();
+    };
+    var drawRight3 = function() {
+        plotSolid([
+            -5,-4,
+            -3,-6,
+            2,-6,
+            -2,-3,
+            2,0,
+            1,1,
+            3,5,
+            5,3,
+            6,3,
+            6,4,
+            4,6,
+            2,6,
+            -1,1,
+            -3,1,
+            -3,6,
+            0,6,
+            0,7,
+            -4,7,
+            -4,2,
+            -3,1,
+            -5,-1,
+        ],color);
+        drawRightEye();
+    };
+
+    var drawUpDownEyes = function() {
+        plotSolid([
+            -5,-5,
+            -4,-6,
+            -3,-6,
+            -3,-5,
+            -4,-4,
+            -5,-4,
+        ],"#00F");
+        plotSolid([
+            3,-6,
+            4,-6,
+            5,-5,
+            5,-4,
+            4,-4,
+            3,-5,
+        ],"#00F");
+    };
+
+    var drawUpDownHead = function() {
+        plotSolid([
+            -4,-4,
+            -2,-6,
+            2,-6,
+            4,-4,
+            4,-1,
+            2,1,
+            -2,1,
+            -4,-1,
+        ],color);
+    };
+
+    var drawUpDownLeg0 = function(y,xs) {
+        ctx.save();
+        ctx.translate(0,y);
+        ctx.scale(xs,1);
+
+        plotSolid([
+            1,0,
+            2,0,
+            2,6,
+            4,6,
+            4,7,
+            1,7,
+        ],color);
+
+        ctx.restore();
+    };
+
+    var drawUpDownLeg1 = function(y,xs) {
+        ctx.save();
+        ctx.translate(0,y);
+        ctx.scale(xs,1);
+
+        plotSolid([
+            1,0,
+            2,0,
+            2,4,
+            3,5,
+            4,4,
+            5,4,
+            5,5,
+            3,7,
+            2,7,
+            1,6,
+        ],color);
+
+        ctx.restore();
+    };
+    var drawUpDownLegs0 = function() {
+        drawUpDownLeg0(0,-1);
+        drawUpDownLeg1(-2,1);
+    };
+
+    var drawUpDownLegs1 = function() {
+        drawUpDownLeg0(-2,-1);
+        drawUpDownLeg1(-2,1);
+    };
+
+    var drawUpDownLegs2 = function() {
+        drawUpDownLeg1(-2,-1);
+        drawUpDownLeg0(0,1);
+    };
+
+    var drawUpDownLegs3 = function() {
+        drawUpDownLeg1(0,-1);
+        drawUpDownLeg0(0,1);
+    };
+
+    var drawDown0 = function() {
+        drawUpDownHead();
+        drawUpDownEyes();
+        drawUpDownLegs0();
+        plotLine([-2,-3,2,-3],"#000");
+    };
+    var drawDown1 = function() {
+        drawUpDownHead();
+        drawUpDownEyes();
+        drawUpDownLegs1();
+    };
+    var drawDown2 = function() {
+        drawUpDownHead();
+        drawUpDownEyes();
+        drawUpDownLegs2();
+        plotLine([-2,-3,2,-3],"#000");
+    };
+    var drawDown3 = function() {
+        drawUpDownHead();
+        drawUpDownEyes();
+        drawUpDownLegs3();
+        plotSolid([
+            -2,-3,
+            0,-5,
+            2,-3,
+            0,-1,
+        ],"#000");
+    };
+
+    var drawUp0 = function() {
+        drawUpDownEyes();
+        drawUpDownHead();
+        drawUpDownLegs0();
+    };
+    var drawUp1 = function() {
+        drawUpDownEyes();
+        drawUpDownHead();
+        drawUpDownLegs1();
+    };
+    var drawUp2 = function() {
+        drawUpDownEyes();
+        drawUpDownHead();
+        drawUpDownLegs2();
+    };
+    var drawUp3 = function() {
+        drawUpDownEyes();
+        drawUpDownHead();
+        drawUpDownLegs3();
+    };
+
+    return function(_ctx,x,y,dirEnum,frame,rotate) {
+        ctx = _ctx;
+
+        ctx.save();
+        ctx.translate(x+0.5,y+0.5);
+        if (rotate) {
+            ctx.rotate(rotate);
+        }
+
+        if (dirEnum == DIR_RIGHT) {
+            ctx.translate(0,-1); // correct my coordinate system
+            [drawRight0, drawRight1, drawRight2, drawRight3][frame]();
+        }
+        else if (dirEnum == DIR_LEFT) {
+            ctx.translate(0,-1); // correct my coordinate system
+            ctx.scale(-1,1);
+            [drawRight0, drawRight1, drawRight2, drawRight3][frame]();
+        }
+        else if (dirEnum == DIR_DOWN) {
+            ctx.translate(0,-1); // correct my coordinate system
+            [drawDown0, drawDown1, drawDown2, drawDown3][frame]();
+        }
+        else if (dirEnum == DIR_UP) {
+            ctx.translate(0,-1); // correct my coordinate system
+            [drawUp0, drawUp1, drawUp2, drawUp3][frame]();
+        }
+
+        ctx.restore();
+    };
+})();
+
+var drawDeadOttoSprite = function(ctx,x,y) {
+    var plotOutline = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    };
+    ctx.save();
+    ctx.translate(x+2,y);
+    plotOutline([
+        3,-5,
+        -1,-5,
+        -2,-6,
+        -2,-7,
+        -1,-8,
+        3,-8,
+        4,-7,
+        4,-6,
+    ],"#F00");
+    ctx.restore();
+    drawOttoSprite(ctx,x,y,DIR_LEFT,2,Math.PI/2);
+};
+
 // draw pacman body
 var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShift,alpha,color,rot_angle) {
 
@@ -5072,6 +5494,9 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
 };
 
 var drawCookiemanSprite = (function(){
+
+    // TODO: draw pupils separately in atlas
+    //      composite the body frame and a random pupil frame when drawing cookie-man
 
     var prevFrame = undefined;
     var sx1 = 0; // shift x for first pupil
@@ -6043,7 +6468,7 @@ Ghost.prototype.load = function(t) {
 // indicates if we slow down in the tunnel
 Ghost.prototype.isSlowInTunnel = function() {
     // special case for Ms. Pac-Man (slow down only for the first three levels)
-    if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE)
+    if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO || gameMode == GAME_COOKIE)
         return level <= 3;
     else
         return true;
@@ -6203,10 +6628,16 @@ Ghost.prototype.homeSteer = (function(){
 
 // special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
 Ghost.prototype.isScatterBrain = function() {
-    return (
-        (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) &&
-        ghostCommander.getCommand() == GHOST_CMD_SCATTER &&
-        (this == blinky || this == pinky));
+    var scatter = false;
+    if (ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
+        if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) {
+            scatter = (this == blinky || this == pinky);
+        }
+        else if (gameMode == GAME_OTTO) {
+            scatter = true;
+        }
+    }
+    return scatter;
 };
 
 // determine direction
@@ -6385,8 +6816,10 @@ Player.prototype.getAnimFrame = function(frame) {
         if (state == deadState)
             frame = 1; // hack to force this frame when dead
     }
-    if (frame == 3) 
-        frame = 1;
+    if (gameMode != GAME_OTTO) {
+        if (frame == 3) 
+            frame = 1;
+    }
     return frame;
 };
 
@@ -6846,7 +7279,7 @@ var ghostCommander = (function() {
                 newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     // new command is always "chase" when in Ms. Pac-Man mode
-                    command = (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) ? GHOST_CMD_CHASE : newCmd;
+                    command = (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO || gameMode == GAME_COOKIE) ? GHOST_CMD_CHASE : newCmd;
 
                     for (i=0; i<4; i++)
                         ghosts[i].reverse();
@@ -7457,6 +7890,7 @@ var fruit = (function(){
     var getInterface = (function() {
         var fruitFromMode = {};
         fruitFromMode[GAME_PACMAN] = pacFruit;
+        fruitFromMode[GAME_OTTO] = mspacFruit;
         fruitFromMode[GAME_MSPACMAN] = mspacFruit;
         fruitFromMode[GAME_COOKIE] = mspacFruit; // for now
         return function() {
@@ -7758,6 +8192,11 @@ var homeState = (function(){
         }
         return frame;
     };
+    var getOttoAnimFrame = function(frame) {
+        frame = Math.floor(frame/3);
+        frame %= 4;
+        return frame;
+    };
     menu.addTextIconButton(getGameName(GAME_PACMAN),
         function() {
             gameMode = GAME_PACMAN;
@@ -7773,6 +8212,14 @@ var homeState = (function(){
         },
         function(ctx,x,y,frame) {
             atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+        });
+    menu.addTextIconButton(getGameName(GAME_OTTO),
+        function() {
+            gameMode = GAME_OTTO;
+            exitTo(preNewGameState);
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawOttoSprite(ctx,x,y,DIR_RIGHT,getOttoAnimFrame(frame));
         });
     menu.addTextIconButton(getGameName(GAME_COOKIE),
         function() {
@@ -7952,7 +8399,7 @@ var scoreState = (function(){
         x = 7*tileSize;
         y = 0;
         ctx.fillStyle = "#FFF"; ctx.fillText("HIGH SCORES", x+6*tileSize,y);
-        y += tileSize*4;
+        y += tileSize*2.2;
 
         ctx.fillStyle = "#FF0"; ctx.fillText(getGameName(GAME_PACMAN), x+4*tileSize,y);
         y += tileSize*2;
@@ -7962,7 +8409,7 @@ var scoreState = (function(){
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[1], x,y);
         ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
 
-        y += tileSize*4;
+        y += tileSize*2.2;
         ctx.fillStyle = "#FFB8AE"; ctx.fillText(getGameName(GAME_MSPACMAN), x+4*tileSize,y);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[2], x,y);
@@ -7971,7 +8418,16 @@ var scoreState = (function(){
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[3], x,y);
         ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
 
-        y += tileSize*4;
+        y += tileSize*2.2;
+        ctx.fillStyle = "#FA0"; ctx.fillText(getGameName(GAME_OTTO), x+4*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[6], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        y += tileSize*2;
+        ctx.fillStyle = scoreColor; ctx.fillText(highScores[7], x,y);
+        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+
+        y += tileSize*2.2;
         ctx.fillStyle = "#359c9c"; ctx.fillText(getGameName(GAME_COOKIE), x+4*tileSize,y);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[4], x,y);
@@ -8138,14 +8594,14 @@ var aboutState = (function(){
 
         y += tileSize*4;
         ctx.fillStyle = "#FF0";
-        ctx.fillText("ORIGINAL PAC-MAN",x,y);
+        ctx.fillText("PAC-MAN",x,y);
         y += tileSize*2;
         ctx.fillStyle = "#777";
         ctx.fillText("NAMCO",x,y);
 
         y += tileSize*4;
         ctx.fillStyle = "#FF0";
-        ctx.fillText("ORIGINAL MS. PAC-MAN",x,y);
+        ctx.fillText("MS. PAC-MAN / CRAZY OTTO",x,y);
         y += tileSize*2;
         ctx.fillStyle = "#777";
         ctx.fillText("GENERAL COMPUTING",x,y);
@@ -8265,7 +8721,7 @@ var readyNewState = {
         if (gameMode == GAME_PACMAN) {
             map = mapPacman;
         }
-        else if (gameMode == GAME_MSPACMAN) {
+        else if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO) {
             setNextMsPacMap();
         }
         else if (gameMode == GAME_COOKIE) {
@@ -8781,7 +9237,7 @@ var overState = (function() {
     addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
     // Move Pac-Man
-    var isPlayState = function() { return state == playState; };
+    var isPlayState = function() { return state == newGameState || state == playState || state == readyNewState || state == readyRestartState; };
     addKeyDown(KEY_LEFT,  function() { pacman.setNextDir(DIR_LEFT); },  isPlayState);
     addKeyDown(KEY_RIGHT, function() { pacman.setNextDir(DIR_RIGHT); }, isPlayState);
     addKeyDown(KEY_UP,    function() { pacman.setNextDir(DIR_UP); },    isPlayState);

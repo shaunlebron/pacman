@@ -4,7 +4,7 @@ var atlas = (function(){
     var canvas,ctx;
     var size = 20;
     var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 15;
+    var rows = 18;
 
     var creates = 0;
 
@@ -173,6 +173,19 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
+
+        var drawOttoCells = function(row,col,dir) {
+            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 0); }, row, col);
+            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 1); }, row, col+1);
+            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 2); }, row, col+2);
+            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 3); }, row, col+3);
+        };
+        row++;
+        drawOttoCells(row,0, DIR_UP);
+        drawOttoCells(row,4, DIR_RIGHT);
+        row++;
+        drawOttoCells(row,0, DIR_DOWN);
+        drawOttoCells(row,4, DIR_LEFT);
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -259,6 +272,27 @@ var atlas = (function(){
         copyCellTo(row, col, destCtx, x, y);
     };
 
+    var copyOttoSprite = function(destCtx,x,y,dirEnum,frame) {
+        var col,row;
+        if (dirEnum == DIR_UP) {
+            col = frame;
+            row = 14;
+        }
+        else if (dirEnum == DIR_RIGHT) {
+            col = frame+4;
+            row = 14;
+        }
+        else if (dirEnum == DIR_DOWN) {
+            col = frame;
+            row = 15;
+        }
+        else if (dirEnum == DIR_LEFT) {
+            col = frame+4;
+            row = 15;
+        }
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
     var copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
         var row = 6;
         var col;
@@ -310,6 +344,7 @@ var atlas = (function(){
         getCanvas: function() { return canvas; },
         drawGhostSprite: copyGhostSprite,
         drawMonsterSprite: copyMonsterSprite,
+        drawOttoSprite: copyOttoSprite,
         drawPacmanSprite: copyPacmanSprite,
         drawMsPacmanSprite: copyMsPacmanSprite,
         drawCookiemanSprite: copyCookiemanSprite,

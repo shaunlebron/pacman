@@ -118,7 +118,7 @@
     addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
     // Move Pac-Man
-    var isPlayState = function() { return state == playState; };
+    var isPlayState = function() { return state == newGameState || state == playState || state == readyNewState || state == readyRestartState; };
     addKeyDown(KEY_LEFT,  function() { pacman.setNextDir(DIR_LEFT); },  isPlayState);
     addKeyDown(KEY_RIGHT, function() { pacman.setNextDir(DIR_RIGHT); }, isPlayState);
     addKeyDown(KEY_UP,    function() { pacman.setNextDir(DIR_UP); },    isPlayState);

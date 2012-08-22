@@ -3,6 +3,13 @@ Pac-Man
 
 A historical tribute and accurate remake of the original Pac-Man arcade game.
 
+Games
+-----
+- Pac-Man (by Namco)
+- Ms. Pac-Man (by GCC/Midway)
+- Crazy Otto (by GCC)
+- Cookie-Man (new game with procedural map generator)
+
 Play
 ----
 
@@ -11,6 +18,7 @@ enabled for mobile browsers.  The game is resolution-independent and scales to
 fit the size of your window.  Performance may increase by shrinking the window.
 
 [Click here to play the current version](http://shaunew.github.com/Pac-Man)
+
 
 Controls
 --------
@@ -37,8 +45,6 @@ Features
 - same coordinate space, movement physics, ghost behavior, timers, and update rate as the original arcade game
 - scalable, resolution-independent graphics
 - playable on mobile browsers
-- original Pac-Man and Ms. Pac-Man game modes, including the original popular turbo modes.
-- new Cookie-Man game with procedural map generator
 
 Navigating the Repository
 -------------------------

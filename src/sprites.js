@@ -629,6 +629,357 @@ var drawMonsterSprite = (function(){
     };
 })();
 
+var drawOttoSprite = (function() {
+    var ctx;
+    var color = "#FF0";
+
+    var plotLine = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    };
+
+    var plotSolid = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineJoin = "round";
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.fill();
+        ctx.stroke();
+    };
+
+    var drawRightEye = function() {
+        plotSolid([
+            -4,-5,
+            -3,-6,
+            -2,-6,
+            -2,-5,
+            -3,-4,
+            -4,-4,
+        ],"#00F");
+    };
+
+    var drawRight0 = function() {
+        plotSolid([
+            -5,-4,
+            -3,-6,
+            2,-6,
+            3,-5,
+            -1,-3,
+            3,-1,
+            1,1,
+            1,3,
+            3,6,
+            5,4,
+            6,4,
+            6,5,
+            4,7,
+            2,7,
+            -1,1,
+            -4,4,
+            -3,6,
+            -3,7,
+            -4,7,
+            -6,5,
+            -6,4,
+            -3,1,
+            -5,-1,
+        ],color);
+        drawRightEye();
+    };
+    var drawRight1 = function() {
+        plotSolid([
+            -5,-4,
+            -3,-6,
+            1,-6,
+            3,-4,
+            3,-1,
+            1,1,
+            1,6,
+            4,6,
+            4,7,
+            0,7,
+            0,1,
+            -2,1,
+            -4,3,
+            -4,4,
+            -3,5,
+            -3,6,
+            -4,6,
+            -5,4,
+            -5,3,
+            -3,1,
+            -5,-1,
+        ],color);
+        drawRightEye();
+    };
+    var drawRight2 = function() {
+        plotSolid([
+            -5,-4,
+            -3,-6,
+            2,-6,
+            3,-5,
+            -1,-3,
+            3,-1,
+            1,1,
+            1,3,
+            4,3,
+            4,4,
+            0,4,
+            0,1,
+            -2,1,
+            -2,6,
+            1,6,
+            1,7,
+            -3,7,
+            -3,1,
+            -5,-1,
+        ],color);
+        drawRightEye();
+    };
+    var drawRight3 = function() {
+        plotSolid([
+            -5,-4,
+            -3,-6,
+            2,-6,
+            -2,-3,
+            2,0,
+            1,1,
+            3,5,
+            5,3,
+            6,3,
+            6,4,
+            4,6,
+            2,6,
+            -1,1,
+            -3,1,
+            -3,6,
+            0,6,
+            0,7,
+            -4,7,
+            -4,2,
+            -3,1,
+            -5,-1,
+        ],color);
+        drawRightEye();
+    };
+
+    var drawUpDownEyes = function() {
+        plotSolid([
+            -5,-5,
+            -4,-6,
+            -3,-6,
+            -3,-5,
+            -4,-4,
+            -5,-4,
+        ],"#00F");
+        plotSolid([
+            3,-6,
+            4,-6,
+            5,-5,
+            5,-4,
+            4,-4,
+            3,-5,
+        ],"#00F");
+    };
+
+    var drawUpDownHead = function() {
+        plotSolid([
+            -4,-4,
+            -2,-6,
+            2,-6,
+            4,-4,
+            4,-1,
+            2,1,
+            -2,1,
+            -4,-1,
+        ],color);
+    };
+
+    var drawUpDownLeg0 = function(y,xs) {
+        ctx.save();
+        ctx.translate(0,y);
+        ctx.scale(xs,1);
+
+        plotSolid([
+            1,0,
+            2,0,
+            2,6,
+            4,6,
+            4,7,
+            1,7,
+        ],color);
+
+        ctx.restore();
+    };
+
+    var drawUpDownLeg1 = function(y,xs) {
+        ctx.save();
+        ctx.translate(0,y);
+        ctx.scale(xs,1);
+
+        plotSolid([
+            1,0,
+            2,0,
+            2,4,
+            3,5,
+            4,4,
+            5,4,
+            5,5,
+            3,7,
+            2,7,
+            1,6,
+        ],color);
+
+        ctx.restore();
+    };
+    var drawUpDownLegs0 = function() {
+        drawUpDownLeg0(0,-1);
+        drawUpDownLeg1(-2,1);
+    };
+
+    var drawUpDownLegs1 = function() {
+        drawUpDownLeg0(-2,-1);
+        drawUpDownLeg1(-2,1);
+    };
+
+    var drawUpDownLegs2 = function() {
+        drawUpDownLeg1(-2,-1);
+        drawUpDownLeg0(0,1);
+    };
+
+    var drawUpDownLegs3 = function() {
+        drawUpDownLeg1(0,-1);
+        drawUpDownLeg0(0,1);
+    };
+
+    var drawDown0 = function() {
+        drawUpDownHead();
+        drawUpDownEyes();
+        drawUpDownLegs0();
+        plotLine([-2,-3,2,-3],"#000");
+    };
+    var drawDown1 = function() {
+        drawUpDownHead();
+        drawUpDownEyes();
+        drawUpDownLegs1();
+    };
+    var drawDown2 = function() {
+        drawUpDownHead();
+        drawUpDownEyes();
+        drawUpDownLegs2();
+        plotLine([-2,-3,2,-3],"#000");
+    };
+    var drawDown3 = function() {
+        drawUpDownHead();
+        drawUpDownEyes();
+        drawUpDownLegs3();
+        plotSolid([
+            -2,-3,
+            0,-5,
+            2,-3,
+            0,-1,
+        ],"#000");
+    };
+
+    var drawUp0 = function() {
+        drawUpDownEyes();
+        drawUpDownHead();
+        drawUpDownLegs0();
+    };
+    var drawUp1 = function() {
+        drawUpDownEyes();
+        drawUpDownHead();
+        drawUpDownLegs1();
+    };
+    var drawUp2 = function() {
+        drawUpDownEyes();
+        drawUpDownHead();
+        drawUpDownLegs2();
+    };
+    var drawUp3 = function() {
+        drawUpDownEyes();
+        drawUpDownHead();
+        drawUpDownLegs3();
+    };
+
+    return function(_ctx,x,y,dirEnum,frame,rotate) {
+        ctx = _ctx;
+
+        ctx.save();
+        ctx.translate(x+0.5,y+0.5);
+        if (rotate) {
+            ctx.rotate(rotate);
+        }
+
+        if (dirEnum == DIR_RIGHT) {
+            ctx.translate(0,-1); // correct my coordinate system
+            [drawRight0, drawRight1, drawRight2, drawRight3][frame]();
+        }
+        else if (dirEnum == DIR_LEFT) {
+            ctx.translate(0,-1); // correct my coordinate system
+            ctx.scale(-1,1);
+            [drawRight0, drawRight1, drawRight2, drawRight3][frame]();
+        }
+        else if (dirEnum == DIR_DOWN) {
+            ctx.translate(0,-1); // correct my coordinate system
+            [drawDown0, drawDown1, drawDown2, drawDown3][frame]();
+        }
+        else if (dirEnum == DIR_UP) {
+            ctx.translate(0,-1); // correct my coordinate system
+            [drawUp0, drawUp1, drawUp2, drawUp3][frame]();
+        }
+
+        ctx.restore();
+    };
+})();
+
+var drawDeadOttoSprite = function(ctx,x,y) {
+    var plotOutline = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    };
+    ctx.save();
+    ctx.translate(x+2,y);
+    plotOutline([
+        3,-5,
+        -1,-5,
+        -2,-6,
+        -2,-7,
+        -1,-8,
+        3,-8,
+        4,-7,
+        4,-6,
+    ],"#F00");
+    ctx.restore();
+    drawOttoSprite(ctx,x,y,DIR_LEFT,2,Math.PI/2);
+};
+
 // draw pacman body
 var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShift,alpha,color,rot_angle) {
 
@@ -772,6 +1123,9 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
 };
 
 var drawCookiemanSprite = (function(){
+
+    // TODO: draw pupils separately in atlas
+    //      composite the body frame and a random pupil frame when drawing cookie-man
 
     var prevFrame = undefined;
     var sx1 = 0; // shift x for first pupil

@@ -75,7 +75,7 @@ Ghost.prototype.load = function(t) {
 // indicates if we slow down in the tunnel
 Ghost.prototype.isSlowInTunnel = function() {
     // special case for Ms. Pac-Man (slow down only for the first three levels)
-    if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE)
+    if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO || gameMode == GAME_COOKIE)
         return level <= 3;
     else
         return true;
@@ -235,10 +235,16 @@ Ghost.prototype.homeSteer = (function(){
 
 // special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
 Ghost.prototype.isScatterBrain = function() {
-    return (
-        (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) &&
-        ghostCommander.getCommand() == GHOST_CMD_SCATTER &&
-        (this == blinky || this == pinky));
+    var scatter = false;
+    if (ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
+        if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) {
+            scatter = (this == blinky || this == pinky);
+        }
+        else if (gameMode == GAME_OTTO) {
+            scatter = true;
+        }
+    }
+    return scatter;
 };
 
 // determine direction

@@ -1451,6 +1451,7 @@ var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShi
 
     ctx.save();
     ctx.translate(x,y);
+    ctx.scale(scale,scale);
     if (rot_angle) {
         ctx.rotate(rot_angle);
     }
@@ -1467,7 +1468,7 @@ var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShi
     ctx.moveTo(-3+mouthShift,0);
 
     // draw head outline
-    ctx.arc(centerShift,0,6.5*scale,angle,2*Math.PI-angle);
+    ctx.arc(centerShift,0,6.5,angle,2*Math.PI-angle);
     ctx.closePath();
 
     //ctx.strokeStyle = color;

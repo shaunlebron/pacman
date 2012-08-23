@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<script src="../src/direction.js"></script>
+<script src="../src/sprites.js"></script>
+</head>
+<body>
+<canvas id='canvas'></canvas>
+<canvas id='canvas2'></canvas>
+<script>
+
+window.onload = function() {
+    var canvas = document.getElementById('canvas');
+    canvas.height = canvas.width = 144;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    drawPacmanSprite(ctx, canvas.width/2, canvas.height/2, DIR_RIGHT,Math.PI/6,undefined,9);
+
+    canvas = document.getElementById('canvas2');
+    canvas.height = canvas.width = 32;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    drawPacmanSprite(ctx, canvas.width/2, canvas.height/2, DIR_RIGHT,Math.PI/6,undefined,1.8);
+};
+
+</script>
+</body>
+</html>

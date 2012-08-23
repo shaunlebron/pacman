@@ -413,12 +413,7 @@ var initRenderer = function(){
 
         // draw the points earned from the most recently eaten ghost
         drawEatenPoints: function() {
-            var text = energizer.getPoints();
-            ctx.font = this.pointsEarnedTextSize + "px sans-serif";
-            ctx.textBaseline = "middle";
-            ctx.textAlign = "center";
-            ctx.fillStyle = "#0FF";
-            ctx.fillText(text, pacman.pixel.x, pacman.pixel.y);
+            atlas.drawGhostPoints(ctx, pacman.pixel.x, pacman.pixel.y, energizer.getPoints());
         },
 
         // draw each actor (ghosts and pacman)
@@ -977,11 +972,12 @@ var initRenderer = function(){
                 atlas.drawFruitSprite(ctx,fruit.pixel.x, fruit.pixel.y, name);
             }
             else if (fruit.isScorePresent()) {
-                ctx.font = this.pointsEarnedTextSize + "px sans-serif";
-                ctx.textBaseline = "middle";
-                ctx.textAlign = "center";
-                ctx.fillStyle = "#FFF";
-                ctx.fillText(fruit.getPoints(), fruit.pixel.x, fruit.pixel.y);
+                if (gameMode == GAME_PACMAN) {
+                    atlas.drawPacFruitPoints(ctx, fruit.pixel.x, fruit.pixel.y, fruit.getPoints());
+                }
+                else {
+                    atlas.drawMsPacFruitPoints(ctx, fruit.pixel.x, fruit.pixel.y, fruit.getPoints());
+                }
             }
         },
 

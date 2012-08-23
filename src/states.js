@@ -289,45 +289,60 @@ var scoreState = (function(){
         var captionColor = "#444";
 
         var x,y;
-        x = 7*tileSize;
+        x = 9*tileSize;
         y = 0;
-        ctx.fillStyle = "#FFF"; ctx.fillText("HIGH SCORES", x+6*tileSize,y);
-        y += tileSize*2.2;
+        ctx.fillStyle = "#FFF"; ctx.fillText("HIGH SCORES", x+4*tileSize,y);
+        y += tileSize*4;
 
-        ctx.fillStyle = "#FF0"; ctx.fillText(getGameName(GAME_PACMAN), x+4*tileSize,y);
-        y += tileSize*2;
+        var drawContrails = function(x,y) {
+            ctx.lineWidth = 1.0;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+
+            ctx.save();
+            ctx.translate(-2.5,0);
+
+            var dy;
+            for (dy=-4; dy<=4; dy+=2) {
+                ctx.beginPath();
+                ctx.moveTo(x+tileSize,y+dy);
+                ctx.lineTo(x+tileSize*(Math.random()*0.5+1.5),y+dy);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+        };
+
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[0], x,y);
-        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        atlas.drawPacmanSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,1);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[1], x,y);
-        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+        drawContrails(x+2*tileSize,y+tileSize/2);
+        atlas.drawPacmanSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,1);
 
-        y += tileSize*2.2;
-        ctx.fillStyle = "#FFB8AE"; ctx.fillText(getGameName(GAME_MSPACMAN), x+4*tileSize,y);
-        y += tileSize*2;
+        y += tileSize*3;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[2], x,y);
-        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        atlas.drawMsPacmanSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,1);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[3], x,y);
-        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+        drawContrails(x+2*tileSize,y+tileSize/2);
+        atlas.drawMsPacmanSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,1);
 
-        y += tileSize*2.2;
-        ctx.fillStyle = "#FA0"; ctx.fillText(getGameName(GAME_OTTO), x+4*tileSize,y);
-        y += tileSize*2;
+        y += tileSize*3;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[6], x,y);
-        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        atlas.drawOttoSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,0);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[7], x,y);
-        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+        drawContrails(x+2*tileSize,y+tileSize/2);
+        atlas.drawOttoSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,0);
 
-        y += tileSize*2.2;
-        ctx.fillStyle = "#359c9c"; ctx.fillText(getGameName(GAME_COOKIE), x+4*tileSize,y);
-        y += tileSize*2;
+        y += tileSize*3;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[4], x,y);
-        ctx.fillStyle = captionColor; ctx.fillText("NORMAL", x+7*tileSize,y);
+        atlas.drawCookiemanSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,1);
         y += tileSize*2;
         ctx.fillStyle = scoreColor; ctx.fillText(highScores[5], x,y);
-        ctx.fillStyle = captionColor; ctx.fillText("TURBO", x+6*tileSize,y);
+        drawContrails(x+2*tileSize,y+tileSize/2);
+        atlas.drawCookiemanSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,1);
     };
 
     var drawFood = function(ctx) {
@@ -354,7 +369,7 @@ var scoreState = (function(){
 
         y += 3*tileSize;
         atlas.drawGhostSprite(ctx,x,y,0,DIR_RIGHT,true);
-        ctx.fillText("200",x+tileSize,y);
+        atlas.drawGhostPoints(ctx,x+2*tileSize,y,200);
 
         var alpha = ctx.globalAlpha;
 
@@ -363,7 +378,7 @@ var scoreState = (function(){
         atlas.drawGhostSprite(ctx,x,y,0,DIR_RIGHT,true);
         ctx.globalAlpha = alpha;
         atlas.drawGhostSprite(ctx,x+2*tileSize,y,0,DIR_RIGHT,true);
-        ctx.fillText("400",x+3*tileSize,y);
+        atlas.drawGhostPoints(ctx,x+4*tileSize,y,400);
 
         y += 2*tileSize;
         ctx.globalAlpha = alpha*0.5;
@@ -371,7 +386,7 @@ var scoreState = (function(){
         atlas.drawGhostSprite(ctx,x+2*tileSize,y,0,DIR_RIGHT,true);
         ctx.globalAlpha = alpha;
         atlas.drawGhostSprite(ctx,x+4*tileSize,y,0,DIR_RIGHT,true);
-        ctx.fillText("800",x+5*tileSize,y);
+        atlas.drawGhostPoints(ctx,x+6*tileSize,y,800);
 
         y += 2*tileSize;
         ctx.globalAlpha = alpha*0.5;
@@ -380,7 +395,7 @@ var scoreState = (function(){
         atlas.drawGhostSprite(ctx,x+4*tileSize,y,0,DIR_RIGHT,true);
         ctx.globalAlpha = alpha;
         atlas.drawGhostSprite(ctx,x+6*tileSize,y,0,DIR_RIGHT,true);
-        ctx.fillText("1600",x+7*tileSize,y);
+        atlas.drawGhostPoints(ctx,x+8*tileSize,y,1600);
 
         var mspac_fruits = [
             {name: 'cherry',     points: 100},
@@ -405,11 +420,10 @@ var scoreState = (function(){
 
         var i,f;
         y += 3*tileSize;
-        ctx.fillStyle = "#FFF";
         for (i=0; i<pac_fruits.length; i++) {
             f = pac_fruits[i];
             atlas.drawFruitSprite(ctx,x,y,f.name);
-            ctx.fillText(f.points,x+tileSize,y);
+            atlas.drawPacFruitPoints(ctx,x+2*tileSize,y,f.points);
             y += 2*tileSize;
         }
         x += 6*tileSize;
@@ -417,7 +431,7 @@ var scoreState = (function(){
         for (i=0; i<mspac_fruits.length; i++) {
             f = mspac_fruits[i];
             atlas.drawFruitSprite(ctx,x,y,f.name);
-            ctx.fillText(f.points,x+tileSize,y);
+            atlas.drawMsPacFruitPoints(ctx,x+2*tileSize,y,f.points);
             y += 2*tileSize;
         }
         ctx.globalAlpha = 1;

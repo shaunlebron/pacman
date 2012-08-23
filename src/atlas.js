@@ -2,9 +2,9 @@
 var atlas = (function(){
 
     var canvas,ctx;
-    var size = 20;
+    var size = 22;
     var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 18;
+    var rows = 19;
 
     var creates = 0;
 
@@ -186,6 +186,28 @@ var atlas = (function(){
         row++;
         drawOttoCells(row,0, DIR_DOWN);
         drawOttoCells(row,4, DIR_LEFT);
+
+        row++;
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 200, "#33ffff"); }, row, 0);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 400, "#33ffff"); }, row, 1);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 800, "#33ffff"); }, row, 2);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 1600, "#33ffff");}, row, 3);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 100, "#ffb8ff"); }, row, 4);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 300, "#ffb8ff"); }, row, 5);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 500, "#ffb8ff"); }, row, 6);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 700, "#ffb8ff"); }, row, 7);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 1000, "#ffb8ff"); }, row, 8);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 2000, "#ffb8ff"); }, row, 9);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 3000, "#ffb8ff"); }, row, 10);
+        drawAtCell(function(x,y) { drawPacPoints(ctx, x,y, 5000, "#ffb8ff"); }, row, 11);
+        row++;
+        drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 100, "#fff"); }, row, 0);
+        drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 200, "#fff"); }, row, 1);
+        drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 500, "#fff"); }, row, 2);
+        drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 700, "#fff"); }, row, 3);
+        drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 1000, "#fff"); }, row, 4);
+        drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 2000, "#fff"); }, row, 5);
+        drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 5000, "#fff"); }, row, 6);
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -204,6 +226,52 @@ var atlas = (function(){
         }
 
         destCtx.drawImage(canvas,sx,sy,sw,sh,dx,dy,dw,dh);
+    };
+
+    var copyGhostPoints = function(destCtx,x,y,points) {
+        var row = 16;
+        var col = {
+            200: 0,
+            400: 1,
+            800: 2,
+            1600: 3,
+        }[points];
+        if (col != undefined) {
+            copyCellTo(row, col, destCtx, x, y);
+        }
+    };
+
+    var copyPacFruitPoints = function(destCtx,x,y,points) {
+        var row = 16;
+        var col = {
+            100: 4,
+            300: 5,
+            500: 6,
+            700: 7,
+            1000: 8,
+            2000: 9,
+            3000: 10,
+            5000: 11,
+        }[points];
+        if (col != undefined) {
+            copyCellTo(row, col, destCtx, x, y);
+        }
+    };
+
+    var copyMsPacFruitPoints = function(destCtx,x,y,points) {
+        var row = 17;
+        var col = {
+            100: 0,
+            200: 1,
+            500: 2,
+            700: 3,
+            1000: 4,
+            2000: 5,
+            5000: 6,
+        }[points];
+        if (col != undefined) {
+            copyCellTo(row, col, destCtx, x, y);
+        }
     };
 
     var copyGhostSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
@@ -349,5 +417,8 @@ var atlas = (function(){
         drawMsPacmanSprite: copyMsPacmanSprite,
         drawCookiemanSprite: copyCookiemanSprite,
         drawFruitSprite: copyFruitSprite,
+        drawGhostPoints: copyGhostPoints,
+        drawPacFruitPoints: copyPacFruitPoints,
+        drawMsPacFruitPoints: copyMsPacFruitPoints,
     };
 })();

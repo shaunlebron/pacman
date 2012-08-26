@@ -4,7 +4,7 @@ var atlas = (function(){
     var canvas,ctx;
     var size = 22;
     var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 19;
+    var rows = 20;
 
     var creates = 0;
 
@@ -208,6 +208,14 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 1000, "#fff"); }, row, 4);
         drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 2000, "#fff"); }, row, 5);
         drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 5000, "#fff"); }, row, 6);
+
+        row++;
+        drawAtCell(function(x,y) {
+            drawSnail(ctx,x,y, "#0ff");
+        }, row, 0);
+        drawAtCell(function(x,y) {
+            drawSnail(ctx,x,y, "#FFF");
+        }, row, 1);
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -361,6 +369,12 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
+    var copySnail = function(destCtx,x,y,frame) {
+        var row = 18;
+        var col = frame;
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
     var copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
         var row = 6;
         var col;
@@ -420,5 +434,6 @@ var atlas = (function(){
         drawGhostPoints: copyGhostPoints,
         drawPacFruitPoints: copyPacFruitPoints,
         drawMsPacFruitPoints: copyMsPacFruitPoints,
+        drawSnail: copySnail,
     };
 })();

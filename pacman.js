@@ -2233,7 +2233,7 @@ var atlas = (function(){
     var canvas,ctx;
     var size = 22;
     var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 19;
+    var rows = 20;
 
     var creates = 0;
 
@@ -2437,6 +2437,14 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 1000, "#fff"); }, row, 4);
         drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 2000, "#fff"); }, row, 5);
         drawAtCell(function(x,y) { drawMsPacPoints(ctx, x,y, 5000, "#fff"); }, row, 6);
+
+        row++;
+        drawAtCell(function(x,y) {
+            drawSnail(ctx,x,y, "#0ff");
+        }, row, 0);
+        drawAtCell(function(x,y) {
+            drawSnail(ctx,x,y, "#FFF");
+        }, row, 1);
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -2590,6 +2598,12 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
+    var copySnail = function(destCtx,x,y,frame) {
+        var row = 18;
+        var col = frame;
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
     var copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
         var row = 6;
         var col;
@@ -2649,6 +2663,7 @@ var atlas = (function(){
         drawGhostPoints: copyGhostPoints,
         drawPacFruitPoints: copyPacFruitPoints,
         drawMsPacFruitPoints: copyMsPacFruitPoints,
+        drawSnail: copySnail,
     };
 })();
 //@line 1 "src/renderers.js"
@@ -3993,6 +4008,9 @@ ToggleButton.prototype = {
         if (this.label) {
             this.msg = this.label + ": " + (this.isOn() ? "ON" : "OFF");
         }
+    },
+    refreshOnState: function() {
+        this.setOn(this.isOn());
     },
 };
 //@line 1 "src/Menu.js"
@@ -6687,6 +6705,68 @@ var drawDownSymbol = function(ctx,x,y,color) {
     ctx.fill();
     ctx.restore();
 };
+
+var drawSnail = (function(){
+    var plotSolid = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineJoin = "round";
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.fill();
+        ctx.stroke();
+    };
+    return function(ctx,x,y,color) {
+        ctx.save();
+        ctx.translate(x,y);
+        ctx.beginPath();
+        ctx.moveTo(-7,3);
+        ctx.lineTo(-5,3);
+        ctx.bezierCurveTo(-6,0,-5,-3,-2,-3);
+        ctx.bezierCurveTo(0,-3,2,-2,2,2);
+        ctx.bezierCurveTo(3,-1,3,-2,5,-2);
+        ctx.bezierCurveTo(6,-2,6,0,5,0);
+        ctx.bezierCurveTo(4,1,4,3,2,3);
+        ctx.closePath();
+
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(4,-2);
+        ctx.lineTo(3,-5);
+        ctx.moveTo(5,-1);
+        ctx.lineTo(7,-5);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(3,-5, 1, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(7,-5, 1, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-4,1);
+        ctx.bezierCurveTo(-5,-1,-3,-3, -1,-2);
+        ctx.bezierCurveTo(0,-1,0,0,-1,1);
+        ctx.bezierCurveTo(-2,1,-3,0,-2,-0.5);
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = "#000";
+        ctx.stroke();
+
+        ctx.restore();
+    };
+})();
 //@line 1 "src/Actor.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // The actor class defines common data functions for the ghosts and pacman
@@ -8547,10 +8627,13 @@ var executive = (function(){
 
     return {
 
-        // scheduling
+        getFramePeriod: function() {
+            return framePeriod;
+        },
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
             gameTime = (new Date).getTime();
+            vcr.onFramePeriodChange();
         },
         init: function() {
             var that = this;
@@ -10523,6 +10606,29 @@ var vcr = (function() {
     seekToggleBtn.setIcon(function(ctx,x,y,frame) {
         drawRewindSymbol(ctx,x,y,"#FFF");
     });
+    var slowBtn = new ToggleButton(-w-pad-1,y,w,h,
+        function() {
+            return executive.getFramePeriod() == 1000/15;
+        },
+        function(on) {
+            executive.setUpdatesPerSecond(on ? 15 : 60);
+        });
+    slowBtn.setIcon(function(ctx,x,y) {
+        atlas.drawSnail(ctx,x,y,1);
+    });
+
+    var onFramePeriodChange = function() {
+        if (slowBtn.isOn()) {
+            slowBtn.setIcon(function(ctx,x,y) {
+                atlas.drawSnail(ctx,x,y,0);
+            });
+        }
+        else {
+            slowBtn.setIcon(function(ctx,x,y) {
+                atlas.drawSnail(ctx,x,y,1);
+            });
+        }
+    };
 
     var onHudEnable = function() {
         if (practiceMode) {
@@ -10535,6 +10641,7 @@ var vcr = (function() {
                 seekDownBtn.enable();
             }
             seekToggleBtn.enable();
+            slowBtn.enable();
         }
     };
 
@@ -10543,6 +10650,7 @@ var vcr = (function() {
             seekUpBtn.disable();
             seekDownBtn.disable();
             seekToggleBtn.disable();
+            slowBtn.disable();
         }
     };
 
@@ -10575,6 +10683,9 @@ var vcr = (function() {
             if (seekToggleBtn.isEnabled) {
                 seekToggleBtn.draw(ctx);
             }
+            if (slowBtn.isEnabled) {
+                slowBtn.draw(ctx);
+            }
         }
     };
 
@@ -10597,6 +10708,7 @@ var vcr = (function() {
         seek: seek,
         record: record,
         draw: draw,
+        onFramePeriodChange: onFramePeriodChange,
         onHudEnable: onHudEnable,
         onHudDisable: onHudDisable,
         eraseFuture: eraseFuture,

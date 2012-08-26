@@ -216,6 +216,29 @@ var vcr = (function() {
     seekToggleBtn.setIcon(function(ctx,x,y,frame) {
         drawRewindSymbol(ctx,x,y,"#FFF");
     });
+    var slowBtn = new ToggleButton(-w-pad-1,y,w,h,
+        function() {
+            return executive.getFramePeriod() == 1000/15;
+        },
+        function(on) {
+            executive.setUpdatesPerSecond(on ? 15 : 60);
+        });
+    slowBtn.setIcon(function(ctx,x,y) {
+        atlas.drawSnail(ctx,x,y,1);
+    });
+
+    var onFramePeriodChange = function() {
+        if (slowBtn.isOn()) {
+            slowBtn.setIcon(function(ctx,x,y) {
+                atlas.drawSnail(ctx,x,y,0);
+            });
+        }
+        else {
+            slowBtn.setIcon(function(ctx,x,y) {
+                atlas.drawSnail(ctx,x,y,1);
+            });
+        }
+    };
 
     var onHudEnable = function() {
         if (practiceMode) {
@@ -228,6 +251,7 @@ var vcr = (function() {
                 seekDownBtn.enable();
             }
             seekToggleBtn.enable();
+            slowBtn.enable();
         }
     };
 
@@ -236,6 +260,7 @@ var vcr = (function() {
             seekUpBtn.disable();
             seekDownBtn.disable();
             seekToggleBtn.disable();
+            slowBtn.disable();
         }
     };
 
@@ -268,6 +293,9 @@ var vcr = (function() {
             if (seekToggleBtn.isEnabled) {
                 seekToggleBtn.draw(ctx);
             }
+            if (slowBtn.isEnabled) {
+                slowBtn.draw(ctx);
+            }
         }
     };
 
@@ -290,6 +318,7 @@ var vcr = (function() {
         seek: seek,
         record: record,
         draw: draw,
+        onFramePeriodChange: onFramePeriodChange,
         onHudEnable: onHudEnable,
         onHudDisable: onHudDisable,
         eraseFuture: eraseFuture,

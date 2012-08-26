@@ -106,10 +106,13 @@ var executive = (function(){
 
     return {
 
-        // scheduling
+        getFramePeriod: function() {
+            return framePeriod;
+        },
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
             gameTime = (new Date).getTime();
+            vcr.onFramePeriodChange();
         },
         init: function() {
             var that = this;

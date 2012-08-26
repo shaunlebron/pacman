@@ -2366,3 +2366,65 @@ var drawDownSymbol = function(ctx,x,y,color) {
     ctx.fill();
     ctx.restore();
 };
+
+var drawSnail = (function(){
+    var plotSolid = function(points,color) {
+        var len = points.length;
+        var i;
+        ctx.beginPath();
+        ctx.moveTo(points[0],points[1]);
+        for (i=2; i<len; i+=2) {
+            ctx.lineTo(points[i],points[i+1]);
+        }
+        ctx.closePath();
+        ctx.lineWidth = 1.0;
+        ctx.lineJoin = "round";
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.fill();
+        ctx.stroke();
+    };
+    return function(ctx,x,y,color) {
+        ctx.save();
+        ctx.translate(x,y);
+        ctx.beginPath();
+        ctx.moveTo(-7,3);
+        ctx.lineTo(-5,3);
+        ctx.bezierCurveTo(-6,0,-5,-3,-2,-3);
+        ctx.bezierCurveTo(0,-3,2,-2,2,2);
+        ctx.bezierCurveTo(3,-1,3,-2,5,-2);
+        ctx.bezierCurveTo(6,-2,6,0,5,0);
+        ctx.bezierCurveTo(4,1,4,3,2,3);
+        ctx.closePath();
+
+        ctx.lineWidth = 1.0;
+        ctx.lineCap = ctx.lineJoin = "round";
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(4,-2);
+        ctx.lineTo(3,-5);
+        ctx.moveTo(5,-1);
+        ctx.lineTo(7,-5);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(3,-5, 1, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(7,-5, 1, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-4,1);
+        ctx.bezierCurveTo(-5,-1,-3,-3, -1,-2);
+        ctx.bezierCurveTo(0,-1,0,0,-1,1);
+        ctx.bezierCurveTo(-2,1,-3,0,-2,-0.5);
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = "#000";
+        ctx.stroke();
+
+        ctx.restore();
+    };
+})();

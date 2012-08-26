@@ -234,4 +234,7 @@ ToggleButton.prototype = {
             this.msg = this.label + ": " + (this.isOn() ? "ON" : "OFF");
         }
     },
+    refreshOnState: function() {
+        this.setOn(this.isOn());
+    },
 };

@@ -10,7 +10,7 @@ Games
 - Crazy Otto (by GCC)
 - Cookie-Man (new game with procedural map generator)
 
-<a href="https://shaunew.github.com/Pac-Man/shots/montage.png"><img src="https://shaunew.github.com/Pac-Man/shots/montage.png" width="100%"/></a>
+<a href="http://shaunew.github.com/Pac-Man/shots/montage.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage.png" width="100%"/></a>
 
 Play
 ----

@@ -60,6 +60,12 @@ Menu.prototype = {
         nextBtn.focus();
     },
 
+    addToggleButton: function(label,isOn,setOn) {
+        this.buttons.push(new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn,label,this.font,this.fontcolor));
+        this.buttonCount++;
+        this.currentY += this.pad + this.h;
+    },
+
     addTextButton: function(msg,onclick) {
         this.buttons.push(new TextButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor));
         this.buttonCount++;

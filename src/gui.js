@@ -114,7 +114,7 @@ var Button = function(x,y,w,h,onclick) {
     };
 
     this.isEnabled = false;
-    this.enable = function() {
+    this.onEnable = function() {
         canvas.addEventListener('click', click);
         canvas.addEventListener('mousemove', mousemove);
         canvas.addEventListener('mouseleave', mouseleave);
@@ -125,7 +125,7 @@ var Button = function(x,y,w,h,onclick) {
         this.isEnabled = true;
     };
 
-    this.disable = function() {
+    this.onDisable = function() {
         canvas.removeEventListener('click', click);
         canvas.removeEventListener('mousemove', mousemove);
         canvas.removeEventListener('mouseleave', mouseleave);
@@ -143,6 +143,14 @@ Button.prototype = {
     contains: function(x,y) {
         return x >= this.x && x <= this.x+this.w &&
                y >= this.y && y <= this.y+this.h;
+    },
+
+    enable: function() {
+        this.onEnable();
+    },
+
+    disable: function() {
+        this.onDisable();
     },
 
     focus: function() {
@@ -200,6 +208,29 @@ TextButton.prototype = {
         //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
         ctx.fillText(this.msg, this.x + this.w/2, this.y + this.h/2 + 1);
 
+    },
+};
+
+var ToggleButton = function(x,y,w,h,isOn,setOn,label,font,fontcolor) {
+    var that = this;
+    var onclick = function() {
+        setOn(!isOn());
+        that.refreshMsg();
+    };
+    this.label = label;
+    this.isOn = isOn;
+    this.setOn = setOn;
+    TextButton.call(this,x,y,w,h,onclick,"",font,fontcolor);
+};
+
+ToggleButton.prototype = {
+    __proto__: TextButton.prototype,
+    enable: function() {
+        TextButton.prototype.enable.call(this);
+        this.refreshMsg();
+    },
+    refreshMsg: function() {
+        this.msg = this.label + ": " + (this.isOn() ? "ON" : "OFF");
     },
 };
 

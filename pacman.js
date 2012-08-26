@@ -4081,7 +4081,7 @@ var Button = function(x,y,w,h,onclick) {
     };
 
     this.isEnabled = false;
-    this.enable = function() {
+    this.onEnable = function() {
         canvas.addEventListener('click', click);
         canvas.addEventListener('mousemove', mousemove);
         canvas.addEventListener('mouseleave', mouseleave);
@@ -4092,7 +4092,7 @@ var Button = function(x,y,w,h,onclick) {
         this.isEnabled = true;
     };
 
-    this.disable = function() {
+    this.onDisable = function() {
         canvas.removeEventListener('click', click);
         canvas.removeEventListener('mousemove', mousemove);
         canvas.removeEventListener('mouseleave', mouseleave);
@@ -4110,6 +4110,14 @@ Button.prototype = {
     contains: function(x,y) {
         return x >= this.x && x <= this.x+this.w &&
                y >= this.y && y <= this.y+this.h;
+    },
+
+    enable: function() {
+        this.onEnable();
+    },
+
+    disable: function() {
+        this.onDisable();
     },
 
     focus: function() {
@@ -4167,6 +4175,29 @@ TextButton.prototype = {
         //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
         ctx.fillText(this.msg, this.x + this.w/2, this.y + this.h/2 + 1);
 
+    },
+};
+
+var ToggleButton = function(x,y,w,h,isOn,setOn,label,font,fontcolor) {
+    var that = this;
+    var onclick = function() {
+        setOn(!isOn());
+        that.refreshMsg();
+    };
+    this.label = label;
+    this.isOn = isOn;
+    this.setOn = setOn;
+    TextButton.call(this,x,y,w,h,onclick,"",font,fontcolor);
+};
+
+ToggleButton.prototype = {
+    __proto__: TextButton.prototype,
+    enable: function() {
+        TextButton.prototype.enable.call(this);
+        this.refreshMsg();
+    },
+    refreshMsg: function() {
+        this.msg = this.label + ": " + (this.isOn() ? "ON" : "OFF");
     },
 };
 
@@ -4251,6 +4282,12 @@ Menu.prototype = {
         }
         nextBtn = nextBtn || this.buttons[this.buttonCount-1];
         nextBtn.focus();
+    },
+
+    addToggleButton: function(label,isOn,setOn) {
+        this.buttons.push(new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn,label,this.font,this.fontcolor));
+        this.buttonCount++;
+        this.currentY += this.pad + this.h;
     },
 
     addTextButton: function(msg,onclick) {
@@ -4382,12 +4419,70 @@ var inGameMenu = (function() {
             switchState(readyNewState, 60);
         });
     });
+    practiceMenu.addTextButton("CHEATS", function() {
+        practiceMenu.disable();
+        cheatsMenu.enable();
+    });
     practiceMenu.addTextButton("QUIT", function() {
         showConfirm("QUIT GAME?", function() {
             switchState(homeState, 60);
         });
     });
     practiceMenu.backButton = practiceMenu.buttons[0];
+
+    // cheats menu
+    var cheatsMenu = new Menu("CHEATS",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    cheatsMenu.addToggleButton("INVINCIBLE",
+        function() {
+            return pacman.invincible;
+        },
+        function(on) {
+            pacman.invincible = on;
+        });
+    cheatsMenu.addToggleButton("TURBO",
+        function() {
+            return turboMode;
+        },
+        function(on) {
+            turboMode = on;
+        });
+    cheatsMenu.addToggleButton("SHOW TARGETS",
+        function() {
+            return blinky.isDrawTarget;
+        },
+        function(on) {
+            for (var i=0; i<4; i++) {
+                ghosts[i].isDrawTarget = on;
+            }
+        });
+    cheatsMenu.addToggleButton("SHOW PATHS",
+        function() {
+            return blinky.isDrawPath;
+        },
+        function(on) {
+            for (var i=0; i<4; i++) {
+                ghosts[i].isDrawPath = on;
+            }
+        });
+    cheatsMenu.addSpacer(1);
+    cheatsMenu.addTextButton("BACK", function() {
+        cheatsMenu.disable();
+        practiceMenu.enable();
+    });
+    cheatsMenu.backButton = cheatsMenu.buttons[cheatsMenu.buttons.length-1];
+
+    var menus = [menu, practiceMenu, confirmMenu, cheatsMenu];
+    var getVisibleMenu = function() {
+        var len = menus.length;
+        var i;
+        var m;
+        for (i=0; i<len; i++) {
+            m = menus[i];
+            if (m.isEnabled()) {
+                return m;
+            }
+        }
+    };
 
     // returns true if menu button should be available in the current state
     var isMenuBtnState = function() {
@@ -4414,30 +4509,26 @@ var inGameMenu = (function() {
 
         },
         drawButton: function(ctx) {
-            if (isMenuBtnState() && (!getMainMenu().isEnabled() && !confirmMenu.isEnabled())) {
+            if (isMenuBtnState() && (!getVisibleMenu())) {
                 btn.draw(ctx);
             }
         },
         drawMenu: function(ctx) {
-            if (getMainMenu().isEnabled() || confirmMenu.isEnabled()) {
+            var m = getVisibleMenu();
+            if (m) {
                 ctx.fillStyle = "rgba(0,0,0,0.8)";
                 ctx.fillRect(-mapPad-1,-mapPad-1,mapWidth+1,mapHeight+1);
-                getMainMenu().isEnabled() ? getMainMenu().draw(ctx) : confirmMenu.draw(ctx);
+                m.draw(ctx);
             }
         },
         isAllowed: function() {
             return isMenuBtnState();
         },
         isOpen: function() {
-            return getMainMenu().isEnabled() || confirmMenu.isEnabled();
+            return getVisibleMenu() != undefined;
         },
         getMenu: function() {
-            if (getMainMenu().isEnabled()) {
-                return getMainMenu();
-            }
-            else if (confirmMenu.isEnabled()) {
-                return confirmMenu;
-            }
+            return getVisibleMenu();
         },
         getMenuButton: function() {
             return btn;

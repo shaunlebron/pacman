@@ -3,6 +3,7 @@
 // This coordinates the recording, rewinding, and replaying of the game state.
 // Inspired by Braid.
 
+var VCR_NONE = -1;
 var VCR_RECORD = 0;
 var VCR_REWIND = 1;
 var VCR_FORWARD = 2;
@@ -127,6 +128,10 @@ var vcr = (function() {
         return (dt > 0) ? Math.min(maxForward,dt) : Math.max(-maxReverse,dt);
     };
 
+    var init = function() {
+        mode = VCR_NONE;
+    };
+
     // seek to the state at the given relative time difference.
     var seek = function(dt) {
         if (dt == undefined) {
@@ -157,11 +162,21 @@ var vcr = (function() {
         mode = VCR_RECORD;
         initialized = false;
         eraseFuture();
+        seekUpBtn.disable();
+        seekDownBtn.disable();
+        seekToggleBtn.setIcon(function(ctx,x,y,frame) {
+            drawRewindSymbol(ctx,x,y,"#FFF");
+        });
     };
 
     var startSeeking = function() {
         speedIndex = 3;
         updateMode();
+        seekUpBtn.enable();
+        seekDownBtn.enable();
+        seekToggleBtn.setIcon(function(ctx,x,y,frame) {
+            drawRecordSymbol(ctx,x,y,"#F00");
+        });
     };
 
     var nextSpeed = function(di) {
@@ -171,16 +186,88 @@ var vcr = (function() {
         updateMode();
     };
 
+    var x,y,w,h;
+    var pad = 5;
+    x = mapWidth+1;
+    h = 20;
+    w = 25;
+    y = mapHeight/2-h/2;
+    var seekUpBtn = new Button(x,y-h-pad,w,h,
+        function() {
+            nextSpeed(1);
+        });
+    seekUpBtn.setIcon(function(ctx,x,y,frame) {
+        drawUpSymbol(ctx,x,y,"#FFF");
+    });
+    var seekDownBtn = new Button(x,y+h+pad,w,h,
+        function() {
+            nextSpeed(-1);
+        });
+    seekDownBtn.setIcon(function(ctx,x,y,frame) {
+        drawDownSymbol(ctx,x,y,"#FFF");
+    });
+    var seekToggleBtn = new ToggleButton(x,y,w,h,
+        function() {
+            return mode != VCR_RECORD;
+        },
+        function(on) {
+            on ? startSeeking() : startRecording();
+        });
+    seekToggleBtn.setIcon(function(ctx,x,y,frame) {
+        drawRewindSymbol(ctx,x,y,"#FFF");
+    });
+
     var onHudEnable = function() {
+        if (practiceMode) {
+            if (mode == VCR_NONE || mode == VCR_RECORD) {
+                seekUpBtn.disable();
+                seekDownBtn.disable();
+            }
+            else {
+                seekUpBtn.enable();
+                seekDownBtn.enable();
+            }
+            seekToggleBtn.enable();
+        }
     };
 
     var onHudDisable = function() {
+        if (practiceMode) {
+            seekUpBtn.disable();
+            seekDownBtn.disable();
+            seekToggleBtn.disable();
+        }
+    };
+
+    var isValidState = function() {
+        return (
+            !inGameMenu.isOpen() && (
+            state == playState ||
+            state == finishState ||
+            state == deadState));
     };
 
     var draw = function(ctx) {
-        if (vcr.getMode() != VCR_RECORD) {
-            // change the hue to reflect speed
-            renderer.setOverlayColor(speedColors[speedIndex]);
+        if (practiceMode) {
+            if (isValidState() && vcr.getMode() != VCR_RECORD) {
+                // change the hue to reflect speed
+                renderer.setOverlayColor(speedColors[speedIndex]);
+                ctx.font = tileSize + "px ArcadeR";
+                ctx.fillStyle = "#FFF";
+                ctx.textAlign = "right";
+                ctx.textBaseline = "top";
+                ctx.fillText(speeds[speedIndex]+"x",x+w,y-2*h);
+            }
+
+            if (seekUpBtn.isEnabled) {
+                seekUpBtn.draw(ctx);
+            }
+            if (seekDownBtn.isEnabled) {
+                seekDownBtn.draw(ctx);
+            }
+            if (seekToggleBtn.isEnabled) {
+                seekToggleBtn.draw(ctx);
+            }
         }
     };
 
@@ -198,6 +285,7 @@ var vcr = (function() {
     };
 
     return {
+        init: init,
         reset: reset,
         seek: seek,
         record: record,

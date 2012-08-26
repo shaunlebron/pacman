@@ -15,7 +15,12 @@ var inGameMenu = (function() {
     };
 
     // button to enable in-game menu
-    var btn = new TextButton(mapWidth/2 - w/2,-1.5*h,w,h, showMainMenu, "MENU",(tileSize-2)+"px ArcadeR","#FFF");
+    var btn = new Button(mapWidth/2 - w/2,-1.5*h,w,h, function() {
+        showMainMenu();
+        vcr.onHudDisable();
+    });
+    btn.setText("MENU");
+    btn.setFont((tileSize-2)+"px ArcadeR","#FFF");
 
     // confirms a menu action
     var confirmMenu = new Menu("QUESTION?",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
@@ -54,7 +59,10 @@ var inGameMenu = (function() {
 
     // practice menu
     var practiceMenu = new Menu("PAUSED",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-    practiceMenu.addTextButton("RESUME", hideMainMenu);
+    practiceMenu.addTextButton("RESUME", function() {
+        hideMainMenu();
+        vcr.onHudEnable();
+    });
     practiceMenu.addTextButton("RESTART LEVEL", function() {
         showConfirm("RESTART LEVEL?", function() {
             level--;
@@ -79,21 +87,21 @@ var inGameMenu = (function() {
 
     // cheats menu
     var cheatsMenu = new Menu("CHEATS",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-    cheatsMenu.addToggleButton("INVINCIBLE",
+    cheatsMenu.addToggleTextButton("INVINCIBLE",
         function() {
             return pacman.invincible;
         },
         function(on) {
             pacman.invincible = on;
         });
-    cheatsMenu.addToggleButton("TURBO",
+    cheatsMenu.addToggleTextButton("TURBO",
         function() {
             return turboMode;
         },
         function(on) {
             turboMode = on;
         });
-    cheatsMenu.addToggleButton("SHOW TARGETS",
+    cheatsMenu.addToggleTextButton("SHOW TARGETS",
         function() {
             return blinky.isDrawTarget;
         },
@@ -102,7 +110,7 @@ var inGameMenu = (function() {
                 ghosts[i].isDrawTarget = on;
             }
         });
-    cheatsMenu.addToggleButton("SHOW PATHS",
+    cheatsMenu.addToggleTextButton("SHOW PATHS",
         function() {
             return blinky.isDrawPath;
         },

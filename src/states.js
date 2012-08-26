@@ -598,6 +598,7 @@ var readyState =  (function(){
             energizer.reset();
             map.resetTimeEaten();
             frames = 0;
+            vcr.init();
         },
         draw: function() {
             newGameState.draw();

@@ -2307,3 +2307,62 @@ var getSpriteFuncFromFruitName = function(name) {
     return funcs[name];
 };
 
+var drawRecordSymbol = function(ctx,x,y,color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.translate(x,y);
+
+    ctx.beginPath();
+    ctx.arc(0,0,4,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+};
+
+var drawRewindSymbol = function(ctx,x,y,color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.translate(x,y);
+
+    var s = 3;
+    var drawTriangle = function(x) {
+        ctx.beginPath();
+        ctx.moveTo(x,s);
+        ctx.lineTo(x-2*s,0);
+        ctx.lineTo(x,-s);
+        ctx.closePath();
+        ctx.fill();
+    };
+    drawTriangle(0);
+    drawTriangle(2*s);
+
+    ctx.restore();
+};
+
+var drawUpSymbol = function(ctx,x,y,color) {
+    ctx.save();
+    ctx.translate(x,y);
+    var s = tileSize;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,-s/2);
+    ctx.lineTo(s/2,s/2);
+    ctx.lineTo(-s/2,s/2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+};
+
+var drawDownSymbol = function(ctx,x,y,color) {
+    ctx.save();
+    ctx.translate(x,y);
+    var s = tileSize;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0,s/2);
+    ctx.lineTo(s/2,-s/2);
+    ctx.lineTo(-s/2,-s/2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+};

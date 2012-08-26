@@ -97,6 +97,9 @@
     var KEY_O = 79;
     var KEY_P = 80;
 
+    var KEY_1 = 49;
+    var KEY_2 = 50;
+
     // Custom Key Listeners
 
     // Menu Navigation Keys
@@ -126,10 +129,10 @@
 
     // Slow-Motion
     var isPracticeMode = function() { return practiceMode; };
-    addKeyDown(KEY_CTRL, function() { executive.setUpdatesPerSecond(30); }, isPracticeMode);
-    addKeyDown(KEY_ALT,  function() { executive.setUpdatesPerSecond(15); }, isPracticeMode);
-    addKeyUp  (KEY_CTRL, function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
-    addKeyUp  (KEY_ALT,  function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
+    addKeyDown(KEY_1, function() { executive.setUpdatesPerSecond(30); }, isPracticeMode);
+    addKeyDown(KEY_2,  function() { executive.setUpdatesPerSecond(15); }, isPracticeMode);
+    addKeyUp  (KEY_1, function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
+    addKeyUp  (KEY_2,  function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
 
     // Toggle VCR
     addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   isPracticeMode);

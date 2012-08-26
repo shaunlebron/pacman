@@ -60,20 +60,37 @@ Menu.prototype = {
         nextBtn.focus();
     },
 
-    addToggleButton: function(label,isOn,setOn) {
-        this.buttons.push(new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn,label,this.font,this.fontcolor));
+    addToggleButton: function(isOn,setOn) {
+        var b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
+        this.buttons.push(b);
+        this.buttonCount++;
+        this.currentY += this.pad + this.h;
+    },
+
+    addToggleTextButton: function(label,isOn,setOn) {
+        var b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
+        b.setFont(this.font,this.fontcolor);
+        b.setToggleLabel(label);
+        this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
     },
 
     addTextButton: function(msg,onclick) {
-        this.buttons.push(new TextButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor));
+        var b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
+        b.setFont(this.font,this.fontcolor);
+        b.setText(msg);
+        this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
     },
 
     addTextIconButton: function(msg,onclick,drawIcon) {
-        this.buttons.push(new TextIconButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick,msg,this.font,this.fontcolor,drawIcon));
+        var b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
+        b.setFont(this.font,this.fontcolor);
+        b.setText(msg);
+        b.setIcon(drawIcon);
+        this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
     },

@@ -23,7 +23,6 @@ echo "
 
 for file in \
     game.js \
-    vcr.js \
     direction.js \
     Map.js \
     colors.js \
@@ -32,7 +31,7 @@ for file in \
     renderers.js  \
     hud.js \
     galagaStars.js \
-    gui.js \
+    Button.js \
     Menu.js \
     inGameMenu.js \
     sprites.js \
@@ -51,6 +50,7 @@ for file in \
     input.js \
     cutscenes.js \
     maps.js \
+    vcr.js \
     main.js
 do
     # points firebug to correct file (or so I hoped)

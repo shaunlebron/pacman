@@ -23,34 +23,20 @@ var getPointerPos = function(evt) {
     return { x: mouseX, y: mouseY };
 };
 
-var ComboBox = function(x,y,w,h,options) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-
-    this.options = options;
-
-    this.enable = function() {
-    };
-
-    this.disable = function() {
-    };
-};
-
-ComboBox.prototype = {
-
-    draw: function(ctx) {
-    },
-
-};
-
 var Button = function(x,y,w,h,onclick) {
     this.x = x;
     this.y = y;
     this.w = w;
     this.h = h;
     this.onclick = onclick;
+
+    // text and icon padding
+    this.pad = tileSize;
+
+
+
+    // icon attributes
+    this.frame = 0;
 
     this.borderBlurColor = "#333";
     this.borderFocusColor = "#EEE";
@@ -161,7 +147,22 @@ Button.prototype = {
         this.isSelected = false;
     },
 
+    setText: function(msg) {
+        this.msg = msg;
+    },
+
+    setFont: function(font,fontcolor) {
+        this.font = font;
+        this.fontcolor = fontcolor;
+    },
+
+    setIcon: function(drawIcon) {
+        this.drawIcon = drawIcon;
+    },
+
     draw: function(ctx) {
+
+        // draw border
         ctx.lineWidth = 2;
         ctx.beginPath();
         var x=this.x, y=this.y, w=this.w, h=this.h;
@@ -175,82 +176,62 @@ Button.prototype = {
         ctx.lineTo(x+r,y+h);
         ctx.quadraticCurveTo(x,y+h,x,y+h-r);
         ctx.closePath();
-
         ctx.fillStyle = "rgba(0,0,0,0.5)";
         ctx.fill();
         ctx.strokeStyle = this.isSelected && this.onclick ? this.borderFocusColor : this.borderBlurColor;
         ctx.stroke();
 
+        // draw icon
+        if (this.drawIcon) {
+            if (!this.msg) {
+                this.drawIcon(ctx,this.x+this.w/2,this.y+this.h/2,this.frame);
+            }
+            else {
+                this.drawIcon(ctx,this.x+this.pad+tileSize,this.y+this.h/2,this.frame);
+            }
+        }
+
+        // draw text
+        if (this.msg) {
+            ctx.font = this.font;
+            ctx.fillStyle = this.isSelected && this.onclick ? this.fontcolor : "#777";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
+            ctx.fillText(this.msg, this.x + this.w/2, this.y + this.h/2 + 1);
+        }
     },
 
     update: function() {
+        if (this.drawIcon) {
+            this.frame = this.isSelected ? this.frame+1 : 0;
+        }
     },
 };
 
-var TextButton = function(x,y,w,h,onclick,msg,font,fontcolor) {
-    Button.call(this,x,y,w,h,onclick);
-    this.msg = msg;
-    this.font = font;
-    this.fontcolor = fontcolor;
-    this.pad = tileSize;
-};
-
-TextButton.prototype = {
-
-    __proto__: Button.prototype,
-
-    draw: function(ctx) {
-        Button.prototype.draw.call(this,ctx);
-        ctx.font = this.font;
-        ctx.fillStyle = this.isSelected && this.onclick ? this.fontcolor : "#777";
-        ctx.textBaseline = "middle";
-        ctx.textAlign = "center";
-        //ctx.fillText(this.msg, 2*tileSize+2*this.pad+this.x, this.y + this.h/2 + 1);
-        ctx.fillText(this.msg, this.x + this.w/2, this.y + this.h/2 + 1);
-
-    },
-};
-
-var ToggleButton = function(x,y,w,h,isOn,setOn,label,font,fontcolor) {
+var ToggleButton = function(x,y,w,h,isOn,setOn) {
     var that = this;
     var onclick = function() {
         setOn(!isOn());
         that.refreshMsg();
     };
-    this.label = label;
     this.isOn = isOn;
     this.setOn = setOn;
-    TextButton.call(this,x,y,w,h,onclick,"",font,fontcolor);
+    Button.call(this,x,y,w,h,onclick);
 };
 
 ToggleButton.prototype = {
-    __proto__: TextButton.prototype,
+    __proto__: Button.prototype,
     enable: function() {
-        TextButton.prototype.enable.call(this);
+        Button.prototype.enable.call(this);
         this.refreshMsg();
     },
+    setToggleLabel: function(label) {
+        this.label = label;
+    },
     refreshMsg: function() {
-        this.msg = this.label + ": " + (this.isOn() ? "ON" : "OFF");
-    },
-};
-
-var TextIconButton = function(x,y,w,h,onclick,msg,font,fontcolor,drawIcon) {
-    TextButton.call(this,x,y,w,h,onclick,msg,font,fontcolor);
-    this.drawIcon = drawIcon;
-    this.frame = 0;
-};
-
-TextIconButton.prototype = {
-
-    __proto__: TextButton.prototype,
-
-    draw: function(ctx) {
-        TextButton.prototype.draw.call(this,ctx);
-        this.drawIcon(ctx,this.x+this.pad+tileSize,this.y+this.h/2,this.frame);
-    },
-
-    update: function() {
-        TextButton.prototype.update.call(this);
-        this.frame = this.isSelected ? this.frame+1 : 0;
+        if (this.label) {
+            this.msg = this.label + ": " + (this.isOn() ? "ON" : "OFF");
+        }
     },
 };

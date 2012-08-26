@@ -1,0 +1,3 @@
+#!/bin/bash
+
+montage pac.png mspac.png otto.png cookie.png -tile x1 -geometry +1+1 -background black montage.png

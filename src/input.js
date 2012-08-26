@@ -100,6 +100,8 @@
     var KEY_1 = 49;
     var KEY_2 = 50;
 
+    var KEY_END = 35;
+
     // Custom Key Listeners
 
     // Menu Navigation Keys
@@ -174,6 +176,8 @@
     addKeyDown(KEY_I, function() { pacman.invincible = !pacman.invincible; }, isPracticeMode);
     addKeyDown(KEY_O, function() { turboMode = !turboMode; }, isPracticeMode);
     addKeyDown(KEY_P, function() { pacman.ai = !pacman.ai; }, isPracticeMode);
+
+    addKeyDown(KEY_END, function() { executive.togglePause(); });
 
 })();
 

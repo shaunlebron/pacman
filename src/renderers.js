@@ -164,7 +164,7 @@ var initRenderer = function(){
         },
 
         beginFrame: function() {
-            this.setOverlayColor(executive.isPaused() ? "rgba(0,0,0,0.5)" : undefined);
+            this.setOverlayColor(undefined);
             ctx.save();
 
             // clear margin area

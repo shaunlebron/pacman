@@ -3,14 +3,14 @@ Pac-Man
 
 A historical tribute and accurate remake of the original Pac-Man arcade game.
 
+<a href="http://shaunew.github.com/Pac-Man/shots/montage.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage.png" width="100%"/></a>
+
 Games
 -----
 - Pac-Man (by Namco)
 - Ms. Pac-Man (by GCC/Midway)
 - Crazy Otto (by GCC)
 - Cookie-Man (new game with procedural map generator)
-
-<a href="http://shaunew.github.com/Pac-Man/shots/montage.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage.png" width="100%"/></a>
 
 Play
 ----

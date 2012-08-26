@@ -30,8 +30,8 @@ Controls
 ### Practice Mode
 
 - **shift**: hold down to rewind (a la Braid)
-- **ctrl**: hold down to slow down the game to 0.5x
-- **alt**: hold down to slow down the game to 0.25x
+- **1**: hold down to slow down the game to 0.5x
+- **2**: hold down to slow down the game to 0.25x
 - **o**: toggle pacman turbo mode
 - **p**: toggle pacman attract mode (autoplay)
 - **i**: toggle pacman invincibility

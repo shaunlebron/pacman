@@ -189,7 +189,7 @@ var vcr = (function() {
     var x,y,w,h;
     var pad = 5;
     x = mapWidth+1;
-    h = 20;
+    h = 25;
     w = 25;
     y = mapHeight/2-h/2;
     var seekUpBtn = new Button(x,y-h-pad,w,h,

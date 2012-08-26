@@ -113,7 +113,7 @@
     addKeyDown(KEY_UP,    function(){ menu.selectPrevOption(); }, isInMenu);
     addKeyDown(KEY_DOWN,  function(){ menu.selectNextOption(); }, isInMenu);
     var isInGameMenuButtonClickable = function() {
-        return inGameMenu.isAllowed() && !inGameMenu.isOpen();
+        return hud.isValidState() && !inGameMenu.isOpen();
     };
     addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
@@ -185,7 +185,7 @@ var initSwipe = function() {
     var dy = 0;
 
     // minimum distance from anchor before direction is registered
-    var r = 2;
+    var r = 4;
     
     var touchStart = function(event) {
         event.preventDefault();

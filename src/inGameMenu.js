@@ -131,45 +131,28 @@ var inGameMenu = (function() {
         }
     };
 
-    // returns true if menu button should be available in the current state
-    var isMenuBtnState = function() {
-        return state == playState || state == newGameState || state == readyNewState || state == readyRestartState || state == finishState || state == deadState || state == overState;
-    };
-
     return {
+        onHudEnable: function() {
+            btn.enable();
+        },
+        onHudDisable: function() {
+            btn.disable();
+        },
         update: function() {
-
-            // enable or disable menu activation button
-            if (btn.isEnabled) {
-                if (!isMenuBtnState()) {
-                    btn.disable();
-                }
-            }
-            else {
-                if (isMenuBtnState()) {
-                    btn.enable();
-                }
-            }
             if (btn.isEnabled) {
                 btn.update();
             }
-
         },
-        drawButton: function(ctx) {
-            if (isMenuBtnState() && (!getVisibleMenu())) {
-                btn.draw(ctx);
-            }
-        },
-        drawMenu: function(ctx) {
+        draw: function(ctx) {
             var m = getVisibleMenu();
             if (m) {
                 ctx.fillStyle = "rgba(0,0,0,0.8)";
                 ctx.fillRect(-mapPad-1,-mapPad-1,mapWidth+1,mapHeight+1);
                 m.draw(ctx);
             }
-        },
-        isAllowed: function() {
-            return isMenuBtnState();
+            else {
+                btn.draw(ctx);
+            }
         },
         isOpen: function() {
             return getVisibleMenu() != undefined;

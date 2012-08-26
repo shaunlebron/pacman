@@ -324,44 +324,17 @@ var vcr = (function() {
         updateMode();
     };
 
-    var renderHud = function(ctx) {
-        if (vcr.getMode() != VCR_RECORD) {
+    var onHudEnable = function() {
+    };
 
+    var onHudDisable = function() {
+    };
+
+    var draw = function(ctx) {
+        if (vcr.getMode() != VCR_RECORD) {
             // change the hue to reflect speed
             renderer.setOverlayColor(speedColors[speedIndex]);
-
-            // draw the speed
-            ctx.font = (tileSize-1) + "px ArcadeR";
-            ctx.textBaseline = "top";
-            ctx.textAlign = "right";
-            ctx.fillStyle = "#FFF";
-            ctx.fillText("TIME", mapWidth-tileSize, 0);
-            ctx.fillText(speeds[speedIndex]+"x", mapWidth-2*tileSize, tileSize);
-
-            // draw up/down arrows
-            var s = tileSize/2;
-            ctx.fillStyle = "#AAA";
-            ctx.save();
-
-            ctx.translate(mapWidth-1.65*tileSize, tileSize-2);
-            ctx.beginPath();
-            ctx.moveTo(0,s);
-            ctx.lineTo(s/2,0);
-            ctx.lineTo(s,s);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.translate(0,s+s/2);
-            ctx.beginPath();
-            ctx.moveTo(0,0);
-            ctx.lineTo(s/2,s);
-            ctx.lineTo(s,0);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.restore();
         }
-
     };
 
     var updateMode = function() {
@@ -381,11 +354,13 @@ var vcr = (function() {
         reset: reset,
         seek: seek,
         record: record,
+        draw: draw,
+        onHudEnable: onHudEnable,
+        onHudDisable: onHudDisable,
         eraseFuture: eraseFuture,
         startRecording: startRecording,
         startSeeking: startSeeking,
         nextSpeed: nextSpeed,
-        renderHud: renderHud,
         getTime: function() { return time; },
         getMode: function() { return mode; },
     };
@@ -3075,17 +3050,11 @@ var initRenderer = function(){
             ctx.fillStyle = "#333";
             ctx.fillText(executive.getFps().toFixed(2)+" FPS", screenWidth, screenHeight);
 
-            // draw inGameMenu button
-            inGameMenu.drawButton(ctx);
-
             // translate to map space
             ctx.translate(mapMargin+mapPad, mapMargin+mapPad);
         },
 
         endFrame: function() {
-            if (executive.isPaused()) {
-                renderer.drawMessage("PAUSED", "#fff");
-            }
             ctx.restore();
             if (this.overlayColor != undefined) {
                 ctx.fillStyle = this.overlayColor;
@@ -3886,6 +3855,45 @@ var initRenderer = function(){
     ];
     renderer = renderer_list[1];
 };
+//@line 1 "src/hud.js"
+
+var hud = (function(){
+
+    var on = false;
+
+    return {
+
+        update: function() {
+            var valid = this.isValidState();
+            if (valid != on) {
+                on = valid;
+                if (on) {
+                    inGameMenu.onHudEnable();
+                    vcr.onHudEnable();
+                }
+                else {
+                    inGameMenu.onHudDisable();
+                    vcr.onHudDisable();
+                }
+            }
+        },
+        draw: function(ctx) {
+            inGameMenu.draw(ctx);
+            vcr.draw(ctx);
+        },
+        isValidState: function() {
+            return (
+                state == playState ||
+                state == newGameState ||
+                state == readyNewState ||
+                state == readyRestartState ||
+                state == finishState ||
+                state == deadState ||
+                state == overState);
+        },
+    };
+
+})();
 //@line 1 "src/galagaStars.js"
 
 var galagaStars = (function() {
@@ -4484,45 +4492,28 @@ var inGameMenu = (function() {
         }
     };
 
-    // returns true if menu button should be available in the current state
-    var isMenuBtnState = function() {
-        return state == playState || state == newGameState || state == readyNewState || state == readyRestartState || state == finishState || state == deadState || state == overState;
-    };
-
     return {
+        onHudEnable: function() {
+            btn.enable();
+        },
+        onHudDisable: function() {
+            btn.disable();
+        },
         update: function() {
-
-            // enable or disable menu activation button
-            if (btn.isEnabled) {
-                if (!isMenuBtnState()) {
-                    btn.disable();
-                }
-            }
-            else {
-                if (isMenuBtnState()) {
-                    btn.enable();
-                }
-            }
             if (btn.isEnabled) {
                 btn.update();
             }
-
         },
-        drawButton: function(ctx) {
-            if (isMenuBtnState() && (!getVisibleMenu())) {
-                btn.draw(ctx);
-            }
-        },
-        drawMenu: function(ctx) {
+        draw: function(ctx) {
             var m = getVisibleMenu();
             if (m) {
                 ctx.fillStyle = "rgba(0,0,0,0.8)";
                 ctx.fillRect(-mapPad-1,-mapPad-1,mapWidth+1,mapHeight+1);
                 m.draw(ctx);
             }
-        },
-        isAllowed: function() {
-            return isMenuBtnState();
+            else {
+                btn.draw(ctx);
+            }
         },
         isOpen: function() {
             return getVisibleMenu() != undefined;
@@ -8684,7 +8675,7 @@ var executive = (function(){
             gameTime = now;
         }
 
-        inGameMenu.update();
+        hud.update();
 
         // Update the game until the gameTime surpasses the current time.
         while (gameTime < now) {
@@ -8695,8 +8686,9 @@ var executive = (function(){
         // Draw.
         renderer.beginFrame();
         state.draw();
-        renderer.renderFunc(inGameMenu.drawButton);
-        renderer.renderFunc(inGameMenu.drawMenu);
+        if (hud.isValidState()) {
+            renderer.renderFunc(hud.draw);
+        }
         renderer.endFrame();
 
         // Schedule the next tick.
@@ -9419,8 +9411,6 @@ var playState = {
         renderer.drawActors();
         renderer.drawTargets();
         renderer.endMapClip();
-
-        renderer.renderFunc(vcr.renderHud);
     },
 
     // handles collision between pac-man and ghosts
@@ -9599,7 +9589,6 @@ var seekableScriptState = (function(){
         draw: function() {
             if (this.drawFunc) {
                 scriptState.draw.call(this);
-                renderer.renderFunc(vcr.renderHud);
             }
         },
     };
@@ -9876,7 +9865,7 @@ var overState = (function() {
     addKeyDown(KEY_UP,    function(){ menu.selectPrevOption(); }, isInMenu);
     addKeyDown(KEY_DOWN,  function(){ menu.selectNextOption(); }, isInMenu);
     var isInGameMenuButtonClickable = function() {
-        return inGameMenu.isAllowed() && !inGameMenu.isOpen();
+        return hud.isValidState() && !inGameMenu.isOpen();
     };
     addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
@@ -9948,7 +9937,7 @@ var initSwipe = function() {
     var dy = 0;
 
     // minimum distance from anchor before direction is registered
-    var r = 2;
+    var r = 4;
     
     var touchStart = function(event) {
         event.preventDefault();

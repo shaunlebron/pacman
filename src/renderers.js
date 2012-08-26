@@ -181,17 +181,11 @@ var initRenderer = function(){
             ctx.fillStyle = "#333";
             ctx.fillText(executive.getFps().toFixed(2)+" FPS", screenWidth, screenHeight);
 
-            // draw inGameMenu button
-            inGameMenu.drawButton(ctx);
-
             // translate to map space
             ctx.translate(mapMargin+mapPad, mapMargin+mapPad);
         },
 
         endFrame: function() {
-            if (executive.isPaused()) {
-                renderer.drawMessage("PAUSED", "#fff");
-            }
             ctx.restore();
             if (this.overlayColor != undefined) {
                 ctx.fillStyle = this.overlayColor;

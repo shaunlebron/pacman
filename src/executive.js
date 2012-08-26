@@ -84,7 +84,7 @@ var executive = (function(){
             gameTime = now;
         }
 
-        inGameMenu.update();
+        hud.update();
 
         // Update the game until the gameTime surpasses the current time.
         while (gameTime < now) {
@@ -95,8 +95,9 @@ var executive = (function(){
         // Draw.
         renderer.beginFrame();
         state.draw();
-        renderer.renderFunc(inGameMenu.drawButton);
-        renderer.renderFunc(inGameMenu.drawMenu);
+        if (hud.isValidState()) {
+            renderer.renderFunc(hud.draw);
+        }
         renderer.endFrame();
 
         // Schedule the next tick.

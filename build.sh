@@ -30,6 +30,7 @@ for file in \
     mapgen.js \
     atlas.js \
     renderers.js  \
+    hud.js \
     galagaStars.js \
     gui.js \
     Menu.js \

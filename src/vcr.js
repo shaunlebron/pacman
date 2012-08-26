@@ -171,44 +171,17 @@ var vcr = (function() {
         updateMode();
     };
 
-    var renderHud = function(ctx) {
-        if (vcr.getMode() != VCR_RECORD) {
+    var onHudEnable = function() {
+    };
 
+    var onHudDisable = function() {
+    };
+
+    var draw = function(ctx) {
+        if (vcr.getMode() != VCR_RECORD) {
             // change the hue to reflect speed
             renderer.setOverlayColor(speedColors[speedIndex]);
-
-            // draw the speed
-            ctx.font = (tileSize-1) + "px ArcadeR";
-            ctx.textBaseline = "top";
-            ctx.textAlign = "right";
-            ctx.fillStyle = "#FFF";
-            ctx.fillText("TIME", mapWidth-tileSize, 0);
-            ctx.fillText(speeds[speedIndex]+"x", mapWidth-2*tileSize, tileSize);
-
-            // draw up/down arrows
-            var s = tileSize/2;
-            ctx.fillStyle = "#AAA";
-            ctx.save();
-
-            ctx.translate(mapWidth-1.65*tileSize, tileSize-2);
-            ctx.beginPath();
-            ctx.moveTo(0,s);
-            ctx.lineTo(s/2,0);
-            ctx.lineTo(s,s);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.translate(0,s+s/2);
-            ctx.beginPath();
-            ctx.moveTo(0,0);
-            ctx.lineTo(s/2,s);
-            ctx.lineTo(s,0);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.restore();
         }
-
     };
 
     var updateMode = function() {
@@ -228,11 +201,13 @@ var vcr = (function() {
         reset: reset,
         seek: seek,
         record: record,
+        draw: draw,
+        onHudEnable: onHudEnable,
+        onHudDisable: onHudDisable,
         eraseFuture: eraseFuture,
         startRecording: startRecording,
         startSeeking: startSeeking,
         nextSpeed: nextSpeed,
-        renderHud: renderHud,
         getTime: function() { return time; },
         getMode: function() { return mode; },
     };

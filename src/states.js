@@ -682,8 +682,6 @@ var playState = {
         renderer.drawActors();
         renderer.drawTargets();
         renderer.endMapClip();
-
-        renderer.renderFunc(vcr.renderHud);
     },
 
     // handles collision between pac-man and ghosts
@@ -862,7 +860,6 @@ var seekableScriptState = (function(){
         draw: function() {
             if (this.drawFunc) {
                 scriptState.draw.call(this);
-                renderer.renderFunc(vcr.renderHud);
             }
         },
     };

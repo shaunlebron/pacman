@@ -80,8 +80,12 @@ var energizer = (function() {
             active = true;
             count = 0;
             points = 100;
-            for (i=0; i<4; i++)
+            for (i=0; i<4; i++) {
                 ghosts[i].onEnergized();
+            }
+            if (getDuration() == 0) { // if no duration, then immediately reset
+                this.reset();
+            }
         },
         isActive: function() { return active; },
         isFlash: function() { 

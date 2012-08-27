@@ -325,7 +325,28 @@ var vcr = (function() {
         startRecording: startRecording,
         startSeeking: startSeeking,
         nextSpeed: nextSpeed,
+        isSeeking: function() {
+            return (
+                mode == VCR_REWIND ||
+                mode == VCR_FORWARD ||
+                mode == VCR_PAUSE);
+        },
         getTime: function() { return time; },
+        getFrame: function() { return frame; },
         getMode: function() { return mode; },
+        forEachHistoryFrame: function(callback) {
+            var maxReverse = getForwardDist(startFrame,frame);
+            var start = (frame - Math.min(maxReverse,20)) % maxFrames;
+            if (start < 0) {
+                start += maxFrames;
+            }
+            var maxForward = getForwardDist(frame,stopFrame);
+            var end = (frame + Math.min(maxForward,15)) % maxFrames;
+
+            var t;
+            for (t=start; t<end; t+=5) {
+                callback(t);
+            }
+        },
     };
 })();

@@ -3529,19 +3529,38 @@ var initRenderer = function(){
             }
         },
 
+        drawHistory: function(callback) {
+            // draw past and present
+            if (vcr.isSeeking()) {
+                var backupAlpha = ctx.globalAlpha;
+                ctx.globalAlpha = 0.25;
+                vcr.forEachHistoryFrame(callback);
+                ctx.globalAlpha = backupAlpha;
+            }
+        },
+
         // draw ghost
         drawGhost: function(g) {
-            if (g.mode == GHOST_EATEN)
-                return;
-            var frame = Math.floor(g.frames/8)%2; // toggle frame every 8 ticks
-            var eyes = (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME);
-            //drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.dirEnum,g.scared,energizer.isFlash(),eyes,g.color);
-            if (gameMode == GAME_OTTO) {
-                atlas.drawMonsterSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
-            }
-            else {
-                atlas.drawGhostSprite(ctx,g.pixel.x,g.pixel.y,frame,g.faceDirEnum,g.scared,energizer.isFlash(),eyes,g.color);
-            }
+
+            var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color) {
+                if (mode == GHOST_EATEN)
+                    return;
+                var frame = Math.floor(frames/8)%2; // toggle frame every 8 ticks
+                var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
+                var func = (gameMode == GAME_OTTO) ? atlas.drawMonsterSprite : atlas.drawGhostSprite;
+                func(ctx,pixel.x,pixel.y,frame,faceDirEnum,scared,isFlash,eyes,color);
+            };
+            this.drawHistory(function(t) {
+                draw(
+                    g.savedMode[t],
+                    g.savedPixel[t],
+                    g.savedFrames[t],
+                    g.savedFaceDirEnum[t],
+                    g.savedScared[t],
+                    energizer.isFlash(),
+                    g.color);
+            });
+            draw(g.mode, g.pixel, g.frames, g.faceDirEnum, g.scared, energizer.isFlash(), g.color);
         },
 
         // draw pacman
@@ -3550,21 +3569,32 @@ var initRenderer = function(){
             if (pacman.invincible) {
                 ctx.globalAlpha = 0.6;
             }
-            if (gameMode == GAME_PACMAN) {
-                //drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame*Math.PI/6);
-                atlas.drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
-            }
-            else if (gameMode == GAME_MSPACMAN) {
-                //drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
-                atlas.drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
-            }
-            else if (gameMode == GAME_COOKIE) {
-                //drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame,true);
-                atlas.drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
-            }
-            else if (gameMode == GAME_OTTO) {
-                atlas.drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum,frame);
-            }
+
+            var draw = function(pixel, dirEnum, steps) {
+                var frame = pacman.getAnimFrame(pacman.getStepFrame(steps));
+                var func;
+                if (gameMode == GAME_PACMAN) {
+                    func = atlas.drawPacmanSprite;
+                }
+                else if (gameMode == GAME_MSPACMAN) {
+                    func = atlas.drawMsPacmanSprite;
+                }
+                else if (gameMode == GAME_COOKIE) {
+                    func = atlas.drawCookiemanSprite;
+                }
+                else if (gameMode == GAME_OTTO) {
+                    func = atlas.drawOttoSprite;
+                }
+                func(ctx, pixel.x, pixel.y, dirEnum, frame);
+            };
+
+            this.drawHistory(function(t) {
+                draw(
+                    pacman.savedPixel[t],
+                    pacman.savedDirEnum[t],
+                    pacman.savedSteps[t]);
+            });
+            draw(pacman.pixel, pacman.dirEnum, pacman.steps);
             if (pacman.invincible) {
                 ctx.globalAlpha = 1;
             }
@@ -3630,9 +3660,7 @@ var initRenderer = function(){
         drawFruit: function() {
             if (fruit.isPresent()) {
                 var name = fruit.getCurrentFruit().name;
-                var drawFunc = getSpriteFuncFromFruitName(name);
-                //drawFunc(ctx,fruit.pixel.x, fruit.pixel.y);
-                atlas.drawFruitSprite(ctx,fruit.pixel.x, fruit.pixel.y, name);
+                atlas.drawFruitSprite(ctx, fruit.pixel.x, fruit.pixel.y, name);
             }
             else if (fruit.isScorePresent()) {
                 if (gameMode == GAME_PACMAN) {
@@ -7350,8 +7378,11 @@ Player.prototype.getNumSteps = function() {
     return this.getStepSizeFromTable(level, pattern);
 };
 
-Player.prototype.getStepFrame = function() {
-    return Math.floor(this.steps/2)%4;
+Player.prototype.getStepFrame = function(steps) {
+    if (steps == undefined) {
+        steps = this.steps;
+    }
+    return Math.floor(steps/2)%4;
 };
 
 Player.prototype.getAnimFrame = function(frame) {
@@ -10719,8 +10750,29 @@ var vcr = (function() {
         startRecording: startRecording,
         startSeeking: startSeeking,
         nextSpeed: nextSpeed,
+        isSeeking: function() {
+            return (
+                mode == VCR_REWIND ||
+                mode == VCR_FORWARD ||
+                mode == VCR_PAUSE);
+        },
         getTime: function() { return time; },
+        getFrame: function() { return frame; },
         getMode: function() { return mode; },
+        forEachHistoryFrame: function(callback) {
+            var maxReverse = getForwardDist(startFrame,frame);
+            var start = (frame - Math.min(maxReverse,20)) % maxFrames;
+            if (start < 0) {
+                start += maxFrames;
+            }
+            var maxForward = getForwardDist(frame,stopFrame);
+            var end = (frame + Math.min(maxForward,15)) % maxFrames;
+
+            var t;
+            for (t=start; t<end; t+=5) {
+                callback(t);
+            }
+        },
     };
 })();
 //@line 1 "src/main.js"

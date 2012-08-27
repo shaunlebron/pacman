@@ -64,8 +64,11 @@ Player.prototype.getNumSteps = function() {
     return this.getStepSizeFromTable(level, pattern);
 };
 
-Player.prototype.getStepFrame = function() {
-    return Math.floor(this.steps/2)%4;
+Player.prototype.getStepFrame = function(steps) {
+    if (steps == undefined) {
+        steps = this.steps;
+    }
+    return Math.floor(steps/2)%4;
 };
 
 Player.prototype.getAnimFrame = function(frame) {

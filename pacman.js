@@ -40,6 +40,7 @@ var clearCheats = function() {
         ghosts[i].isDrawPath = false;
         ghosts[i].isDrawTarget = false;
     }
+    executive.setUpdatesPerSecond(60);
 };
 
 // current level, lives, and score
@@ -3935,6 +3936,7 @@ Button.prototype = {
     },
 
     enable: function() {
+        this.frame = 0;
         this.onEnable();
     },
 
@@ -4192,7 +4194,7 @@ Menu.prototype = {
 // In-Game Menu
 var inGameMenu = (function() {
 
-    var w=tileSize*6,h=tileSize*2;
+    var w=tileSize*6,h=tileSize*3;
 
     var getMainMenu = function() {
         return practiceMode ? practiceMenu : menu;
@@ -4205,12 +4207,12 @@ var inGameMenu = (function() {
     };
 
     // button to enable in-game menu
-    var btn = new Button(mapWidth/2 - w/2,-1.5*h,w,h, function() {
+    var btn = new Button(mapWidth/2 - w/2,mapHeight,w,h, function() {
         showMainMenu();
         vcr.onHudDisable();
     });
     btn.setText("MENU");
-    btn.setFont((tileSize-2)+"px ArcadeR","#FFF");
+    btn.setFont(tileSize+"px ArcadeR","#FFF");
 
     // confirms a menu action
     var confirmMenu = new Menu("QUESTION?",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
@@ -4271,6 +4273,8 @@ var inGameMenu = (function() {
     practiceMenu.addTextButton("QUIT", function() {
         showConfirm("QUIT GAME?", function() {
             switchState(homeState, 60);
+            clearCheats();
+            vcr.reset();
         });
     });
     practiceMenu.backButton = practiceMenu.buttons[0];
@@ -8703,6 +8707,9 @@ var state;
 var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
     state = (fadeDuration) ? fadeNextState(state,nextState,fadeDuration,continueUpdate1, continueUpdate2) : nextState;
     state.init();
+    if (executive.isPaused()) {
+        executive.togglePause();
+    }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -8876,21 +8883,18 @@ var preNewGameState = (function() {
 
     menu.addTextButton("PLAY",
         function() { 
-            clearCheats();
             practiceMode = false;
             turboMode = false;
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PLAY TURBO",
         function() { 
-            clearCheats();
             practiceMode = false;
             turboMode = true;
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PRACTICE",
         function() { 
-            clearCheats();
             practiceMode = true;
             turboMode = false;
             exitTo(newGameState, 60);
@@ -9366,7 +9370,11 @@ var readyRestartState = {
 // (state when playing the game)
 
 var playState = {
-    init: function() { vcr.reset(); },
+    init: function() { 
+        if (practiceMode) {
+            vcr.reset();
+        }
+    },
     draw: function() {
         renderer.blitMap();
         renderer.drawScore();
@@ -9400,10 +9408,14 @@ var playState = {
     },
     update: function() {
         
-        if (vcr.getMode() == VCR_RECORD) {
-
+        if (vcr.isSeeking()) {
+            vcr.seek();
+        }
+        else {
             // record current state
-            vcr.record();
+            if (vcr.getMode() == VCR_RECORD) {
+                vcr.record();
+            }
 
             var i,j; // loop index
             var maxSteps = 2;
@@ -9464,9 +9476,6 @@ var playState = {
                 for (i=0; i<5; i++)
                     actors[i].frames++;
             }
-        }
-        else {
-            vcr.seek();
         }
     },
 };
@@ -9543,12 +9552,14 @@ var seekableScriptState = (function(){
             this.updateFunc = this.savedUpdateFunc[t];
         },
         update: function() {
-            if (vcr.getMode() == VCR_RECORD) {
-                vcr.record();
-                scriptState.update.call(this);
+            if (vcr.isSeeking()) {
+                vcr.seek();
             }
             else {
-                vcr.seek();
+                if (vcr.getMode() == VCR_RECORD) {
+                    vcr.record();
+                }
+                scriptState.update.call(this);
             }
         },
         draw: function() {
@@ -9847,18 +9858,19 @@ var overState = (function() {
     addKeyDown(KEY_DOWN,  function() { pacman.setNextDir(DIR_DOWN); },  isPlayState);
 
     // Slow-Motion
-    var isPracticeMode = function() { return practiceMode; };
+    var isPracticeMode = function() { return isPlayState() && practiceMode; };
     addKeyDown(KEY_1, function() { executive.setUpdatesPerSecond(30); }, isPracticeMode);
     addKeyDown(KEY_2,  function() { executive.setUpdatesPerSecond(15); }, isPracticeMode);
     addKeyUp  (KEY_1, function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
     addKeyUp  (KEY_2,  function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
 
     // Toggle VCR
-    addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   isPracticeMode);
-    addKeyUp  (KEY_SHIFT, function() { vcr.startRecording(); }, isPracticeMode);
+    var canSeek = function() { return vcr.getMode() != VCR_NONE; };
+    addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   canSeek);
+    addKeyUp  (KEY_SHIFT, function() { vcr.startRecording(); }, canSeek);
 
     // Adjust VCR seeking
-    var isSeekState = function() { return vcr.getMode() != VCR_RECORD };
+    var isSeekState = function() { return vcr.isSeeking(); };
     addKeyDown(KEY_UP,   function() { vcr.nextSpeed(1); },  isSeekState);
     addKeyDown(KEY_DOWN, function() { vcr.nextSpeed(-1); }, isSeekState);
 
@@ -10592,6 +10604,11 @@ var vcr = (function() {
         seekToggleBtn.setIcon(function(ctx,x,y,frame) {
             drawRewindSymbol(ctx,x,y,"#FFF");
         });
+        seekToggleBtn.setText();
+    };
+
+    var refreshSeekDisplay = function() {
+        seekToggleBtn.setText(speeds[speedIndex]+"x");
     };
 
     var startSeeking = function() {
@@ -10599,9 +10616,8 @@ var vcr = (function() {
         updateMode();
         seekUpBtn.enable();
         seekDownBtn.enable();
-        seekToggleBtn.setIcon(function(ctx,x,y,frame) {
-            drawRecordSymbol(ctx,x,y,"#F00");
-        });
+        seekToggleBtn.setIcon(undefined);
+        refreshSeekDisplay();
     };
 
     var nextSpeed = function(di) {
@@ -10609,6 +10625,7 @@ var vcr = (function() {
             speedIndex = speedIndex+di;
         }
         updateMode();
+        refreshSeekDisplay();
     };
 
     var x,y,w,h;
@@ -10641,6 +10658,7 @@ var vcr = (function() {
     seekToggleBtn.setIcon(function(ctx,x,y,frame) {
         drawRewindSymbol(ctx,x,y,"#FFF");
     });
+    seekToggleBtn.setFont((tileSize-1)+"px ArcadeR", "#FFF");
     var slowBtn = new ToggleButton(-w-pad-1,y,w,h,
         function() {
             return executive.getFramePeriod() == 1000/15;
@@ -10702,11 +10720,6 @@ var vcr = (function() {
             if (isValidState() && vcr.getMode() != VCR_RECORD) {
                 // change the hue to reflect speed
                 renderer.setOverlayColor(speedColors[speedIndex]);
-                ctx.font = tileSize + "px ArcadeR";
-                ctx.fillStyle = "#FFF";
-                ctx.textAlign = "right";
-                ctx.textBaseline = "top";
-                ctx.fillText(speeds[speedIndex]+"x",x+w,y-2*h);
             }
 
             if (seekUpBtn.isEnabled) {
@@ -10759,6 +10772,7 @@ var vcr = (function() {
         getTime: function() { return time; },
         getFrame: function() { return frame; },
         getMode: function() { return mode; },
+
         forEachHistoryFrame: function(callback) {
             var maxReverse = getForwardDist(startFrame,frame);
             var start = (frame - Math.min(maxReverse,20)) % maxFrames;
@@ -10768,8 +10782,15 @@ var vcr = (function() {
             var maxForward = getForwardDist(frame,stopFrame);
             var end = (frame + Math.min(maxForward,15)) % maxFrames;
 
-            var t;
-            for (t=start; t<end; t+=5) {
+            var t = start;
+            var step = 5;
+            if (start > end) {
+                for (; t<maxFrames; t+=step) {
+                    callback(t);
+                }
+                t %= maxFrames;
+            }
+            for (; t<end; t+=step) {
                 callback(t);
             }
         },

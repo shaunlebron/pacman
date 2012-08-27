@@ -130,18 +130,19 @@
     addKeyDown(KEY_DOWN,  function() { pacman.setNextDir(DIR_DOWN); },  isPlayState);
 
     // Slow-Motion
-    var isPracticeMode = function() { return practiceMode; };
+    var isPracticeMode = function() { return isPlayState() && practiceMode; };
     addKeyDown(KEY_1, function() { executive.setUpdatesPerSecond(30); }, isPracticeMode);
     addKeyDown(KEY_2,  function() { executive.setUpdatesPerSecond(15); }, isPracticeMode);
     addKeyUp  (KEY_1, function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
     addKeyUp  (KEY_2,  function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
 
     // Toggle VCR
-    addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   isPracticeMode);
-    addKeyUp  (KEY_SHIFT, function() { vcr.startRecording(); }, isPracticeMode);
+    var canSeek = function() { return vcr.getMode() != VCR_NONE; };
+    addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   canSeek);
+    addKeyUp  (KEY_SHIFT, function() { vcr.startRecording(); }, canSeek);
 
     // Adjust VCR seeking
-    var isSeekState = function() { return vcr.getMode() != VCR_RECORD };
+    var isSeekState = function() { return vcr.isSeeking(); };
     addKeyDown(KEY_UP,   function() { vcr.nextSpeed(1); },  isSeekState);
     addKeyDown(KEY_DOWN, function() { vcr.nextSpeed(-1); }, isSeekState);
 

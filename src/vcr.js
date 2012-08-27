@@ -167,6 +167,11 @@ var vcr = (function() {
         seekToggleBtn.setIcon(function(ctx,x,y,frame) {
             drawRewindSymbol(ctx,x,y,"#FFF");
         });
+        seekToggleBtn.setText();
+    };
+
+    var refreshSeekDisplay = function() {
+        seekToggleBtn.setText(speeds[speedIndex]+"x");
     };
 
     var startSeeking = function() {
@@ -174,9 +179,8 @@ var vcr = (function() {
         updateMode();
         seekUpBtn.enable();
         seekDownBtn.enable();
-        seekToggleBtn.setIcon(function(ctx,x,y,frame) {
-            drawRecordSymbol(ctx,x,y,"#F00");
-        });
+        seekToggleBtn.setIcon(undefined);
+        refreshSeekDisplay();
     };
 
     var nextSpeed = function(di) {
@@ -184,6 +188,7 @@ var vcr = (function() {
             speedIndex = speedIndex+di;
         }
         updateMode();
+        refreshSeekDisplay();
     };
 
     var x,y,w,h;
@@ -216,6 +221,7 @@ var vcr = (function() {
     seekToggleBtn.setIcon(function(ctx,x,y,frame) {
         drawRewindSymbol(ctx,x,y,"#FFF");
     });
+    seekToggleBtn.setFont((tileSize-1)+"px ArcadeR", "#FFF");
     var slowBtn = new ToggleButton(-w-pad-1,y,w,h,
         function() {
             return executive.getFramePeriod() == 1000/15;
@@ -277,11 +283,6 @@ var vcr = (function() {
             if (isValidState() && vcr.getMode() != VCR_RECORD) {
                 // change the hue to reflect speed
                 renderer.setOverlayColor(speedColors[speedIndex]);
-                ctx.font = tileSize + "px ArcadeR";
-                ctx.fillStyle = "#FFF";
-                ctx.textAlign = "right";
-                ctx.textBaseline = "top";
-                ctx.fillText(speeds[speedIndex]+"x",x+w,y-2*h);
             }
 
             if (seekUpBtn.isEnabled) {
@@ -334,6 +335,7 @@ var vcr = (function() {
         getTime: function() { return time; },
         getFrame: function() { return frame; },
         getMode: function() { return mode; },
+
         forEachHistoryFrame: function(callback) {
             var maxReverse = getForwardDist(startFrame,frame);
             var start = (frame - Math.min(maxReverse,20)) % maxFrames;
@@ -343,8 +345,15 @@ var vcr = (function() {
             var maxForward = getForwardDist(frame,stopFrame);
             var end = (frame + Math.min(maxForward,15)) % maxFrames;
 
-            var t;
-            for (t=start; t<end; t+=5) {
+            var t = start;
+            var step = 5;
+            if (start > end) {
+                for (; t<maxFrames; t+=step) {
+                    callback(t);
+                }
+                t %= maxFrames;
+            }
+            for (; t<end; t+=step) {
                 callback(t);
             }
         },

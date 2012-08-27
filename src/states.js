@@ -10,6 +10,9 @@ var state;
 var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
     state = (fadeDuration) ? fadeNextState(state,nextState,fadeDuration,continueUpdate1, continueUpdate2) : nextState;
     state.init();
+    if (executive.isPaused()) {
+        executive.togglePause();
+    }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -183,21 +186,18 @@ var preNewGameState = (function() {
 
     menu.addTextButton("PLAY",
         function() { 
-            clearCheats();
             practiceMode = false;
             turboMode = false;
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PLAY TURBO",
         function() { 
-            clearCheats();
             practiceMode = false;
             turboMode = true;
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PRACTICE",
         function() { 
-            clearCheats();
             practiceMode = true;
             turboMode = false;
             exitTo(newGameState, 60);
@@ -673,7 +673,11 @@ var readyRestartState = {
 // (state when playing the game)
 
 var playState = {
-    init: function() { vcr.reset(); },
+    init: function() { 
+        if (practiceMode) {
+            vcr.reset();
+        }
+    },
     draw: function() {
         renderer.blitMap();
         renderer.drawScore();
@@ -707,10 +711,14 @@ var playState = {
     },
     update: function() {
         
-        if (vcr.getMode() == VCR_RECORD) {
-
+        if (vcr.isSeeking()) {
+            vcr.seek();
+        }
+        else {
             // record current state
-            vcr.record();
+            if (vcr.getMode() == VCR_RECORD) {
+                vcr.record();
+            }
 
             var i,j; // loop index
             var maxSteps = 2;
@@ -771,9 +779,6 @@ var playState = {
                 for (i=0; i<5; i++)
                     actors[i].frames++;
             }
-        }
-        else {
-            vcr.seek();
         }
     },
 };
@@ -850,12 +855,14 @@ var seekableScriptState = (function(){
             this.updateFunc = this.savedUpdateFunc[t];
         },
         update: function() {
-            if (vcr.getMode() == VCR_RECORD) {
-                vcr.record();
-                scriptState.update.call(this);
+            if (vcr.isSeeking()) {
+                vcr.seek();
             }
             else {
-                vcr.seek();
+                if (vcr.getMode() == VCR_RECORD) {
+                    vcr.record();
+                }
+                scriptState.update.call(this);
             }
         },
         draw: function() {

@@ -132,6 +132,7 @@ Button.prototype = {
     },
 
     enable: function() {
+        this.frame = 0;
         this.onEnable();
     },
 

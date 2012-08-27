@@ -2,7 +2,7 @@
 // In-Game Menu
 var inGameMenu = (function() {
 
-    var w=tileSize*6,h=tileSize*2;
+    var w=tileSize*6,h=tileSize*3;
 
     var getMainMenu = function() {
         return practiceMode ? practiceMenu : menu;
@@ -15,12 +15,12 @@ var inGameMenu = (function() {
     };
 
     // button to enable in-game menu
-    var btn = new Button(mapWidth/2 - w/2,-1.5*h,w,h, function() {
+    var btn = new Button(mapWidth/2 - w/2,mapHeight,w,h, function() {
         showMainMenu();
         vcr.onHudDisable();
     });
     btn.setText("MENU");
-    btn.setFont((tileSize-2)+"px ArcadeR","#FFF");
+    btn.setFont(tileSize+"px ArcadeR","#FFF");
 
     // confirms a menu action
     var confirmMenu = new Menu("QUESTION?",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
@@ -81,6 +81,8 @@ var inGameMenu = (function() {
     practiceMenu.addTextButton("QUIT", function() {
         showConfirm("QUIT GAME?", function() {
             switchState(homeState, 60);
+            clearCheats();
+            vcr.reset();
         });
     });
     practiceMenu.backButton = practiceMenu.buttons[0];

@@ -27,6 +27,7 @@ var clearCheats = function() {
         ghosts[i].isDrawPath = false;
         ghosts[i].isDrawTarget = false;
     }
+    executive.setUpdatesPerSecond(60);
 };
 
 // current level, lives, and score

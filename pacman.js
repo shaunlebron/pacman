@@ -32,6 +32,54 @@ var getGameName = function(mode) {
     return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"][mode];
 };
 
+var getGhostNames = function(mode) {
+    if (mode == undefined) {
+        mode = gameMode;
+    }
+    if (mode == GAME_OTTO) {
+        return ["plato","darwin","freud","newton"];
+    }
+    else if (mode == GAME_MSPACMAN) {
+        return ["blinky","pinky","inky","sue"];
+    }
+    else if (mode == GAME_PACMAN) {
+        return ["blinky","pinky","inky","clyde"];
+    }
+    else if (mode == GAME_COOKIE) {
+        return ["elmo","piggy","rosita","zoe"];
+    }
+};
+
+var getGhostDrawFunc = function(mode) {
+    if (mode == undefined) {
+        mode = gameMode;
+    }
+    if (mode == GAME_OTTO) {
+        return atlas.drawMonsterSprite;
+    }
+    else {
+        return atlas.drawGhostSprite;
+    }
+};
+
+var getPlayerDrawFunc = function(mode) {
+    if (mode == undefined) {
+        mode = gameMode;
+    }
+    if (mode == GAME_OTTO) {
+        return atlas.drawOttoSprite;
+    }
+    else if (mode == GAME_PACMAN) {
+        return atlas.drawPacmanSprite;
+    }
+    else if (mode == GAME_MSPACMAN) {
+        return atlas.drawMsPacmanSprite;
+    }
+    else if (mode == GAME_COOKIE) {
+        return atlas.drawCookiemanSprite;
+    }
+};
+
 // clear cheats, useful when switching game modes
 
 var clearCheats = function() {
@@ -2839,10 +2887,12 @@ var initRenderer = function(){
 
             // clear margin area
             ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,screenWidth,mapMargin);
-            ctx.fillRect(0,mapMargin,mapMargin,screenHeight-2*mapMargin);
-            ctx.fillRect(screenWidth-mapMargin-1,mapMargin,mapMargin+1,screenHeight-2*mapMargin);
-            ctx.fillRect(0,screenHeight-1-mapMargin,screenWidth,mapMargin+1);
+            (function(w,h,p){
+                ctx.fillRect(0,0,w,p+1);
+                ctx.fillRect(0,p,p,h-2*p);
+                ctx.fillRect(w-p-2,p,p+2,h-2*p);
+                ctx.fillRect(0,h-p-2,w,p+2);
+            })(screenWidth, screenHeight, mapMargin);
 
             // draw fps
             ctx.font = (tileSize-2) + "px ArcadeR";
@@ -3548,7 +3598,7 @@ var initRenderer = function(){
                     return;
                 var frame = Math.floor(frames/8)%2; // toggle frame every 8 ticks
                 var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
-                var func = (gameMode == GAME_OTTO) ? atlas.drawMonsterSprite : atlas.drawGhostSprite;
+                var func = getGhostDrawFunc();
                 func(ctx,pixel.x,pixel.y,frame,faceDirEnum,scared,isFlash,eyes,color);
             };
             this.drawHistory(function(t) {
@@ -3573,19 +3623,7 @@ var initRenderer = function(){
 
             var draw = function(pixel, dirEnum, steps) {
                 var frame = pacman.getAnimFrame(pacman.getStepFrame(steps));
-                var func;
-                if (gameMode == GAME_PACMAN) {
-                    func = atlas.drawPacmanSprite;
-                }
-                else if (gameMode == GAME_MSPACMAN) {
-                    func = atlas.drawMsPacmanSprite;
-                }
-                else if (gameMode == GAME_COOKIE) {
-                    func = atlas.drawCookiemanSprite;
-                }
-                else if (gameMode == GAME_OTTO) {
-                    func = atlas.drawOttoSprite;
-                }
+                var func = getPlayerDrawFunc();
                 func(ctx, pixel.x, pixel.y, dirEnum, frame);
             };
 
@@ -8822,22 +8860,7 @@ var homeState = (function(){
         function(ctx,x,y,frame) {
             atlas.drawCookiemanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
-    /*
-    menu.addTextIconButton("CHALLENGES",
-        function() {
-        },
-        function(ctx,x,y,frame) {
-            atlas.drawGhostSprite(ctx,x,y,Math.floor(frame/8)%2,DIR_RIGHT,false,false,false,blinky.color);
-        });
-    menu.addTextIconButton("HELP",
-        function() {
-        },
-        function(ctx,x,y,frame) {
-            var animFrame = Math.floor(frame/8)%2;
-            var flash = Math.floor(frame/24)%2;
-            atlas.drawGhostSprite(ctx,x,y,animFrame,DIR_RIGHT,true,flash,false,blinky.color);
-        });
-    */
+
     menu.addSpacer(1.5);
     menu.addTextButton("HIGH SCORES",
         function() {
@@ -8877,10 +8900,14 @@ var preNewGameState = (function() {
     var exitTo = function(s,fade) {
         switchState(s,fade);
         menu.disable();
+        forEachCharBtn(function (btn) {
+            btn.disable();
+        });
     };
 
-    var menu = new Menu("GAMENAME",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
 
+    menu.addSpacer(3);
     menu.addTextButton("PLAY",
         function() { 
             practiceMode = false;
@@ -8906,16 +8933,96 @@ var preNewGameState = (function() {
         });
     menu.backButton = menu.buttons[menu.buttonCount-1];
 
+    var name,nameColor;
+
+    var w = 20;
+    var h = 30;
+    var x = mapWidth/2 - 3*w;
+    var y = 8*tileSize;
+    var yellowBtn = new Button(x,y,w,h,function(){
+        name = getGameName();
+        nameColor = pacman.color;
+    });
+    yellowBtn.setIcon(function (ctx,x,y,frame) {
+        getPlayerDrawFunc()(ctx,x,y,DIR_RIGHT,pacman.getAnimFrame(pacman.getStepFrame(Math.floor(frame/1.5))));
+    });
+    x += 2*w;
+    var redBtn = new Button(x,y,w,h,function(){
+        name = getGhostNames()[0];
+        nameColor = blinky.color;
+    });
+    redBtn.setIcon(function (ctx,x,y,frame) {
+        getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,blinky.color);
+    });
+    x += w;
+    var pinkBtn = new Button(x,y,w,h,function(){
+        name = getGhostNames()[1];
+        nameColor = pinky.color;
+    });
+    pinkBtn.setIcon(function (ctx,x,y,frame) {
+        getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,pinky.color);
+    });
+    x += w;
+    var cyanBtn = new Button(x,y,w,h,function(){
+        name = getGhostNames()[2];
+        nameColor = inky.color;
+    });
+    cyanBtn.setIcon(function (ctx,x,y,frame) {
+        getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,inky.color);
+    });
+    x += w;
+    var orangeBtn = new Button(x,y,w,h,function(){
+        name = getGhostNames()[3];
+        nameColor = clyde.color;
+    });
+    orangeBtn.setIcon(function (ctx,x,y,frame) {
+        getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,clyde.color);
+    });
+    
+    var forEachCharBtn = function(callback) {
+        callback(yellowBtn);
+        callback(redBtn);
+        callback(pinkBtn);
+        callback(cyanBtn);
+        callback(orangeBtn);
+    };
+    forEachCharBtn(function(btn) {
+        btn.borderBlurColor = btn.borderFocusColor = "#000";
+    });
+
     return {
         init: function() {
-            menu.title = getGameName();
+            name = getGameName();
+            nameColor = "#FFF";
+            //menu.title = getGameName();
             menu.enable();
+            forEachCharBtn(function (btn) {
+                btn.enable();
+            });
         },
         draw: function() {
             renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
+
+            forEachCharBtn(function (btn) {
+                renderer.renderFunc(btn.draw,btn);
+            });
+
+            renderer.renderFunc(function(ctx){
+                ctx.font = tileSize+"px ArcadeR";
+                ctx.fillStyle = nameColor;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                ctx.fillText(name, mapWidth/2, 6*tileSize);
+            });
         },
         update: function() {
+            forEachCharBtn(function (btn) {
+                btn.update();
+                if (btn.isSelected) {
+                    btn.onclick();
+                }
+            });
         },
         getMenu: function() {
             return menu;

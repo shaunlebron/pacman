@@ -125,22 +125,7 @@ var homeState = (function(){
         function(ctx,x,y,frame) {
             atlas.drawCookiemanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
         });
-    /*
-    menu.addTextIconButton("CHALLENGES",
-        function() {
-        },
-        function(ctx,x,y,frame) {
-            atlas.drawGhostSprite(ctx,x,y,Math.floor(frame/8)%2,DIR_RIGHT,false,false,false,blinky.color);
-        });
-    menu.addTextIconButton("HELP",
-        function() {
-        },
-        function(ctx,x,y,frame) {
-            var animFrame = Math.floor(frame/8)%2;
-            var flash = Math.floor(frame/24)%2;
-            atlas.drawGhostSprite(ctx,x,y,animFrame,DIR_RIGHT,true,flash,false,blinky.color);
-        });
-    */
+
     menu.addSpacer(1.5);
     menu.addTextButton("HIGH SCORES",
         function() {
@@ -180,10 +165,14 @@ var preNewGameState = (function() {
     var exitTo = function(s,fade) {
         switchState(s,fade);
         menu.disable();
+        forEachCharBtn(function (btn) {
+            btn.disable();
+        });
     };
 
-    var menu = new Menu("GAMENAME",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
 
+    menu.addSpacer(3);
     menu.addTextButton("PLAY",
         function() { 
             practiceMode = false;
@@ -209,16 +198,96 @@ var preNewGameState = (function() {
         });
     menu.backButton = menu.buttons[menu.buttonCount-1];
 
+    var name,nameColor;
+
+    var w = 20;
+    var h = 30;
+    var x = mapWidth/2 - 3*w;
+    var y = 8*tileSize;
+    var yellowBtn = new Button(x,y,w,h,function(){
+        name = getGameName();
+        nameColor = pacman.color;
+    });
+    yellowBtn.setIcon(function (ctx,x,y,frame) {
+        getPlayerDrawFunc()(ctx,x,y,DIR_RIGHT,pacman.getAnimFrame(pacman.getStepFrame(Math.floor(frame/1.5))));
+    });
+    x += 2*w;
+    var redBtn = new Button(x,y,w,h,function(){
+        name = getGhostNames()[0];
+        nameColor = blinky.color;
+    });
+    redBtn.setIcon(function (ctx,x,y,frame) {
+        getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,blinky.color);
+    });
+    x += w;
+    var pinkBtn = new Button(x,y,w,h,function(){
+        name = getGhostNames()[1];
+        nameColor = pinky.color;
+    });
+    pinkBtn.setIcon(function (ctx,x,y,frame) {
+        getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,pinky.color);
+    });
+    x += w;
+    var cyanBtn = new Button(x,y,w,h,function(){
+        name = getGhostNames()[2];
+        nameColor = inky.color;
+    });
+    cyanBtn.setIcon(function (ctx,x,y,frame) {
+        getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,inky.color);
+    });
+    x += w;
+    var orangeBtn = new Button(x,y,w,h,function(){
+        name = getGhostNames()[3];
+        nameColor = clyde.color;
+    });
+    orangeBtn.setIcon(function (ctx,x,y,frame) {
+        getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,clyde.color);
+    });
+    
+    var forEachCharBtn = function(callback) {
+        callback(yellowBtn);
+        callback(redBtn);
+        callback(pinkBtn);
+        callback(cyanBtn);
+        callback(orangeBtn);
+    };
+    forEachCharBtn(function(btn) {
+        btn.borderBlurColor = btn.borderFocusColor = "#000";
+    });
+
     return {
         init: function() {
-            menu.title = getGameName();
+            name = getGameName();
+            nameColor = "#FFF";
+            //menu.title = getGameName();
             menu.enable();
+            forEachCharBtn(function (btn) {
+                btn.enable();
+            });
         },
         draw: function() {
             renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
+
+            forEachCharBtn(function (btn) {
+                renderer.renderFunc(btn.draw,btn);
+            });
+
+            renderer.renderFunc(function(ctx){
+                ctx.font = tileSize+"px ArcadeR";
+                ctx.fillStyle = nameColor;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                ctx.fillText(name, mapWidth/2, 6*tileSize);
+            });
         },
         update: function() {
+            forEachCharBtn(function (btn) {
+                btn.update();
+                if (btn.isSelected) {
+                    btn.onclick();
+                }
+            });
         },
         getMenu: function() {
             return menu;

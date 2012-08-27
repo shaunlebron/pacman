@@ -19,6 +19,54 @@ var getGameName = function(mode) {
     return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"][mode];
 };
 
+var getGhostNames = function(mode) {
+    if (mode == undefined) {
+        mode = gameMode;
+    }
+    if (mode == GAME_OTTO) {
+        return ["plato","darwin","freud","newton"];
+    }
+    else if (mode == GAME_MSPACMAN) {
+        return ["blinky","pinky","inky","sue"];
+    }
+    else if (mode == GAME_PACMAN) {
+        return ["blinky","pinky","inky","clyde"];
+    }
+    else if (mode == GAME_COOKIE) {
+        return ["elmo","piggy","rosita","zoe"];
+    }
+};
+
+var getGhostDrawFunc = function(mode) {
+    if (mode == undefined) {
+        mode = gameMode;
+    }
+    if (mode == GAME_OTTO) {
+        return atlas.drawMonsterSprite;
+    }
+    else {
+        return atlas.drawGhostSprite;
+    }
+};
+
+var getPlayerDrawFunc = function(mode) {
+    if (mode == undefined) {
+        mode = gameMode;
+    }
+    if (mode == GAME_OTTO) {
+        return atlas.drawOttoSprite;
+    }
+    else if (mode == GAME_PACMAN) {
+        return atlas.drawPacmanSprite;
+    }
+    else if (mode == GAME_MSPACMAN) {
+        return atlas.drawMsPacmanSprite;
+    }
+    else if (mode == GAME_COOKIE) {
+        return atlas.drawCookiemanSprite;
+    }
+};
+
 // clear cheats, useful when switching game modes
 
 var clearCheats = function() {

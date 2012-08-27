@@ -169,10 +169,12 @@ var initRenderer = function(){
 
             // clear margin area
             ctx.fillStyle = "#000";
-            ctx.fillRect(0,0,screenWidth,mapMargin);
-            ctx.fillRect(0,mapMargin,mapMargin,screenHeight-2*mapMargin);
-            ctx.fillRect(screenWidth-mapMargin-1,mapMargin,mapMargin+1,screenHeight-2*mapMargin);
-            ctx.fillRect(0,screenHeight-1-mapMargin,screenWidth,mapMargin+1);
+            (function(w,h,p){
+                ctx.fillRect(0,0,w,p+1);
+                ctx.fillRect(0,p,p,h-2*p);
+                ctx.fillRect(w-p-2,p,p+2,h-2*p);
+                ctx.fillRect(0,h-p-2,w,p+2);
+            })(screenWidth, screenHeight, mapMargin);
 
             // draw fps
             ctx.font = (tileSize-2) + "px ArcadeR";
@@ -878,7 +880,7 @@ var initRenderer = function(){
                     return;
                 var frame = Math.floor(frames/8)%2; // toggle frame every 8 ticks
                 var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
-                var func = (gameMode == GAME_OTTO) ? atlas.drawMonsterSprite : atlas.drawGhostSprite;
+                var func = getGhostDrawFunc();
                 func(ctx,pixel.x,pixel.y,frame,faceDirEnum,scared,isFlash,eyes,color);
             };
             this.drawHistory(function(t) {
@@ -903,19 +905,7 @@ var initRenderer = function(){
 
             var draw = function(pixel, dirEnum, steps) {
                 var frame = pacman.getAnimFrame(pacman.getStepFrame(steps));
-                var func;
-                if (gameMode == GAME_PACMAN) {
-                    func = atlas.drawPacmanSprite;
-                }
-                else if (gameMode == GAME_MSPACMAN) {
-                    func = atlas.drawMsPacmanSprite;
-                }
-                else if (gameMode == GAME_COOKIE) {
-                    func = atlas.drawCookiemanSprite;
-                }
-                else if (gameMode == GAME_OTTO) {
-                    func = atlas.drawOttoSprite;
-                }
+                var func = getPlayerDrawFunc();
                 func(ctx, pixel.x, pixel.y, dirEnum, frame);
             };
 

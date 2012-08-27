@@ -2833,7 +2833,7 @@ var initRenderer = function(){
         },
 
         beginFrame: function() {
-            this.setOverlayColor(executive.isPaused() ? "rgba(0,0,0,0.5)" : undefined);
+            this.setOverlayColor(undefined);
             ctx.save();
 
             // clear margin area
@@ -9786,6 +9786,8 @@ var overState = (function() {
     var KEY_1 = 49;
     var KEY_2 = 50;
 
+    var KEY_END = 35;
+
     // Custom Key Listeners
 
     // Menu Navigation Keys
@@ -9860,6 +9862,8 @@ var overState = (function() {
     addKeyDown(KEY_I, function() { pacman.invincible = !pacman.invincible; }, isPracticeMode);
     addKeyDown(KEY_O, function() { turboMode = !turboMode; }, isPracticeMode);
     addKeyDown(KEY_P, function() { pacman.ai = !pacman.ai; }, isPracticeMode);
+
+    addKeyDown(KEY_END, function() { executive.togglePause(); });
 
 })();
 

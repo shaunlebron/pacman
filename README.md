@@ -5,21 +5,14 @@ A historical tribute and accurate remake of the original Pac-Man arcade game.
 
 <a href="http://shaunew.github.com/Pac-Man/shots/montage.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage.png" width="100%"/></a>
 
-Games
------
-- Pac-Man (by Namco)
-- Ms. Pac-Man (by GCC/Midway)
-- Crazy Otto (by GCC)
-- Cookie-Man (new game with procedural map generator)
-
 Play
 ----
+
+[Click here to play the current version](http://shaunew.github.com/Pac-Man)
 
 You can play the game on all canvas-enabled browsers.  Touch interface is
 enabled for mobile browsers.  The game is resolution-independent and scales to
 fit the size of your window.  Performance may increase by shrinking the window.
-
-[Click here to play the current version](http://shaunew.github.com/Pac-Man)
 
 
 Controls

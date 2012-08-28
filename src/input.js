@@ -115,15 +115,19 @@
     };
     addKeyDown(KEY_ESC,   function(){ menu.backButton ? menu.backButton.onclick():0; return true; }, isInMenu);
     addKeyDown(KEY_ENTER, function(){ menu.clickCurrentOption(); }, isInMenu);
-    addKeyDown(KEY_UP,    function(){ menu.selectPrevOption(); }, isInMenu);
-    addKeyDown(KEY_DOWN,  function(){ menu.selectNextOption(); }, isInMenu);
+    var isMenuKeysAllowed = function() {
+        var menu = isInMenu();
+        return menu && !menu.noArrowKeys;
+    };
+    addKeyDown(KEY_UP,    function(){ menu.selectPrevOption(); }, isMenuKeysAllowed);
+    addKeyDown(KEY_DOWN,  function(){ menu.selectNextOption(); }, isMenuKeysAllowed);
     var isInGameMenuButtonClickable = function() {
         return hud.isValidState() && !inGameMenu.isOpen();
     };
     addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
     // Move Pac-Man
-    var isPlayState = function() { return state == newGameState || state == playState || state == readyNewState || state == readyRestartState; };
+    var isPlayState = function() { return state == learnState || state == newGameState || state == playState || state == readyNewState || state == readyRestartState; };
     addKeyDown(KEY_LEFT,  function() { pacman.setNextDir(DIR_LEFT); },  isPlayState);
     addKeyDown(KEY_RIGHT, function() { pacman.setNextDir(DIR_RIGHT); }, isPlayState);
     addKeyDown(KEY_UP,    function() { pacman.setNextDir(DIR_UP); },    isPlayState);
@@ -137,7 +141,7 @@
     addKeyUp  (KEY_2,  function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
 
     // Toggle VCR
-    var canSeek = function() { return vcr.getMode() != VCR_NONE; };
+    var canSeek = function() { return !isInMenu() && vcr.getMode() != VCR_NONE; };
     addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   canSeek);
     addKeyUp  (KEY_SHIFT, function() { vcr.startRecording(); }, canSeek);
 

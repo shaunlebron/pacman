@@ -106,20 +106,34 @@ inky.setTarget = function() {
 };
 inky.drawTarget = function(ctx) {
     if (!this.targetting) return;
-    ctx.fillStyle = this.color;
     var pixel;
+
+    var px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
+    var py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
 
     if (this.targetting == 'pacman') {
         pixel = this.getTargetPixel();
         ctx.beginPath();
+        ctx.moveTo(pacman.pixel.x, pacman.pixel.y);
+        ctx.lineTo(px, py);
         ctx.moveTo(blinky.pixel.x, blinky.pixel.y);
         ctx.lineTo(pixel.x, pixel.y);
         ctx.closePath();
         ctx.stroke();
+
+        // draw seesaw joint
+        ctx.beginPath();
+        ctx.arc(px,py,2,0,Math.PI*2);
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.fill();
+
+        ctx.fillStyle = this.color;
         renderer.drawCenterPixelSq(ctx, pixel.x, pixel.y, targetSize);
     }
-    else
+    else {
+        ctx.fillStyle = this.color;
         renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+    }
 };
 inky.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
@@ -176,8 +190,14 @@ clyde.drawTarget = function(ctx) {
         ctx.stroke();
         renderer.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, targetSize);
     }
-    else
+    else {
+        // draw a radius
+        ctx.beginPath();
+        ctx.arc(pacman.pixel.x, pacman.pixel.y, tileSize*8,0, 2*Math.PI);
+        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        ctx.stroke();
         renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
+    }
 };
 clyde.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;

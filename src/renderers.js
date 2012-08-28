@@ -263,10 +263,13 @@ var initRenderer = function(){
         },
 
         drawPaths: function() {
+            var backupAlpha = ctx.globalAlpha;
+            ctx.globalAlpha = 0.7;
             var i;
             for (i=0;i<5;i++)
                 if (actors[i].isDrawPath)
                     this.drawPath(actors[i]);
+            ctx.globalAlpha = backupAlpha;
         },
 
         // draw a predicted path for the actor if it continues pursuing current target
@@ -417,8 +420,9 @@ var initRenderer = function(){
             var i;
             // draw such that pacman appears on top
             if (energizer.isActive()) {
-                for (i=0; i<4; i++)
+                for (i=0; i<4; i++) {
                     this.drawGhost(ghosts[i]);
+                }
                 if (!energizer.showingPoints())
                     this.drawPlayer();
                 else
@@ -427,8 +431,14 @@ var initRenderer = function(){
             // draw such that pacman appears on bottom
             else {
                 this.drawPlayer();
-                for (i=3; i>=0; i--) 
-                    this.drawGhost(ghosts[i]);
+                for (i=3; i>=0; i--) {
+                    if (ghosts[i].isVisible) {
+                        this.drawGhost(ghosts[i]);
+                    }
+                }
+                if (inky.isVisible && !blinky.isVisible) {
+                    this.drawGhost(blinky,0.5);
+                }
             }
         },
 
@@ -793,6 +803,10 @@ var initRenderer = function(){
             }
             bgCtx.restore();
 
+            if (map.onDraw) {
+                map.onDraw(bgCtx);
+            }
+
             endMapFrame();
         },
 
@@ -873,7 +887,12 @@ var initRenderer = function(){
         },
 
         // draw ghost
-        drawGhost: function(g) {
+        drawGhost: function(g,alpha) {
+            var backupAlpha;
+            if (alpha) {
+                backupAlpha = ctx.globalAlpha;
+                ctx.globalAlpha = alpha;
+            }
 
             var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color) {
                 if (mode == GHOST_EATEN)
@@ -894,6 +913,9 @@ var initRenderer = function(){
                     g.color);
             });
             draw(g.mode, g.pixel, g.frames, g.faceDirEnum, g.scared, energizer.isFlash(), g.color);
+            if (alpha) {
+                ctx.globalAlpha = backupAlpha;
+            }
         },
 
         // draw pacman

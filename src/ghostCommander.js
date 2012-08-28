@@ -91,5 +91,8 @@ var ghostCommander = (function() {
         getCommand: function() {
             return command; 
         },
+        setCommand: function(cmd) {
+            command = cmd;
+        },
     };
 })();

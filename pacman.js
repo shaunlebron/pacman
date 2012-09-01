@@ -7773,10 +7773,12 @@ clyde.drawTarget = function(ctx) {
     }
     else {
         // draw a radius
-        ctx.beginPath();
-        ctx.arc(pacman.pixel.x, pacman.pixel.y, tileSize*8,0, 2*Math.PI);
-        ctx.strokeStyle = "rgba(255,255,255,0.25)";
-        ctx.stroke();
+        if (ghostCommander.getCommand() == GHOST_CMD_CHASE) {
+            ctx.beginPath();
+            ctx.arc(pacman.pixel.x, pacman.pixel.y, tileSize*8,0, 2*Math.PI);
+            ctx.strokeStyle = "rgba(255,255,255,0.25)";
+            ctx.stroke();
+        }
         renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
     }
 };

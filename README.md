@@ -1,12 +1,9 @@
 Pac-Man
 =======
 
-A historical tribute and accurate remake of the original Pac-Man arcade game. (Inspired by [The Pac-Man Dossier](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html))
+A historical tribute and accurate remake of the original Pac-Man arcade game
 
-Objective
----------
-
-To faithfully recreate the original Pac-Man arcade game in a modern language-- so that it may survive to be studied, modified, extended, and accessed on the open web.
+Inspired by [The Pac-Man Dossier](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html)
 
 Play
 ----
@@ -24,6 +21,14 @@ fit the size of any screen.  **Performance** may increase by shrinking the windo
 - **end**: pause the game
 - **escape**: open in-game menu
 
+### Tested Browers
+
+- Safari
+- Firefox
+- Chrome
+- Mobile Safari (iOS web app compatible)
+- Firefox Beta on Android
+
 Games
 -----
 
@@ -40,17 +45,17 @@ Each of the following games are playable from the main menu.
 
 Each game has an alternate mode called Turbo (a.k.a. speedy mode).  This is a
 popular hardware modification of the game found in many of the original arcade
-cabinets.  In this mode, Pac-Man travels as fast as the disembodied eyes of the
-ghosts and is not slowed down when eating pellets.
+cabinets.  In this mode, Pac-Man travels about twice as fast (same speed as the disembodied eyes of the
+ghosts) and is not slowed down when eating pellets.
 
 ### High Scores
 
-High scores for each game (normal and turbo separately) are stored by your browser.
+High scores for each game (normal and turbo separately) are stored on your local machine by your browser.
 
 Learn Mode
 ----------
 
-This mini mode is playable from the main menu. It allows you to **visualize the behaviors** the ghosts.  (The colored square indicates the ghost bait.)
+Learn Mode allows you to visualize the behaviors of the ghosts.  (The colored square represents the ghost bait.)
 
 <a href="http://shaunew.github.com/Pac-Man/shots/learn.png"><img src="http://shaunew.github.com/Pac-Man/shots/learn.png" width="100%"/></a>
 
@@ -77,21 +82,24 @@ into **slow-motion** or **rewind time** with the special onscreen buttons or the
 Accuracy
 --------
 
-It is a major goal of this project to stay as closely accurate to the original arcade game as reasonably possible. The current accuracy is due to the work of reverse-engineers Jamey Pittman and Bart Grantham.
+It is a goal of this project to stay reasonably accurate to the original
+arcade game. The current accuracy is due to the work of reverse-engineers Jamey Pittman and Bart Grantham.
 
 Currently, the coordinate space, movement physics, ghost behavior, actor speeds, timers, and update rate match that of the original arcade game.
 
 ### Inaccuracies
 
-The **timings** of certain non-critical events such as score display pauses and map-blinking animations are currently approximated until they are closely measured.
+The **timings** of certain non-critical events such as score display pauses and map-blinking animations are currently approximated.
 
-Unfortunately, you **cannot use original Pac-Man patterns** in this version because of the nondeterministic pseudo random number generator used to turn the frightened ghosts.
+Unfortunately, you **cannot use patterns from the original Pac-Man** because of complications with random number generators.
 
-Also, the **collision detection** works a little differently by checking if Pac-Man occupies the same tile as a ghost before and after ghost positions are updated.  This is to prevent pass-through "bugs" of the original, which seemed to happen more in this version than the original.  The collision detection may need fixing.
+Also, the **collision detection** is tighter than the original (checked twice as often) to prevent pass-through "bugs".
+
+I also chose to leave out the **overflow bug** which shifts a ghost target when Pac-Man is facing up, [detailed here](http://donhodges.com/pacman_pinky_explanation.htm).
 
 ### Report/Fix Bugs
 
-I'd love to hear any issues you have with any inaccuracies that may detract or simply annoy.  Any reverse-engineers willing to contribute their expertise to this project would be a big help as well!
+Feel free to report any inaccuracies that may detract or simply annoy.  Any reverse-engineers willing to contribute their expertise to this project would be a big help as well!
 
 Future Work
 -----------

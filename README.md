@@ -1,7 +1,7 @@
 Pac-Man
 =======
 
-A historical tribute and accurate remake of the original Pac-Man arcade game. (Inspired by [The Pac-Man Dossier](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html)
+A historical tribute and accurate remake of the original Pac-Man arcade game. (Inspired by [The Pac-Man Dossier](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html))
 
 Objective
 ---------
@@ -57,8 +57,7 @@ Practice Mode
 -------------
 
 This mode allows you to practice the game with special features.  You can go
-into **slow-motion** or **rewind time** with the special onscreen buttons or the hotkeys listed below.  You can also turn on
-**invincibility** or visualize the ghosts behavior from the menu.
+into **slow-motion** or **rewind time** with the special onscreen buttons or the hotkeys listed below.  (The time-manipulation controls and design were borrowed from the game [Braid](http://braid-game.com/)).  You can also turn on **invincibility** or **ghost visualizers** from the menu.
 
 <a href="http://shaunew.github.com/Pac-Man/shots/practice.png"><img src="http://shaunew.github.com/Pac-Man/shots/practice.png" width="100%"/></a>
 

@@ -876,16 +876,6 @@ var initRenderer = function(){
             }
         },
 
-        drawHistory: function(callback) {
-            // draw past and present
-            if (vcr.isSeeking()) {
-                var backupAlpha = ctx.globalAlpha;
-                ctx.globalAlpha = 0.25;
-                vcr.forEachHistoryFrame(callback);
-                ctx.globalAlpha = backupAlpha;
-            }
-        },
-
         // draw ghost
         drawGhost: function(g,alpha) {
             var backupAlpha;
@@ -902,7 +892,7 @@ var initRenderer = function(){
                 var func = getGhostDrawFunc();
                 func(ctx,pixel.x,pixel.y,frame,faceDirEnum,scared,isFlash,eyes,color);
             };
-            this.drawHistory(function(t) {
+            vcr.drawHistory(ctx, function(t) {
                 draw(
                     g.savedMode[t],
                     g.savedPixel[t],
@@ -931,7 +921,7 @@ var initRenderer = function(){
                 func(ctx, pixel.x, pixel.y, dirEnum, frame);
             };
 
-            this.drawHistory(function(t) {
+            vcr.drawHistory(ctx, function(t) {
                 draw(
                     pacman.savedPixel[t],
                     pacman.savedDirEnum[t],

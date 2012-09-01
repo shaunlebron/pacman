@@ -14,15 +14,29 @@ You can play the game on all canvas-enabled browsers.  Touch interface is
 enabled for mobile browsers.  The game is resolution-independent and scales to
 fit the size of your window.  Performance may increase by shrinking the window.
 
-
-Controls
---------
+### Controls
 
 - **swipe**: steer pacman on mobile browsers
 - **arrows**: steer pacman
 - **escape**: pause the game
 
-### Practice Mode
+### Learn Mode
+
+This mini mode allows you to visualize the behavior of each ghost.  The colored square indicates the ghost bait.
+
+<a href="http://shaunew.github.com/Pac-Man/shots/learn.png"><img src="http://shaunew.github.com/Pac-Man/shots/learn.png" width="100%"/></a>
+
+Practice Mode
+-------------
+
+This mode allows you to play a game with special options that help with
+practicing.  You may use slow-motion or rewind time when making mistakes in
+this mode.  Listed below are more options that can also be enabled through the
+in-game menu.  There are no high scores recorded in this mode.
+
+<a href="http://shaunew.github.com/Pac-Man/shots/practice.png"><img src="http://shaunew.github.com/Pac-Man/shots/practice.png" width="100%"/></a>
+
+### Controls
 
 - **shift**: hold down to rewind (a la Braid)
 - **1**: hold down to slow down the game to 0.5x

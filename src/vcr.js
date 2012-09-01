@@ -22,6 +22,7 @@ var vcr = (function() {
     // tracking speed
     var speedIndex;
     var speeds = [-8,-4,-2,-1,0,1,2,4,8];
+    var speedCount = speeds.length;
     var speedColors = [
         "rgba(255,255,0,0.25)",
         "rgba(255,255,0,0.20)",
@@ -32,6 +33,40 @@ var vcr = (function() {
         "rgba(0,0,255,0.15)",
         "rgba(0,0,255,0.20)",
         "rgba(0,0,255,0.25)",
+    ];
+
+    // This is the number of "footprint" frames to display along the seek direction around a player
+    // to create the rewind/forward blurring.  
+    // This is also inversely used to determine the number of footprint frames to display OPPOSITE the seek direction
+    // around a player.
+    //
+    // For example: 
+    //   nextFrames = speedPrints[speedIndex];
+    //   prevFrames = speedPrints[speedCount-1-speedIndex];
+    var speedPrints = [
+        18,// -8x
+        13,// -4x
+        8, // -2x
+        3, // -1x
+        3, //  0x
+        10,//  1x
+        15,//  2x
+        20,//  4x
+        25,//  8x
+    ];
+
+    // The distance between each footprint used in the rewind/forward blurring.
+    // Step size grows when seeking speed increases to show emphasize time dilation.
+    var speedPrintStep = [
+        6,  // -8x
+        5,  // -4x
+        4,  // -2x
+        3,  // -1x
+        3,  //  0x
+        3,  //  1x
+        4,  //  2x
+        5,  //  4x
+        6,  //  8x
     ];
 
     // current frame associated with current time
@@ -336,17 +371,27 @@ var vcr = (function() {
         getFrame: function() { return frame; },
         getMode: function() { return mode; },
 
-        forEachHistoryFrame: function(callback) {
+        drawHistory: function(ctx,callback) {
+            if (!this.isSeeking()) {
+                return;
+            }
+
+            // determine start frame
             var maxReverse = getForwardDist(startFrame,frame);
-            var start = (frame - Math.min(maxReverse,20)) % maxFrames;
+            var start = (frame - Math.min(maxReverse,speedPrints[speedIndex])) % maxFrames;
             if (start < 0) {
                 start += maxFrames;
             }
-            var maxForward = getForwardDist(frame,stopFrame);
-            var end = (frame + Math.min(maxForward,15)) % maxFrames;
 
+            // determine end frame
+            var maxForward = getForwardDist(frame,stopFrame);
+            var end = (frame + Math.min(maxForward,speedPrints[speedCount-1-speedIndex])) % maxFrames;
+
+            var backupAlpha = ctx.globalAlpha;
+            ctx.globalAlpha = 0.2;
+            
             var t = start;
-            var step = 5;
+            var step = speedPrintStep[speedIndex];
             if (start > end) {
                 for (; t<maxFrames; t+=step) {
                     callback(t);
@@ -356,6 +401,8 @@ var vcr = (function() {
             for (; t<end; t+=step) {
                 callback(t);
             }
+
+            ctx.globalAlpha = backupAlpha;
         },
     };
 })();

@@ -1,42 +1,57 @@
 Pac-Man
 =======
 
-A historical tribute and accurate remake of the original Pac-Man arcade game.
+A historical tribute and accurate remake of the original Pac-Man arcade game. (Inspired by [The Pac-Man Dossier](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html)
 
-<a href="http://shaunew.github.com/Pac-Man/shots/montage.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage.png" width="100%"/></a>
+Objective
+---------
+
+To faithfully recreate the original Pac-Man arcade game in a modern language-- so that its internals may better survive to be studied, modified, extended, and accessed on the open web.
 
 Play
 ----
 
 [Click here to play the current version](http://shaunew.github.com/Pac-Man)
 
-You can play the game on all canvas-enabled browsers.  Touch interface is
-enabled for mobile browsers.  The game is resolution-independent and scales to
-fit the size of your window.  Performance may increase by shrinking the window.
+You can play the game on all canvas-enabled browsers.  **Touch controls** are
+enabled for mobile browsers.  The game is **resolution-independent** and smoothly scales to
+fit the size of any screen.  **Performance** may increase by shrinking the window or zooming in with your browser.
 
-### Controls
+### Main Controls
 
 - **swipe**: steer pacman on mobile browsers
 - **arrows**: steer pacman
 - **escape**: pause the game
 
-### Learn Mode
+Games
+-----
 
-This mini mode allows you to visualize the behavior of each ghost.  The colored square indicates the ghost bait.
+Each of the following games are playable from the main menu.
+
+<a href="http://shaunew.github.com/Pac-Man/shots/montage.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage.png" width="100%"/></a>
+
+- **Pac-Man**: 1980 original arcade by Namco.
+- **Ms. Pac-Man**: 1981 Pac-Man modification by GCC/Midway.
+- **Crazy Otto**: GCC's unreleased, in-house version of Ms. Pac-Man before it was sold to Midway.
+- **Cookie-Man**: a brand new version of Ms. Pac-Man with a sophisticated **procedural map generator**.
+
+Learn Mode
+----------
+
+This mini mode is playable from the main menu. It allows you to **visualize the behaviors** the ghosts.  (The colored square indicates the ghost bait.)
 
 <a href="http://shaunew.github.com/Pac-Man/shots/learn.png"><img src="http://shaunew.github.com/Pac-Man/shots/learn.png" width="100%"/></a>
 
 Practice Mode
 -------------
 
-This mode allows you to play a game with special options that help with
-practicing.  You may use slow-motion or rewind time when making mistakes in
-this mode.  Listed below are more options that can also be enabled through the
-in-game menu.  There are no high scores recorded in this mode.
+This mode allows you to practice the game with special features.  You can go
+into **slow-motion** or **rewind time** with the special onscreen buttons or the hotkeys listed below.  You can also turn on
+**invincibility** or visualize the ghosts behavior from the menu.
 
 <a href="http://shaunew.github.com/Pac-Man/shots/practice.png"><img src="http://shaunew.github.com/Pac-Man/shots/practice.png" width="100%"/></a>
 
-### Controls
+### Practice Controls
 
 - **shift**: hold down to rewind (a la Braid)
 - **1**: hold down to slow down the game to 0.5x
@@ -48,12 +63,31 @@ in-game menu.  There are no high scores recorded in this mode.
 - **q,w,e,r,t**: toggle target graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 - **a,s,d,f,g**: toggle path graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 
-Features
+Accuracy
 --------
 
-- same coordinate space, movement physics, ghost behavior, timers, and update rate as the original arcade game
-- scalable, resolution-independent graphics
-- playable on mobile browsers
+It is a major goal of this project to stay as closely accurate to the original arcade game as reasonably possible. The current accuracy is due to the work of reverse-engineers Jamey Pittman and Bart Grantham.
+
+Currently, the coordinate space, movement physics, ghost behavior, actor speeds, timers, and update rate match that of the original arcade game.
+
+### Inaccuracies
+
+The **timings** of certain non-critical events such as score display pauses and map-blinking animations are currently approximated until they are closely measured.
+
+Unfortunately, you **cannot use original Pac-Man patterns** in this version because of the nondeterministic pseudo random number generator used to turn the frightened ghosts.
+
+Also, the **collision detection** works a little differently by checking if Pac-Man occupies the same tile as a ghost before and after ghost positions are updated.  This is to prevent pass-through "bugs" of the original, which seemed to happen more in this version than the original.  The collision detection may need fixing.
+
+### Report/Fix Bugs
+
+I'd love to hear any issues you have with any inaccuracies that may detract or simply annoy.  Any reverse-engineers willing to contribute their expertise to this project would be a big help as well!
+
+Future Work
+-----------
+
+- Sound
+- Cutscenes
+- 2 Player switch-off
 
 Navigating the Repository
 -------------------------

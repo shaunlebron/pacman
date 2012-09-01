@@ -6,7 +6,7 @@ A historical tribute and accurate remake of the original Pac-Man arcade game. (I
 Objective
 ---------
 
-To faithfully recreate the original Pac-Man arcade game in a modern language-- so that its internals may better survive to be studied, modified, extended, and accessed on the open web.
+To faithfully recreate the original Pac-Man arcade game in a modern language-- so that it may survive to be studied, modified, extended, and accessed on the open web.
 
 Play
 ----
@@ -34,6 +34,17 @@ Each of the following games are playable from the main menu.
 - **Ms. Pac-Man**: 1981 Pac-Man modification by GCC/Midway.
 - **Crazy Otto**: GCC's unreleased, in-house version of Ms. Pac-Man before it was sold to Midway.
 - **Cookie-Man**: a brand new version of Ms. Pac-Man with a sophisticated **procedural map generator**.
+
+### Turbo Mode
+
+Each game has an alternate mode called Turbo (a.k.a. speedy mode).  This is a
+popular hardware modification of the game found in many of the original arcade
+cabinets.  In this mode, Pac-Man travels as fast as the disembodied eyes of the
+ghosts and is not slowed down when eating pellets.
+
+### High Scores
+
+High scores for each game (normal and turbo separately) are stored by your browser.
 
 Learn Mode
 ----------

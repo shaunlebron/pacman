@@ -32,7 +32,7 @@ Each of the following games are playable from the main menu.
 
 - **Pac-Man**: 1980 original arcade by Namco.
 - **Ms. Pac-Man**: 1981 Pac-Man modification by GCC/Midway.
-- **Crazy Otto**: GCC's unreleased, in-house version of Ms. Pac-Man before it was sold to Midway.
+- **Crazy Otto**: GCC's unreleased, in-house version of Ms. Pac-Man before it was sold to Midway. ([See video](http://www.youtube.com/watch?v=CEKAqWk-Tp4))
 - **Cookie-Man**: a brand new version of Ms. Pac-Man with a sophisticated **procedural map generator**.
 
 ### Turbo Mode

@@ -21,7 +21,8 @@ fit the size of any screen.  **Performance** may increase by shrinking the windo
 
 - **swipe**: steer pacman on mobile browsers
 - **arrows**: steer pacman
-- **escape**: pause the game
+- **end**: pause the game
+- **escape**: open in-game menu
 
 Games
 -----

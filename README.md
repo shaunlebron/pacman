@@ -86,10 +86,23 @@ In the **Cookie-Man** game mode, the mazes change as often as they do in Ms. Pac
 
 <a href="http://shaunew.github.com/Pac-Man/shots/procedural.png"><img src="http://shaunew.github.com/Pac-Man/shots/procedural.png" width="100%"/></a>
 
+### Demo
+
 [Click here to see many generated maps](http://shaunew.github.com/Pac-Man/mapgen/tetris/many.htm)
 
-The mazes are built carefully to closely match the design patterns of the original maps found in Pac-Man and Ms. Pac-Man (i.e. no dead-ends, no tight-turns, no fat walls, and occasional rectangle blocks).  I plan to write an article explaining the algorithm in detail, but currently you can find notes, diagrams, and demos in the `mapgen` folder of this repo.
+### Algorithm
 
+The mazes are built carefully to closely match design patterns deduced from the original maps found in Pac-Man and Ms. Pac-Man:
+
+- Map is 28x31 tiles.
+- Paths are only 1 tile thick
+- No sharp turns (i.e. intersections are separated by atleast 2 tiles).
+- There are 1 or 2 tunnels
+- No dead-ends.
+- Only **I**, **L**, **T**, or **+** wall shapes are allowed, including the occasional rectangular wall.
+- Any non-rectangular wall pieces must only be 2 tiles thick.
+
+I plan to write an article explaining the algorithm in detail, but currently you can find notes, diagrams, and demos in the `mapgen` folder of this repo.
 
 Accuracy
 --------

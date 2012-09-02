@@ -146,7 +146,7 @@ Thanks to the original Pac-Man team at Namco for creating such an enduring game 
 
 Thanks to the Ms. Pac-Man team at GCC for improving Pac-Man with a variety of aesthetic maps that I based the map generator on.
 
-Thanks to Jonathan Blow for introducing the rewind mechanic employed in this remake.
+Thanks to Jonathan Blow for creating the rewind mechanic in [Braid](http://braid-game.com) which inspired the same mechanic in my project.  Further thanks for presenting the implementation details in [this talk](https://store.cmpgame.com/product/5900/The-Implementation-of-Rewind-in-braid) which helped in my own implementation.
 
 ### Art
 

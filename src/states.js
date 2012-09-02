@@ -703,7 +703,11 @@ var aboutState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("", 2*tileSize,mapHeight-11*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    menu.addTextButton("GO TO PROJECT PAGE",
+        function() {
+            window.open("https://github.com/shaunew/Pac-Man");
+        });
     menu.addTextButton("BACK",
         function() {
             exitTo(homeState);
@@ -746,13 +750,6 @@ var aboutState = (function(){
         y += tileSize*2;
         ctx.fillStyle = "#777";
         ctx.fillText("GENERAL COMPUTING",x,y);
-
-        y += tileSize*4;
-        ctx.fillStyle = "#0F0";
-        ctx.fillText("PROJECT SITE",x,y);
-        y += tileSize*2;
-        ctx.fillStyle = "#777";
-        ctx.fillText("GITHUB.COM/SHAUNEW/PAC-MAN",x,y);
     };
 
     return {

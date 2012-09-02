@@ -79,6 +79,18 @@ into **slow-motion** or **rewind time** with the special onscreen buttons or the
 - **q,w,e,r,t**: toggle target graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 - **a,s,d,f,g**: toggle path graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 
+Procedural Maps
+---------------
+
+In the **Cookie-Man** game mode, the mazes change as often as they do in Ms. Pac-Man, but are **procedurally generated**.  Each level has a pre-defined color palette, granting an element of consistency to the random structure of the mazes.
+
+<a href="http://shaunew.github.com/Pac-Man/shots/procedural.png"><img src="http://shaunew.github.com/Pac-Man/shots/procedural.png" width="100%"/></a>
+
+[Click here to see many generated maps](http://shaunew.github.com/Pac-Man/mapgen/tetris/many.htm)
+
+The mazes are built carefully to closely match the design patterns of the original maps found in Pac-Man and Ms. Pac-Man (i.e. no dead-ends, no tight-turns, no fat walls, and occasional rectangle blocks).  I plan to write an article explaining the algorithm in detail, but currently you can find notes, diagrams, and demos in the `mapgen` folder of this repo.
+
+
 Accuracy
 --------
 

@@ -2748,6 +2748,10 @@ var switchRenderer = function(i) {
     renderer.drawMap();
 };
 
+var getDevicePixelRatio = function() {
+    return window.devicePixelRatio || 1;
+};
+
 var initRenderer = function(){
 
     var bgCanvas;
@@ -2763,8 +2767,16 @@ var initRenderer = function(){
 
     // rescale the canvases
     var resetCanvasSizes = function() {
+
+        // set the size of the canvas in actual pixels
         canvas.width = screenWidth * scale;
         canvas.height = screenHeight * scale;
+
+        // set the size of the canvas in browser pixels
+        var ratio = getDevicePixelRatio();
+        canvas.style.width = canvas.width / ratio;
+        canvas.style.height = canvas.height / ratio;
+
         if (resets > 0) {
             ctx.restore();
         }
@@ -2786,7 +2798,9 @@ var initRenderer = function(){
     var getTargetScale = function() {
         var sx = (window.innerWidth - 10) / screenWidth;
         var sy = (window.innerHeight - 10) / screenHeight;
-        return Math.min(sx,sy);
+        var s = Math.min(sx,sy);
+        s *= getDevicePixelRatio();
+        return s;
     };
 
     // maximize the scale to fit the window
@@ -2803,7 +2817,7 @@ var initRenderer = function(){
 
     // center the canvas in the window
     var center = function() {
-        var s = getTargetScale();
+        var s = getTargetScale()/getDevicePixelRatio();
         var w = screenWidth*s;
         var x = Math.max(0,(window.innerWidth-10)/2 - w/2);
         var y = 0;
@@ -3867,8 +3881,9 @@ var getPointerPos = function(evt) {
     var mouseY = evt.pageY - top;
 
     // make independent of scale
-    mouseX /= renderScale;
-    mouseY /= renderScale;
+    var ratio = getDevicePixelRatio();
+    mouseX /= (renderScale / ratio);
+    mouseY /= (renderScale / ratio);
 
     // offset
     mouseX -= mapMargin;

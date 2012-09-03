@@ -13,8 +13,9 @@ var getPointerPos = function(evt) {
     var mouseY = evt.pageY - top;
 
     // make independent of scale
-    mouseX /= renderScale;
-    mouseY /= renderScale;
+    var ratio = getDevicePixelRatio();
+    mouseX /= (renderScale / ratio);
+    mouseY /= (renderScale / ratio);
 
     // offset
     mouseX -= mapMargin;

@@ -73,10 +73,15 @@ var Button = function(x,y,w,h,onclick) {
     };
     var touchend = function(evt) {
         evt.preventDefault();
-        if (that.onclick && that.startedInside && that.isSelected) {
+        var registerClick = (that.onclick && that.startedInside && that.isSelected);
+        if (registerClick) {
             that.click();
         }
         touchcancel(evt);
+        if (registerClick) {
+            // focus the button to keep it highlighted after successful click
+            that.focus();
+        }
     };
     var touchcancel = function(evt) {
         evt.preventDefault();
@@ -139,9 +144,6 @@ Button.prototype = {
         // set a click delay
         var that = this;
         this.clickTimeout = setTimeout(function() { that.onclick(); }, 200);
-
-        // focus the button to keep it highlighted after click
-        this.focus();
     },
 
     enable: function() {

@@ -74,7 +74,7 @@ var Button = function(x,y,w,h,onclick) {
     var touchend = function(evt) {
         evt.preventDefault();
         if (that.onclick && that.startedInside && that.isSelected) {
-            that.onclick();
+            that.click();
         }
         touchcancel(evt);
     };
@@ -89,7 +89,7 @@ var Button = function(x,y,w,h,onclick) {
     var click = function(evt) {
         var pos = getPointerPos(evt);
         if (that.onclick && that.contains(pos.x, pos.y)) {
-            that.onclick();
+            that.click();
         }
     };
     var mousemove = function(evt) {
@@ -130,6 +130,18 @@ Button.prototype = {
     contains: function(x,y) {
         return x >= this.x && x <= this.x+this.w &&
                y >= this.y && y <= this.y+this.h;
+    },
+
+    click: function() {
+        // disable current click timeout (to prevent double clicks on some devices)
+        clearTimeout(this.clickTimeout);
+
+        // set a click delay
+        var that = this;
+        this.clickTimeout = setTimeout(function() { that.onclick(); }, 200);
+
+        // focus the button to keep it highlighted after click
+        this.focus();
     },
 
     enable: function() {

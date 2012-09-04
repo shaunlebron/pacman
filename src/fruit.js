@@ -304,6 +304,7 @@ var fruit;
 var setFruitFromGameMode = (function() {
     var pacfruit = new PacFruit();
     var mspacfruit = new MsPacFruit();
+    fruit = pacfruit;
     return function() {
         if (gameMode == GAME_PACMAN) {
             fruit = pacfruit;

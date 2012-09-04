@@ -171,6 +171,7 @@ var MsPacFruit = function() {
 
     this.pen_path = "<<<<<<^^^^^^>>>>>>>>>vvvvvv<<";
 
+    this.savedIsPresent = {};
     this.savedPixel = {};
     this.savedPathMode = {};
     this.savedFrame = {};
@@ -278,7 +279,7 @@ MsPacFruit.prototype = {
     save: function(t) {
         BaseFruit.prototype.save.call(this,t);
 
-        this.savedPixel[t] =        {x:this.pixel.x, y:this.pixel.y};
+        this.savedPixel[t] =        this.isPresent() ? {x:this.pixel.x, y:this.pixel.y} : undefined;
         this.savedPathMode[t] =     this.pathMode;
         this.savedFrame[t] =        this.frame;
         this.savedNumFrames[t] =    this.numFrames;
@@ -288,8 +289,10 @@ MsPacFruit.prototype = {
     load: function(t) {
         BaseFruit.prototype.load.call(this,t);
 
-        this.pixel.x =      this.savedPixel[t].x;
-        this.pixel.y =      this.savedPixel[t].y;
+        if (this.savedPixel[t]) {
+            this.pixel.x =      this.savedPixel[t].x;
+            this.pixel.y =      this.savedPixel[t].y;
+        }
         this.pathMode =     this.savedPathMode[t];
         this.frame =        this.savedFrame[t];
         this.numFrames =    this.savedNumFrames[t]; 

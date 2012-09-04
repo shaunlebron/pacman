@@ -1005,8 +1005,20 @@ var initRenderer = function(){
 
         // draw fruit
         drawFruit: function() {
+
+            var name = fruit.getCurrentFruit().name;
+
+            // draw history trails of the fruit if applicable
+            if (fruit.savedPixel) {
+                vcr.drawHistory(ctx, function(t) {
+                    var pixel = fruit.savedPixel[t];
+                    if (pixel) {
+                        atlas.drawFruitSprite(ctx, pixel.x, pixel.y, name);
+                    }
+                });
+            }
+
             if (fruit.isPresent()) {
-                var name = fruit.getCurrentFruit().name;
                 atlas.drawFruitSprite(ctx, fruit.pixel.x, fruit.pixel.y, name);
             }
             else if (fruit.isScorePresent()) {

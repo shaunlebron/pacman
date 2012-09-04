@@ -790,6 +790,7 @@ var newGameState = (function() {
             level = 0;
             extraLives = practiceMode ? Infinity : 3;
             setScore(0);
+            setFruitFromGameMode();
             readyNewState.init();
         },
         draw: function() {

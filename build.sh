@@ -22,6 +22,7 @@ echo "
 " > $output
 
 for file in \
+    random.js \
     game.js \
     direction.js \
     Map.js \

@@ -721,7 +721,7 @@ var initRenderer = function(){
             }
 
             // draw level fruit
-            var fruits = fruit.getFruitHistory();
+            var fruits = fruit.fruitHistory;
             var i,j;
             var f,drawFunc;
             var numFruit = 7;

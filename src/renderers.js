@@ -935,7 +935,7 @@ var initRenderer = function(){
             var draw = function(pixel, dirEnum, steps) {
                 var frame = pacman.getAnimFrame(pacman.getStepFrame(steps));
                 var func = getPlayerDrawFunc();
-                func(ctx, pixel.x, pixel.y, dirEnum, frame);
+                func(ctx, pixel.x, pixel.y, dirEnum, frame, true);
             };
 
             vcr.drawHistory(ctx, function(t) {

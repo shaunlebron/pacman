@@ -182,7 +182,7 @@ Map.prototype.parseWalls = function() {
                 pad = that.isFloorTile(tx+dir.y,ty-dir.x) ? 5 : 0;
             var px = -tileSize/2+pad;
             var py = tileSize/2;
-            var a = dirEnum*Math.PI/2;
+            var a = getClockwiseAngleFromTop(dirEnum);
             var c = Math.cos(a);
             var s = Math.sin(a);
             return {
@@ -220,17 +220,17 @@ Map.prototype.parseWalls = function() {
             turn = false;
             turnAround = false;
             if (toIndex(tx+dir.y, ty-dir.x) in edges) { // turn left
-                dirEnum = (dirEnum+3)%4;
+                dirEnum = rotateLeft(dirEnum);
                 turn = true;
             }
             else if (toIndex(tx+dir.x, ty+dir.y) in edges) { // continue straight
             }
             else if (toIndex(tx-dir.y, ty+dir.x) in edges) { // turn right
-                dirEnum = (dirEnum+1)%4;
+                dirEnum = rotateRight(dirEnum);
                 turn = true;
             }
             else { // turn around
-                dirEnum = (dirEnum+2)%4;
+                dirEnum = rotateAboutFace(dirEnum);
                 turnAround = true;
             }
             setDirFromEnum(dir,dirEnum);
@@ -240,7 +240,7 @@ Map.prototype.parseWalls = function() {
 
             // special case for turning around (have to connect more dots manually)
             if (turnAround) {
-                path.push(getStartPoint(tx-dir.x, ty-dir.y, (dirEnum+2)%4));
+                path.push(getStartPoint(tx-dir.x, ty-dir.y, rotateAboutFace(dirEnum)));
                 path.push(getStartPoint(tx, ty, dirEnum));
             }
 

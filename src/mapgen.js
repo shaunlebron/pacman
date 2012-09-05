@@ -112,7 +112,7 @@ var mapgen = (function(){
             }
 
             // prevent long straight pieces of length 3
-            if (size == 2 && (i==prevDir || (i+2)%4==prevDir)) {
+            if (size == 2 && (i==prevDir || rotateAboutFace(i)==prevDir)) {
                 return false;
             }
 
@@ -142,7 +142,7 @@ var mapgen = (function(){
         };
         var connectCell = function(cell,dir) {
             cell.connect[dir] = true;
-            cell.next[dir].connect[(dir+2)%4] = true;
+            cell.next[dir].connect[rotateAboutFace(dir)] = true;
             if (cell.x == 0 && dir == RIGHT) {
                 cell.connect[LEFT] = true;
             }
@@ -1350,7 +1350,7 @@ var mapgen = (function(){
             var node = graph[x+y*28];
             var dirEnum = getDirFromPenult(node);
             if (dirEnum != undefined) {
-                return (dirEnum+2)%4; // reverse direction (door->ghost to door<-ghost)
+                return rotateAboutFace(dirEnum); // reverse direction (door->ghost to door<-ghost)
             }
         };
     };

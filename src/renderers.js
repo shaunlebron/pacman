@@ -973,11 +973,17 @@ var initRenderer = function(){
             else if (gameMode == GAME_OTTO) {
                 // TODO: spin around
                 if (t < 0.8) {
-                    var dirEnum = Math.floor((pacman.dirEnum + t*16))%4;
+                    var dirEnum = Math.floor((pacman.dirEnum - t*16))%4;
+                    if (dirEnum < 0) {
+                        dirEnum += 4;
+                    }
                     drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
                 }
                 else if (t < 0.95) {
-                    var dirEnum = Math.floor((pacman.dirEnum + 0.8*16))%4;
+                    var dirEnum = Math.floor((pacman.dirEnum - 0.8*16))%4;
+                    if (dirEnum < 0) {
+                        dirEnum += 4;
+                    }
                     drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
                 }
                 else {

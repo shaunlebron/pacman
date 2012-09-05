@@ -2,11 +2,31 @@
 // Directions
 // (variables and utility functions for representing actor heading direction)
 
-// direction enums (in clockwise order)
+// direction enums (in counter-clockwise order)
+// NOTE: changing the order of these enums may effect the enums.
+//       I've tried abstracting away the uses by creating functions to rotate them.
+// NOTE: This order determines tie-breakers in the shortest distance turn logic.
+//       (i.e. higher priority turns have lower enum values)
 var DIR_UP = 0;
-var DIR_RIGHT = 1;
+var DIR_LEFT = 1;
 var DIR_DOWN = 2;
-var DIR_LEFT = 3;
+var DIR_RIGHT = 3;
+
+var getClockwiseAngleFromTop = function(dirEnum) {
+    return -dirEnum*Math.PI/2;
+};
+
+var rotateLeft = function(dirEnum) {
+    return (dirEnum+1)%4;
+};
+
+var rotateRight = function(dirEnum) {
+    return (dirEnum+3)%4;
+};
+
+var rotateAboutFace = function(dirEnum) {
+    return (dirEnum+2)%4;
+};
 
 // get direction enum from a direction vector
 var getEnumFromDir = function(dir) {
@@ -69,7 +89,7 @@ var getOpenTiles = function(tile,dirEnum) {
         // By design, no mazes should have dead ends,
         // but allow player to turn around if and only if it's necessary.
         // Only close the passage behind the player if there are other openings.
-        var oppDirEnum = (dirEnum+2)%4; // current opposite direction enum
+        var oppDirEnum = rotateAboutFace(dirEnum); // current opposite direction enum
         if (numOpenTiles > 1)
             openTiles[oppDirEnum] = false;
     }

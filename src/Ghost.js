@@ -303,7 +303,7 @@ Ghost.prototype.steer = function() {
 
     var dirEnum;                         // final direction to update to
     var openTiles;                       // list of four booleans indicating which surrounding tiles are open
-    var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
+    var oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
     var actor;                           // actor whose corner we will target
 
     var isOnNewTile = ((this.dirEnum == DIR_UP && this.tilePixel.y == tileSize-1) ||
@@ -325,7 +325,7 @@ Ghost.prototype.steer = function() {
     // special map-specific steering when going to, entering, pacing inside, or leaving home
     this.homeSteer();
 
-    oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
+    oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
 
     // only execute rest of the steering logic if we're pursuing a target tile
     if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME) {

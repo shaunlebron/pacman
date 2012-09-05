@@ -218,11 +218,31 @@ var saveHighScores = function() {
 // Directions
 // (variables and utility functions for representing actor heading direction)
 
-// direction enums (in clockwise order)
+// direction enums (in counter-clockwise order)
+// NOTE: changing the order of these enums may effect the enums.
+//       I've tried abstracting away the uses by creating functions to rotate them.
+// NOTE: This order determines tie-breakers in the shortest distance turn logic.
+//       (i.e. higher priority turns have lower enum values)
 var DIR_UP = 0;
-var DIR_RIGHT = 1;
+var DIR_LEFT = 1;
 var DIR_DOWN = 2;
-var DIR_LEFT = 3;
+var DIR_RIGHT = 3;
+
+var getClockwiseAngleFromTop = function(dirEnum) {
+    return -dirEnum*Math.PI/2;
+};
+
+var rotateLeft = function(dirEnum) {
+    return (dirEnum+1)%4;
+};
+
+var rotateRight = function(dirEnum) {
+    return (dirEnum+3)%4;
+};
+
+var rotateAboutFace = function(dirEnum) {
+    return (dirEnum+2)%4;
+};
 
 // get direction enum from a direction vector
 var getEnumFromDir = function(dir) {
@@ -285,7 +305,7 @@ var getOpenTiles = function(tile,dirEnum) {
         // By design, no mazes should have dead ends,
         // but allow player to turn around if and only if it's necessary.
         // Only close the passage behind the player if there are other openings.
-        var oppDirEnum = (dirEnum+2)%4; // current opposite direction enum
+        var oppDirEnum = rotateAboutFace(dirEnum); // current opposite direction enum
         if (numOpenTiles > 1)
             openTiles[oppDirEnum] = false;
     }
@@ -483,7 +503,7 @@ Map.prototype.parseWalls = function() {
                 pad = that.isFloorTile(tx+dir.y,ty-dir.x) ? 5 : 0;
             var px = -tileSize/2+pad;
             var py = tileSize/2;
-            var a = dirEnum*Math.PI/2;
+            var a = getClockwiseAngleFromTop(dirEnum);
             var c = Math.cos(a);
             var s = Math.sin(a);
             return {
@@ -521,17 +541,17 @@ Map.prototype.parseWalls = function() {
             turn = false;
             turnAround = false;
             if (toIndex(tx+dir.y, ty-dir.x) in edges) { // turn left
-                dirEnum = (dirEnum+3)%4;
+                dirEnum = rotateLeft(dirEnum);
                 turn = true;
             }
             else if (toIndex(tx+dir.x, ty+dir.y) in edges) { // continue straight
             }
             else if (toIndex(tx-dir.y, ty+dir.x) in edges) { // turn right
-                dirEnum = (dirEnum+1)%4;
+                dirEnum = rotateRight(dirEnum);
                 turn = true;
             }
             else { // turn around
-                dirEnum = (dirEnum+2)%4;
+                dirEnum = rotateAboutFace(dirEnum);
                 turnAround = true;
             }
             setDirFromEnum(dir,dirEnum);
@@ -541,7 +561,7 @@ Map.prototype.parseWalls = function() {
 
             // special case for turning around (have to connect more dots manually)
             if (turnAround) {
-                path.push(getStartPoint(tx-dir.x, ty-dir.y, (dirEnum+2)%4));
+                path.push(getStartPoint(tx-dir.x, ty-dir.y, rotateAboutFace(dirEnum)));
                 path.push(getStartPoint(tx, ty, dirEnum));
             }
 
@@ -948,7 +968,7 @@ var mapgen = (function(){
             }
 
             // prevent long straight pieces of length 3
-            if (size == 2 && (i==prevDir || (i+2)%4==prevDir)) {
+            if (size == 2 && (i==prevDir || rotateAboutFace(i)==prevDir)) {
                 return false;
             }
 
@@ -978,7 +998,7 @@ var mapgen = (function(){
         };
         var connectCell = function(cell,dir) {
             cell.connect[dir] = true;
-            cell.next[dir].connect[(dir+2)%4] = true;
+            cell.next[dir].connect[rotateAboutFace(dir)] = true;
             if (cell.x == 0 && dir == RIGHT) {
                 cell.connect[LEFT] = true;
             }
@@ -2186,7 +2206,7 @@ var mapgen = (function(){
             var node = graph[x+y*28];
             var dirEnum = getDirFromPenult(node);
             if (dirEnum != undefined) {
-                return (dirEnum+2)%4; // reverse direction (door->ghost to door<-ghost)
+                return rotateAboutFace(dirEnum); // reverse direction (door->ghost to door<-ghost)
             }
         };
     };
@@ -2371,14 +2391,14 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawCookieFlash(ctx,x,y); },      row,12);
 
         var drawGhostCells = function(row,color) {
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, false, false, false, color); },   row,1);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_RIGHT, false, false, false, color) },  row,2);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_RIGHT, false, false, false, color) },  row,3);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_DOWN, false, false, false, color) },  row,4);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_DOWN, false, false, false, color) },  row,5);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_LEFT, false, false, false, color) }, row,6);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_LEFT, false, false, false, color) }, row,7);
+            var i,f;
+            var col = 0;
+            for (i=0; i<4; i++) { // dirEnum
+                for (f=0; f<2; f++) { // frame
+                    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
+                    col++;
+                }
+            }
         };
 
         row++;
@@ -2391,10 +2411,17 @@ var atlas = (function(){
         drawGhostCells(row, "#FFB851");
 
         row++;
-        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, true, "#fff"); },     row,0);
-        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_RIGHT, false, false, true, "#fff"); },  row,1);
-        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_DOWN, false, false, true, "#fff"); },   row,2);
-        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_LEFT, false, false, true, "#fff"); },   row,3);
+        // draw disembodied eyes
+        (function(){
+            var i;
+            var col = 0;
+            for (i=0; i<4; i++) { // dirEnum
+                drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
+                col++;
+            }
+        })();
+
+        // draw ghosts scared
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
@@ -2405,11 +2432,19 @@ var atlas = (function(){
             drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/3); }, row, col+1);
         };
         row++;
+
+        // draw pacman mouth closed
         drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, DIR_RIGHT, 0); }, row, 0);
-        drawPacCells(row,1,DIR_UP);
-        drawPacCells(row,3,DIR_RIGHT);
-        drawPacCells(row,5,DIR_DOWN);
-        drawPacCells(row,7,DIR_LEFT);
+
+        // draw pacman directions
+        (function(){
+            var i;
+            var col=1;
+            for (i=0; i<4; i++) {
+                drawPacCells(row,col,i);
+                col+=2;
+            }
+        })();
 
         var drawMsPacCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 0); }, row, col);
@@ -2417,10 +2452,14 @@ var atlas = (function(){
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 2); }, row, col+2);
         };
         row++;
-        drawMsPacCells(row,0, DIR_UP);
-        drawMsPacCells(row,3, DIR_RIGHT);
-        drawMsPacCells(row,6, DIR_DOWN);
-        drawMsPacCells(row,9, DIR_LEFT);
+        (function(){
+            var i;
+            var col=0;
+            for (i=0; i<4; i++) {
+                drawMsPacCells(row,col,i);
+                col+=3;
+            }
+        })();
 
         var drawCookieCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 0, true); }, row, col);
@@ -2428,20 +2467,24 @@ var atlas = (function(){
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 2, true); }, row, col+2);
         };
         row++;
-        drawCookieCells(row,0, DIR_UP);
-        drawCookieCells(row,3, DIR_RIGHT);
-        drawCookieCells(row,6, DIR_DOWN);
-        drawCookieCells(row,9, DIR_LEFT);
+        (function(){
+            var i;
+            var col=0;
+            for (i=0; i<4; i++) {
+                drawCookieCells(row,col,i);
+                col+=3;
+            }
+        })();
 
         var drawMonsterCells = function(row,color) {
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, false, false, false, color); },   row,1);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_RIGHT, false, false, false, color) },  row,2);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_RIGHT, false, false, false, color) },  row,3);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_DOWN, false, false, false, color) },  row,4);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_DOWN, false, false, false, color) },  row,5);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_LEFT, false, false, false, color) }, row,6);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_LEFT, false, false, false, color) }, row,7);
+            var i,f;
+            var col=0;
+            for (i=0; i<4; i++) { // dirEnum
+                for (f=0; f<2; f++) { // frame
+                    drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
+                    col++;
+                }
+            }
         };
 
         row++;
@@ -2454,20 +2497,25 @@ var atlas = (function(){
         drawMonsterCells(row, "#FFB851");
 
         row++;
-        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, false, false, true, "#fff"); },     row,0);
-        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_RIGHT, false, false, true, "#fff"); },  row,1);
-        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_DOWN, false, false, true, "#fff"); },   row,2);
-        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_LEFT, false, false, true, "#fff"); },   row,3);
+        (function(){
+            var i;
+            var col = 0;
+            for (i=0; i<4; i++) { // dirEnum
+                drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
+                col++;
+            }
+        })();
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
 
         var drawOttoCells = function(row,col,dir) {
-            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 0); }, row, col);
-            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 1); }, row, col+1);
-            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 2); }, row, col+2);
-            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 3); }, row, col+3);
+            var i;
+            for (i=0; i<4; i++) { // frame
+                drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, i); }, row, col);
+                col++;
+            }
         };
         row++;
         drawOttoCells(row,0, DIR_UP);
@@ -3718,11 +3766,17 @@ var initRenderer = function(){
             else if (gameMode == GAME_OTTO) {
                 // TODO: spin around
                 if (t < 0.8) {
-                    var dirEnum = Math.floor((pacman.dirEnum + t*16))%4;
+                    var dirEnum = Math.floor((pacman.dirEnum - t*16))%4;
+                    if (dirEnum < 0) {
+                        dirEnum += 4;
+                    }
                     drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
                 }
                 else if (t < 0.95) {
-                    var dirEnum = Math.floor((pacman.dirEnum + 0.8*16))%4;
+                    var dirEnum = Math.floor((pacman.dirEnum - 0.8*16))%4;
+                    if (dirEnum < 0) {
+                        dirEnum += 4;
+                    }
                     drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
                 }
                 else {
@@ -7423,7 +7477,7 @@ Ghost.prototype.steer = function() {
 
     var dirEnum;                         // final direction to update to
     var openTiles;                       // list of four booleans indicating which surrounding tiles are open
-    var oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
+    var oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
     var actor;                           // actor whose corner we will target
 
     var isOnNewTile = ((this.dirEnum == DIR_UP && this.tilePixel.y == tileSize-1) ||
@@ -7445,7 +7499,7 @@ Ghost.prototype.steer = function() {
     // special map-specific steering when going to, entering, pacing inside, or leaving home
     this.homeSteer();
 
-    oppDirEnum = (this.dirEnum+2)%4; // current opposite direction enum
+    oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
 
     // only execute rest of the steering logic if we're pursuing a target tile
     if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME) {

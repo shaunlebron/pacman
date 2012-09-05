@@ -83,14 +83,14 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawCookieFlash(ctx,x,y); },      row,12);
 
         var drawGhostCells = function(row,color) {
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, false, false, false, color); },   row,1);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_RIGHT, false, false, false, color) },  row,2);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_RIGHT, false, false, false, color) },  row,3);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_DOWN, false, false, false, color) },  row,4);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_DOWN, false, false, false, color) },  row,5);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_LEFT, false, false, false, color) }, row,6);
-            drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_LEFT, false, false, false, color) }, row,7);
+            var i,f;
+            var col = 0;
+            for (i=0; i<4; i++) { // dirEnum
+                for (f=0; f<2; f++) { // frame
+                    drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
+                    col++;
+                }
+            }
         };
 
         row++;
@@ -103,10 +103,17 @@ var atlas = (function(){
         drawGhostCells(row, "#FFB851");
 
         row++;
-        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, true, "#fff"); },     row,0);
-        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_RIGHT, false, false, true, "#fff"); },  row,1);
-        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_DOWN, false, false, true, "#fff"); },   row,2);
-        drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_LEFT, false, false, true, "#fff"); },   row,3);
+        // draw disembodied eyes
+        (function(){
+            var i;
+            var col = 0;
+            for (i=0; i<4; i++) { // dirEnum
+                drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
+                col++;
+            }
+        })();
+
+        // draw ghosts scared
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
@@ -117,11 +124,19 @@ var atlas = (function(){
             drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/3); }, row, col+1);
         };
         row++;
+
+        // draw pacman mouth closed
         drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, DIR_RIGHT, 0); }, row, 0);
-        drawPacCells(row,1,DIR_UP);
-        drawPacCells(row,3,DIR_RIGHT);
-        drawPacCells(row,5,DIR_DOWN);
-        drawPacCells(row,7,DIR_LEFT);
+
+        // draw pacman directions
+        (function(){
+            var i;
+            var col=1;
+            for (i=0; i<4; i++) {
+                drawPacCells(row,col,i);
+                col+=2;
+            }
+        })();
 
         var drawMsPacCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 0); }, row, col);
@@ -129,10 +144,14 @@ var atlas = (function(){
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 2); }, row, col+2);
         };
         row++;
-        drawMsPacCells(row,0, DIR_UP);
-        drawMsPacCells(row,3, DIR_RIGHT);
-        drawMsPacCells(row,6, DIR_DOWN);
-        drawMsPacCells(row,9, DIR_LEFT);
+        (function(){
+            var i;
+            var col=0;
+            for (i=0; i<4; i++) {
+                drawMsPacCells(row,col,i);
+                col+=3;
+            }
+        })();
 
         var drawCookieCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 0, true); }, row, col);
@@ -140,20 +159,24 @@ var atlas = (function(){
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 2, true); }, row, col+2);
         };
         row++;
-        drawCookieCells(row,0, DIR_UP);
-        drawCookieCells(row,3, DIR_RIGHT);
-        drawCookieCells(row,6, DIR_DOWN);
-        drawCookieCells(row,9, DIR_LEFT);
+        (function(){
+            var i;
+            var col=0;
+            for (i=0; i<4; i++) {
+                drawCookieCells(row,col,i);
+                col+=3;
+            }
+        })();
 
         var drawMonsterCells = function(row,color) {
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, false, false, false, color); },   row,1);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_RIGHT, false, false, false, color) },  row,2);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_RIGHT, false, false, false, color) },  row,3);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_DOWN, false, false, false, color) },  row,4);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_DOWN, false, false, false, color) },  row,5);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_LEFT, false, false, false, color) }, row,6);
-            drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_LEFT, false, false, false, color) }, row,7);
+            var i,f;
+            var col=0;
+            for (i=0; i<4; i++) { // dirEnum
+                for (f=0; f<2; f++) { // frame
+                    drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
+                    col++;
+                }
+            }
         };
 
         row++;
@@ -166,20 +189,25 @@ var atlas = (function(){
         drawMonsterCells(row, "#FFB851");
 
         row++;
-        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, false, false, true, "#fff"); },     row,0);
-        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_RIGHT, false, false, true, "#fff"); },  row,1);
-        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_DOWN, false, false, true, "#fff"); },   row,2);
-        drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_LEFT, false, false, true, "#fff"); },   row,3);
+        (function(){
+            var i;
+            var col = 0;
+            for (i=0; i<4; i++) { // dirEnum
+                drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
+                col++;
+            }
+        })();
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, false, false, "#fff"); }, row,5);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
 
         var drawOttoCells = function(row,col,dir) {
-            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 0); }, row, col);
-            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 1); }, row, col+1);
-            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 2); }, row, col+2);
-            drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, 3); }, row, col+3);
+            var i;
+            for (i=0; i<4; i++) { // frame
+                drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, i); }, row, col);
+                col++;
+            }
         };
         row++;
         drawOttoCells(row,0, DIR_UP);

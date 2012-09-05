@@ -67,6 +67,9 @@ var getGhostDrawFunc = function(mode) {
     if (mode == GAME_OTTO) {
         return atlas.drawMonsterSprite;
     }
+    else if (mode == GAME_COOKIE) {
+        return atlas.drawMuppetSprite;
+    }
     else {
         return atlas.drawGhostSprite;
     }
@@ -2287,7 +2290,7 @@ var atlas = (function(){
 
     var canvas,ctx;
     var size = 22;
-    var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
+    var cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
     var rows = 20;
 
     var creates = 0;
@@ -2364,6 +2367,7 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawPear(ctx,x,y); },        row,9);
         drawAtCell(function(x,y) { drawBanana(ctx,x,y); },      row,10);
         drawAtCell(function(x,y) { drawCookie(ctx,x,y); },      row,11);
+        drawAtCell(function(x,y) { drawCookieFlash(ctx,x,y); },      row,12);
 
         var drawGhostCells = function(row,color) {
             drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
@@ -2599,6 +2603,20 @@ var atlas = (function(){
         copyCellTo(row, col, destCtx, x, y);
     };
 
+    var copyMuppetSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        if (scared) {
+            if (flash) {
+                copyFruitSprite(destCtx,x,y,"cookieface");
+            }
+            else {
+                copyFruitSprite(destCtx,x,y,"cookie");
+            }
+        }
+        else {
+            copyGhostSprite(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color);
+        }
+    };
+
     var copyMonsterSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
         var row,col;
         if (eyes_only) {
@@ -2700,6 +2718,7 @@ var atlas = (function(){
             "pear": 9,
             "banana": 10,
             "cookie": 11,
+            "cookieface": 12,
         }[name];
 
         copyCellTo(row,col,destCtx,x,y);
@@ -2710,6 +2729,7 @@ var atlas = (function(){
         getCanvas: function() { return canvas; },
         drawGhostSprite: copyGhostSprite,
         drawMonsterSprite: copyMonsterSprite,
+        drawMuppetSprite: copyMuppetSprite,
         drawOttoSprite: copyOttoSprite,
         drawPacmanSprite: copyPacmanSprite,
         drawMsPacmanSprite: copyMsPacmanSprite,
@@ -3622,13 +3642,15 @@ var initRenderer = function(){
                 ctx.globalAlpha = alpha;
             }
 
-            var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color) {
+            var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color, dirEnum) {
                 if (mode == GHOST_EATEN)
                     return;
                 var frame = Math.floor(frames/8)%2; // toggle frame every 8 ticks
                 var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
                 var func = getGhostDrawFunc();
-                func(ctx,pixel.x,pixel.y,frame,faceDirEnum,scared,isFlash,eyes,color);
+                var y = g.getBounceY(pixel.x, pixel.y, dirEnum);
+
+                func(ctx,pixel.x,y,frame,faceDirEnum,scared,isFlash,eyes,color);
             };
             vcr.drawHistory(ctx, function(t) {
                 draw(
@@ -3638,9 +3660,10 @@ var initRenderer = function(){
                     g.savedFaceDirEnum[t],
                     g.savedScared[t],
                     energizer.isFlash(),
-                    g.color);
+                    g.color,
+                    g.savedDirEnum[t]);
             });
-            draw(g.mode, g.pixel, g.frames, g.faceDirEnum, g.scared, energizer.isFlash(), g.color);
+            draw(g.mode, g.pixel, g.frames, g.faceDirEnum, g.scared, energizer.isFlash(), g.color, g.dirEnum);
             if (alpha) {
                 ctx.globalAlpha = backupAlpha;
             }
@@ -6748,6 +6771,41 @@ var drawCookie = function(ctx,x,y) {
     ctx.restore();
 };
 
+var drawCookieFlash = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // body
+    ctx.beginPath();
+    ctx.arc(0,0,6,0,Math.PI*2);
+    ctx.fillStyle = "#000";
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#f9bd6d";
+    ctx.fill();
+    ctx.stroke();
+
+    // chocolate chips
+    var spots = [
+        0,-3,
+        -4,-1,
+        0,2,
+        3,0,
+        3,3,
+         ];
+
+    ctx.fillStyle = "#f9bd6d";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i+=2) {
+        var x = spots[i];
+        var y = spots[i+1];
+        ctx.beginPath();
+        ctx.arc(x,y,0.75,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
 var getSpriteFuncFromFruitName = function(name) {
     var funcs = {
         'cherry': drawCherry,
@@ -7081,6 +7139,57 @@ var Ghost = function() {
 
 // inherit functions from Actor class
 Ghost.prototype.__proto__ = Actor.prototype;
+
+// displacements for ghost bouncing
+Ghost.prototype.getBounceY = (function(){
+
+    // NOTE: The bounce animation assumes an actor is moving in straight
+    // horizontal or vertical lines between the centers of each tile.
+    //
+    // When moving horizontal, bounce height is a function of x.
+    // When moving vertical, bounce height is a function of y.
+
+    var bounceY = {};
+
+    // map y tile pixel to new y tile pixel
+    bounceY[DIR_UP] =    [-4,-2,0,2,4,3,2,3];
+    bounceY[DIR_DOWN] =  [3,5,7,5,4,5,7,8];
+
+    // map x tile pixel to y tile pixel
+    bounceY[DIR_LEFT] =  [2,3,3,4,3,2,2,2];
+    bounceY[DIR_RIGHT] = [2,2,3,4,3,3,2,2];
+
+    return function(px,py,dirEnum) {
+        if (px == undefined) {
+            px = this.pixel.x;
+        }
+        if (py == undefined) {
+            py = this.pixel.y;
+        }
+        if (dirEnum == undefined) {
+            dirEnum = this.dirEnum;
+        }
+
+        if (this.mode != GHOST_OUTSIDE || !this.scared || gameMode != GAME_COOKIE) {
+            return py;
+        }
+
+        var tilePixelX = px % tileSize;
+        var tilePixelY = py % tileSize;
+        var tileY = Math.floor(py / tileSize);
+        var y = tileY*tileSize;
+
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN) {
+            y += bounceY[dirEnum][tilePixelY];
+        }
+        else {
+            y += bounceY[dirEnum][tilePixelX];
+        }
+
+        return y;
+    };
+})();
+
 
 // reset the state of the ghost on new level or level restart
 Ghost.prototype.reset = function() {
@@ -8552,6 +8661,8 @@ MsPacFruit.prototype = {
         var DL = { dx:-1, dy:1 };
         var DR = { dx:1, dy:1 };
         var Z = { dx:0, dy:0 };
+
+        // A 16-frame animation for moving 8 pixels either up, down, left, or right.
         return {
             '^': [U, U, U, U, U, U, U, U, U, Z, U, Z, Z, D, Z, D],
             '>': [Z, UR,Z, R, Z, UR,Z, R, Z, R, Z, R, Z, DR,DR,Z],

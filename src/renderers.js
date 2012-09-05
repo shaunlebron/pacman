@@ -898,13 +898,15 @@ var initRenderer = function(){
                 ctx.globalAlpha = alpha;
             }
 
-            var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color) {
+            var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color, dirEnum) {
                 if (mode == GHOST_EATEN)
                     return;
                 var frame = Math.floor(frames/8)%2; // toggle frame every 8 ticks
                 var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
                 var func = getGhostDrawFunc();
-                func(ctx,pixel.x,pixel.y,frame,faceDirEnum,scared,isFlash,eyes,color);
+                var y = g.getBounceY(pixel.x, pixel.y, dirEnum);
+
+                func(ctx,pixel.x,y,frame,faceDirEnum,scared,isFlash,eyes,color);
             };
             vcr.drawHistory(ctx, function(t) {
                 draw(
@@ -914,9 +916,10 @@ var initRenderer = function(){
                     g.savedFaceDirEnum[t],
                     g.savedScared[t],
                     energizer.isFlash(),
-                    g.color);
+                    g.color,
+                    g.savedDirEnum[t]);
             });
-            draw(g.mode, g.pixel, g.frames, g.faceDirEnum, g.scared, energizer.isFlash(), g.color);
+            draw(g.mode, g.pixel, g.frames, g.faceDirEnum, g.scared, energizer.isFlash(), g.color, g.dirEnum);
             if (alpha) {
                 ctx.globalAlpha = backupAlpha;
             }

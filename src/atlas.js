@@ -3,7 +3,7 @@ var atlas = (function(){
 
     var canvas,ctx;
     var size = 22;
-    var cols = 13; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
+    var cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
     var rows = 20;
 
     var creates = 0;
@@ -80,6 +80,7 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawPear(ctx,x,y); },        row,9);
         drawAtCell(function(x,y) { drawBanana(ctx,x,y); },      row,10);
         drawAtCell(function(x,y) { drawCookie(ctx,x,y); },      row,11);
+        drawAtCell(function(x,y) { drawCookieFlash(ctx,x,y); },      row,12);
 
         var drawGhostCells = function(row,color) {
             drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, false, false, false, color); },   row,0);
@@ -315,6 +316,20 @@ var atlas = (function(){
         copyCellTo(row, col, destCtx, x, y);
     };
 
+    var copyMuppetSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        if (scared) {
+            if (flash) {
+                copyFruitSprite(destCtx,x,y,"cookieface");
+            }
+            else {
+                copyFruitSprite(destCtx,x,y,"cookie");
+            }
+        }
+        else {
+            copyGhostSprite(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color);
+        }
+    };
+
     var copyMonsterSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
         var row,col;
         if (eyes_only) {
@@ -416,6 +431,7 @@ var atlas = (function(){
             "pear": 9,
             "banana": 10,
             "cookie": 11,
+            "cookieface": 12,
         }[name];
 
         copyCellTo(row,col,destCtx,x,y);
@@ -426,6 +442,7 @@ var atlas = (function(){
         getCanvas: function() { return canvas; },
         drawGhostSprite: copyGhostSprite,
         drawMonsterSprite: copyMonsterSprite,
+        drawMuppetSprite: copyMuppetSprite,
         drawOttoSprite: copyOttoSprite,
         drawPacmanSprite: copyPacmanSprite,
         drawMsPacmanSprite: copyMsPacmanSprite,

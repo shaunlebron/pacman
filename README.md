@@ -34,7 +34,7 @@ Games
 
 Each of the following games are playable from the main menu.
 
-<a href="http://shaunew.github.com/Pac-Man/shots/montage.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage.png" width="100%"/></a>
+<a href="http://shaunew.github.com/Pac-Man/shots/montage2.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage2.png" width="100%"/></a>
 
 - **Pac-Man**: 1980 original arcade by Namco.
 - **Ms. Pac-Man**: 1981 Pac-Man modification by GCC/Midway.

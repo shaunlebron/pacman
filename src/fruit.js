@@ -233,6 +233,8 @@ MsPacFruit.prototype = {
         var DL = { dx:-1, dy:1 };
         var DR = { dx:1, dy:1 };
         var Z = { dx:0, dy:0 };
+
+        // A 16-frame animation for moving 8 pixels either up, down, left, or right.
         return {
             '^': [U, U, U, U, U, U, U, U, U, Z, U, Z, Z, D, Z, D],
             '>': [Z, UR,Z, R, Z, UR,Z, R, Z, R, Z, R, Z, DR,DR,Z],

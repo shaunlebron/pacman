@@ -2288,6 +2288,41 @@ var drawCookie = function(ctx,x,y) {
     ctx.restore();
 };
 
+var drawCookieFlash = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+
+    // body
+    ctx.beginPath();
+    ctx.arc(0,0,6,0,Math.PI*2);
+    ctx.fillStyle = "#000";
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#f9bd6d";
+    ctx.fill();
+    ctx.stroke();
+
+    // chocolate chips
+    var spots = [
+        0,-3,
+        -4,-1,
+        0,2,
+        3,0,
+        3,3,
+         ];
+
+    ctx.fillStyle = "#f9bd6d";
+    var i,len;
+    for (i=0, len=spots.length; i<len; i+=2) {
+        var x = spots[i];
+        var y = spots[i+1];
+        ctx.beginPath();
+        ctx.arc(x,y,0.75,0,2*Math.PI);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
 var getSpriteFuncFromFruitName = function(name) {
     var funcs = {
         'cherry': drawCherry,

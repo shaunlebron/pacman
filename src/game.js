@@ -44,6 +44,9 @@ var getGhostDrawFunc = function(mode) {
     if (mode == GAME_OTTO) {
         return atlas.drawMonsterSprite;
     }
+    else if (mode == GAME_COOKIE) {
+        return atlas.drawMuppetSprite;
+    }
     else {
         return atlas.drawGhostSprite;
     }

@@ -21,6 +21,57 @@ var Ghost = function() {
 // inherit functions from Actor class
 Ghost.prototype.__proto__ = Actor.prototype;
 
+// displacements for ghost bouncing
+Ghost.prototype.getBounceY = (function(){
+
+    // NOTE: The bounce animation assumes an actor is moving in straight
+    // horizontal or vertical lines between the centers of each tile.
+    //
+    // When moving horizontal, bounce height is a function of x.
+    // When moving vertical, bounce height is a function of y.
+
+    var bounceY = {};
+
+    // map y tile pixel to new y tile pixel
+    bounceY[DIR_UP] =    [-4,-2,0,2,4,3,2,3];
+    bounceY[DIR_DOWN] =  [3,5,7,5,4,5,7,8];
+
+    // map x tile pixel to y tile pixel
+    bounceY[DIR_LEFT] =  [2,3,3,4,3,2,2,2];
+    bounceY[DIR_RIGHT] = [2,2,3,4,3,3,2,2];
+
+    return function(px,py,dirEnum) {
+        if (px == undefined) {
+            px = this.pixel.x;
+        }
+        if (py == undefined) {
+            py = this.pixel.y;
+        }
+        if (dirEnum == undefined) {
+            dirEnum = this.dirEnum;
+        }
+
+        if (this.mode != GHOST_OUTSIDE || !this.scared || gameMode != GAME_COOKIE) {
+            return py;
+        }
+
+        var tilePixelX = px % tileSize;
+        var tilePixelY = py % tileSize;
+        var tileY = Math.floor(py / tileSize);
+        var y = tileY*tileSize;
+
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN) {
+            y += bounceY[dirEnum][tilePixelY];
+        }
+        else {
+            y += bounceY[dirEnum][tilePixelX];
+        }
+
+        return y;
+    };
+})();
+
+
 // reset the state of the ghost on new level or level restart
 Ghost.prototype.reset = function() {
 

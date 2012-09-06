@@ -55,16 +55,15 @@ Ghost.prototype.getBounceY = (function(){
             return py;
         }
 
-        var tilePixelX = px % tileSize;
-        var tilePixelY = py % tileSize;
+        var tilePixel = this.getTilePixel({x:px,y:py});
         var tileY = Math.floor(py / tileSize);
         var y = tileY*tileSize;
 
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN) {
-            y += bounceY[dirEnum][tilePixelY];
+            y += bounceY[dirEnum][tilePixel.y];
         }
         else {
-            y += bounceY[dirEnum][tilePixelX];
+            y += bounceY[dirEnum][tilePixel.x];
         }
 
         return y;

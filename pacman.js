@@ -7071,6 +7071,25 @@ Actor.prototype.setPos = function(px,py) {
     this.commitPos();
 };
 
+// returns the relative pixel inside a tile given a map pixel
+Actor.prototype.getTilePixel = function(pixel,tilePixel) {
+    if (pixel == undefined) {
+        pixel = this.pixel;
+    }
+    if (tilePixel == undefined) {
+        tilePixel = {};
+    }
+    tilePixel.x = pixel.x % tileSize;
+    tilePixel.y = pixel.y % tileSize;
+    if (tilePixel.x < 0) {
+        tilePixel.x += tileSize;
+    }
+    if (tilePixel.y < 0) {
+        tilePixel.y += tileSize;
+    }
+    return tilePixel;
+};
+
 // updates the position's dependent variables
 Actor.prototype.commitPos = function() {
 
@@ -7079,8 +7098,7 @@ Actor.prototype.commitPos = function() {
 
     this.tile.x = Math.floor(this.pixel.x / tileSize);
     this.tile.y = Math.floor(this.pixel.y / tileSize);
-    this.tilePixel.x = this.pixel.x % tileSize;
-    this.tilePixel.y = this.pixel.y % tileSize;
+    this.getTilePixel(this.pixel,this.tilePixel);
     this.distToMid.x = midTile.x - this.tilePixel.x;
     this.distToMid.y = midTile.y - this.tilePixel.y;
 };
@@ -7229,16 +7247,15 @@ Ghost.prototype.getBounceY = (function(){
             return py;
         }
 
-        var tilePixelX = px % tileSize;
-        var tilePixelY = py % tileSize;
+        var tilePixel = this.getTilePixel({x:px,y:py});
         var tileY = Math.floor(py / tileSize);
         var y = tileY*tileSize;
 
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN) {
-            y += bounceY[dirEnum][tilePixelY];
+            y += bounceY[dirEnum][tilePixel.y];
         }
         else {
-            y += bounceY[dirEnum][tilePixelX];
+            y += bounceY[dirEnum][tilePixel.x];
         }
 
         return y;

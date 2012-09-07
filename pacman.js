@@ -9871,6 +9871,7 @@ var playState = {
         }
     },
     draw: function() {
+        renderer.setLevelFlash(false);
         renderer.blitMap();
         renderer.drawScore();
         renderer.beginMapClip();
@@ -10167,6 +10168,7 @@ var finishState = (function(){
         // script functions for each time
         triggers: {
             0:   { draw: function() {
+                    renderer.setLevelFlash(false);
                     renderer.blitMap();
                     renderer.drawScore();
                     renderer.beginMapClip();
@@ -10175,8 +10177,7 @@ var finishState = (function(){
                     renderer.drawTargets();
                     renderer.endMapClip();
             } },
-            60:  { draw: function() { flashFloorAndDraw(false); } },
-            120: { draw: function() { flashFloorAndDraw(true); } },
+            120:  { draw: function() { flashFloorAndDraw(true); } },
             132: { draw: function() { flashFloorAndDraw(false); } },
             144: { draw: function() { flashFloorAndDraw(true); } },
             156: { draw: function() { flashFloorAndDraw(false); } },
@@ -10184,7 +10185,7 @@ var finishState = (function(){
             180: { draw: function() { flashFloorAndDraw(false); } },
             192: { draw: function() { flashFloorAndDraw(true); } },
             204: { draw: function() { flashFloorAndDraw(false); } },
-            234: {
+            216: {
                 draw: function() { flashFloorAndDraw(false); },
                 init: function() {
                     if (!triggerCutsceneAtEndLevel()) {

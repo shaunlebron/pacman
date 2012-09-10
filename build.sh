@@ -9,14 +9,27 @@ debug_includes="\n"
 
 # write header
 echo "
+// Copyright 2012 Shaun Williams
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License Version 3 as 
+//  published by the Free Software Foundation.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+
+// ==========================================================================
 // PAC-MAN
 // an accurate remake of the original arcade game
 
-// original by Namco
-// research from 'The Pacman Dossier' compiled by Jamey Pittman
-// remake by Shaun Williams
+// Based on original works by Namco, GCC, and Midway.
+// Research by Jamey Pittman and Bart Grantham
+// Developed by Shaun Williams
 
 // Project Page: http://github.com/shaunew/Pac-Man
+// ==========================================================================
 
 (function(){
 " > $output

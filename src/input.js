@@ -80,6 +80,7 @@
 
     var KEY_SPACE = 32;
 
+    var KEY_M = 77;
     var KEY_N = 78;
     var KEY_Q = 81;
     var KEY_W = 87;
@@ -162,6 +163,7 @@
             state == overState);
     };
     addKeyDown(KEY_N, function() { switchState(readyNewState, 60); }, canSkip);
+    addKeyDown(KEY_M, function() { switchState(finishState); }, function() { return state == playState; });
 
     // Draw Actor Targets (fishpoles)
     addKeyDown(KEY_Q, function() { blinky.isDrawTarget = !blinky.isDrawTarget; }, isPracticeMode);

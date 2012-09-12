@@ -659,168 +659,180 @@ var initRenderer = function(){
             //ctx.clearRect(-mapPad,-mapPad,mapWidth,mapHeight);
         },
 
-        drawMap: function() {
-
-            if (!map) {
-                return;
-            }
-
-            // Sometimes pressing escape during a flash can cause flash to be permanently enabled on maps.
-            // so just turn it off when not in the finish state.
-            if (state != finishState) {
-                this.flashLevel = false;
-            }
+        drawMap: function(isCutscene) {
 
             // fill background
             beginMapFrame();
 
-            var x,y;
-            var i,j;
-            var tile;
+            if (map) {
 
-            // ghost house door
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                if (map.currentTiles[i] == '-' && map.currentTiles[i+1] == '-') {
-                    bgCtx.fillStyle = "#ffb8de";
-                    bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize*2,2);
+                // Sometimes pressing escape during a flash can cause flash to be permanently enabled on maps.
+                // so just turn it off when not in the finish state.
+                if (state != finishState) {
+                    this.flashLevel = false;
                 }
-                i++;
-            }
 
-            if (this.flashLevel) {
-                bgCtx.fillStyle = "#000";
-                bgCtx.strokeStyle = "#fff";
-            }
-            else {
-                bgCtx.fillStyle = map.wallFillColor;
-                bgCtx.strokeStyle = map.wallStrokeColor;
-            }
-            for (i=0; i<map.paths.length; i++) {
-                var path = map.paths[i];
-                bgCtx.beginPath();
-                bgCtx.moveTo(path[0].x, path[0].y);
-                for (j=1; j<path.length; j++) {
-                    if (path[j].cx != undefined)
-                        bgCtx.quadraticCurveTo(path[j].cx, path[j].cy, path[j].x, path[j].y);
-                    else
-                        bgCtx.lineTo(path[j].x, path[j].y);
+                var x,y;
+                var i,j;
+                var tile;
+
+                // ghost house door
+                i=0;
+                for (y=0; y<map.numRows; y++)
+                for (x=0; x<map.numCols; x++) {
+                    if (map.currentTiles[i] == '-' && map.currentTiles[i+1] == '-') {
+                        bgCtx.fillStyle = "#ffb8de";
+                        bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize*2,2);
+                    }
+                    i++;
                 }
-                bgCtx.quadraticCurveTo(path[j-1].x, path[0].y, path[0].x, path[0].y);
-                bgCtx.fill();
-                bgCtx.stroke();
-            }
 
-            // draw pellet tiles
-            bgCtx.fillStyle = map.pelletColor;
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                this.refreshPellet(x,y,true);
-            }
+                if (this.flashLevel) {
+                    bgCtx.fillStyle = "#000";
+                    bgCtx.strokeStyle = "#fff";
+                }
+                else {
+                    bgCtx.fillStyle = map.wallFillColor;
+                    bgCtx.strokeStyle = map.wallStrokeColor;
+                }
+                for (i=0; i<map.paths.length; i++) {
+                    var path = map.paths[i];
+                    bgCtx.beginPath();
+                    bgCtx.moveTo(path[0].x, path[0].y);
+                    for (j=1; j<path.length; j++) {
+                        if (path[j].cx != undefined)
+                            bgCtx.quadraticCurveTo(path[j].cx, path[j].cy, path[j].x, path[j].y);
+                        else
+                            bgCtx.lineTo(path[j].x, path[j].y);
+                    }
+                    bgCtx.quadraticCurveTo(path[j-1].x, path[0].y, path[0].x, path[0].y);
+                    bgCtx.fill();
+                    bgCtx.stroke();
+                }
 
-            // draw level fruit
-            var fruits = fruit.fruitHistory;
-            var i,j;
-            var f,drawFunc;
-            var numFruit = 7;
-            var startLevel = Math.max(numFruit,level);
-            if (gameMode != GAME_PACMAN) {
-                // for the Pac-Man game, display the last 7 fruit
-                // for the Ms Pac-Man game, display stop after the 7th fruit
-                startLevel = Math.min(numFruit,startLevel);
+                // draw pellet tiles
+                bgCtx.fillStyle = map.pelletColor;
+                i=0;
+                for (y=0; y<map.numRows; y++)
+                for (x=0; x<map.numCols; x++) {
+                    this.refreshPellet(x,y,true);
+                }
+
+                if (map.onDraw) {
+                    map.onDraw(bgCtx);
+                }
+
+                if (map.shouldDrawMapOnly) {
+                    endMapFrame();
+                    return;
+                }
             }
-            var scale = 0.85;
-            for (i=0, j=startLevel-numFruit+1; i<numFruit && j<=level; j++, i++) {
-                f = fruits[j];
-                if (f) {
-                    drawFunc = getSpriteFuncFromFruitName(f.name);
-                    if (drawFunc) {
-                        bgCtx.save();
-                        bgCtx.translate((map.numCols-3)*tileSize - i*16*scale, (map.numRows-1)*tileSize);
-                        bgCtx.scale(scale,scale);
-                        drawFunc(bgCtx,0,0);
-                        bgCtx.restore();
+            if (level > 0) {
+
+                var numRows = 36;
+                var numCols = 28;
+
+                if (!isCutscene) {
+                    // draw extra lives
+                    var i;
+                    bgCtx.fillStyle = pacman.color;
+
+                    bgCtx.save();
+                    bgCtx.translate(3*tileSize, (numRows-1)*tileSize);
+                    bgCtx.scale(0.85, 0.85);
+                    var lives = extraLives == Infinity ? 1 : extraLives;
+                    if (gameMode == GAME_PACMAN) {
+                        for (i=0; i<lives; i++) {
+                            drawPacmanSprite(bgCtx, 0,0, DIR_LEFT, Math.PI/6);
+                            bgCtx.translate(2*tileSize,0);
+                        }
+                    }
+                    else if (gameMode == GAME_MSPACMAN) {
+                        for (i=0; i<lives; i++) {
+                            drawMsPacmanSprite(bgCtx, 0,0, DIR_RIGHT, 1);
+                            bgCtx.translate(2*tileSize,0);
+                        }
+                    }
+                    else if (gameMode == GAME_COOKIE) {
+                        for (i=0; i<lives; i++) {
+                            drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
+                            bgCtx.translate(2*tileSize,0);
+                        }
+                    }
+                    else if (gameMode == GAME_OTTO) {
+                        for (i=0; i<lives; i++) {
+                            drawOttoSprite(bgCtx, 0,0,DIR_RIGHT, 0);
+                            bgCtx.translate(2*tileSize,0);
+                        }
+                    }
+                    if (extraLives == Infinity) {
+                        bgCtx.translate(-4*tileSize,0);
+
+                        // draw X
+                        /*
+                        bgCtx.translate(-s*2,0);
+                        var s = 2; // radius of each stroke
+                        bgCtx.beginPath();
+                        bgCtx.moveTo(-s,-s);
+                        bgCtx.lineTo(s,s);
+                        bgCtx.moveTo(-s,s);
+                        bgCtx.lineTo(s,-s);
+                        bgCtx.lineWidth = 1;
+                        bgCtx.strokeStyle = "#777";
+                        bgCtx.stroke();
+                        */
+
+                        // draw Infinity symbol
+                        var r = 2; // radius of each half-circle
+                        var d = 3; // distance between the two focal points
+                        bgCtx.beginPath();
+                        bgCtx.moveTo(-d-r,0);
+                        bgCtx.quadraticCurveTo(-d-r,-r,-d,-r);
+                        bgCtx.bezierCurveTo(-(d-r),-r,d-r,r,d,r);
+                        bgCtx.quadraticCurveTo(d+r,r,d+r,0);
+                        bgCtx.quadraticCurveTo(d+r,-r,d,-r);
+                        bgCtx.bezierCurveTo(d-r,-r,-(d-r),r,-d,r);
+                        bgCtx.quadraticCurveTo(-d-r,r,-d-r,0);
+                        bgCtx.lineWidth = 1;
+                        bgCtx.strokeStyle = "#FFF";
+                        bgCtx.stroke();
+                    }
+                    bgCtx.restore();
+                }
+
+                // draw level fruit
+                var fruits = fruit.fruitHistory;
+                var i,j;
+                var f,drawFunc;
+                var numFruit = 7;
+                var startLevel = Math.max(numFruit,level);
+                if (gameMode != GAME_PACMAN) {
+                    // for the Pac-Man game, display the last 7 fruit
+                    // for the Ms Pac-Man game, display stop after the 7th fruit
+                    startLevel = Math.min(numFruit,startLevel);
+                }
+                var scale = 0.85;
+                for (i=0, j=startLevel-numFruit+1; i<numFruit && j<=level; j++, i++) {
+                    f = fruits[j];
+                    if (f) {
+                        drawFunc = getSpriteFuncFromFruitName(f.name);
+                        if (drawFunc) {
+                            bgCtx.save();
+                            bgCtx.translate((numCols-3)*tileSize - i*16*scale, (numRows-1)*tileSize);
+                            bgCtx.scale(scale,scale);
+                            drawFunc(bgCtx,0,0);
+                            bgCtx.restore();
+                        }
                     }
                 }
-            }
-            bgCtx.font = (tileSize-1) + "px ArcadeR";
-            bgCtx.textBaseline = "middle";
-            bgCtx.fillStyle = "#777";
-            bgCtx.textAlign = "left";
-            bgCtx.fillText(level,(map.numCols-2)*tileSize, (map.numRows-1)*tileSize);
-
-            // draw extra lives
-            var i;
-            bgCtx.fillStyle = pacman.color;
-
-            bgCtx.save();
-            bgCtx.translate(3*tileSize, (map.numRows-1)*tileSize);
-            bgCtx.scale(0.85, 0.85);
-            var lives = extraLives == Infinity ? 1 : extraLives;
-            if (gameMode == GAME_PACMAN) {
-                for (i=0; i<lives; i++) {
-                    drawPacmanSprite(bgCtx, 0,0, DIR_LEFT, Math.PI/6);
-                    bgCtx.translate(2*tileSize,0);
+                if (!isCutscene) {
+                    bgCtx.font = (tileSize-1) + "px ArcadeR";
+                    bgCtx.textBaseline = "middle";
+                    bgCtx.fillStyle = "#777";
+                    bgCtx.textAlign = "left";
+                    bgCtx.fillText(level,(numCols-2)*tileSize, (numRows-1)*tileSize);
                 }
             }
-            else if (gameMode == GAME_MSPACMAN) {
-                for (i=0; i<lives; i++) {
-                    drawMsPacmanSprite(bgCtx, 0,0, DIR_RIGHT, 1);
-                    bgCtx.translate(2*tileSize,0);
-                }
-            }
-            else if (gameMode == GAME_COOKIE) {
-                for (i=0; i<lives; i++) {
-                    drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
-                    bgCtx.translate(2*tileSize,0);
-                }
-            }
-            else if (gameMode == GAME_OTTO) {
-                for (i=0; i<lives; i++) {
-                    drawOttoSprite(bgCtx, 0,0,DIR_RIGHT, 0);
-                    bgCtx.translate(2*tileSize,0);
-                }
-            }
-            if (extraLives == Infinity) {
-                bgCtx.translate(-4*tileSize,0);
-
-                // draw X
-                /*
-                bgCtx.translate(-s*2,0);
-                var s = 2; // radius of each stroke
-                bgCtx.beginPath();
-                bgCtx.moveTo(-s,-s);
-                bgCtx.lineTo(s,s);
-                bgCtx.moveTo(-s,s);
-                bgCtx.lineTo(s,-s);
-                bgCtx.lineWidth = 1;
-                bgCtx.strokeStyle = "#777";
-                bgCtx.stroke();
-                */
-
-                // draw Infinity symbol
-                var r = 2; // radius of each half-circle
-                var d = 3; // distance between the two focal points
-                bgCtx.beginPath();
-                bgCtx.moveTo(-d-r,0);
-                bgCtx.quadraticCurveTo(-d-r,-r,-d,-r);
-                bgCtx.bezierCurveTo(-(d-r),-r,d-r,r,d,r);
-                bgCtx.quadraticCurveTo(d+r,r,d+r,0);
-                bgCtx.quadraticCurveTo(d+r,-r,d,-r);
-                bgCtx.bezierCurveTo(d-r,-r,-(d-r),r,-d,r);
-                bgCtx.quadraticCurveTo(-d-r,r,-d-r,0);
-                bgCtx.lineWidth = 1;
-                bgCtx.strokeStyle = "#FFF";
-                bgCtx.stroke();
-            }
-            bgCtx.restore();
-
-            if (map.onDraw) {
-                map.onDraw(bgCtx);
-            }
-
             endMapFrame();
         },
 

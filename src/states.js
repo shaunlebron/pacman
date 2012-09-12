@@ -79,7 +79,7 @@ var homeState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu("ARCADE",2*tileSize,-2*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("ARCADE",2*tileSize,0*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     var getIconAnimFrame = function(frame) {
         frame = Math.floor(frame/3)+1;
         frame %= 4;
@@ -136,13 +136,12 @@ var homeState = (function(){
         });
 
     menu.addSpacer(0.5);
-    menu.addTextButton("SCORES",
+    menu.addTextIconButton("SOURCE CODE",
         function() {
-            exitTo(scoreState);
-        });
-    menu.addTextButton("CREDITS",
-        function() {
-            exitTo(aboutState);
+            window.open("https://github.com/shaunew/Pac-Man");
+        },
+        function(ctx,x,y,frame) {
+            atlas.drawFruitSprite(ctx,x,y,"key");
         });
 
     return {
@@ -305,6 +304,7 @@ var learnState = (function(){
             forEachCharBtn(function (btn) {
                 btn.update();
             });
+            var i,j;
             for (j=0; j<2; j++) {
                 pacman.update(j);
                 for (i=0;i<4;i++) {
@@ -322,53 +322,17 @@ var learnState = (function(){
 })();
 
 //////////////////////////////////////////////////////////////////////////////////////
-// Pre New Game State
-// (the screen shown to select final options before starting a game)
+// Game Title
+// (provides functions for managing the game title with clickable player and enemies below it)
 
-var preNewGameState = (function() {
-
-    var exitTo = function(s,fade) {
-        switchState(s,fade);
-        menu.disable();
-        forEachCharBtn(function (btn) {
-            btn.disable();
-        });
-    };
-
-    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-
-    menu.addSpacer(3);
-    menu.addTextButton("PLAY",
-        function() { 
-            practiceMode = false;
-            turboMode = false;
-            exitTo(newGameState, 60);
-        });
-    menu.addTextButton("PLAY TURBO",
-        function() { 
-            practiceMode = false;
-            turboMode = true;
-            exitTo(newGameState, 60);
-        });
-    menu.addTextButton("PRACTICE",
-        function() { 
-            practiceMode = true;
-            turboMode = false;
-            exitTo(newGameState, 60);
-        });
-    menu.addSpacer();
-    menu.addTextButton("BACK",
-        function() {
-            exitTo(homeState);
-        });
-    menu.backButton = menu.buttons[menu.buttonCount-1];
+var gameTitleState = (function() {
 
     var name,nameColor;
 
     var w = 20;
     var h = 30;
     var x = mapWidth/2 - 3*w;
-    var y = 8*tileSize;
+    var y = 5*tileSize;
     var yellowBtn = new Button(x,y,w,h,function(){
         name = getGameName();
         nameColor = pacman.color;
@@ -424,16 +388,16 @@ var preNewGameState = (function() {
         init: function() {
             name = getGameName();
             nameColor = "#FFF";
-            //menu.title = getGameName();
-            menu.enable();
             forEachCharBtn(function (btn) {
                 btn.enable();
             });
         },
+        shutdown: function() {
+            forEachCharBtn(function (btn) {
+                btn.disable();
+            });
+        },
         draw: function() {
-            renderer.clearMapFrame();
-            renderer.renderFunc(menu.draw,menu);
-
             forEachCharBtn(function (btn) {
                 renderer.renderFunc(btn.draw,btn);
             });
@@ -443,7 +407,7 @@ var preNewGameState = (function() {
                 ctx.fillStyle = nameColor;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "top";
-                ctx.fillText(name, mapWidth/2, 6*tileSize);
+                ctx.fillText(name, mapWidth/2, 3*tileSize);
             });
         },
         update: function() {
@@ -453,6 +417,192 @@ var preNewGameState = (function() {
                     btn.onclick();
                 }
             });
+        },
+    };
+
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Pre New Game State
+// (the main menu for the currently selected game)
+
+var preNewGameState = (function() {
+
+    var exitTo = function(s,fade) {
+        gameTitleState.shutdown();
+        menu.disable();
+        switchState(s,fade);
+    };
+
+    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+
+    menu.addSpacer(2);
+    menu.addTextButton("PLAY",
+        function() { 
+            practiceMode = false;
+            turboMode = false;
+            exitTo(newGameState, 60);
+        });
+    menu.addTextButton("PLAY TURBO",
+        function() { 
+            practiceMode = false;
+            turboMode = true;
+            exitTo(newGameState, 60);
+        });
+    menu.addTextButton("PRACTICE",
+        function() { 
+            practiceMode = true;
+            turboMode = false;
+            exitTo(newGameState, 60);
+        });
+    menu.addSpacer(0.5);
+    menu.addTextButton("CUTSCENES",
+        function() { 
+            exitTo(cutSceneMenuState);
+        });
+    menu.addTextButton("ABOUT",
+        function() { 
+            exitTo(aboutGameState);
+        });
+    menu.addSpacer(0.5);
+    menu.addTextButton("BACK",
+        function() {
+            exitTo(homeState);
+        });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
+
+    return {
+        init: function() {
+            menu.enable();
+            gameTitleState.init();
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.renderFunc(menu.draw,menu);
+            gameTitleState.draw();
+        },
+        update: function() {
+            gameTitleState.update();
+        },
+        getMenu: function() {
+            return menu;
+        },
+    };
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
+// About Game State
+// (the screen shows some information about the game)
+
+var aboutGameState = (function() {
+
+    var exitTo = function(s,fade) {
+        gameTitleState.shutdown();
+        menu.disable();
+        switchState(s,fade);
+    };
+
+    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+
+    menu.addSpacer(8);
+    menu.addTextButton("BACK",
+        function() {
+            exitTo(preNewGameState);
+        });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
+
+    var desc;
+    var numDescLines;
+
+    var drawDesc = function(ctx){
+        ctx.font = tileSize+"px ArcadeR";
+        ctx.fillStyle = "#FFF";
+        ctx.textBaseline = "top";
+        ctx.textAlign = "center";
+        var y = 12*tileSize;
+        var i;
+        for (i=0; i<numDescLines; i++) {
+            ctx.fillText(desc[i],14*tileSize,y+i*2*tileSize);
+        }
+    };
+
+    return {
+        init: function() {
+            menu.enable();
+            gameTitleState.init();
+            desc = getGameDescription();
+            numDescLines = desc.length;
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.renderFunc(menu.draw,menu);
+            gameTitleState.draw();
+            renderer.renderFunc(drawDesc);
+        },
+        update: function() {
+            gameTitleState.update();
+        },
+        getMenu: function() {
+            return menu;
+        },
+    };
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Cut Scene Menu State
+// (the screen that shows a list of the available cutscenes for the current game)
+
+var cutSceneMenuState = (function() {
+
+    var exitTo = function(s,fade) {
+        gameTitleState.shutdown();
+        menu.disable();
+        switchState(s,fade);
+    };
+
+    var exitToCutscene = function(s) {
+        if (s) {
+            gameTitleState.shutdown();
+            menu.disable();
+            playCutScene(s,cutSceneMenuState);
+        }
+    };
+
+    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+
+    menu.addSpacer(2);
+    menu.addTextButton("CUTSCENE 1",
+        function() { 
+            exitToCutscene(cutscenes[gameMode][0]);
+        });
+    menu.addTextButton("CUTSCENE 2",
+        function() { 
+            exitToCutscene(cutscenes[gameMode][1]);
+        });
+    menu.addTextButton("CUTSCENE 3",
+        function() { 
+            exitToCutscene(cutscenes[gameMode][2]);
+        });
+    menu.addSpacer();
+    menu.addTextButton("BACK",
+        function() {
+            exitTo(preNewGameState);
+        });
+    menu.backButton = menu.buttons[menu.buttonCount-1];
+
+    return {
+        init: function() {
+            menu.enable();
+            gameTitleState.init();
+            level = 0;
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.renderFunc(menu.draw,menu);
+            gameTitleState.draw();
+        },
+        update: function() {
+            gameTitleState.update();
         },
         getMenu: function() {
             return menu;
@@ -1226,7 +1376,6 @@ var finishState = (function(){
             192: { draw: function() { flashFloorAndDraw(true); } },
             204: { draw: function() { flashFloorAndDraw(false); } },
             216: {
-                draw: function() { flashFloorAndDraw(false); },
                 init: function() {
                     if (!triggerCutsceneAtEndLevel()) {
                         switchState(readyNewState,60);

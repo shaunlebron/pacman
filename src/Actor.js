@@ -90,7 +90,9 @@ Actor.prototype.getTilePixel = function(pixel,tilePixel) {
 Actor.prototype.commitPos = function() {
 
     // use map-specific tunnel teleport
-    map.teleport(this);
+    if (map) {
+        map.teleport(this);
+    }
 
     this.tile.x = Math.floor(this.pixel.x / tileSize);
     this.tile.y = Math.floor(this.pixel.y / tileSize);

@@ -99,6 +99,12 @@ Player.prototype.step = (function(){
 
     return function() {
 
+        // just increment if we're not in a map
+        if (!map) {
+            this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
+            return 1;
+        }
+
         // identify the axes of motion
         var a = (this.dir.x != 0) ? 'x' : 'y'; // axis of motion
         var b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
@@ -156,20 +162,22 @@ Player.prototype.update = function(j) {
     Actor.prototype.update.call(this,j);
 
     // eat something
-    var t = map.getTile(this.tile.x, this.tile.y);
-    if (t == '.' || t == 'o') {
+    if (map) {
+        var t = map.getTile(this.tile.x, this.tile.y);
+        if (t == '.' || t == 'o') {
 
-        // apply eating drag (unless in turbo mode)
-        if (!turboMode) {
-            this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
+            // apply eating drag (unless in turbo mode)
+            if (!turboMode) {
+                this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
+            }
+
+            map.onDotEat(this.tile.x, this.tile.y);
+            ghostReleaser.onDotEat();
+            fruit.onDotEat();
+            addScore((t=='.') ? 10 : 50);
+
+            if (t=='o')
+                energizer.activate();
         }
-
-        map.onDotEat(this.tile.x, this.tile.y);
-        ghostReleaser.onDotEat();
-        fruit.onDotEat();
-        addScore((t=='.') ? 10 : 50);
-
-        if (t=='o')
-            energizer.activate();
     }
 };

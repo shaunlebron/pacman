@@ -12,12 +12,73 @@ var turboMode = false;
 
 // current game mode
 var gameMode = GAME_PACMAN;
-var getGameName = function(mode) {
-    if (mode == undefined) {
-        mode = gameMode;
-    }
-    return ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"][mode];
-};
+var getGameName = (function(){
+
+    var names = ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"];
+    
+    return function(mode) {
+        if (mode == undefined) {
+            mode = gameMode;
+        }
+        return names[mode];
+    };
+})();
+
+var getGameDescription = (function(){
+
+    var desc = [
+        [
+            "ORIGINAL ARCADE:",
+            "NAMCO (C) 1980",
+            "",
+            "REVERSE-ENGINEERING:",
+            "JAMEY PITTMAN",
+            "",
+            "REMAKE:",
+            "SHAUN WILLIAMS",
+        ],
+        [
+            "ORIGINAL ARCADE ADDON:",
+            "MIDWAY/GCC (C) 1981",
+            "",
+            "REVERSE-ENGINEERING:",
+            "BART GRANTHAM",
+            "",
+            "REMAKE:",
+            "SHAUN WILLIAMS",
+        ],
+        [
+            "A NEW PAC-MAN GAME",
+            "WITH RANDOM MAZES:",
+            "SHAUN WILLIAMS (C) 2012",
+            "",
+            "COOKIE MONSTER DESIGN:",
+            "JIM HENSON",
+            "",
+            "PAC-MAN CROSSOVER CONCEPT:",
+            "TANG YONGFA",
+        ],
+        [
+            "THE UNRELEASED",
+            "MS. PAC-MAN PROTOTYPE:",
+            "GCC (C) 1981",
+            "",
+            "SPRITES REFERENCED FROM",
+            "STEVE GOLSON'S",
+            "CAX 2012 PRESENTATION",
+            "",
+            "REMAKE:",
+            "SHAUN WILLIAMS",
+        ],
+    ];
+    
+    return function(mode) {
+        if (mode == undefined) {
+            mode = gameMode;
+        }
+        return desc[mode];
+    };
+})();
 
 var getGhostNames = function(mode) {
     if (mode == undefined) {

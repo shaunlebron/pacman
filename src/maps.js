@@ -105,11 +105,7 @@ mapLearn.name = "Pac-Man";
 mapLearn.wallStrokeColor = "#47b897"; // from Pac-Man Plus
 mapLearn.wallFillColor = "#000";
 mapLearn.pelletColor = "#ffb8ae";
-mapLearn.onDraw = function(ctx) {
-    // kludge to clear the level indicators and extra lives
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0,30*tileSize+1,mapWidth,7*tileSize);
-};
+mapLearn.shouldDrawMapOnly = true;
 
 // Original Pac-Man map
 var mapPacman = new Map(28, 36, (

@@ -5,6 +5,14 @@ A historical tribute and accurate remake of the original Pac-Man arcade game
 
 Inspired by [The Pac-Man Dossier](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html)
 
+### Under Construction
+
+- Sound
+- Cutscenes
+- 2 Player switch-off
+
+Contact me at shaunewilliams@gmail.com
+
 License
 -------
 
@@ -28,13 +36,17 @@ fit the size of any screen.  **Performance** may increase by shrinking the windo
 - **end**: pause the game
 - **escape**: open in-game menu
 
-### Tested Browers
+### Confirmed Desktop Browers
 
 - Safari
 - Firefox
 - Chrome
-- Mobile Safari (iOS web app compatible)
-- Firefox Beta on Android
+
+### Confirmed Mobile Devices
+
+- [iPad and iPhone (Mobile Safari)](http://www.atariage.com/forums/topic/202594-html5-pac-man/)
+- Samsung Galaxy Tablet 7 (Firefox Beta)
+- Nexus 7 (Chrome)
 
 Games
 -----
@@ -86,8 +98,8 @@ into **slow-motion** or **rewind time** with the special onscreen buttons or the
 - **q,w,e,r,t**: toggle target graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 - **a,s,d,f,g**: toggle path graphic for blinky, pinky, inky, clyde, and pacman, respectively.
 
-Procedural Maps
----------------
+Procedurally-Generated Maps
+---------------------------
 
 In the **Cookie-Man** game mode, the mazes change as often as they do in Ms. Pac-Man, but are **procedurally generated**.  Each level has a pre-defined color palette, granting an element of consistency to the random structure of the mazes.
 
@@ -132,13 +144,6 @@ I also chose to leave out the **overflow bug** which shifts a ghost target when 
 ### Report/Fix Bugs
 
 Feel free to report any inaccuracies that may detract or simply annoy.  Any reverse-engineers willing to contribute their expertise to this project would be a big help as well!
-
-Future Work
------------
-
-- Sound
-- Cutscenes
-- 2 Player switch-off
 
 Navigating the Repository
 -------------------------

@@ -6103,6 +6103,45 @@ var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShi
     ctx.restore();
 };
 
+// draw giant pacman body
+var drawGiantPacmanSprite = function(ctx,x,y,dirEnum,frame) {
+
+    var color = "#FF0";
+    var mouthShift = 0;
+    var angle = 0;
+    if (frame == 1) {
+        mouthShift = -4;
+        angle = Math.atan(7/14);
+    }
+    else if (frame == 2) {
+        mouthShift = -2;
+        angle = Math.atan(13/9);
+    }
+
+    ctx.save();
+    ctx.translate(x,y);
+
+    // rotate to current heading direction
+    var d90 = Math.PI/2;
+    if (dirEnum == DIR_UP) ctx.rotate(3*d90);
+    else if (dirEnum == DIR_RIGHT) ctx.rotate(0);
+    else if (dirEnum == DIR_DOWN) ctx.rotate(d90);
+    else if (dirEnum == DIR_LEFT) ctx.rotate(2*d90);
+
+    // plant corner of mouth
+    ctx.beginPath();
+    ctx.moveTo(mouthShift,0);
+
+    // draw head outline
+    ctx.arc(0,0,16,angle,2*Math.PI-angle);
+    ctx.closePath();
+
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    ctx.restore();
+};
+
 var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
     var angle = 0;
 
@@ -10774,8 +10813,8 @@ var pacmanCutscene1 = (function() {
             scriptState.init.call(this);
 
             // initialize actor positions
-            pacman.setPos(35*tileSize, 18*tileSize); // TODO: set exact pixel
-            blinky.setPos(38*tileSize+4, 18*tileSize); // TODO: set exact pixel
+            pacman.setPos(232, 164);
+            blinky.setPos(257, 164);
 
             // initialize actor directions
             blinky.setDir(DIR_LEFT);
@@ -10815,16 +10854,18 @@ var pacmanCutscene1 = (function() {
                 },
                 draw: function() {
                     renderer.blitMap();
+                    renderer.beginMapClip();
                     renderer.drawPlayer();
                     renderer.drawGhost(blinky);
+                    renderer.endMapClip();
                 },
             },
 
             // Pac-Man chases Blinky
-            300: {
+            260: {
                 init: function() {
-                    pacman.setPos(-39*tileSize, 17*tileSize);
-                    blinky.setPos(-8*tileSize, 18*tileSize);
+                    pacman.setPos(-193, 155);
+                    blinky.setPos(-8, 164);
 
                     // initialize actor directions
                     blinky.setDir(DIR_RIGHT);
@@ -10853,21 +10894,21 @@ var pacmanCutscene1 = (function() {
                 },
                 draw: function() {
                     renderer.blitMap();
+                    renderer.beginMapClip();
                     renderer.drawGhost(blinky);
                     renderer.renderFunc(function(ctx) {
                         var frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
                         if (frame == 3) {
                             frame = 1;
                         }
-                        var mouthShift = 2; // mouth isn't as wide when giant
-                        var scale = 3; // giant scale
-                        drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, Math.PI/6*frame, mouthShift, scale);
+                        drawGiantPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
                     });
+                    renderer.endMapClip();
                 },
             },
 
             // end
-            800: {
+            640: {
                 init: function() {
                     // disable custom steps
                     delete pacman.getNumSteps;
@@ -10878,7 +10919,7 @@ var pacmanCutscene1 = (function() {
                     delete blinky.steer;
 
                     // exit to next level
-                    switchState(pacmanCutscene1.nextState);
+                    switchState(pacmanCutscene1.nextState, 60);
                 },
             },
         },

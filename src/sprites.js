@@ -1479,6 +1479,45 @@ var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShi
     ctx.restore();
 };
 
+// draw giant pacman body
+var drawGiantPacmanSprite = function(ctx,x,y,dirEnum,frame) {
+
+    var color = "#FF0";
+    var mouthShift = 0;
+    var angle = 0;
+    if (frame == 1) {
+        mouthShift = -4;
+        angle = Math.atan(7/14);
+    }
+    else if (frame == 2) {
+        mouthShift = -2;
+        angle = Math.atan(13/9);
+    }
+
+    ctx.save();
+    ctx.translate(x,y);
+
+    // rotate to current heading direction
+    var d90 = Math.PI/2;
+    if (dirEnum == DIR_UP) ctx.rotate(3*d90);
+    else if (dirEnum == DIR_RIGHT) ctx.rotate(0);
+    else if (dirEnum == DIR_DOWN) ctx.rotate(d90);
+    else if (dirEnum == DIR_LEFT) ctx.rotate(2*d90);
+
+    // plant corner of mouth
+    ctx.beginPath();
+    ctx.moveTo(mouthShift,0);
+
+    // draw head outline
+    ctx.arc(0,0,16,angle,2*Math.PI-angle);
+    ctx.closePath();
+
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    ctx.restore();
+};
+
 var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
     var angle = 0;
 

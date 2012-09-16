@@ -70,6 +70,12 @@ Ghost.prototype.getBounceY = (function(){
     };
 })();
 
+Ghost.prototype.getAnimFrame = function(frames) {
+    if (frames == undefined) {
+        frames = this.frames;
+    }
+    return Math.floor(frames/8)%2; // toggle frame every 8 ticks
+};
 
 // reset the state of the ghost on new level or level restart
 Ghost.prototype.reset = function() {

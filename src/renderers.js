@@ -913,7 +913,7 @@ var initRenderer = function(){
             var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color, dirEnum) {
                 if (mode == GHOST_EATEN)
                     return;
-                var frame = Math.floor(frames/8)%2; // toggle frame every 8 ticks
+                var frame = g.getAnimFrame(frames);
                 var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
                 var func = getGhostDrawFunc();
                 var y = g.getBounceY(pixel.x, pixel.y, dirEnum);

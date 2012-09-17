@@ -2502,3 +2502,22 @@ var drawSnail = (function(){
         ctx.restore();
     };
 })();
+
+var drawHeartSprite = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle = "#ffb8ff";
+
+    ctx.beginPath();
+    ctx.moveTo(0,-3);
+    ctx.bezierCurveTo(-1,-4,-2,-6,-3.5,-6);
+    ctx.quadraticCurveTo(-7,-6,-7,-0.5);
+    ctx.bezierCurveTo(-7,2,-2,5,0,7);
+    ctx.bezierCurveTo(2,5,7,2,7,-0.5);
+    ctx.quadraticCurveTo(7,-6,3.5,-6);
+    ctx.bezierCurveTo(2,-6,1,-4,0,-3);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}

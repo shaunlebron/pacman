@@ -3280,15 +3280,18 @@ var initRenderer = function(){
         },
 
         // draw a center screen message (e.g. "start", "ready", "game over")
-        drawMessage: function(text, color) {
+        drawMessage: function(text, color, x,y) {
             ctx.font = tileSize + "px ArcadeR";
-            ctx.textBaseline = "middle";
-            ctx.textAlign = "center";
-            ctx.strokeStyle = "#000";
-            ctx.lineWidth = 2;
-            ctx.strokeText(text, map.numCols*tileSize/2, this.messageRow*tileSize+midTile.y);
+            ctx.textBaseline = "top";
+            ctx.textAlign = "right";
             ctx.fillStyle = color;
-            ctx.fillText(text, map.numCols*tileSize/2, this.messageRow*tileSize+midTile.y);
+            x += text.length;
+            ctx.fillText(text, x*tileSize, y*tileSize);
+        },
+
+        drawReadyMessage: function() {
+            this.drawMessage("READY ","#FF0",11,20);
+            drawExclamationPoint(ctx,16*tileSize+3, 20*tileSize+3);
         },
 
         // draw the points earned from the most recently eaten ghost
@@ -7144,7 +7147,28 @@ var drawHeartSprite = function(ctx,x,y) {
     ctx.fill();
 
     ctx.restore();
-}
+};
+
+var drawExclamationPoint = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = ctx.fillStyle = "#ff0";
+    ctx.beginPath();
+    ctx.moveTo(-1,1);
+    ctx.bezierCurveTo(-1,0,-1,-3,0,-3);
+    ctx.lineTo(2,-3);
+    ctx.bezierCurveTo(2,-2,0,0,-1,1);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(-2,3,0.5,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+};
 //@line 1 "src/Actor.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // The actor class defines common data functions for the ghosts and pacman
@@ -10068,7 +10092,8 @@ var newGameState = (function() {
                 return;
             renderer.blitMap();
             renderer.drawScore();
-            renderer.drawMessage("READY!","#FF0");
+            renderer.drawMessage("PLAYER ONE", "#0FF", 9, 14);
+            renderer.drawReadyMessage();
         },
         update: function() {
             if (frames == duration*60) {
@@ -10103,8 +10128,12 @@ var readyState =  (function(){
             vcr.init();
         },
         draw: function() {
-            newGameState.draw();
+            if (!map)
+                return;
+            renderer.blitMap();
+            renderer.drawScore();
             renderer.drawActors();
+            renderer.drawReadyMessage();
         },
         update: function() {
             if (frames == duration*60)
@@ -10519,7 +10548,7 @@ var overState = (function() {
         draw: function() {
             renderer.blitMap();
             renderer.drawScore();
-            renderer.drawMessage("GAME  OVER", "#F00");
+            renderer.drawMessage("GAME  OVER", "#F00", 9, 20);
         },
         update: function() {
             if (frames == 120) {

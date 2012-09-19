@@ -2520,4 +2520,25 @@ var drawHeartSprite = function(ctx,x,y) {
     ctx.fill();
 
     ctx.restore();
-}
+};
+
+var drawExclamationPoint = function(ctx,x,y) {
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = ctx.fillStyle = "#ff0";
+    ctx.beginPath();
+    ctx.moveTo(-1,1);
+    ctx.bezierCurveTo(-1,0,-1,-3,0,-3);
+    ctx.lineTo(2,-3);
+    ctx.bezierCurveTo(2,-2,0,0,-1,1);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(-2,3,0.5,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+};

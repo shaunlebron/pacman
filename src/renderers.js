@@ -413,15 +413,18 @@ var initRenderer = function(){
         },
 
         // draw a center screen message (e.g. "start", "ready", "game over")
-        drawMessage: function(text, color) {
+        drawMessage: function(text, color, x,y) {
             ctx.font = tileSize + "px ArcadeR";
-            ctx.textBaseline = "middle";
-            ctx.textAlign = "center";
-            ctx.strokeStyle = "#000";
-            ctx.lineWidth = 2;
-            ctx.strokeText(text, map.numCols*tileSize/2, this.messageRow*tileSize+midTile.y);
+            ctx.textBaseline = "top";
+            ctx.textAlign = "right";
             ctx.fillStyle = color;
-            ctx.fillText(text, map.numCols*tileSize/2, this.messageRow*tileSize+midTile.y);
+            x += text.length;
+            ctx.fillText(text, x*tileSize, y*tileSize);
+        },
+
+        drawReadyMessage: function() {
+            this.drawMessage("READY ","#FF0",11,20);
+            drawExclamationPoint(ctx,16*tileSize+3, 20*tileSize+3);
         },
 
         // draw the points earned from the most recently eaten ghost

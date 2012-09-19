@@ -948,7 +948,8 @@ var newGameState = (function() {
                 return;
             renderer.blitMap();
             renderer.drawScore();
-            renderer.drawMessage("READY!","#FF0");
+            renderer.drawMessage("PLAYER ONE", "#0FF", 9, 14);
+            renderer.drawReadyMessage();
         },
         update: function() {
             if (frames == duration*60) {
@@ -983,8 +984,12 @@ var readyState =  (function(){
             vcr.init();
         },
         draw: function() {
-            newGameState.draw();
+            if (!map)
+                return;
+            renderer.blitMap();
+            renderer.drawScore();
             renderer.drawActors();
+            renderer.drawReadyMessage();
         },
         update: function() {
             if (frames == duration*60)
@@ -1399,7 +1404,7 @@ var overState = (function() {
         draw: function() {
             renderer.blitMap();
             renderer.drawScore();
-            renderer.drawMessage("GAME  OVER", "#F00");
+            renderer.drawMessage("GAME  OVER", "#F00", 9, 20);
         },
         update: function() {
             if (frames == 120) {

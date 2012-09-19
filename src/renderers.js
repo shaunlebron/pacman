@@ -894,14 +894,15 @@ var initRenderer = function(){
             if (score == 0) {
                 score = "00";
             }
-            ctx.fillText(score, 7*tileSize, tileSize);
+            var y = tileSize+1;
+            ctx.fillText(score, 7*tileSize, y);
 
             if (!practiceMode) {
                 var highScore = getHighScore();
                 if (highScore == 0) {
                     highScore = "00";
                 }
-                ctx.fillText(highScore, 17*tileSize, tileSize);
+                ctx.fillText(highScore, 17*tileSize, y);
             }
         },
 

@@ -31,7 +31,13 @@ var switchRenderer = function(i) {
 };
 
 var getDevicePixelRatio = function() {
-    return window.devicePixelRatio || 1;
+    // Only consider the device pixel ratio for devices that are <= 320 pixels in width.
+    // This is necessary for the iPhone4's retina display; otherwise the game would be blurry.
+    // The iPad3's retina display @ 2048x1536 starts slowing the game down.
+    if (window.innerWidth <= 320) {
+        return window.devicePixelRatio || 1;
+    }
+    return 1;
 };
 
 var initRenderer = function(){

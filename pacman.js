@@ -10891,6 +10891,7 @@ var pacmanCutscene1 = (function() {
 
             // initialize misc actor properties
             blinky.scared = false;
+            blinky.mode = GHOST_OUTSIDE;
 
             // clear other states
             clearCheats();
@@ -11075,11 +11076,13 @@ var mspacmanCutscene1 = (function() {
             
             // initial ghost states
             inky.frames = 0;
+            inky.mode = GHOST_OUTSIDE;
             inky.scared = false;
             inky.setPos(pac.pixel.x-42, 99);
             inky.setDir(DIR_RIGHT);
             inky.faceDirEnum = DIR_RIGHT;
             pinky.frames = 3;
+            pinky.mode = GHOST_OUTSIDE;
             pinky.scared = false;
             pinky.setPos(mspac.pixel.x+49, 180);
             pinky.setDir(DIR_LEFT);

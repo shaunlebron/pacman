@@ -936,6 +936,7 @@ var newGameState = (function() {
 
     return {
         init: function() {
+            clearCheats();
             frames = 0;
             level = 0;
             extraLives = practiceMode ? Infinity : 3;

@@ -10087,6 +10087,7 @@ var newGameState = (function() {
 
     return {
         init: function() {
+            clearCheats();
             frames = 0;
             level = 0;
             extraLives = practiceMode ? Infinity : 3;
@@ -10705,7 +10706,7 @@ var overState = (function() {
 
     // Slow-Motion
     var isPracticeMode = function() { return isPlayState() && practiceMode; };
-    isPracticeMode = function() { return true; };
+    //isPracticeMode = function() { return true; };
     addKeyDown(KEY_1, function() { executive.setUpdatesPerSecond(30); }, isPracticeMode);
     addKeyDown(KEY_2,  function() { executive.setUpdatesPerSecond(15); }, isPracticeMode);
     addKeyUp  (KEY_1, function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);

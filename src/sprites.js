@@ -1556,34 +1556,30 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
 
     // bow
     var x=-7.5,y=-7.5;
-    ctx.beginPath();
-    ctx.arc(x+1,y+4,1.25,0,Math.PI*2);
-    ctx.arc(x+2,y+5,1.25,0,Math.PI*2);
-    ctx.arc(x+3,y+3,1.25,0,Math.PI*2);
-    ctx.arc(x+4,y+1,1.25,0,Math.PI*2);
-    ctx.arc(x+5,y+2,1.25,0,Math.PI*2);
     ctx.fillStyle = "#F00";
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x+2.5,y+3.5,0.5,0,Math.PI*2);
-    ctx.arc(x+3.5,y+2.5,0.5,0,Math.PI*2);
+    ctx.beginPath(); ctx.arc(x+1,y+4,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+2,y+5,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+3,y+3,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+4,y+1,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+5,y+2,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
     ctx.fillStyle = "#0031FF";
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(x+2.5,y+3.5,0.5,0,Math.PI*2); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+3.5,y+2.5,0.5,0,Math.PI*2); ctx.closePath(); ctx.fill();
 
     // lips
     ctx.strokeStyle = "#F00";
     ctx.lineWidth = 1.25;
-    ctx.lineCap = "butt";
+    ctx.lineCap = "round";
     ctx.beginPath();
     if (frame == 0) {
         ctx.moveTo(5,0);
-        ctx.lineTo(7,0);
-        ctx.moveTo(6.5,-2);
-        ctx.lineTo(6.5,2);
+        ctx.lineTo(6.5,0);
+        ctx.moveTo(6.5,-1.5);
+        ctx.lineTo(6.5,1.5);
     }
     else {
-        var r1 = 7;
-        var r2 = 9;
+        var r1 = 7.5;
+        var r2 = 8.5;
         var c = Math.cos(angle);
         var s = Math.sin(angle);
         ctx.moveTo(-3+r1*c,r1*s);
@@ -1601,14 +1597,15 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
 
     // eye
     ctx.strokeStyle = "#000";
+    ctx.lineCap = "round";
     ctx.beginPath();
     if (frame == 0) {
-        ctx.moveTo(-3,-2);
-        ctx.lineTo(0,-2);
+        ctx.moveTo(-2.5,-2);
+        ctx.lineTo(-0.5,-2);
     }
     else {
-        var r1 = 0;
-        var r2 = 3;
+        var r1 = 0.5;
+        var r2 = 2.5;
         var c = Math.cos(angle);
         var s = Math.sin(angle);
         ctx.moveTo(-3+r1*c,-2-r1*s);

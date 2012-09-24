@@ -352,6 +352,9 @@ Ghost.prototype.steer = function() {
             this.targetting = false;
         }
         else {
+
+            /* SET TARGET */
+
             // target ghost door
             if (this.mode == GHOST_GOING_HOME) {
                 this.targetTile.x = map.doorTile.x;
@@ -367,8 +370,11 @@ Ghost.prototype.steer = function() {
                 this.targetting = 'corner';
             }
             // use custom function for each ghost when in attack mode
-            else
+            else {
                 this.setTarget();
+            }
+
+            /* CHOOSE TURN */
 
             if (this.mode == GHOST_GOING_HOME &&
                 map.getExitDir && 
@@ -380,9 +386,13 @@ Ghost.prototype.steer = function() {
                 // to ensure that ghosts can return home without looping forever.
             }
             else {
-                // edit openTiles to reflect the current map's special contraints
-                if (map.constrainGhostTurns)
-                    map.constrainGhostTurns(this.tile, openTiles);
+                // Do not constrain turns for ghosts going home. (thanks bitwave)
+                if (this.mode != GHOST_GOING_HOME) {
+                    if (map.constrainGhostTurns) {
+                        // edit openTiles to reflect the current map's special contraints
+                        map.constrainGhostTurns(this.tile, openTiles);
+                    }
+                }
 
                 // choose direction that minimizes distance to target
                 dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);

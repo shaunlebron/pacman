@@ -3702,7 +3702,12 @@ var initRenderer = function(){
                     }
                 }
                 if (!isCutscene) {
-                    bgCtx.font = (tileSize-1) + "px ArcadeR";
+                    if (level >= 100) {
+                        bgCtx.font = (tileSize-3) + "px ArcadeR";
+                    }
+                    else {
+                        bgCtx.font = (tileSize-1) + "px ArcadeR";
+                    }
                     bgCtx.textBaseline = "middle";
                     bgCtx.fillStyle = "#777";
                     bgCtx.textAlign = "left";

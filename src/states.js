@@ -23,8 +23,9 @@ var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpda
 // if continueUpdate2 is true, then nextState.update will be called while fading in
 var fadeNextState = function (prevState, nextState, frameDuration, continueUpdate1, continueUpdate2) {
     var frames;
-    var inFirstState = function() { return frames < frameDuration/2; };
-    var getStateTime = function() { return inFirstState() ? frames/frameDuration*2 : frames/frameDuration*2-1; };
+    var midFrame = Math.floor(frameDuration/2);
+    var inFirstState = function() { return frames < midFrame; };
+    var getStateTime = function() { return frames/frameDuration*2 + (inFirstState() ? 0 : -1); };
     var initialized = false;
 
     return {
@@ -35,35 +36,42 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
         draw: function() {
             if (!initialized) return;
             var t = getStateTime();
-            if (inFirstState()) {
+            if (frames < midFrame) {
                 if (prevState) {
                     prevState.draw();
                     renderer.setOverlayColor("rgba(0,0,0,"+t+")");
                 }
             }
-            else {
+            else if (frames > midFrame) {
                 nextState.draw();
                 renderer.setOverlayColor("rgba(0,0,0,"+(1-t)+")");
             }
         },
         update: function() {
-            if (inFirstState()) {
-                if (continueUpdate1) prevState.update();
-            }
-            else {
-                if (continueUpdate2) nextState.update();
-            }
 
-            if (frames == frameDuration) {
-                state = nextState; // hand over state
+            // update prevState
+            if (frames < midFrame) {
+                if (continueUpdate1) {
+                    prevState.update();
+                }
+            }
+            // change to nextState
+            else if (frames == midFrame) {
+                nextState.init();
+            }
+            // update nextState
+            else if (frames < frameDuration) {
+                if (continueUpdate2) {
+                    nextState.update();
+                }
+            }
+            // hand over state to nextState
+            else {
+                state = nextState;
                 initialized = false;
             }
-            else {
-                if (frames == frameDuration/2) {
-                    nextState.init();
-                }
-                frames++;
-            }
+
+            frames++;
         },
     }
 };

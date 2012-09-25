@@ -45,7 +45,16 @@ var ghostCommander = (function() {
                 i = 1;
             else
                 i = 2;
-            return times[i][frame];
+            var newCmd = times[i][frame];
+
+            if (gameMode == GAME_PACMAN) {
+                return newCmd;
+            }
+            else if (frame <= 27*60) { // only revearse twice in Ms. Pac-Man (two happen in first 27 seconds)
+                if (newCmd != undefined) {
+                    return GHOST_CMD_CHASE; // always chase in Ms. Pac-Man mode
+                }
+            }
         };
     })();
 
@@ -79,9 +88,7 @@ var ghostCommander = (function() {
             if (!energizer.isActive()) {
                 newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
-                    // new command is always "chase" when in Ms. Pac-Man mode
-                    command = (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO || gameMode == GAME_COOKIE) ? GHOST_CMD_CHASE : newCmd;
-
+                    command = newCmd;
                     for (i=0; i<4; i++)
                         ghosts[i].reverse();
                 }

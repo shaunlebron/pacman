@@ -28,7 +28,6 @@ echo "
 // Research by Jamey Pittman and Bart Grantham
 // Developed by Shaun Williams
 
-// Project Page: http://github.com/shaunew/Pac-Man
 // ==========================================================================
 
 (function(){

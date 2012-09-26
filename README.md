@@ -161,6 +161,22 @@ Thanks to Jonathan Blow for creating the rewind mechanic in [Braid](http://braid
 
 Thanks to Tang Yongfa and their cookie monster Pac-Man design at [threadless website](http://www.threadless.com/product/2362/Cookies) which I used as the character in the random maze mode.
 
+Links to Public Feedback
+------------------------
+
+- http://www.reddit.com/r/programming/comments/z0tuv/historical_tribute_and_accurate_remake_of_the/
+- http://www.reddit.com/r/javascript/comments/z7bc0/very_polished_javascript_remake_of_pac_man/
+- http://www.reddit.com/r/webdev/comments/z85lj/quite_accurate_remake_of_pacman_in_js/
+- http://news.ycombinator.com/item?id=4448539
+- http://news.ycombinator.com/item?id=4464006
+- http://www.lockergnome.com/news/2012/09/02/play-pac-man-online-for-free-no-download/
+- http://www.atariage.com/forums/topic/202594-html5-pac-man/
+- http://boards.straightdope.com/sdmb/showthread.php?t=664081
+- http://www.classicarcadegaming.com/forums/index.php?topic=4563.0
+- http://news.dice.com/2012/09/04/pac-man-online-open-source/
+
+
+
 [1]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/montage2.png
 [2]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/learn.png
 [3]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/practice.png

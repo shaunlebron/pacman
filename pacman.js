@@ -18,7 +18,6 @@
 // Research by Jamey Pittman and Bart Grantham
 // Developed by Shaun Williams
 
-// Project Page: http://github.com/shaunew/Pac-Man
 // ==========================================================================
 
 (function(){
@@ -8546,14 +8545,15 @@ var ghostReleaser = (function(){
 var elroyTimer = (function(){
 
     // get the number of dots left that should trigger elroy stage #1 or #2
-    var getDotsLeftLimit = (function(){
+    var getDotsEatenLimit = (function(){
         var dotsLeft = [
             [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120], // elroy1
             [10,15,20,20,20,25,25,25,30,30,30,40,40,40, 50, 50, 50, 50, 60, 60, 60]]; // elroy2
         return function(stage) {
             var i = level;
             if (i>21) i = 21;
-            return dotsLeft[stage-1][i-1];
+            var pacman_max_pellets = 244;
+            return pacman_max_pellets - dotsLeft[stage-1][i-1];
         };
     })();
 
@@ -8580,21 +8580,25 @@ var elroyTimer = (function(){
             waitForClyde = true;
         },
         update: function() {
-            var dotsLeft = map.dotsLeft();
 
             // stop waiting for clyde when clyde leaves home
             if (waitForClyde && clyde.mode != GHOST_PACING_HOME)
                 waitForClyde = false;
 
-            if (waitForClyde)
+            if (waitForClyde) {
                 blinky.elroy = 0;
-            else
-                if (dotsLeft <= getDotsLeftLimit(2))
+            }
+            else {
+                if (map.dotsEaten >= getDotsEatenLimit(2)) {
                     blinky.elroy = 2;
-                else if (dotsLeft <= getDotsLeftLimit(1))
+                }
+                else if (map.dotsEaten >= getDotsEatenLimit(1)) {
                     blinky.elroy = 1;
-                else
+                }
+                else {
                     blinky.elroy = 0;
+                }
+            }
         },
         save: save,
         load: load,

@@ -1,0 +1,14 @@
+# This is a list of bugs.
+
+MINOR:
+    - vector overflow when pacman looking up
+    - map walls too skinny
+    - map colors should change in ms. pac-man
+    - disembodied eyes stay that way until next frame in ghost pen
+
+BACKBURNER:
+    - collision detection
+
+PRIORITY:
+    - pre-joystick should not push pac-man through a turn unless pressed the turning tile
+    - ghosts cannot turn down after exiting tunnels?

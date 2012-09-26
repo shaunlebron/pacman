@@ -1,0 +1,25 @@
+# This is a feature backlog.
+
+- cookie-man
+    - change ghost sprites to muppet sprites
+
+- two player mode
+    - (cocktail option for screen flipping?)
+
+- cutscenes
+- puzzles
+    - experiment with puzzle mode
+- mapgen
+    - post-resize path-shifting for more diversity
+    - write article
+    - automated tester to check for sharp turns and deads and wide paths
+    - hidden debug canvas to display cells and tiles to help track potential bugs
+    - map a cell group to a size indicating number of cells attached to it?
+
+fullscreen:
+http://jlongster.com/2011/11/21/canvas.html
+
+audio:
+https://developer.mozilla.org/en-US/docs/Introducing_the_Audio_API_Extension
+
+

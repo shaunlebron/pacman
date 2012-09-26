@@ -23,8 +23,6 @@ published by the Free Software Foundation.
 Play
 ----
 
-[Click here to play the current version](http://shaunew.github.com/Pac-Man)
-
 You can play the game on all canvas-enabled browsers.  **Touch controls** are
 enabled for mobile browsers.  The game is **resolution-independent** and smoothly scales to
 fit the size of any screen.  **Performance** may increase by shrinking the window or zooming in with your browser.
@@ -53,7 +51,7 @@ Games
 
 Each of the following games are playable from the main menu.
 
-<a href="http://shaunew.github.com/Pac-Man/shots/montage2.png"><img src="http://shaunew.github.com/Pac-Man/shots/montage2.png" width="100%"/></a>
+![Montage][1]
 
 - **Pac-Man**: 1980 original arcade by Namco.
 - **Ms. Pac-Man**: 1981 Pac-Man modification by GCC/Midway.
@@ -76,7 +74,7 @@ Learn Mode
 
 Learn Mode allows you to visualize the behaviors of the ghosts.  (The colored square represents the ghost bait.)
 
-<a href="http://shaunew.github.com/Pac-Man/shots/learn.png"><img src="http://shaunew.github.com/Pac-Man/shots/learn.png" width="100%"/></a>
+![Learn][2]
 
 Practice Mode
 -------------
@@ -84,7 +82,7 @@ Practice Mode
 This mode allows you to practice the game with special features.  You can go
 into **slow-motion** or **rewind time** with the special onscreen buttons or the hotkeys listed below.  (The time-manipulation controls and design were borrowed from the game [Braid](http://braid-game.com/)).  You can also turn on **invincibility** or **ghost visualizers** from the menu.
 
-<a href="http://shaunew.github.com/Pac-Man/shots/practice.png"><img src="http://shaunew.github.com/Pac-Man/shots/practice.png" width="100%"/></a>
+![Practice][3]
 
 ### Practice Controls
 
@@ -103,13 +101,11 @@ Procedurally-Generated Maps
 
 In the **Cookie-Man** game mode, the mazes change as often as they do in Ms. Pac-Man, but are **procedurally generated**.  Each level has a pre-defined color palette, granting an element of consistency to the random structure of the mazes.
 
-<a href="http://shaunew.github.com/Pac-Man/shots/procedural.png"><img src="http://shaunew.github.com/Pac-Man/shots/procedural.png" width="100%"/></a>
+![Procedural][4]
 
 ### Algorithm Description
 
 The mazes are built carefully to closely match design patterns deduced from the original maps found in Pac-Man and Ms. Pac-Man.
-
-[Click here to read a description of the algorithm](http://shaunew.github.com/Pac-Man/mapgen)
 
 Accuracy
 --------
@@ -155,7 +151,7 @@ Thanks to **Bart Grantham** for sharing his expert knowledge on Ms. Pac-Man's in
 
 ### Original Games
 
-Thanks to the original Pac-Man team at Namco for creating such an enduring game and not suing me.  And thanks to the MAME team for their arcade emulator and very helpful debugger.
+Thanks to the original Pac-Man team at Namco for creating such an enduring game.  And thanks to the MAME team for their arcade emulator and very helpful debugger.
 
 Thanks to the Ms. Pac-Man team at GCC for improving Pac-Man with a variety of aesthetic maps that I based the map generator on.
 
@@ -164,3 +160,8 @@ Thanks to Jonathan Blow for creating the rewind mechanic in [Braid](http://braid
 ### Art
 
 Thanks to Tang Yongfa and their cookie monster Pac-Man design at [threadless website](http://www.threadless.com/product/2362/Cookies) which I used as the character in the random maze mode.
+
+[1]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/montage2.png
+[2]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/learn.png
+[3]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/practice.png
+[4]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/procedural.png

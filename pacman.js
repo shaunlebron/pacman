@@ -9320,7 +9320,7 @@ var homeState = (function(){
     menu.addSpacer(0.5);
     menu.addTextIconButton("SOURCE CODE",
         function() {
-            window.location.href = "/src";
+            window.location.href = "get-the-code.htm";
         },
         function(ctx,x,y,frame) {
             atlas.drawFruitSprite(ctx,x,y,"key");

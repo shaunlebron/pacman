@@ -146,7 +146,7 @@ var homeState = (function(){
     menu.addSpacer(0.5);
     menu.addTextIconButton("SOURCE CODE",
         function() {
-            window.open("https://github.com/shaunew/Pac-Man");
+            window.location.href = "/src";
         },
         function(ctx,x,y,frame) {
             atlas.drawFruitSprite(ctx,x,y,"key");

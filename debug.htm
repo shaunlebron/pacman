@@ -30,6 +30,10 @@
             src: url('font/PressStart2P.ttf');
             */
         }
+        #canvas-warning {
+            color: #FF0;
+            font-size: 1.5em;
+        }
     </style>
 
 
@@ -70,7 +74,7 @@
 
 <body>
     <div style='font-family: ArcadeR'> </div>
-    <canvas id='canvas'></canvas>
+    <canvas id='canvas'><div id="canvas-warning">Your browser does not support HTML Canvas.  Please upgrade!</div></canvas>
     <canvas id='atlas' style="display:none"></canvas>
 </body>
 

@@ -7553,9 +7553,8 @@ Ghost.prototype.leaveHome = function() {
 
 // function called when pacman eats an energizer
 Ghost.prototype.onEnergized = function() {
-    // only reverse if we are in an active targetting mode or going home
-    if (this.mode == GHOST_OUTSIDE || this.mode == GHOST_GOING_HOME)
-        this.reverse();
+
+    this.reverse();
 
     // only scare me if not already going home
     if (this.mode != GHOST_GOING_HOME && this.mode != GHOST_ENTERING_HOME) {

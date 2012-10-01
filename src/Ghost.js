@@ -310,26 +310,14 @@ Ghost.prototype.steer = function() {
     var oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
     var actor;                           // actor whose corner we will target
 
-    var isOnNewTile = ((this.dirEnum == DIR_UP && this.tilePixel.y == tileSize-1) ||
-                (this.dirEnum == DIR_DOWN && this.tilePixel.y == 0) ||
-                (this.dirEnum == DIR_LEFT && this.tilePixel.x == tileSize-1) ||
-                (this.dirEnum == DIR_RIGHT && this.tilePixel.x == 0));
-
-    // reverse direction if commanded
-    if (this.sigReverse && (this.mode == GHOST_OUTSIDE || this.mode == GHOST_GOING_HOME)) {
-        // reverse direction only if we've reached a new tile
-        if (isOnNewTile) {
-                this.sigReverse = false;
-                this.setDir(oppDirEnum);
-                this.faceDirEnum = this.dirEnum;
-                return;
-        }
-    }
+    // ghost should look ahead if at mid tile
+    var shouldLookAhead = (this.distToMid.x == 0 && this.distToMid.y == 0);
 
     // special map-specific steering when going to, entering, pacing inside, or leaving home
     this.homeSteer();
 
-    oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
+    // current opposite direction enum
+    oppDirEnum = rotateAboutFace(this.dirEnum); 
 
     // only execute rest of the steering logic if we're pursuing a target tile
     if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME) {
@@ -338,16 +326,32 @@ Ghost.prototype.steer = function() {
     }
 
     // If we have just reached a new tile, then update the next direction.
-    if (isOnNewTile) {
+    if (shouldLookAhead) {
+        
+        if (this.sigReverse) {
+            // reverse direction
+            this.setDir(oppDirEnum);
+            this.sigReverse = false;
+        }
+        else {
+            // commit previous direction
+            this.setDir(this.faceDirEnum);
+        }
 
-        // get surrounding tiles and their open indication
-        openTiles = getOpenTiles(this.tile, this.dirEnum);
+        // get next tile
+        var nextTile = {
+            x: this.tile.x + this.dir.x,
+            y: this.tile.y + this.dir.y,
+        };
+
+        // get tiles surrounding next tile and their open indication
+        openTiles = getOpenTiles(nextTile, this.dirEnum);
 
         if (this.scared) {
             // choose a random turn
             dirEnum = Math.floor(Math.random()*4);
             while (!openTiles[dirEnum])
-                dirEnum = (dirEnum+1)%4;
+                dirEnum = (dirEnum+1)%4; // look at likelihood of random turns
             this.targetting = false;
         }
         else {
@@ -377,7 +381,7 @@ Ghost.prototype.steer = function() {
 
             if (this.mode == GHOST_GOING_HOME &&
                 map.getExitDir && 
-                (dirEnum=map.getExitDir(this.tile.x,this.tile.y)) != undefined &&
+                (dirEnum=map.getExitDir(nextTile.x,nextTile.y)) != undefined &&
                 dirEnum != oppDirEnum) {
                 // if the map has a 'getExitDir' function, then we are using
                 // a custom algorithm to choose the next direction.
@@ -389,22 +393,17 @@ Ghost.prototype.steer = function() {
                 if (this.mode != GHOST_GOING_HOME) {
                     if (map.constrainGhostTurns) {
                         // edit openTiles to reflect the current map's special contraints
-                        map.constrainGhostTurns(this.tile, openTiles);
+                        map.constrainGhostTurns(nextTile, openTiles);
                     }
                 }
 
                 // choose direction that minimizes distance to target
-                dirEnum = getTurnClosestToTarget(this.tile, this.targetTile, openTiles);
+                dirEnum = getTurnClosestToTarget(nextTile, this.targetTile, openTiles);
             }
         }
 
         // Point eyeballs to the determined direction.
         this.faceDirEnum = dirEnum;
     }
-    else if (this.distToMid.x == 0 && this.distToMid.y == 0) {
-        // Once we have reached the middle of the tile, then we start travelling in the direction that we are looking.
-        this.setDir(this.faceDirEnum);
-    }
-
 };
 

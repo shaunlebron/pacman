@@ -144,9 +144,9 @@ var homeState = (function(){
         });
 
     menu.addSpacer(0.5);
-    menu.addTextIconButton("SOURCE CODE",
+    menu.addTextIconButton("DISCUSS",
         function() {
-            window.location.href = "get-the-code.htm";
+            window.location.href = "forum";
         },
         function(ctx,x,y,frame) {
             atlas.drawFruitSprite(ctx,x,y,"key");

@@ -407,3 +407,20 @@ Ghost.prototype.steer = function() {
     }
 };
 
+Ghost.prototype.getPathDistLeft = function(fromPixel, dirEnum) {
+    var distLeft = tileSize;
+    var pixel = this.getTargetPixel();
+    if (this.targetting == 'pacman') {
+        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+            distLeft = Math.abs(fromPixel.y - pixel.y);
+        else {
+            distLeft = Math.abs(fromPixel.x - pixel.x);
+        }
+    }
+    return distLeft;
+};
+
+Ghost.prototype.setTarget = function() {
+    this.targetTile = this.getTargetTile();
+    this.targetting = 'pacman';
+};

@@ -21,10 +21,11 @@ clyde.pathCenter = { x:2, y:2 };
 /////////////////////////////////////////////////////////////////
 // blinky directly targets pacman
 
-blinky.setTarget = function() {
-    this.targetTile.x = pacman.tile.x;
-    this.targetTile.y = pacman.tile.y;
-    this.targetting = 'pacman';
+blinky.getTargetTile = function() {
+    return { x: pacman.tile.x, y: pacman.tile.y };
+};
+blinky.getTargetPixel = function() {
+    return { x: pacman.pixel.x, y: pacman.pixel.y };
 };
 blinky.drawTarget = function(ctx) {
     if (!this.targetting) return;
@@ -34,52 +35,43 @@ blinky.drawTarget = function(ctx) {
     else
         renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
 };
-blinky.getPathDistLeft = function(fromPixel, dirEnum) {
-    var distLeft = tileSize;
-    if (this.targetting == 'pacman') {
-        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(fromPixel.y - pacman.pixel.y);
-        else
-            distLeft = Math.abs(fromPixel.x - pacman.pixel.x);
-    }
-    return distLeft;
-};
 
 /////////////////////////////////////////////////////////////////
 // pinky targets four tiles ahead of pacman
-
-pinky.setTarget = function() {
-    this.targetTile.x = pacman.tile.x + 4*pacman.dir.x;
-    this.targetTile.y = pacman.tile.y + 4*pacman.dir.y;
-    this.targetting = 'pacman';
+pinky.getTargetTile = function() {
+    var px = pacman.tile.x + 4*pacman.dir.x;
+    var py = pacman.tile.y + 4*pacman.dir.y;
+    if (pacman.dirEnum == DIR_UP) {
+        px -= 4;
+    }
+    return { x : px, y : py };
+};
+pinky.getTargetPixel = function() {
+    var px = pacman.pixel.x + 4*pacman.dir.x*tileSize;
+    var py = pacman.pixel.y + 4*pacman.dir.y*tileSize;
+    if (pacman.dirEnum == DIR_UP) {
+        px -= 4*tileSize;
+    }
+    return { x : px, y : py };
 };
 pinky.drawTarget = function(ctx) {
     if (!this.targetting) return;
     ctx.fillStyle = this.color;
 
-    var px = pacman.pixel.x + 4*pacman.dir.x*tileSize;
-    var py = pacman.pixel.y + 4*pacman.dir.y*tileSize;
+    var pixel = this.getTargetPixel();
 
     if (this.targetting == 'pacman') {
         ctx.beginPath();
         ctx.moveTo(pacman.pixel.x, pacman.pixel.y);
-        ctx.lineTo(px, py);
-        ctx.closePath();
+        if (pacman.dirEnum == DIR_UP) {
+            ctx.lineTo(pacman.pixel.x, pixel.y);
+        }
+        ctx.lineTo(pixel.x, pixel.y);
         ctx.stroke();
-        renderer.drawCenterPixelSq(ctx, px,py, targetSize);
+        renderer.drawCenterPixelSq(ctx, pixel.x, pixel.y, targetSize);
     }
     else
         renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
-};
-pinky.getPathDistLeft = function(fromPixel, dirEnum) {
-    var distLeft = tileSize;
-    if (this.targetting == 'pacman') {
-        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(fromPixel.y - (pacman.pixel.y + pacman.dir.y*tileSize*4));
-        else
-            distLeft = Math.abs(fromPixel.x - (pacman.pixel.x + pacman.dir.x*tileSize*4));
-    }
-    return distLeft;
 };
 
 /////////////////////////////////////////////////////////////////
@@ -87,35 +79,47 @@ pinky.getPathDistLeft = function(fromPixel, dirEnum) {
 inky.getTargetTile = function() {
     var px = pacman.tile.x + 2*pacman.dir.x;
     var py = pacman.tile.y + 2*pacman.dir.y;
+    if (pacman.dirEnum == DIR_UP) {
+        px -= 2;
+    }
     return {
         x : blinky.tile.x + 2*(px - blinky.tile.x),
         y : blinky.tile.y + 2*(py - blinky.tile.y),
     };
 };
+inky.getJointPixel = function() {
+    var px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
+    var py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
+    if (pacman.dirEnum == DIR_UP) {
+        px -= 2*tileSize;
+    }
+    return { x: px, y: py };
+};
 inky.getTargetPixel = function() {
     var px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
     var py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
+    if (pacman.dirEnum == DIR_UP) {
+        px -= 2*tileSize;
+    }
     return {
         x : blinky.pixel.x + 2*(px-blinky.pixel.x),
         y : blinky.pixel.y + 2*(py-blinky.pixel.y),
     };
 };
-inky.setTarget = function() {
-    this.targetTile = this.getTargetTile();
-    this.targetting = 'pacman';
-};
 inky.drawTarget = function(ctx) {
     if (!this.targetting) return;
     var pixel;
 
-    var px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
-    var py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
+    var joint = this.getJointPixel();
 
     if (this.targetting == 'pacman') {
         pixel = this.getTargetPixel();
         ctx.beginPath();
         ctx.moveTo(pacman.pixel.x, pacman.pixel.y);
-        ctx.lineTo(px, py);
+        if (pacman.dirEnum == DIR_UP) {
+            ctx.lineTo(pacman.pixel.x, joint.y);
+        }
+        ctx.lineTo(joint.x, joint.y);
         ctx.moveTo(blinky.pixel.x, blinky.pixel.y);
         ctx.lineTo(pixel.x, pixel.y);
         ctx.closePath();
@@ -123,7 +127,7 @@ inky.drawTarget = function(ctx) {
 
         // draw seesaw joint
         ctx.beginPath();
-        ctx.arc(px,py,2,0,Math.PI*2);
+        ctx.arc(joint.x, joint.y, 2,0,Math.PI*2);
         ctx.fillStyle = ctx.strokeStyle;
         ctx.fill();
 
@@ -135,36 +139,26 @@ inky.drawTarget = function(ctx) {
         renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
     }
 };
-inky.getPathDistLeft = function(fromPixel, dirEnum) {
-    var distLeft = tileSize;
-    var toPixel;
-    if (this.targetting == 'pacman') {
-        toPixel = this.getTargetPixel();
-        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(toPixel.y - fromPixel.y);
-        else
-            distLeft = Math.abs(toPixel.x - fromPixel.x);
-    }
-    return distLeft;
-};
 
 /////////////////////////////////////////////////////////////////
 // clyde targets pacman if >=8 tiles away, otherwise targets home
 
-clyde.setTarget = function() {
+clyde.getTargetTile = function() {
     var dx = pacman.tile.x - this.tile.x;
     var dy = pacman.tile.y - this.tile.y;
     var dist = dx*dx+dy*dy;
     if (dist >= 64) {
-        this.targetTile.x = pacman.tile.x;
-        this.targetTile.y = pacman.tile.y;
         this.targetting = 'pacman';
+        return { x: pacman.tile.x, y: pacman.tile.y };
     }
     else {
-        this.targetTile.x = this.cornerTile.x;
-        this.targetTile.y = this.cornerTile.y;
         this.targetting = 'corner';
+        return { x: this.cornerTile.x, y: this.cornerTile.y };
     }
+};
+clyde.getTargetPixel = function() {
+    // NOTE: won't ever need this function for corner tile because it is always outside
+    return { x: pacman.pixel.x, y: pacman.pixel.y };
 };
 clyde.drawTarget = function(ctx) {
     if (!this.targetting) return;
@@ -200,16 +194,6 @@ clyde.drawTarget = function(ctx) {
         }
         renderer.drawCenterTileSq(ctx, this.targetTile.x, this.targetTile.y, targetSize);
     }
-};
-clyde.getPathDistLeft = function(fromPixel, dirEnum) {
-    var distLeft = tileSize;
-    if (this.targetting == 'pacman') {
-        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(fromPixel.y - pacman.pixel.y);
-        else
-            distLeft = Math.abs(fromPixel.x - pacman.pixel.x);
-    }
-    return distLeft;
 };
 
 

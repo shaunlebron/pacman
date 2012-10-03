@@ -136,9 +136,10 @@ var getPlayerDrawFunc = function(mode) {
 
 var clearCheats = function() {
     pacman.invincible = false;
-    for (i=0; i<4; i++) {
-        ghosts[i].isDrawPath = false;
-        ghosts[i].isDrawTarget = false;
+    pacman.ai = false;
+    for (i=0; i<5; i++) {
+        actors[i].isDrawPath = false;
+        actors[i].isDrawTarget = false;
     }
     executive.setUpdatesPerSecond(60);
 };

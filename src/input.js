@@ -129,10 +129,14 @@
 
     // Move Pac-Man
     var isPlayState = function() { return state == learnState || state == newGameState || state == playState || state == readyNewState || state == readyRestartState; };
-    addKeyDown(KEY_LEFT,  function() { pacman.setNextDir(DIR_LEFT); },  isPlayState);
-    addKeyDown(KEY_RIGHT, function() { pacman.setNextDir(DIR_RIGHT); }, isPlayState);
-    addKeyDown(KEY_UP,    function() { pacman.setNextDir(DIR_UP); },    isPlayState);
-    addKeyDown(KEY_DOWN,  function() { pacman.setNextDir(DIR_DOWN); },  isPlayState);
+    addKeyDown(KEY_LEFT,  function() { pacman.setInputDir(DIR_LEFT); },  isPlayState);
+    addKeyDown(KEY_RIGHT, function() { pacman.setInputDir(DIR_RIGHT); }, isPlayState);
+    addKeyDown(KEY_UP,    function() { pacman.setInputDir(DIR_UP); },    isPlayState);
+    addKeyDown(KEY_DOWN,  function() { pacman.setInputDir(DIR_DOWN); },  isPlayState);
+    addKeyUp  (KEY_LEFT,  function() { pacman.clearInputDir(DIR_LEFT); },  isPlayState);
+    addKeyUp  (KEY_RIGHT, function() { pacman.clearInputDir(DIR_RIGHT); }, isPlayState);
+    addKeyUp  (KEY_UP,    function() { pacman.clearInputDir(DIR_UP); },    isPlayState);
+    addKeyUp  (KEY_DOWN,  function() { pacman.clearInputDir(DIR_DOWN); },  isPlayState);
 
     // Slow-Motion
     var isPracticeMode = function() { return isPlayState() && practiceMode; };
@@ -235,10 +239,10 @@ var initSwipe = function() {
 
                 // register direction
                 if (Math.abs(dx) >= Math.abs(dy)) {
-                    pacman.setNextDir(dx>0 ? DIR_RIGHT : DIR_LEFT);
+                    pacman.setInputDir(dx>0 ? DIR_RIGHT : DIR_LEFT);
                 }
                 else {
-                    pacman.setNextDir(dy>0 ? DIR_DOWN : DIR_UP);
+                    pacman.setInputDir(dy>0 ? DIR_DOWN : DIR_UP);
                 }
             }
         }
@@ -255,8 +259,14 @@ var initSwipe = function() {
         event.preventDefault();
         x=y=dx=dy=0;
     };
+
+    var touchTap = function(event) {
+        // tap to clear input directions
+        pacman.clearInputDir(undefined);
+    };
     
     // register touch events
+    document.onclick = touchTap;
     document.ontouchstart = touchStart;
     document.ontouchend = touchEnd;
     document.ontouchmove = touchMove;

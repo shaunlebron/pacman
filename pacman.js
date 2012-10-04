@@ -7709,6 +7709,9 @@ Ghost.prototype.steer = function() {
             this.setDir(this.faceDirEnum);
         }
 
+        // update opposite direction enum
+        oppDirEnum = rotateAboutFace(this.dirEnum);
+
         // get next tile
         var nextTile = {
             x: this.tile.x + this.dir.x,
@@ -7750,16 +7753,20 @@ Ghost.prototype.steer = function() {
 
             /* CHOOSE TURN */
 
-            if (this.mode == GHOST_GOING_HOME &&
-                map.getExitDir && 
-                (dirEnum=map.getExitDir(nextTile.x,nextTile.y)) != undefined &&
-                dirEnum != oppDirEnum) {
-                // if the map has a 'getExitDir' function, then we are using
+            var dirDecided = false;
+            if (this.mode == GHOST_GOING_HOME && map.getExitDir) {
+                // If the map has a 'getExitDir' function, then we are using
                 // a custom algorithm to choose the next direction.
                 // Currently, procedurally-generated maps use this function
                 // to ensure that ghosts can return home without looping forever.
+                var exitDir = map.getExitDir(nextTile.x,nextTile.y);
+                if (exitDir != undefined && exitDir != oppDirEnum) {
+                    dirDecided = true;
+                    dirEnum = exitDir;
+                }
             }
-            else {
+
+            if (!dirDecided) {
                 // Do not constrain turns for ghosts going home. (thanks bitwave)
                 if (this.mode != GHOST_GOING_HOME) {
                     if (map.constrainGhostTurns) {

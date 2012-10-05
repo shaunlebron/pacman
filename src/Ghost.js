@@ -400,7 +400,7 @@ Ghost.prototype.steer = function() {
                 if (this.mode != GHOST_GOING_HOME) {
                     if (map.constrainGhostTurns) {
                         // edit openTiles to reflect the current map's special contraints
-                        map.constrainGhostTurns(nextTile, openTiles);
+                        map.constrainGhostTurns(nextTile, openTiles, this.dirEnum);
                     }
                 }
 

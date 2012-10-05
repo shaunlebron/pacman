@@ -419,6 +419,14 @@ mapMsPacman3.fruitPaths = {
                  { "path": "<vvv>>>vvv>>>^^^^^^<<<^^^^^^>>>>>^^>>>>>" }
              ]
          };
+mapMsPacman3.constrainGhostTurns = function(tile,openTiles,dirEnum) {
+    // prevent ghost from turning down when exiting tunnels
+    if (tile.y == 12) {
+        if ((tile.x == 1 && dirEnum == DIR_RIGHT) || (tile.x == 26 && dirEnum == DIR_LEFT)) {
+            openTiles[DIR_DOWN] = false;
+        }
+    }
+};
 
 // Ms. Pac-Man map 4
 

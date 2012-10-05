@@ -2,6 +2,7 @@
 // Cutscenes
 //
 
+// TODO: no cutscene after board 17 (last one after completing board 17)
 var triggerCutsceneAtEndLevel = function() {
     if (gameMode == GAME_PACMAN) {
         if (level == 2) {

@@ -3213,7 +3213,7 @@ var initRenderer = function(){
                 // predict next turn from current tile
                 openTiles = getOpenTiles(tile, dirEnum);
                 if (actor != pacman && map.constrainGhostTurns)
-                    map.constrainGhostTurns(tile, openTiles);
+                    map.constrainGhostTurns(tile, openTiles, dirEnum);
                 dirEnum = getTurnClosestToTarget(tile, target, openTiles);
                 setDirFromEnum(dir,dirEnum);
                 
@@ -7771,7 +7771,7 @@ Ghost.prototype.steer = function() {
                 if (this.mode != GHOST_GOING_HOME) {
                     if (map.constrainGhostTurns) {
                         // edit openTiles to reflect the current map's special contraints
-                        map.constrainGhostTurns(nextTile, openTiles);
+                        map.constrainGhostTurns(nextTile, openTiles, this.dirEnum);
                     }
                 }
 
@@ -10923,6 +10923,7 @@ var initSwipe = function() {
 // Cutscenes
 //
 
+// TODO: no cutscene after board 17 (last one after completing board 17)
 var triggerCutsceneAtEndLevel = function() {
     if (gameMode == GAME_PACMAN) {
         if (level == 2) {
@@ -11853,6 +11854,14 @@ mapMsPacman3.fruitPaths = {
                  { "path": "<vvv>>>vvv>>>^^^^^^<<<^^^^^^>>>>>^^>>>>>" }
              ]
          };
+mapMsPacman3.constrainGhostTurns = function(tile,openTiles,dirEnum) {
+    // prevent ghost from turning down when exiting tunnels
+    if (tile.y == 12) {
+        if ((tile.x == 1 && dirEnum == DIR_RIGHT) || (tile.x == 26 && dirEnum == DIR_LEFT)) {
+            openTiles[DIR_DOWN] = false;
+        }
+    }
+};
 
 // Ms. Pac-Man map 4
 

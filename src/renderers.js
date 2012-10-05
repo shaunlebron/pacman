@@ -346,7 +346,7 @@ var initRenderer = function(){
                 // predict next turn from current tile
                 openTiles = getOpenTiles(tile, dirEnum);
                 if (actor != pacman && map.constrainGhostTurns)
-                    map.constrainGhostTurns(tile, openTiles);
+                    map.constrainGhostTurns(tile, openTiles, dirEnum);
                 dirEnum = getTurnClosestToTarget(tile, target, openTiles);
                 setDirFromEnum(dir,dirEnum);
                 

@@ -9,6 +9,5 @@ BACKBURNER:
     - collision detection
 
 PRIORITY:
-    - ghosts cannot turn down after exiting tunnels?
     - correct/verify reversal-times
     - correct/verify actor speeds

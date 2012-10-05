@@ -211,11 +211,37 @@ var setNextMsPacMap = function() {
 
     // The third and fourth maps repeat indefinitely after the second map.
     // (i.e. act1=map1, act2=map2, act3=map3, act4=map4, act5=map3, act6=map4, ...)
-    var i = getLevelAct(level)-1;
-    if (i > 1) {
-        i = (i%2)+2;
+    var act = getLevelAct(level)-1;
+    var mapIndex = (act <= 1) ? act : (act%2)+2;
+    map = maps[mapIndex];
+    if (act >= 4) {
+        var colors = [
+            {
+                wallFillColor: "#ffb8ff",
+                wallStrokeColor: "#FFFF00",
+                pelletColor: "#00ffff",
+            },
+            {
+                wallFillColor: "#FFB8AE",
+                wallStrokeColor: "#FF0000",
+                pelletColor: "#dedeff",
+            },
+            {
+                wallFillColor: "#de9751",
+                wallStrokeColor: "#dedeff",
+                pelletColor: "#ff0000",
+            },
+            {
+                wallFillColor: "#2121ff",
+                wallStrokeColor: "#ffb851",
+                pelletColor: "#dedeff",
+            },
+        ][act%4];
+
+        map.wallFillColor = colors.wallFillColor;
+        map.wallStrokeColor = colors.wallStrokeColor;
+        map.pelletColor = colors.pelletColor;
     }
-    map = maps[i];
     // TODO: add random color bug from arcade?
 };
 

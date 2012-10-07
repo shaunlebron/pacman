@@ -25,6 +25,10 @@ var triggerCutsceneAtEndLevel = function() {
             playCutScene(mspacmanCutscene1, readyNewState);
             return true;
         }
+        else if (level == 5) {
+            playCutScene(mspacmanCutscene2, readyNewState);
+            return true;
+        }
     }
 
     // no cutscene triggered
@@ -494,9 +498,155 @@ var mspacmanCutscene1 = (function() {
     }; // returned object
 })(); // mspacCutscene1
 
+var mspacmanCutscene2 = (function() {
+
+    // create new players pac and mspac for this scene
+    var pac = new Player();
+    var mspac = new Player();
+
+    // draws pac or mspac
+    var drawPlayer = function(ctx,player) {
+        var frame = player.getAnimFrame();
+        var func;
+        if (player == pac) {
+            func = atlas.drawPacmanSprite;
+        }
+        else if (player == mspac) {
+            func = atlas.drawMsPacmanSprite;
+        }
+        func(ctx, player.pixel.x, player.pixel.y, player.dirEnum, frame);
+    };
+
+    // draws all actors
+    var draw = function() {
+        renderer.blitMap();
+        renderer.beginMapClip();
+        renderer.renderFunc(function(ctx) {
+            drawPlayer(ctx,pac);
+            drawPlayer(ctx,mspac);
+        });
+        renderer.endMapClip();
+    };
+
+    // updates all actors
+    var update = function() {
+        var j;
+        for (j=0; j<7; j++) {
+            pac.update(j);
+            mspac.update(j);
+        }
+        pac.frames++;
+        mspac.frames++;
+    };
+
+    var exit = function() {
+        // exit to next level
+        switchState(mspacmanCutscene2.nextState, 60);
+    };
+
+    var getChaseSteps = function() { return 3; };
+    var getFleeSteps = function() { return "32"[this.frames%2]; };
+    var getDartSteps = function() { return 7; };
+
+    return {
+        __proto__: scriptState,
+        init: function() {
+            scriptState.init.call(this);
+
+            // chosen by trial-and-error to match animations
+            mspac.frames = 20;
+            pac.frames = 12;
+
+            // step player animation every four frames
+            pac.getStepFrame = function() { return Math.floor(this.frames/4)%4; };
+            mspac.getStepFrame = function() { return Math.floor(this.frames/4)%4; };
+
+            // set steering functions
+            pac.steer = function(){};
+            mspac.steer = function(){};
+        },
+        triggers: {
+            0: {
+                draw: function() {
+                    renderer.blitMap();
+                },
+            },
+
+            160: {
+                init: function() {
+                    pac.setPos(-8, 67);
+                    pac.setDir(DIR_RIGHT);
+
+                    mspac.setPos(-106, 68);
+                    mspac.setDir(DIR_RIGHT);
+
+                    pac.getNumSteps = getFleeSteps;
+                    mspac.getNumSteps = getChaseSteps;
+                },
+                update: update,
+                draw: draw,
+            },
+            410: {
+                init: function() {
+                    pac.setPos(329, 163);
+                    pac.setDir(DIR_LEFT);
+
+                    mspac.setPos(223+8, 164);
+                    mspac.setDir(DIR_LEFT);
+
+                    pac.getNumSteps = getChaseSteps;
+                    mspac.getNumSteps = getFleeSteps;
+                },
+                update: update,
+                draw: draw,
+            },
+            670: {
+                init: function() {
+                    pac.setPos(-8,142);
+                    pac.setDir(DIR_RIGHT);
+
+                    mspac.setPos(-106, 143);
+                    mspac.setDir(DIR_RIGHT);
+
+                    pac.getNumSteps = getFleeSteps;
+                    mspac.getNumSteps = getChaseSteps;
+                },
+                update: update,
+                draw: draw,
+            },
+            930: {
+                init: function() {
+                    pac.setPos(233+148,99);
+                    pac.setDir(DIR_LEFT);
+
+                    mspac.setPos(233,100);
+                    mspac.setDir(DIR_LEFT);
+
+                    pac.getNumSteps = getDartSteps;
+                    mspac.getNumSteps = getDartSteps;
+                },
+                update: function() {
+                    if (pac.pixel.x <= 17 && pac.dirEnum == DIR_LEFT) {
+                        pac.setPos(-2,195);
+                        pac.setDir(DIR_RIGHT);
+
+                        mspac.setPos(-2-148,196);
+                        mspac.setDir(DIR_RIGHT);
+                    }
+                    update();
+                },
+                draw: draw,
+            },
+            1140: {
+                init: exit,
+            },
+        }, // triggers
+    }; // returned object
+})(); // mspacCutscene2
+
 var cutscenes = [
     [pacmanCutscene1], // GAME_PACMAN
-    [mspacmanCutscene1], // GAME_MSPACMAN
+    [mspacmanCutscene1, mspacmanCutscene2], // GAME_MSPACMAN
     [], // GAME_COOKIE
     [], // GAME_OTTO
 ];

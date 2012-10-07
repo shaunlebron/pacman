@@ -1191,8 +1191,9 @@ var scriptState = (function(){
             this.frames = 0;        // frames since state began
             this.triggerFrame = 0;  // frames since last trigger
 
-            this.drawFunc = this.triggers[0].draw;   // current draw function
-            this.updateFunc = this.triggers[0].update; // current update function
+            var trigger = this.triggers[0];
+            this.drawFunc = trigger ? trigger.draw : undefined;   // current draw function
+            this.updateFunc = trigger ? trigger.update : undefined; // current update function
         },
         update: function() {
 

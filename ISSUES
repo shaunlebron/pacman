@@ -9,5 +9,4 @@ BACKBURNER:
     - collision detection
 
 PRIORITY:
-    - correct/verify reversal-times
     - correct/verify actor speeds

@@ -29,9 +29,9 @@ var ghostCommander = (function() {
         times[1][t+=1033*60] = GHOST_CMD_SCATTER;
         times[1][t+=1] = GHOST_CMD_CHASE;
         // level 5+
-        times[2][t=7*60] = GHOST_CMD_CHASE;
+        times[2][t=5*60] = GHOST_CMD_CHASE;
         times[2][t+=20*60] = GHOST_CMD_SCATTER;
-        times[2][t+=7*60] = GHOST_CMD_CHASE;
+        times[2][t+=5*60] = GHOST_CMD_CHASE;
         times[2][t+=20*60] = GHOST_CMD_SCATTER;
         times[2][t+=5*60] = GHOST_CMD_CHASE;
         times[2][t+=1037*60] = GHOST_CMD_SCATTER;

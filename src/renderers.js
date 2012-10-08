@@ -932,8 +932,9 @@ var initRenderer = function(){
                 var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
                 var func = getGhostDrawFunc();
                 var y = g.getBounceY(pixel.x, pixel.y, dirEnum);
+                var x = (g == blinky && scared) ? pixel.x+1 : pixel.x; // blinky's sprite is shifted right when scared
 
-                func(ctx,pixel.x,y,frame,faceDirEnum,scared,isFlash,eyes,color);
+                func(ctx,x,y,frame,faceDirEnum,scared,isFlash,eyes,color);
             };
             vcr.drawHistory(ctx, function(t) {
                 draw(

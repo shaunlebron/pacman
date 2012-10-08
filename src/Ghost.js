@@ -310,9 +310,6 @@ Ghost.prototype.steer = function() {
     var oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
     var actor;                           // actor whose corner we will target
 
-    // ghost should look ahead if at mid tile
-    var shouldLookAhead = (this.distToMid.x == 0 && this.distToMid.y == 0);
-
     // special map-specific steering when going to, entering, pacing inside, or leaving home
     this.homeSteer();
 
@@ -325,21 +322,24 @@ Ghost.prototype.steer = function() {
         return;
     }
 
-    // If we have just reached a new tile, then update the next direction.
-    if (shouldLookAhead) {
-        
+    // AT MID-TILE (update movement direction)
+    if (this.distToMid.x == 0 && this.distToMid.y == 0) {
+
+        // trigger reversal
         if (this.sigReverse) {
-            // reverse direction
-            this.setDir(oppDirEnum);
+            this.faceDirEnum = oppDirEnum;
             this.sigReverse = false;
         }
-        else {
-            // commit previous direction
-            this.setDir(this.faceDirEnum);
-        }
 
-        // update opposite direction enum
-        oppDirEnum = rotateAboutFace(this.dirEnum);
+        // commit previous direction
+        this.setDir(this.faceDirEnum);
+    }
+    // JUST PASSED MID-TILE (update face direction)
+    else if (
+            this.dirEnum == DIR_RIGHT && this.tilePixel.x == midTile.x+1 ||
+            this.dirEnum == DIR_LEFT  && this.tilePixel.x == midTile.x-1 ||
+            this.dirEnum == DIR_UP    && this.tilePixel.y == midTile.y-1 ||
+            this.dirEnum == DIR_DOWN  && this.tilePixel.y == midTile.y+1) {
 
         // get next tile
         var nextTile = {

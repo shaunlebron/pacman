@@ -340,13 +340,13 @@ var gameTitleState = (function() {
     var w = 20;
     var h = 30;
     var x = mapWidth/2 - 3*w;
-    var y = 5*tileSize;
+    var y = 3*tileSize;
     var yellowBtn = new Button(x,y,w,h,function(){
         name = getGameName();
         nameColor = pacman.color;
     });
     yellowBtn.setIcon(function (ctx,x,y,frame) {
-        getPlayerDrawFunc()(ctx,x,y,DIR_RIGHT,pacman.getAnimFrame(pacman.getStepFrame(Math.floor(frame/1.5))));
+        getPlayerDrawFunc()(ctx,x,y,DIR_RIGHT,pacman.getAnimFrame(pacman.getStepFrame(Math.floor((gameMode==GAME_PACMAN?frame+4:frame)/1.5))));
     });
     x += 2*w;
     var redBtn = new Button(x,y,w,h,function(){
@@ -415,7 +415,7 @@ var gameTitleState = (function() {
                 ctx.fillStyle = nameColor;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "top";
-                ctx.fillText(name, mapWidth/2, 3*tileSize);
+                ctx.fillText(name, mapWidth/2, tileSize);
             });
         },
         update: function() {
@@ -449,19 +449,21 @@ var preNewGameState = (function() {
         function() { 
             practiceMode = false;
             turboMode = false;
+            newGameState.setStartLevel(1);
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PLAY TURBO",
         function() { 
             practiceMode = false;
             turboMode = true;
+            newGameState.setStartLevel(1);
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PRACTICE",
         function() { 
             practiceMode = true;
             turboMode = false;
-            exitTo(newGameState, 60);
+            exitTo(selectActState);
         });
     menu.addSpacer(0.5);
     menu.addTextButton("CUTSCENES",
@@ -483,6 +485,212 @@ var preNewGameState = (function() {
         init: function() {
             menu.enable();
             gameTitleState.init();
+            map = undefined;
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.renderFunc(menu.draw,menu);
+            gameTitleState.draw();
+        },
+        update: function() {
+            gameTitleState.update();
+        },
+        getMenu: function() {
+            return menu;
+        },
+    };
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Select Act State
+
+var selectActState = (function() {
+
+    // TODO: create ingame menu option to return to this menu (with last act played present)
+
+    var menu;
+    var numActs = 4;
+    var defaultStartAct = 1;
+    var startAct = defaultStartAct;
+
+    var exitTo = function(state,fade) {
+        gameTitleState.shutdown();
+        menu.disable();
+        switchState(state,fade);
+    };
+
+    var chooseLevelFromAct = function(act) {
+        selectLevelState.setAct(act);
+        exitTo(selectLevelState);
+    };
+
+    var scrollToAct = function(act) {
+        // just rebuild the menu
+        selectActState.setStartAct(act);
+        exitTo(selectActState);
+    };
+
+    var drawArrow = function(ctx,x,y,dir) {
+        ctx.save();
+        ctx.translate(x,y);
+        ctx.scale(1,dir);
+        ctx.beginPath();
+        ctx.moveTo(0,-tileSize/2);
+        ctx.lineTo(tileSize,tileSize/2);
+        ctx.lineTo(-tileSize,tileSize/2);
+        ctx.closePath();
+        ctx.fillStyle = "#FFF";
+        ctx.fill();
+        ctx.restore();
+    };
+
+    var buildMenu = function(act) {
+        // set buttons starting at the given act
+        startAct = act;
+
+        menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+        var i;
+        var range;
+        menu.addSpacer(2);
+        menu.addIconButton(
+            function(ctx,x,y) {
+                drawArrow(ctx,x,y,1);
+            },
+            function() {
+                scrollToAct(Math.max(1,act-numActs));
+            });
+        for (i=0; i<numActs; i++) {
+            range = getActRange(act+i);
+            menu.addTextIconButton("LEVELS "+range[0]+"-"+range[1],
+                (function(j){
+                    return function() { 
+                        chooseLevelFromAct(act+j);
+                    };
+                })(i),
+                (function(j){
+                    return function(ctx,x,y) {
+                        var s = tileSize/3*2;
+                        var r = tileSize/6;
+                        ctx.save();
+                        ctx.translate(x,y);
+                        ctx.beginPath();
+                        ctx.moveTo(-s,0);
+                        ctx.lineTo(-s,-r);
+                        ctx.quadraticCurveTo(-s,-s,-r,-s);
+                        ctx.lineTo(r,-s);
+                        ctx.quadraticCurveTo(s,-s,s,-r);
+                        ctx.lineTo(s,r);
+                        ctx.quadraticCurveTo(s,s,r,s);
+                        ctx.lineTo(-r,s);
+                        ctx.quadraticCurveTo(-s,s,-s,r);
+                        ctx.closePath();
+                        var colors = getActColor(act+j);
+                        ctx.fillStyle = colors.wallFillColor;
+                        ctx.strokeStyle = colors.wallStrokeColor;
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.restore();
+                    };
+                })(i));
+        }
+        menu.addIconButton(
+            function(ctx,x,y) {
+                drawArrow(ctx,x,y,-1);
+            },
+            function() {
+                scrollToAct(act+numActs);
+            });
+        menu.addTextButton("BACK",
+            function() {
+                exitTo(preNewGameState);
+            });
+        menu.backButton = menu.buttons[menu.buttonCount-1];
+        menu.enable();
+    };
+
+    return {
+        init: function() {
+            buildMenu(startAct);
+            gameTitleState.init();
+        },
+        setStartAct: function(act) {
+            startAct = act;
+        },
+        draw: function() {
+            renderer.clearMapFrame();
+            renderer.renderFunc(menu.draw,menu);
+            gameTitleState.draw();
+        },
+        update: function() {
+            gameTitleState.update();
+        },
+        getMenu: function() {
+            return menu;
+        },
+    };
+})();
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Select Level State
+
+var selectLevelState = (function() {
+
+    var menu;
+    var act = 1;
+
+    var exitTo = function(state,fade) {
+        gameTitleState.shutdown();
+        menu.disable();
+        switchState(state,fade);
+    };
+
+    var playLevel = function(i) {
+        // TODO: set level (will have to set up fruit history correctly)
+        newGameState.setStartLevel(i);
+        exitTo(newGameState, 60);
+    };
+
+    var buildMenu = function(act) {
+        var range = getActRange(act);
+
+        menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+        var i;
+        menu.addSpacer(2);
+        if (range[0] < range[1]) {
+            for (i=range[0]; i<=range[1]; i++) {
+                menu.addTextIconButton("LEVEL "+i,
+                    (function(j){
+                        return function() { 
+                            playLevel(j);
+                        };
+                    })(i),
+                    (function(j){
+                        return function(ctx,x,y) {
+                            var f = fruit.getFruitFromLevel(j);
+                            if (f) {
+                                atlas.drawFruitSprite(ctx,x,y,f.name);
+                            }
+                        };
+                    })(i));
+            }
+        }
+        menu.addSpacer(0.5);
+        menu.addTextButton("BACK",
+            function() {
+                exitTo(selectActState);
+            });
+        menu.backButton = menu.buttons[menu.buttonCount-1];
+        menu.enable();
+    };
+
+    return {
+        init: function() {
+            setFruitFromGameMode();
+            buildMenu(act);
+            gameTitleState.init();
+        },
+        setAct: function(a) {
+            act = a;
         },
         draw: function() {
             renderer.clearMapFrame();
@@ -941,16 +1149,20 @@ var aboutState = (function(){
 var newGameState = (function() {
     var frames;
     var duration = 2;
+    var startLevel = 1;
 
     return {
         init: function() {
             clearCheats();
             frames = 0;
-            level = 0;
+            level = startLevel-1;
             extraLives = practiceMode ? Infinity : 3;
             setScore(0);
             setFruitFromGameMode();
             readyNewState.init();
+        },
+        setStartLevel: function(i) {
+            startLevel = i;
         },
         draw: function() {
             if (!map)
@@ -1425,3 +1637,4 @@ var overState = (function() {
         },
     };
 })();
+

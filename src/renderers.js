@@ -1043,27 +1043,29 @@ var initRenderer = function(){
         // draw fruit
         drawFruit: function() {
 
-            var name = fruit.getCurrentFruit().name;
+            if (fruit.getCurrentFruit()) {
+                var name = fruit.getCurrentFruit().name;
 
-            // draw history trails of the fruit if applicable
-            if (fruit.savedPixel) {
-                vcr.drawHistory(ctx, function(t) {
-                    var pixel = fruit.savedPixel[t];
-                    if (pixel) {
-                        atlas.drawFruitSprite(ctx, pixel.x, pixel.y, name);
-                    }
-                });
-            }
-
-            if (fruit.isPresent()) {
-                atlas.drawFruitSprite(ctx, fruit.pixel.x, fruit.pixel.y, name);
-            }
-            else if (fruit.isScorePresent()) {
-                if (gameMode == GAME_PACMAN) {
-                    atlas.drawPacFruitPoints(ctx, fruit.pixel.x, fruit.pixel.y, fruit.getPoints());
+                // draw history trails of the fruit if applicable
+                if (fruit.savedPixel) {
+                    vcr.drawHistory(ctx, function(t) {
+                        var pixel = fruit.savedPixel[t];
+                        if (pixel) {
+                            atlas.drawFruitSprite(ctx, pixel.x, pixel.y, name);
+                        }
+                    });
                 }
-                else {
-                    atlas.drawMsPacFruitPoints(ctx, fruit.pixel.x, fruit.pixel.y, fruit.getPoints());
+
+                if (fruit.isPresent()) {
+                    atlas.drawFruitSprite(ctx, fruit.pixel.x, fruit.pixel.y, name);
+                }
+                else if (fruit.isScorePresent()) {
+                    if (gameMode == GAME_PACMAN) {
+                        atlas.drawPacFruitPoints(ctx, fruit.pixel.x, fruit.pixel.y, fruit.getPoints());
+                    }
+                    else {
+                        atlas.drawMsPacFruitPoints(ctx, fruit.pixel.x, fruit.pixel.y, fruit.getPoints());
+                    }
                 }
             }
         },

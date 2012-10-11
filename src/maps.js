@@ -181,8 +181,36 @@ var getLevelAct = function(level) {
     }
 };
 
-var setNextCookieMap = function() {
-    // cycle the colors
+var getActColor = function(act) {
+    if (gameMode == GAME_PACMAN) {
+        return {
+            wallFillColor: mapPacman.wallFillColor,
+            wallStrokeColor: mapPacman.wallStrokeColor,
+            pelletColor: mapPacman.pelletColor,
+        };
+    }
+    else if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO) {
+        return getMsPacActColor(act);
+    }
+    else if (gameMode == GAME_COOKIE) {
+        return getCookieActColor(act);
+    }
+};
+
+var getActRange = function(act) {
+    if (act == 1) {
+        return [1,2];
+    }
+    else if (act == 2) {
+        return [3,5];
+    }
+    else {
+        var start = act*4-6;
+        return [start, start+3];
+    }
+};
+
+var getCookieActColor = function(act) {
     var colors = [
         "#359c9c", "#80d8fc", // turqoise
         "#c2b853", "#e6f1e7", // yellow
@@ -194,28 +222,36 @@ var setNextCookieMap = function() {
         "#5036d9", "#618dd4", // violet
         "#939473", "#fdfdf4", // grey
     ];
+    var i = ((act-1)*2) % colors.length;
+    return {
+        wallFillColor: colors[i],
+        wallStrokeColor: colors[i+1],
+        pelletColor: "#ffb8ae",
+    };
+};
+
+var setNextCookieMap = function() {
+    // cycle the colors
     var i;
     var act = getLevelAct(level);
-    if (level == 1 || act != getLevelAct(level-1)) {
+    if (!map || level == 1 || act != getLevelAct(level-1)) {
         map = mapgen();
-        i = ((act-1)*2) % colors.length;
-        map.wallFillColor = colors[i];
-        map.wallStrokeColor = colors[i+1];
+        var colors = getCookieActColor(act);
+        map.wallFillColor = colors.wallFillColor;
+        map.wallStrokeColor = colors.wallStrokeColor;
+        map.pelletColor = colors.pelletColor;
     }
 };
 
 // Ms. Pac-Man map 1
 
-var setNextMsPacMap = function() {
-    var maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
-
-    // The third and fourth maps repeat indefinitely after the second map.
-    // (i.e. act1=map1, act2=map2, act3=map3, act4=map4, act5=map3, act6=map4, ...)
-    var act = getLevelAct(level)-1;
+var getMsPacActColor = function(act) {
+    act -= 1;
     var mapIndex = (act <= 1) ? act : (act%2)+2;
-    map = maps[mapIndex];
+    var maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
+    var map = maps[mapIndex];
     if (act >= 4) {
-        var colors = [
+        return [
             {
                 wallFillColor: "#ffb8ff",
                 wallStrokeColor: "#FFFF00",
@@ -237,12 +273,30 @@ var setNextMsPacMap = function() {
                 pelletColor: "#dedeff",
             },
         ][act%4];
+    }
+    else {
+        return {
+            wallFillColor: map.wallFillColor,
+            wallStrokeColor: map.wallStrokeColor,
+            pelletColor: map.pelletColor,
+        };
+    }
+};
 
+var setNextMsPacMap = function() {
+    var maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
+
+    // The third and fourth maps repeat indefinitely after the second map.
+    // (i.e. act1=map1, act2=map2, act3=map3, act4=map4, act5=map3, act6=map4, ...)
+    var act = getLevelAct(level)-1;
+    var mapIndex = (act <= 1) ? act : (act%2)+2;
+    map = maps[mapIndex];
+    if (act >= 4) {
+        var colors = getMsPacActColor(act+1);
         map.wallFillColor = colors.wallFillColor;
         map.wallStrokeColor = colors.wallStrokeColor;
         map.pelletColor = colors.pelletColor;
     }
-    // TODO: add random color bug from arcade?
 };
 
 var mapMsPacman1 = new Map(28, 36, (

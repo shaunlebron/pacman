@@ -17,12 +17,10 @@ BaseFruit.prototype = {
         return this.scoreFramesLeft > 0;
     },
     onNewLevel: function() {
+        this.buildFruitHistory();
     },
     setCurrentFruit: function(i) {
         this.currentFruitIndex = i;
-    },
-    commitToFruitHistory: function() {
-        this.fruitHistory[level] = this.fruits[this.currentFruitIndex];
     },
     onDotEat: function() {
         if (!this.isPresent() && (map.dotsEaten == this.dotLimit1 || map.dotsEaten == this.dotLimit2)) {
@@ -104,13 +102,27 @@ PacFruit.prototype = {
     __proto__: BaseFruit.prototype,
 
     onNewLevel: function() {
-        var i = level;
+        this.setCurrentFruit(this.getFruitIndexFromLevel(level));
+        BaseFruit.prototype.onNewLevel.call(this);
+    },
+
+    getFruitFromLevel: function(i) {
+        return this.fruits[this.getFruitIndexFromLevel(i)];
+    },
+
+    getFruitIndexFromLevel: function(i) {
         if (i > 13) {
-            i=13;
+            i = 13;
         }
-        i--;
-        this.setCurrentFruit(this.order[i]);
-        this.commitToFruitHistory();
+        return this.order[i-1];
+    },
+
+    buildFruitHistory: function() {
+        this.fruitHistory = {};
+        var i;
+        for (i=1; i<= level; i++) {
+            this.fruitHistory[i] = this.fruits[this.getFruitIndexFromLevel(i)];
+        }
     },
 
     initiate: function() {
@@ -186,10 +198,30 @@ MsPacFruit.prototype = {
         return level > 7;
     },
 
+    getFruitFromLevel: function(i) {
+        if (i <= 7) {
+            return this.fruits[i-1];
+        }
+        else {
+            return undefined;
+        }
+    },
+
     onNewLevel: function() {
         if (!this.shouldRandomizeFruit()) {
             this.setCurrentFruit(level-1);
-            this.commitToFruitHistory();
+        }
+        else {
+            this.setCurrentFruit(0);
+        }
+        BaseFruit.prototype.onNewLevel.call(this);
+    },
+
+    buildFruitHistory: function() {
+        this.fruitHistory = {};
+        var i;
+        for (i=1; i<= Math.max(level,7); i++) {
+            this.fruitHistory[i] = this.fruits[i-1];
         }
     },
 

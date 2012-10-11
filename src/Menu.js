@@ -95,6 +95,14 @@ Menu.prototype = {
         this.currentY += this.pad + this.h;
     },
 
+    addIconButton: function(drawIcon,onclick) {
+        var b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
+        b.setIcon(drawIcon);
+        this.buttons.push(b);
+        this.buttonCount++;
+        this.currentY += this.pad + this.h;
+    },
+
     addSpacer: function(count) {
         if (count == undefined) {
             count = 1;

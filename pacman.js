@@ -11208,6 +11208,12 @@ var triggerCutsceneAtEndLevel = function() {
             return true;
         }
     }
+    else if (gameMode == GAME_COOKIE) {
+        if (level == 2) {
+            playCutScene(cookieCutscene1, readyNewState);
+            return true;
+        }
+    }
 
     // no cutscene triggered
     return false;
@@ -11822,10 +11828,134 @@ var mspacmanCutscene2 = (function() {
     }; // returned object
 })(); // mspacCutscene2
 
+var cookieCutscene1 = (function() {
+    return {
+        __proto__: scriptState,
+        init: function() {
+            scriptState.init.call(this);
+
+            // initialize actor positions
+            pacman.setPos(232, 164);
+            blinky.setPos(257, 164);
+
+            // initialize actor directions
+            blinky.setDir(DIR_LEFT);
+            blinky.faceDirEnum = DIR_LEFT;
+            pacman.setDir(DIR_LEFT);
+
+            // initialize misc actor properties
+            blinky.scared = false;
+            blinky.mode = GHOST_OUTSIDE;
+
+            // clear other states
+            clearCheats();
+            energizer.reset();
+
+            // temporarily override actor step sizes
+            pacman.getNumSteps = function() {
+                return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN);
+            };
+            blinky.getNumSteps = function() {
+                return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_ELROY2);
+            };
+
+            // temporarily override steering functions
+            pacman.steer = blinky.steer = function(){};
+        },
+        triggers: {
+
+            // Blinky chases Pac-Man
+            0: {
+                update: function() {
+                    var j;
+                    for (j=0; j<2; j++) {
+                        pacman.update(j);
+                        blinky.update(j);
+                    }
+                    pacman.frames++;
+                    blinky.frames++;
+                },
+                draw: function() {
+                    renderer.blitMap();
+                    renderer.beginMapClip();
+                    renderer.drawPlayer();
+                    renderer.drawGhost(blinky);
+                    renderer.endMapClip();
+                },
+            },
+
+            // Pac-Man chases Blinky
+            260: {
+                init: function() {
+                    pacman.setPos(-193, 164);
+                    blinky.setPos(-8, 155);
+
+                    // initialize actor directions
+                    blinky.setDir(DIR_RIGHT);
+                    blinky.faceDirEnum = DIR_RIGHT;
+                    pacman.setDir(DIR_RIGHT);
+
+                    // initialize misc actor properties
+                    blinky.scared = true;
+
+                    // temporarily override step sizes
+                    pacman.getNumSteps = function() {
+                        return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN_FRIGHT);
+                    };
+                    blinky.getNumSteps = function() {
+                        return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
+                    };
+                },
+                update: function() {
+                    var j;
+                    for (j=0; j<2; j++) {
+                        pacman.update(j);
+                        blinky.update(j);
+                    }
+                    pacman.frames++;
+                    blinky.frames++;
+                },
+                draw: function() {
+                    renderer.blitMap();
+                    renderer.beginMapClip();
+                    renderer.drawPlayer();
+                    renderer.renderFunc(function(ctx) {
+                        var y = blinky.getBounceY(blinky.pixel.x, blinky.pixel.y, DIR_RIGHT);
+                        var x = blinky.pixel.x;
+                        ctx.save();
+                        ctx.translate(x,y);
+                        var s = 16/6;
+                        ctx.scale(s,s);
+                        drawCookie(ctx,0,0);
+                        ctx.restore();
+                    });
+                    renderer.endMapClip();
+                },
+            },
+
+            // end
+            640: {
+                init: function() {
+                    // disable custom steps
+                    delete pacman.getNumSteps;
+                    delete blinky.getNumSteps;
+
+                    // disable custom steering
+                    delete pacman.steer;
+                    delete blinky.steer;
+
+                    // exit to next level
+                    switchState(cookieCutscene1.nextState, 60);
+                },
+            },
+        },
+    };
+})();
+
 var cutscenes = [
     [pacmanCutscene1], // GAME_PACMAN
     [mspacmanCutscene1, mspacmanCutscene2], // GAME_MSPACMAN
-    [], // GAME_COOKIE
+    [cookieCutscene1], // GAME_COOKIE
     [], // GAME_OTTO
 ];
 

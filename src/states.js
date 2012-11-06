@@ -143,15 +143,6 @@ var homeState = (function(){
             atlas.drawGhostSprite(ctx,x,y,Math.floor(frame/8)%2,DIR_RIGHT,false,false,false,blinky.color);
         });
 
-    menu.addSpacer(0.5);
-    menu.addTextIconButton("DISCUSS",
-        function() {
-            window.location.href = "forum";
-        },
-        function(ctx,x,y,frame) {
-            atlas.drawFruitSprite(ctx,x,y,"key");
-        });
-
     return {
         init: function() {
             menu.enable();

@@ -144,8 +144,8 @@ inky.drawTarget = function(ctx) {
 // clyde targets pacman if >=8 tiles away, otherwise targets home
 
 clyde.getTargetTile = function() {
-    var dx = pacman.tile.x - this.tile.x;
-    var dy = pacman.tile.y - this.tile.y;
+    var dx = pacman.tile.x - (this.tile.x + this.dir.x);
+    var dy = pacman.tile.y - (this.tile.y + this.dir.y);
     var dist = dx*dx+dy*dy;
     if (dist >= 64) {
         this.targetting = 'pacman';

@@ -8219,8 +8219,8 @@ inky.drawTarget = function(ctx) {
 // clyde targets pacman if >=8 tiles away, otherwise targets home
 
 clyde.getTargetTile = function() {
-    var dx = pacman.tile.x - this.tile.x;
-    var dy = pacman.tile.y - this.tile.y;
+    var dx = pacman.tile.x - (this.tile.x + this.dir.x);
+    var dy = pacman.tile.y - (this.tile.y + this.dir.y);
     var dist = dx*dx+dy*dy;
     if (dist >= 64) {
         this.targetting = 'pacman';
@@ -9403,15 +9403,6 @@ var homeState = (function(){
         },
         function(ctx,x,y,frame) {
             atlas.drawGhostSprite(ctx,x,y,Math.floor(frame/8)%2,DIR_RIGHT,false,false,false,blinky.color);
-        });
-
-    menu.addSpacer(0.5);
-    menu.addTextIconButton("DISCUSS",
-        function() {
-            window.location.href = "forum";
-        },
-        function(ctx,x,y,frame) {
-            atlas.drawFruitSprite(ctx,x,y,"key");
         });
 
     return {

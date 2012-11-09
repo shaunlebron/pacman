@@ -236,8 +236,8 @@ var ToggleButton = function(x,y,w,h,isOn,setOn) {
     Button.call(this,x,y,w,h,onclick);
 };
 
-ToggleButton.prototype = {
-    __proto__: Button.prototype,
+ToggleButton.prototype = newChildObject(Button.prototype, {
+
     enable: function() {
         Button.prototype.enable.call(this);
         this.refreshMsg();
@@ -253,4 +253,5 @@ ToggleButton.prototype = {
     refreshOnState: function() {
         this.setOn(this.isOn());
     },
-};
+
+});

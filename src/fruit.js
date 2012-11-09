@@ -97,9 +97,7 @@ var PacFruit = function() {
     this.savedFramesLeft = {};
 };
 
-PacFruit.prototype = {
-
-    __proto__: BaseFruit.prototype,
+PacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
     onNewLevel: function() {
         this.setCurrentFruit(this.getFruitIndexFromLevel(level));
@@ -158,7 +156,7 @@ PacFruit.prototype = {
         BaseFruit.prototype.load.call(this,t);
         this.framesLeft = this.savedFramesLeft[t];
     },
-};
+});
 
 // MS. PAC-MAN FRUIT
 
@@ -191,8 +189,7 @@ var MsPacFruit = function() {
     this.savedPath = {};
 };
 
-MsPacFruit.prototype = {
-    __proto__: BaseFruit.prototype,
+MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
     shouldRandomizeFruit: function() {
         return level > 7;
@@ -332,7 +329,7 @@ MsPacFruit.prototype = {
         this.numFrames =    this.savedNumFrames[t]; 
         this.path =         this.savedPath[t];
     },
-};
+});
 
 var fruit;
 var setFruitFromGameMode = (function() {

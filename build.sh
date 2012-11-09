@@ -34,6 +34,7 @@ echo "
 " > $output
 
 for file in \
+    inherit.js \
     random.js \
     game.js \
     direction.js \

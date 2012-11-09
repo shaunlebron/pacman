@@ -487,10 +487,7 @@ var initRenderer = function(){
         this.name = "Minimal";
     };
 
-    SimpleRenderer.prototype = {
-
-        // inherit functions from Common Renderer
-        __proto__: CommonRenderer.prototype,
+    SimpleRenderer.prototype = newChildObject(CommonRenderer.prototype, {
 
         drawMap: function() {
 
@@ -631,7 +628,7 @@ var initRenderer = function(){
             }
         },
 
-    };
+    });
 
 
     //////////////////////////////////////////////////////////////
@@ -655,10 +652,7 @@ var initRenderer = function(){
         this.name = "Arcade";
     };
 
-    ArcadeRenderer.prototype = {
-
-        // inherit functions from Common Renderer
-        __proto__: CommonRenderer.prototype,
+    ArcadeRenderer.prototype = newChildObject(CommonRenderer.prototype, {
 
         // copy background canvas to the foreground canvas
         blitMap: function() {
@@ -1070,7 +1064,7 @@ var initRenderer = function(){
             }
         },
 
-    };
+    });
 
     //
     // Create list of available renderers

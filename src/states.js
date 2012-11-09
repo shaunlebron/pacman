@@ -1216,10 +1216,7 @@ var readyState =  (function(){
 // Ready New Level state
 // (ready state when pausing before new level)
 
-var readyNewState = { 
-
-    // inherit functions from readyState
-    __proto__: readyState, 
+var readyNewState = newChildObject(readyState, {
 
     init: function() {
 
@@ -1245,16 +1242,13 @@ var readyNewState = {
         // inherit attributes from readyState
         readyState.init.call(this);
     },
-};
+});
 
 ////////////////////////////////////////////////////
 // Ready Restart Level state
 // (ready state when pausing before restarted level)
 
-var readyRestartState = { 
-
-    // inherit functions from readyState
-    __proto__: readyState, 
+var readyRestartState = newChildObject(readyState, {
 
     init: function() {
         extraLives--;
@@ -1265,7 +1259,7 @@ var readyRestartState = {
         // inherit attributes from readyState
         readyState.init.call(this);
     },
-};
+});
 
 ////////////////////////////////////////////////////
 // Play state
@@ -1430,49 +1424,45 @@ var scriptState = (function(){
 // Seekable Script state
 // (a script state that can be controled by the VCR)
 
-var seekableScriptState = (function(){
-    return {
+var seekableScriptState = newChildObject(scriptState, {
 
-        __proto__: scriptState,
+    init: function() {
+        scriptState.init.call(this);
+        this.savedFrames = {};
+        this.savedTriggerFrame = {};
+        this.savedDrawFunc = {};
+        this.savedUpdateFunc = {};
+    },
 
-        init: function() {
-            scriptState.init.call(this);
-            this.savedFrames = {};
-            this.savedTriggerFrame = {};
-            this.savedDrawFunc = {};
-            this.savedUpdateFunc = {};
-        },
-
-        save: function(t) {
-            this.savedFrames[t] = this.frames;
-            this.savedTriggerFrame[t] = this.triggerFrame;
-            this.savedDrawFunc[t] = this.drawFunc;
-            this.savedUpdateFunc[t] = this.updateFunc;
-        },
-        load: function(t) {
-            this.frames = this.savedFrames[t];
-            this.triggerFrame = this.savedTriggerFrame[t];
-            this.drawFunc = this.savedDrawFunc[t];
-            this.updateFunc = this.savedUpdateFunc[t];
-        },
-        update: function() {
-            if (vcr.isSeeking()) {
-                vcr.seek();
+    save: function(t) {
+        this.savedFrames[t] = this.frames;
+        this.savedTriggerFrame[t] = this.triggerFrame;
+        this.savedDrawFunc[t] = this.drawFunc;
+        this.savedUpdateFunc[t] = this.updateFunc;
+    },
+    load: function(t) {
+        this.frames = this.savedFrames[t];
+        this.triggerFrame = this.savedTriggerFrame[t];
+        this.drawFunc = this.savedDrawFunc[t];
+        this.updateFunc = this.savedUpdateFunc[t];
+    },
+    update: function() {
+        if (vcr.isSeeking()) {
+            vcr.seek();
+        }
+        else {
+            if (vcr.getMode() == VCR_RECORD) {
+                vcr.record();
             }
-            else {
-                if (vcr.getMode() == VCR_RECORD) {
-                    vcr.record();
-                }
-                scriptState.update.call(this);
-            }
-        },
-        draw: function() {
-            if (this.drawFunc) {
-                scriptState.draw.call(this);
-            }
-        },
-    };
-})();
+            scriptState.update.call(this);
+        }
+    },
+    draw: function() {
+        if (this.drawFunc) {
+            scriptState.draw.call(this);
+        }
+    },
+});
 
 ////////////////////////////////////////////////////
 // Dead state
@@ -1486,10 +1476,7 @@ var deadState = (function() {
         renderer.drawScore();
     };
 
-    return {
-
-        // inherit script state functions
-        __proto__: seekableScriptState,
+    return newChildObject(seekableScriptState, {
 
         // script functions for each time
         triggers: {
@@ -1543,7 +1530,7 @@ var deadState = (function() {
                 }
             },
         },
-    };
+    });
 })();
 
 ////////////////////////////////////////////////////
@@ -1568,10 +1555,7 @@ var finishState = (function(){
         commonDraw();
     };
 
-    return {
-
-        // inherit script state functions
-        __proto__: seekableScriptState,
+    return newChildObject(seekableScriptState, {
 
         // script functions for each time
         triggers: {
@@ -1601,7 +1585,7 @@ var finishState = (function(){
                 }
             },
         },
-    };
+    });
 })();
 
 ////////////////////////////////////////////////////

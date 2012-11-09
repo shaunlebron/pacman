@@ -19,7 +19,7 @@ var Ghost = function() {
 };
 
 // inherit functions from Actor class
-Ghost.prototype.__proto__ = Actor.prototype;
+Ghost.prototype = newChildObject(Actor.prototype);
 
 // displacements for ghost bouncing
 Ghost.prototype.getBounceY = (function(){

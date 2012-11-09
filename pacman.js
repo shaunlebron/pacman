@@ -22,6 +22,44 @@
 
 (function(){
 
+//@line 1 "src/inherit.js"
+//  Apparently, the mutable, non-standard __proto__ property creates a lot of complexity for JS optimizers,
+//   so it may be phased out in future JS versions.  It's not even supported in Internet Explorer.
+//
+//  Object.create does everything that I would use a mutable __proto__ for, but this isn't implemented everywhere yet.
+// 
+//  So instead of the following:
+//
+//      var obj = {
+//          __proto__: parentObj,
+//          hello: function() { return "world"; },
+//      };
+//
+//  You can use this:
+//
+//      var obj = newChildObject(parentObj, {
+//          hello: function() { return "world"; },
+//      };
+
+var newChildObject = function(parentObj, newObj) {
+
+    // equivalent to: var resultObj = { __proto__: parentObj };
+    var x = function(){};
+    x.prototype = parentObj;
+    var resultObj = new x();
+
+    // store new members in resultObj
+    if (newObj) {
+        var hasProp = {}.hasOwnProperty;
+        for (var name in newObj) {
+            if (hasProp.call(newObj, name)) {
+                resultObj[name] = newObj[name];
+            }
+        }
+    }
+
+    return resultObj;
+};
 //@line 1 "src/random.js"
 
 var getRandomColor = function() {
@@ -3354,10 +3392,7 @@ var initRenderer = function(){
         this.name = "Minimal";
     };
 
-    SimpleRenderer.prototype = {
-
-        // inherit functions from Common Renderer
-        __proto__: CommonRenderer.prototype,
+    SimpleRenderer.prototype = newChildObject(CommonRenderer.prototype, {
 
         drawMap: function() {
 
@@ -3498,7 +3533,7 @@ var initRenderer = function(){
             }
         },
 
-    };
+    });
 
 
     //////////////////////////////////////////////////////////////
@@ -3522,10 +3557,7 @@ var initRenderer = function(){
         this.name = "Arcade";
     };
 
-    ArcadeRenderer.prototype = {
-
-        // inherit functions from Common Renderer
-        __proto__: CommonRenderer.prototype,
+    ArcadeRenderer.prototype = newChildObject(CommonRenderer.prototype, {
 
         // copy background canvas to the foreground canvas
         blitMap: function() {
@@ -3937,7 +3969,7 @@ var initRenderer = function(){
             }
         },
 
-    };
+    });
 
     //
     // Create list of available renderers
@@ -4296,8 +4328,8 @@ var ToggleButton = function(x,y,w,h,isOn,setOn) {
     Button.call(this,x,y,w,h,onclick);
 };
 
-ToggleButton.prototype = {
-    __proto__: Button.prototype,
+ToggleButton.prototype = newChildObject(Button.prototype, {
+
     enable: function() {
         Button.prototype.enable.call(this);
         this.refreshMsg();
@@ -4313,7 +4345,8 @@ ToggleButton.prototype = {
     refreshOnState: function() {
         this.setOn(this.isOn());
     },
-};
+
+});
 //@line 1 "src/Menu.js"
 var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
     this.title = title;
@@ -7401,7 +7434,7 @@ var Ghost = function() {
 };
 
 // inherit functions from Actor class
-Ghost.prototype.__proto__ = Actor.prototype;
+Ghost.prototype = newChildObject(Actor.prototype);
 
 // displacements for ghost bouncing
 Ghost.prototype.getBounceY = (function(){
@@ -7837,6 +7870,9 @@ var Player = function() {
     this.savedEatPauseFramesLeft = {};
 };
 
+// inherit functions from Actor
+Player.prototype = newChildObject(Actor.prototype);
+
 Player.prototype.save = function(t) {
     this.savedEatPauseFramesLeft[t] = this.eatPauseFramesLeft;
     this.savedNextDirEnum[t] = this.nextDirEnum;
@@ -7852,9 +7888,6 @@ Player.prototype.load = function(t) {
 
     Actor.prototype.load.call(this,t);
 };
-
-// inherit functions from Actor
-Player.prototype.__proto__ = Actor.prototype;
 
 // reset the state of the player on new level or level restart
 Player.prototype.reset = function() {
@@ -8867,9 +8900,7 @@ var PacFruit = function() {
     this.savedFramesLeft = {};
 };
 
-PacFruit.prototype = {
-
-    __proto__: BaseFruit.prototype,
+PacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
     onNewLevel: function() {
         this.setCurrentFruit(this.getFruitIndexFromLevel(level));
@@ -8928,7 +8959,7 @@ PacFruit.prototype = {
         BaseFruit.prototype.load.call(this,t);
         this.framesLeft = this.savedFramesLeft[t];
     },
-};
+});
 
 // MS. PAC-MAN FRUIT
 
@@ -8961,8 +8992,7 @@ var MsPacFruit = function() {
     this.savedPath = {};
 };
 
-MsPacFruit.prototype = {
-    __proto__: BaseFruit.prototype,
+MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
     shouldRandomizeFruit: function() {
         return level > 7;
@@ -9102,7 +9132,7 @@ MsPacFruit.prototype = {
         this.numFrames =    this.savedNumFrames[t]; 
         this.path =         this.savedPath[t];
     },
-};
+});
 
 var fruit;
 var setFruitFromGameMode = (function() {
@@ -10478,10 +10508,7 @@ var readyState =  (function(){
 // Ready New Level state
 // (ready state when pausing before new level)
 
-var readyNewState = { 
-
-    // inherit functions from readyState
-    __proto__: readyState, 
+var readyNewState = newChildObject(readyState, {
 
     init: function() {
 
@@ -10507,16 +10534,13 @@ var readyNewState = {
         // inherit attributes from readyState
         readyState.init.call(this);
     },
-};
+});
 
 ////////////////////////////////////////////////////
 // Ready Restart Level state
 // (ready state when pausing before restarted level)
 
-var readyRestartState = { 
-
-    // inherit functions from readyState
-    __proto__: readyState, 
+var readyRestartState = newChildObject(readyState, {
 
     init: function() {
         extraLives--;
@@ -10527,7 +10551,7 @@ var readyRestartState = {
         // inherit attributes from readyState
         readyState.init.call(this);
     },
-};
+});
 
 ////////////////////////////////////////////////////
 // Play state
@@ -10692,49 +10716,45 @@ var scriptState = (function(){
 // Seekable Script state
 // (a script state that can be controled by the VCR)
 
-var seekableScriptState = (function(){
-    return {
+var seekableScriptState = newChildObject(scriptState, {
 
-        __proto__: scriptState,
+    init: function() {
+        scriptState.init.call(this);
+        this.savedFrames = {};
+        this.savedTriggerFrame = {};
+        this.savedDrawFunc = {};
+        this.savedUpdateFunc = {};
+    },
 
-        init: function() {
-            scriptState.init.call(this);
-            this.savedFrames = {};
-            this.savedTriggerFrame = {};
-            this.savedDrawFunc = {};
-            this.savedUpdateFunc = {};
-        },
-
-        save: function(t) {
-            this.savedFrames[t] = this.frames;
-            this.savedTriggerFrame[t] = this.triggerFrame;
-            this.savedDrawFunc[t] = this.drawFunc;
-            this.savedUpdateFunc[t] = this.updateFunc;
-        },
-        load: function(t) {
-            this.frames = this.savedFrames[t];
-            this.triggerFrame = this.savedTriggerFrame[t];
-            this.drawFunc = this.savedDrawFunc[t];
-            this.updateFunc = this.savedUpdateFunc[t];
-        },
-        update: function() {
-            if (vcr.isSeeking()) {
-                vcr.seek();
+    save: function(t) {
+        this.savedFrames[t] = this.frames;
+        this.savedTriggerFrame[t] = this.triggerFrame;
+        this.savedDrawFunc[t] = this.drawFunc;
+        this.savedUpdateFunc[t] = this.updateFunc;
+    },
+    load: function(t) {
+        this.frames = this.savedFrames[t];
+        this.triggerFrame = this.savedTriggerFrame[t];
+        this.drawFunc = this.savedDrawFunc[t];
+        this.updateFunc = this.savedUpdateFunc[t];
+    },
+    update: function() {
+        if (vcr.isSeeking()) {
+            vcr.seek();
+        }
+        else {
+            if (vcr.getMode() == VCR_RECORD) {
+                vcr.record();
             }
-            else {
-                if (vcr.getMode() == VCR_RECORD) {
-                    vcr.record();
-                }
-                scriptState.update.call(this);
-            }
-        },
-        draw: function() {
-            if (this.drawFunc) {
-                scriptState.draw.call(this);
-            }
-        },
-    };
-})();
+            scriptState.update.call(this);
+        }
+    },
+    draw: function() {
+        if (this.drawFunc) {
+            scriptState.draw.call(this);
+        }
+    },
+});
 
 ////////////////////////////////////////////////////
 // Dead state
@@ -10748,10 +10768,7 @@ var deadState = (function() {
         renderer.drawScore();
     };
 
-    return {
-
-        // inherit script state functions
-        __proto__: seekableScriptState,
+    return newChildObject(seekableScriptState, {
 
         // script functions for each time
         triggers: {
@@ -10805,7 +10822,7 @@ var deadState = (function() {
                 }
             },
         },
-    };
+    });
 })();
 
 ////////////////////////////////////////////////////
@@ -10830,10 +10847,7 @@ var finishState = (function(){
         commonDraw();
     };
 
-    return {
-
-        // inherit script state functions
-        __proto__: seekableScriptState,
+    return newChildObject(seekableScriptState, {
 
         // script functions for each time
         triggers: {
@@ -10863,7 +10877,7 @@ var finishState = (function(){
                 }
             },
         },
-    };
+    });
 })();
 
 ////////////////////////////////////////////////////
@@ -11220,126 +11234,123 @@ var playCutScene = function(cutScene, nextState) {
     switchState(cutScene, 60);
 };
 
-var pacmanCutscene1 = (function() {
-    return {
-        __proto__: scriptState,
-        init: function() {
-            scriptState.init.call(this);
+var pacmanCutscene1 = newChildObject(scriptState, {
+    init: function() {
+        scriptState.init.call(this);
 
-            // initialize actor positions
-            pacman.setPos(232, 164);
-            blinky.setPos(257, 164);
+        // initialize actor positions
+        pacman.setPos(232, 164);
+        blinky.setPos(257, 164);
 
-            // initialize actor directions
-            blinky.setDir(DIR_LEFT);
-            blinky.faceDirEnum = DIR_LEFT;
-            pacman.setDir(DIR_LEFT);
+        // initialize actor directions
+        blinky.setDir(DIR_LEFT);
+        blinky.faceDirEnum = DIR_LEFT;
+        pacman.setDir(DIR_LEFT);
 
-            // initialize misc actor properties
-            blinky.scared = false;
-            blinky.mode = GHOST_OUTSIDE;
+        // initialize misc actor properties
+        blinky.scared = false;
+        blinky.mode = GHOST_OUTSIDE;
 
-            // clear other states
-            clearCheats();
-            energizer.reset();
+        // clear other states
+        clearCheats();
+        energizer.reset();
 
-            // temporarily override actor step sizes
-            pacman.getNumSteps = function() {
-                return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN);
-            };
-            blinky.getNumSteps = function() {
-                return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_ELROY2);
-            };
+        // temporarily override actor step sizes
+        pacman.getNumSteps = function() {
+            return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN);
+        };
+        blinky.getNumSteps = function() {
+            return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_ELROY2);
+        };
 
-            // temporarily override steering functions
-            pacman.steer = blinky.steer = function(){};
-        },
-        triggers: {
+        // temporarily override steering functions
+        pacman.steer = blinky.steer = function(){};
+    },
+    triggers: {
 
-            // Blinky chases Pac-Man
-            0: {
-                update: function() {
-                    var j;
-                    for (j=0; j<2; j++) {
-                        pacman.update(j);
-                        blinky.update(j);
-                    }
-                    pacman.frames++;
-                    blinky.frames++;
-                },
-                draw: function() {
-                    renderer.blitMap();
-                    renderer.beginMapClip();
-                    renderer.drawPlayer();
-                    renderer.drawGhost(blinky);
-                    renderer.endMapClip();
-                },
+        // Blinky chases Pac-Man
+        0: {
+            update: function() {
+                var j;
+                for (j=0; j<2; j++) {
+                    pacman.update(j);
+                    blinky.update(j);
+                }
+                pacman.frames++;
+                blinky.frames++;
             },
-
-            // Pac-Man chases Blinky
-            260: {
-                init: function() {
-                    pacman.setPos(-193, 155);
-                    blinky.setPos(-8, 164);
-
-                    // initialize actor directions
-                    blinky.setDir(DIR_RIGHT);
-                    blinky.faceDirEnum = DIR_RIGHT;
-                    pacman.setDir(DIR_RIGHT);
-
-                    // initialize misc actor properties
-                    blinky.scared = true;
-
-                    // temporarily override step sizes
-                    pacman.getNumSteps = function() {
-                        return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN_FRIGHT);
-                    };
-                    blinky.getNumSteps = function() {
-                        return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
-                    };
-                },
-                update: function() {
-                    var j;
-                    for (j=0; j<2; j++) {
-                        pacman.update(j);
-                        blinky.update(j);
-                    }
-                    pacman.frames++;
-                    blinky.frames++;
-                },
-                draw: function() {
-                    renderer.blitMap();
-                    renderer.beginMapClip();
-                    renderer.drawGhost(blinky);
-                    renderer.renderFunc(function(ctx) {
-                        var frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
-                        if (frame == 3) {
-                            frame = 1;
-                        }
-                        drawGiantPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
-                    });
-                    renderer.endMapClip();
-                },
-            },
-
-            // end
-            640: {
-                init: function() {
-                    // disable custom steps
-                    delete pacman.getNumSteps;
-                    delete blinky.getNumSteps;
-
-                    // disable custom steering
-                    delete pacman.steer;
-                    delete blinky.steer;
-
-                    // exit to next level
-                    switchState(pacmanCutscene1.nextState, 60);
-                },
+            draw: function() {
+                renderer.blitMap();
+                renderer.beginMapClip();
+                renderer.drawPlayer();
+                renderer.drawGhost(blinky);
+                renderer.endMapClip();
             },
         },
-    };
-})();
+
+        // Pac-Man chases Blinky
+        260: {
+            init: function() {
+                pacman.setPos(-193, 155);
+                blinky.setPos(-8, 164);
+
+                // initialize actor directions
+                blinky.setDir(DIR_RIGHT);
+                blinky.faceDirEnum = DIR_RIGHT;
+                pacman.setDir(DIR_RIGHT);
+
+                // initialize misc actor properties
+                blinky.scared = true;
+
+                // temporarily override step sizes
+                pacman.getNumSteps = function() {
+                    return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN_FRIGHT);
+                };
+                blinky.getNumSteps = function() {
+                    return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
+                };
+            },
+            update: function() {
+                var j;
+                for (j=0; j<2; j++) {
+                    pacman.update(j);
+                    blinky.update(j);
+                }
+                pacman.frames++;
+                blinky.frames++;
+            },
+            draw: function() {
+                renderer.blitMap();
+                renderer.beginMapClip();
+                renderer.drawGhost(blinky);
+                renderer.renderFunc(function(ctx) {
+                    var frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
+                    if (frame == 3) {
+                        frame = 1;
+                    }
+                    drawGiantPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame);
+                });
+                renderer.endMapClip();
+            },
+        },
+
+        // end
+        640: {
+            init: function() {
+                // disable custom steps
+                delete pacman.getNumSteps;
+                delete blinky.getNumSteps;
+
+                // disable custom steering
+                delete pacman.steer;
+                delete blinky.steer;
+
+                // exit to next level
+                switchState(pacmanCutscene1.nextState, 60);
+            },
+        },
+    },
+});
 
 var mspacmanCutscene1 = (function() {
 
@@ -11405,8 +11416,8 @@ var mspacmanCutscene1 = (function() {
         switchState(mspacmanCutscene1.nextState, 60);
     };
 
-    return {
-        __proto__: scriptState,
+    return newChildObject(scriptState, {
+
         init: function() {
             scriptState.init.call(this);
 
@@ -11670,7 +11681,7 @@ var mspacmanCutscene1 = (function() {
                 }; // returned object
             })(), // trigger at 300
         }, // triggers
-    }; // returned object
+    }); // returned object
 })(); // mspacCutscene1
 
 var mspacmanCutscene2 = (function() {
@@ -11723,8 +11734,8 @@ var mspacmanCutscene2 = (function() {
     var getFleeSteps = function() { return "32"[this.frames%2]; };
     var getDartSteps = function() { return 7; };
 
-    return {
-        __proto__: scriptState,
+    return newChildObject(scriptState, {
+
         init: function() {
             scriptState.init.call(this);
 
@@ -11816,132 +11827,130 @@ var mspacmanCutscene2 = (function() {
                 init: exit,
             },
         }, // triggers
-    }; // returned object
+    }); // returned object
 })(); // mspacCutscene2
 
-var cookieCutscene1 = (function() {
-    return {
-        __proto__: scriptState,
-        init: function() {
-            scriptState.init.call(this);
+var cookieCutscene1 = newChildObject(scriptState, {
 
-            // initialize actor positions
-            pacman.setPos(232, 164);
-            blinky.setPos(257, 164);
+    init: function() {
+        scriptState.init.call(this);
 
-            // initialize actor directions
-            blinky.setDir(DIR_LEFT);
-            blinky.faceDirEnum = DIR_LEFT;
-            pacman.setDir(DIR_LEFT);
+        // initialize actor positions
+        pacman.setPos(232, 164);
+        blinky.setPos(257, 164);
 
-            // initialize misc actor properties
-            blinky.scared = false;
-            blinky.mode = GHOST_OUTSIDE;
+        // initialize actor directions
+        blinky.setDir(DIR_LEFT);
+        blinky.faceDirEnum = DIR_LEFT;
+        pacman.setDir(DIR_LEFT);
 
-            // clear other states
-            clearCheats();
-            energizer.reset();
+        // initialize misc actor properties
+        blinky.scared = false;
+        blinky.mode = GHOST_OUTSIDE;
 
-            // temporarily override actor step sizes
-            pacman.getNumSteps = function() {
-                return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN);
-            };
-            blinky.getNumSteps = function() {
-                return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_ELROY2);
-            };
+        // clear other states
+        clearCheats();
+        energizer.reset();
 
-            // temporarily override steering functions
-            pacman.steer = blinky.steer = function(){};
-        },
-        triggers: {
+        // temporarily override actor step sizes
+        pacman.getNumSteps = function() {
+            return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN);
+        };
+        blinky.getNumSteps = function() {
+            return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_ELROY2);
+        };
 
-            // Blinky chases Pac-Man
-            0: {
-                update: function() {
-                    var j;
-                    for (j=0; j<2; j++) {
-                        pacman.update(j);
-                        blinky.update(j);
-                    }
-                    pacman.frames++;
-                    blinky.frames++;
-                },
-                draw: function() {
-                    renderer.blitMap();
-                    renderer.beginMapClip();
-                    renderer.drawPlayer();
-                    renderer.drawGhost(blinky);
-                    renderer.endMapClip();
-                },
+        // temporarily override steering functions
+        pacman.steer = blinky.steer = function(){};
+    },
+    triggers: {
+
+        // Blinky chases Pac-Man
+        0: {
+            update: function() {
+                var j;
+                for (j=0; j<2; j++) {
+                    pacman.update(j);
+                    blinky.update(j);
+                }
+                pacman.frames++;
+                blinky.frames++;
             },
-
-            // Pac-Man chases Blinky
-            260: {
-                init: function() {
-                    pacman.setPos(-193, 164);
-                    blinky.setPos(-8, 155);
-
-                    // initialize actor directions
-                    blinky.setDir(DIR_RIGHT);
-                    blinky.faceDirEnum = DIR_RIGHT;
-                    pacman.setDir(DIR_RIGHT);
-
-                    // initialize misc actor properties
-                    blinky.scared = true;
-
-                    // temporarily override step sizes
-                    pacman.getNumSteps = function() {
-                        return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN_FRIGHT);
-                    };
-                    blinky.getNumSteps = function() {
-                        return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
-                    };
-                },
-                update: function() {
-                    var j;
-                    for (j=0; j<2; j++) {
-                        pacman.update(j);
-                        blinky.update(j);
-                    }
-                    pacman.frames++;
-                    blinky.frames++;
-                },
-                draw: function() {
-                    renderer.blitMap();
-                    renderer.beginMapClip();
-                    renderer.drawPlayer();
-                    renderer.renderFunc(function(ctx) {
-                        var y = blinky.getBounceY(blinky.pixel.x, blinky.pixel.y, DIR_RIGHT);
-                        var x = blinky.pixel.x;
-                        ctx.save();
-                        ctx.translate(x,y);
-                        var s = 16/6;
-                        ctx.scale(s,s);
-                        drawCookie(ctx,0,0);
-                        ctx.restore();
-                    });
-                    renderer.endMapClip();
-                },
-            },
-
-            // end
-            640: {
-                init: function() {
-                    // disable custom steps
-                    delete pacman.getNumSteps;
-                    delete blinky.getNumSteps;
-
-                    // disable custom steering
-                    delete pacman.steer;
-                    delete blinky.steer;
-
-                    // exit to next level
-                    switchState(cookieCutscene1.nextState, 60);
-                },
+            draw: function() {
+                renderer.blitMap();
+                renderer.beginMapClip();
+                renderer.drawPlayer();
+                renderer.drawGhost(blinky);
+                renderer.endMapClip();
             },
         },
-    };
-})();
+
+        // Pac-Man chases Blinky
+        260: {
+            init: function() {
+                pacman.setPos(-193, 164);
+                blinky.setPos(-8, 155);
+
+                // initialize actor directions
+                blinky.setDir(DIR_RIGHT);
+                blinky.faceDirEnum = DIR_RIGHT;
+                pacman.setDir(DIR_RIGHT);
+
+                // initialize misc actor properties
+                blinky.scared = true;
+
+                // temporarily override step sizes
+                pacman.getNumSteps = function() {
+                    return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_PACMAN_FRIGHT);
+                };
+                blinky.getNumSteps = function() {
+                    return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
+                };
+            },
+            update: function() {
+                var j;
+                for (j=0; j<2; j++) {
+                    pacman.update(j);
+                    blinky.update(j);
+                }
+                pacman.frames++;
+                blinky.frames++;
+            },
+            draw: function() {
+                renderer.blitMap();
+                renderer.beginMapClip();
+                renderer.drawPlayer();
+                renderer.renderFunc(function(ctx) {
+                    var y = blinky.getBounceY(blinky.pixel.x, blinky.pixel.y, DIR_RIGHT);
+                    var x = blinky.pixel.x;
+                    ctx.save();
+                    ctx.translate(x,y);
+                    var s = 16/6;
+                    ctx.scale(s,s);
+                    drawCookie(ctx,0,0);
+                    ctx.restore();
+                });
+                renderer.endMapClip();
+            },
+        },
+
+        // end
+        640: {
+            init: function() {
+                // disable custom steps
+                delete pacman.getNumSteps;
+                delete blinky.getNumSteps;
+
+                // disable custom steering
+                delete pacman.steer;
+                delete blinky.steer;
+
+                // exit to next level
+                switchState(cookieCutscene1.nextState, 60);
+            },
+        },
+    },
+});
 
 var cutscenes = [
     [pacmanCutscene1], // GAME_PACMAN

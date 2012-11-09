@@ -21,6 +21,9 @@ var Player = function() {
     this.savedEatPauseFramesLeft = {};
 };
 
+// inherit functions from Actor
+Player.prototype = newChildObject(Actor.prototype);
+
 Player.prototype.save = function(t) {
     this.savedEatPauseFramesLeft[t] = this.eatPauseFramesLeft;
     this.savedNextDirEnum[t] = this.nextDirEnum;
@@ -36,9 +39,6 @@ Player.prototype.load = function(t) {
 
     Actor.prototype.load.call(this,t);
 };
-
-// inherit functions from Actor
-Player.prototype.__proto__ = Actor.prototype;
 
 // reset the state of the player on new level or level restart
 Player.prototype.reset = function() {

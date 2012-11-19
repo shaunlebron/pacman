@@ -131,7 +131,7 @@ var homeState = (function(){
             exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
-            atlas.drawCookiemanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
+            drawCookiemanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame), true);
         });
 
     menu.addSpacer(0.5);
@@ -337,7 +337,7 @@ var gameTitleState = (function() {
         nameColor = pacman.color;
     });
     yellowBtn.setIcon(function (ctx,x,y,frame) {
-        getPlayerDrawFunc()(ctx,x,y,DIR_RIGHT,pacman.getAnimFrame(pacman.getStepFrame(Math.floor((gameMode==GAME_PACMAN?frame+4:frame)/1.5))));
+        getPlayerDrawFunc()(ctx,x,y,DIR_RIGHT,pacman.getAnimFrame(pacman.getStepFrame(Math.floor((gameMode==GAME_PACMAN?frame+4:frame)/1.5))),true);
     });
     x += 2*w;
     var redBtn = new Button(x,y,w,h,function(){

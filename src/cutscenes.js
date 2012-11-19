@@ -35,6 +35,10 @@ var triggerCutsceneAtEndLevel = function() {
             playCutScene(cookieCutscene1, readyNewState);
             return true;
         }
+        else if (level == 5) {
+            playCutScene(cookieCutscene2, readyNewState);
+            return true;
+        }
     }
 
     // no cutscene triggered

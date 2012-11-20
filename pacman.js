@@ -12035,7 +12035,7 @@ var cookieCutscene2 = (function() {
             scriptState.init.call(this);
 
             // chosen by trial-and-error to match animations
-            mspac.frames = 20;
+            mspac.frames = 14;
             pac.frames = 12;
 
             // initialize actor states
@@ -12115,8 +12115,8 @@ var cookieCutscene2 = (function() {
                 var pinkyBounceFrameLen = pinkyBounceX.length;
 
                 // ramp animation for players
-                var rampX = [0, 1, 1, 1, 1, 0, 0];
-                var rampY = [0, 0,-1,-1,-1, 0, 0];
+                var rampX = [0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1];
+                var rampY = [0, 0,-1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0];
                 var rampFrame = 0;
                 var rampFrameLen = rampX.length;
 
@@ -12196,15 +12196,9 @@ var cookieCutscene2 = (function() {
                                 mspac.pixel.y -= 2;
                                 mspac.commitPos();
                                 mspac.setDir(DIR_UP);
-
-                                // set initial climb state for pac
-                                pac.pixel.x -= 1;
-                                pac.commitPos();
-                                pac.setDir(DIR_UP);
                             }
                             else {
                                 for (j=0; j<2; j++) {
-                                    pac.update(j);
                                     mspac.update(j);
                                 }
                             }
@@ -12219,16 +12213,9 @@ var cookieCutscene2 = (function() {
                                 mspac.pixel.y++;
                                 mspac.setDir(DIR_RIGHT);
                                 mspac.commitPos();
-
-                                // set initial meet state for pac
-                                pac.pixel.y--;
-                                pac.pixel.x++;
-                                pac.setDir(DIR_LEFT);
-                                pac.commitPos();
                             }
                             if (meetFrame > 18) {
                                 // pause player frames after a certain period
-                                pac.frames--;
                                 mspac.frames--;
                             }
                             if (meetFrame == 78) {
@@ -12275,7 +12262,9 @@ var cookieCutscene2 = (function() {
                         renderer.blitMap();
                         renderer.beginMapClip();
                         renderer.renderFunc(function(ctx) {
-                            drawPlayer(ctx,pac);
+                            if (playerMode <= PLAYER_RAMP) {
+                                drawPlayer(ctx,pac);
+                            }
                             drawPlayer(ctx,mspac);
                         });
                         if (inkyBounceFrame < inkyBounceFrameLen) {

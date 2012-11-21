@@ -145,7 +145,7 @@ Ghost.prototype.getNumSteps = function() {
     if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
     else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME)
-        pattern = STEP_GHOST_TUNNEL;
+        return this.getStepSizeFromTable(1, STEP_GHOST_TUNNEL);
     else if (map.isTunnelTile(this.tile.x, this.tile.y) && this.isSlowInTunnel())
         pattern = STEP_GHOST_TUNNEL;
     else if (this.scared)

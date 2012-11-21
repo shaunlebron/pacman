@@ -1,0 +1,53 @@
+{
+  "closed_at": "2012-01-25T11:09:34Z",
+  "milestone": null,
+  "body": "The ghosts seem to ignore the tile system when in their home.  I need to find the exact coordinates of the three custom y axes in that home, and how far up and down inky and clyde can move.",
+  "user": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "closed_by": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "created_at": "2012-01-22T21:55:12Z",
+  "comments": 1,
+  "assignee": null,
+  "pull_request": {
+    "html_url": null,
+    "patch_url": null,
+    "diff_url": null
+  },
+  "title": "Ghosts at Home",
+  "html_url": "https://github.com/shaunew/Pac-Man/issues/3",
+  "number": 3,
+  "state": "closed",
+  "updated_at": "2012-01-25T11:09:34Z",
+  "id": 2929061,
+  "labels": [
+
+  ],
+  "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/3"
+}
+[
+  {
+    "body": "found them with MAME debugger.",
+    "user": {
+      "login": "shaunew",
+      "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+      "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+      "id": 116838,
+      "url": "https://api.github.com/users/shaunew"
+    },
+    "created_at": "2012-01-25T11:09:34Z",
+    "updated_at": "2012-01-25T11:09:34Z",
+    "id": 3648916,
+    "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/comments/3648916"
+  }
+]

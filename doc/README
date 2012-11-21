@@ -1,0 +1,7 @@
+
+cutscene.tar.bz2 contains:
+    MNG format 60fps video of each cutscene in pac and mspac recorded with MAME
+    Also frame-by-frame dumps in PNG format
+
+pixeltests.tar.bz2 contains:
+    frame-by-frame GIMP files for moving through a recorded video to evaluate pixel positions and speeds of the actors

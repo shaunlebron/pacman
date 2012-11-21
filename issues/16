@@ -1,0 +1,53 @@
+{
+  "closed_at": "2012-07-16T17:17:29Z",
+  "milestone": null,
+  "body": "",
+  "user": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "closed_by": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "created_at": "2012-02-04T03:27:54Z",
+  "comments": 1,
+  "assignee": null,
+  "pull_request": {
+    "html_url": null,
+    "patch_url": null,
+    "diff_url": null
+  },
+  "title": "Turn level indicator into tally",
+  "html_url": "https://github.com/shaunew/Pac-Man/issues/16",
+  "number": 16,
+  "state": "closed",
+  "updated_at": "2012-07-16T17:17:29Z",
+  "id": 3091790,
+  "labels": [
+
+  ],
+  "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/16"
+}
+[
+  {
+    "created_at": "2012-07-16T17:17:29Z",
+    "updated_at": "2012-07-16T17:17:29Z",
+    "body": "I removed the level indicator with the original fruit design.  I'm currently only displaying the last 6 fruit.\n\nHave to decide where to include the level number if anywhere (not included in original arcade).",
+    "user": {
+      "login": "shaunew",
+      "id": 116838,
+      "url": "https://api.github.com/users/shaunew",
+      "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+      "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png"
+    },
+    "id": 7012498,
+    "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/comments/7012498"
+  }
+]

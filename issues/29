@@ -1,0 +1,81 @@
+{
+  "milestone": null,
+  "body": "PacManPlus says at\r\n\r\n    http://www.atariage.com/forums/topic/68707-pac-man-ghost-ai-question/page__view__findpost__p__1280120\r\n\r\n>Without having done any disasemblies myself (just noting on behavior from playing the game so much), in Ms. Pac-Man just Pinky and Blinky are randomized in the first 7 seconds of each board - Inky and Clyde still (attempt to) go to their corners.\r\n> Also, there is no 'disperse mode' in Ms. Pac-Man any more; when the monsters reverse direction, they still chase you.  As far as any minute changes to their AI, I don't sense any (Dav of course would know better from looking at the code all this time) - I still use the same strategies when playing either game and the monsters for the most part react the same way.\r\n\r\nJamieVegas says at\r\n\r\n    http://www.atariage.com/forums/topic/68707-pac-man-ghost-ai-question/page__view__findpost__p__1301204\r\n\r\n>After my code analasys, it looks like the Ms. Pac-man AI solution is really just the remains of a failed, better solution.\r\n>\r\n>Having only two ghosts move randomly is a bit silly, since all of the ghosts always moved randomly during blue mode in the last game.\r\n>\r\n>They actually wanted to make each ghost go to a random home corner! They failed to be able to get each ghost to \"remember\" its destination between frames. Instead, each ghost picks a new homecorner every single frame. Even the blue and orange! The end result is that the ghosts move around in \"blue mode\" instead of spreading out to random corners.\r\n>\r\n>The blue and orange ghosts were patched incorrectly, though. So, after they call the randomized home corner selector -- the old pacman code overwrites the decision with the home corners from the original maze that isn't even used in the game.\r\n>\r\n>(Note, home corners are defined as actual map cells to seek out, not directional areas.)\r\n>\r\n>There are tables for each maze in the game of new home corners for the ghosts to pick from. Unfortuanetly, they were never maintained in the code, and don't match up with the mazes, since the programmers found out they couldn't finish what they started.\r\n>\r\n>The random home corner solution would have been very elegant -- or, if necessary, having all of the ghosts move randomly during the first 5 seconds would be decent (although, again it looks really unintelligent and weird -- and is already implemented by \"blue ghost\" behavior.) -- but the hybrid solution, with orange and blue seeking their old home corners and the other ghosts just bobbibng around mindlessly is just a mistake. ",
+  "user": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "closed_at": "2012-07-30T13:52:37Z",
+  "created_at": "2012-02-27T07:13:11Z",
+  "comments": 3,
+  "assignee": null,
+  "closed_by": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "title": "Implement correct ghost behaviors for Ms. Pac-Man maps",
+  "number": 29,
+  "state": "closed",
+  "pull_request": {
+    "patch_url": null,
+    "diff_url": null,
+    "html_url": null
+  },
+  "html_url": "https://github.com/shaunew/Pac-Man/issues/29",
+  "updated_at": "2012-07-30T13:52:37Z",
+  "id": 3396895,
+  "labels": [
+
+  ],
+  "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/29"
+}
+[
+  {
+    "body": "Ghost behaviors are accurate now to the changes mentioned in the first post.  Also need to verify the difficulty levels (actor speeds and timings) and if they're the same as in Pac-Man.",
+    "user": {
+      "login": "shaunew",
+      "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+      "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+      "id": 116838,
+      "url": "https://api.github.com/users/shaunew"
+    },
+    "created_at": "2012-02-27T09:30:42Z",
+    "updated_at": "2012-02-27T09:30:42Z",
+    "id": 4190296,
+    "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/comments/4190296"
+  },
+  {
+    "body": "Perhaps get in contact with bart grantham to get extra details on Ms. Pac-Man, like fruit patterns and correct ghost timers:\nhttp://www.bartgrantham.com/projects/ms-pacman-disassembly/",
+    "user": {
+      "login": "shaunew",
+      "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+      "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+      "id": 116838,
+      "url": "https://api.github.com/users/shaunew"
+    },
+    "created_at": "2012-06-20T13:30:18Z",
+    "updated_at": "2012-06-20T13:30:18Z",
+    "id": 6453806,
+    "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/comments/6453806"
+  },
+  {
+    "body": "I seem to have exhausted my reverse-engineering resources on how the ghosts behave in Ms. Pac-Man.  But Donald Williams from [this gamefaqs entry](www.gamefaqs.com/arcade/583976-ms-pac-man/faqs/1298) says\n\n> The ghost speeds, pacman speeds, and energizer lengths of effects are identical to the original PacMan game.\n\nActually, there is a manual way to verify this.  I can record a playthrough for each game and measure the times for the energizers and reversals.  And then compare the notes between games.",
+    "user": {
+      "login": "shaunew",
+      "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+      "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+      "id": 116838,
+      "url": "https://api.github.com/users/shaunew"
+    },
+    "created_at": "2012-07-17T16:47:10Z",
+    "updated_at": "2012-07-17T16:47:10Z",
+    "id": 7041360,
+    "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/comments/7041360"
+  }
+]

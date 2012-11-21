@@ -1,0 +1,40 @@
+{
+  "milestone": null,
+  "body": "Ghosts face the direction of their next turn upon or right before entering an intersection tile.  In this remake, they're incorrectly making their decision at the center of the tile, then turning.\n\nCorrection:\n\n1. When entering a new tile, if intersection tile, compute next direction and save it as faceDirEnum.  \n2. Make sprite frame use faceDirEnum instead of dirEnum.\n3. At midTile, set dirEnum to faceDirEnum.",
+  "user": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "closed_at": "2012-08-01T05:09:52Z",
+  "created_at": "2012-07-31T16:04:48Z",
+  "comments": 0,
+  "assignee": null,
+  "closed_by": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "title": "Correct ghost turns",
+  "number": 41,
+  "state": "closed",
+  "pull_request": {
+    "patch_url": null,
+    "diff_url": null,
+    "html_url": null
+  },
+  "html_url": "https://github.com/shaunew/Pac-Man/issues/41",
+  "updated_at": "2012-08-01T05:09:52Z",
+  "id": 5946951,
+  "labels": [
+
+  ],
+  "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/41"
+}
+[
+
+]

@@ -1,0 +1,34 @@
+{
+  "closed_at": null,
+  "milestone": null,
+  "body": "When ghosts are really close to each other and are traveling up or down in line, you can see differences in their X position, even though they are on the same track.  I disregarded this as a bug, but maybe it is intended to prevent visual ghost cramming?",
+  "user": {
+    "login": "shaunew",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "closed_by": null,
+  "created_at": "2012-09-11T14:39:48Z",
+  "comments": 0,
+  "assignee": null,
+  "pull_request": {
+    "diff_url": null,
+    "patch_url": null,
+    "html_url": null
+  },
+  "title": "Ghost x-offset",
+  "html_url": "https://github.com/shaunew/Pac-Man/issues/56",
+  "number": 56,
+  "state": "open",
+  "updated_at": "2012-09-11T14:39:48Z",
+  "id": 6792586,
+  "labels": [
+
+  ],
+  "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/56"
+}
+[
+
+]

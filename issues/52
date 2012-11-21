@@ -1,0 +1,53 @@
+{
+  "pull_request": {
+    "html_url": null,
+    "patch_url": null,
+    "diff_url": null
+  },
+  "closed_at": "2012-09-03T19:11:26Z",
+  "milestone": null,
+  "body": "After studying Braid's time foot prints...\n\nWhen fast -forwarding or rewinding, time foot prints of each actor should be drawn to indicate your current velocity through time, meaning the direction and speed at which you are traveling through time.\n\nDiminishing foot prints should be drawn away from the current direction of time, with just a few diminishing shadows drawn toward the direction of time.\n\nNOTE: The time foot prints are stretched to the limits when the character has died and is accelerating to the bottom of the screen.  Once dead, you can try seeking forward to view the how algorithm is choosing the previous frames to more easily observe the changes between seek speeds.\n\nThe **length** of the window covered by the foot prints seems to grow as the velocity increases.  The length\n\nThe **number and distribution of foot prints** shown in this window seems to depend on more than one factor.  At times it appears that the foot prints are simply stretched to meet the new window size, like an accordion.  Other times some foot prints seem to be remove abruptly.  There at least seems to be a minimum time difference between two adjacent foot prints.",
+  "user": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "closed_by": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "created_at": "2012-08-30T06:47:49Z",
+  "comments": 1,
+  "assignee": null,
+  "title": "Correct time foot prints",
+  "html_url": "https://github.com/shaunew/Pac-Man/issues/52",
+  "number": 52,
+  "state": "closed",
+  "updated_at": "2012-09-03T19:11:26Z",
+  "id": 6546407,
+  "labels": [
+
+  ],
+  "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/52"
+}
+[
+  {
+    "body": "implemented this with hard variables for footstep distribution for each seek speed.  may use easing in the future to smooth transition between step distribution when changing seek speed",
+    "user": {
+      "login": "shaunew",
+      "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+      "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+      "id": 116838,
+      "url": "https://api.github.com/users/shaunew"
+    },
+    "created_at": "2012-09-03T19:11:26Z",
+    "updated_at": "2012-09-03T19:11:26Z",
+    "id": 8245192,
+    "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/comments/8245192"
+  }
+]

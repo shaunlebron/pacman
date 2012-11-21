@@ -1,0 +1,40 @@
+{
+  "milestone": null,
+  "body": "from an email exchange with Jamey Pittman:\r\n\r\n\"As for how the original game guides Pac-Man in demo/attract mode, it works like this:\r\n\r\nPac-Man operates in one of two possible pathfinding modes during the demo game.  Let's call the first one \"Run Away From Pinky\" mode.  In this mode, the code measures the distance from the pink ghost to Pac-Man and then doubles it to find his final target (see attached .jpg for an example).  Imagine drawing a line from Pinky to Pac-Man and then continuing the line out that far again beyond Pac-Man.  Whatever tile that extended line ends up in is Pac-Man's target tile.  This results in Pac-Man making turns that keep him as far away from Pinky as possible more often than not.\r\n \r\nThe second mode of behavior does just the opposite and we'll call it \"Get Pinky\" mode.  This mode is much simpler and uses Pinky's current tile as Pac-Man's target.\r\n \r\nWhich mode of targeting Pac-Man uses is based on the state of one ghost in particular.  Oddly enough, the ghost state evaluated by the code is NOT Pinky but Blinky (red)!  Anytime Blinky is not dead (i.e., eyes going back home) or frightened, Pac-Man uses the \"Run Away From Pinky\" mode for targeting.  Whenever Blinky is either frightened or dead, however, Pac-Man switches to \"Get Pinky\" mode until Blinky returns to normal.  Watch the attract/demo mode a few times with these two modes of behavior in mind and you'll see it working just as described.  It's a very simple scheme but effective.\"",
+  "user": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "closed_at": "2012-02-09T09:28:22Z",
+  "created_at": "2012-01-30T10:34:19Z",
+  "comments": 0,
+  "assignee": null,
+  "closed_by": {
+    "login": "shaunew",
+    "avatar_url": "https://secure.gravatar.com/avatar/0bdd2d6d5051b610660baf5c22016639?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png",
+    "gravatar_id": "0bdd2d6d5051b610660baf5c22016639",
+    "id": 116838,
+    "url": "https://api.github.com/users/shaunew"
+  },
+  "title": "add attract mode - pacman's AI",
+  "number": 14,
+  "state": "closed",
+  "pull_request": {
+    "patch_url": null,
+    "diff_url": null,
+    "html_url": null
+  },
+  "html_url": "https://github.com/shaunew/Pac-Man/issues/14",
+  "updated_at": "2012-02-09T09:28:22Z",
+  "id": 3018646,
+  "labels": [
+
+  ],
+  "url": "https://api.github.com/repos/shaunew/Pac-Man/issues/14"
+}
+[
+
+]

@@ -73,6 +73,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
         blinky.mode = GHOST_OUTSIDE;
 
         // clear other states
+        backupCheats();
         clearCheats();
         energizer.reset();
 
@@ -167,6 +168,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
                 delete blinky.steer;
 
                 // exit to next level
+                restoreCheats();
                 switchState(pacmanCutscene1.nextState, 60);
             },
         },
@@ -234,6 +236,7 @@ var mspacmanCutscene1 = (function() {
         delete pinky.getAnimFrame;
 
         // exit to next level
+        restoreCheats();
         switchState(mspacmanCutscene1.nextState, 60);
     };
 
@@ -267,6 +270,7 @@ var mspacmanCutscene1 = (function() {
             pinky.faceDirEnum = DIR_LEFT;
 
             // clear other states
+            backupCheats();
             clearCheats();
             energizer.reset();
 
@@ -548,6 +552,7 @@ var mspacmanCutscene2 = (function() {
 
     var exit = function() {
         // exit to next level
+        restoreCheats();
         switchState(mspacmanCutscene2.nextState, 60);
     };
 
@@ -571,6 +576,9 @@ var mspacmanCutscene2 = (function() {
             // set steering functions
             pac.steer = function(){};
             mspac.steer = function(){};
+            
+            backupCheats();
+            clearCheats();
         },
         triggers: {
             0: {
@@ -670,6 +678,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
         blinky.mode = GHOST_OUTSIDE;
 
         // clear other states
+        backupCheats();
         clearCheats();
         energizer.reset();
 
@@ -767,6 +776,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
                 delete blinky.steer;
 
                 // exit to next level
+                restoreCheats();
                 switchState(cookieCutscene1.nextState, 60);
             },
         },
@@ -843,6 +853,7 @@ var cookieCutscene2 = (function() {
         delete pinky.getAnimFrame;
 
         // exit to next level
+        restoreCheats();
         switchState(cookieCutscene2.nextState, 60);
     };
 
@@ -876,6 +887,7 @@ var cookieCutscene2 = (function() {
             pinky.faceDirEnum = DIR_LEFT;
 
             // clear other states
+            backupCheats();
             clearCheats();
             energizer.reset();
 

@@ -132,17 +132,40 @@ var getPlayerDrawFunc = function(mode) {
     }
 };
 
-// clear cheats, useful when switching game modes
 
-var clearCheats = function() {
-    pacman.invincible = false;
-    pacman.ai = false;
-    for (i=0; i<5; i++) {
-        actors[i].isDrawPath = false;
-        actors[i].isDrawTarget = false;
-    }
-    executive.setUpdatesPerSecond(60);
-};
+// for clearing, backing up, and restoring cheat states (before and after cutscenes presently)
+var clearCheats, backupCheats, restoreCheats;
+(function(){
+    clearCheats = function() {
+        pacman.invincible = false;
+        pacman.ai = false;
+        for (i=0; i<5; i++) {
+            actors[i].isDrawPath = false;
+            actors[i].isDrawTarget = false;
+        }
+        executive.setUpdatesPerSecond(60);
+    };
+
+    var i, invincible, ai, isDrawPath, isDrawTarget;
+    isDrawPath = {};
+    isDrawTarget = {};
+    backupCheats = function() {
+        invincible = pacman.invincible;
+        ai = pacman.ai;
+        for (i=0; i<5; i++) {
+            isDrawPath[i] = actors[i].isDrawPath;
+            isDrawTarget[i] = actors[i].isDrawTarget;
+        }
+    };
+    restoreCheats = function() {
+        pacman.invincible = invincible;
+        pacman.ai = ai;
+        for (i=0; i<5; i++) {
+            actors[i].isDrawPath = isDrawPath[i];
+            actors[i].isDrawTarget = isDrawTarget[i];
+        }
+    };
+})();
 
 // current level, lives, and score
 var level = 1;

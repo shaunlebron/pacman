@@ -205,17 +205,40 @@ var getPlayerDrawFunc = function(mode) {
     }
 };
 
-// clear cheats, useful when switching game modes
 
-var clearCheats = function() {
-    pacman.invincible = false;
-    pacman.ai = false;
-    for (i=0; i<5; i++) {
-        actors[i].isDrawPath = false;
-        actors[i].isDrawTarget = false;
-    }
-    executive.setUpdatesPerSecond(60);
-};
+// for clearing, backing up, and restoring cheat states (before and after cutscenes presently)
+var clearCheats, backupCheats, restoreCheats;
+(function(){
+    clearCheats = function() {
+        pacman.invincible = false;
+        pacman.ai = false;
+        for (i=0; i<5; i++) {
+            actors[i].isDrawPath = false;
+            actors[i].isDrawTarget = false;
+        }
+        executive.setUpdatesPerSecond(60);
+    };
+
+    var i, invincible, ai, isDrawPath, isDrawTarget;
+    isDrawPath = {};
+    isDrawTarget = {};
+    backupCheats = function() {
+        invincible = pacman.invincible;
+        ai = pacman.ai;
+        for (i=0; i<5; i++) {
+            isDrawPath[i] = actors[i].isDrawPath;
+            isDrawTarget[i] = actors[i].isDrawTarget;
+        }
+    };
+    restoreCheats = function() {
+        pacman.invincible = invincible;
+        pacman.ai = ai;
+        for (i=0; i<5; i++) {
+            actors[i].isDrawPath = isDrawPath[i];
+            actors[i].isDrawTarget = isDrawTarget[i];
+        }
+    };
+})();
 
 // current level, lives, and score
 var level = 1;
@@ -11256,6 +11279,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
         blinky.mode = GHOST_OUTSIDE;
 
         // clear other states
+        backupCheats();
         clearCheats();
         energizer.reset();
 
@@ -11350,6 +11374,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
                 delete blinky.steer;
 
                 // exit to next level
+                restoreCheats();
                 switchState(pacmanCutscene1.nextState, 60);
             },
         },
@@ -11417,6 +11442,7 @@ var mspacmanCutscene1 = (function() {
         delete pinky.getAnimFrame;
 
         // exit to next level
+        restoreCheats();
         switchState(mspacmanCutscene1.nextState, 60);
     };
 
@@ -11450,6 +11476,7 @@ var mspacmanCutscene1 = (function() {
             pinky.faceDirEnum = DIR_LEFT;
 
             // clear other states
+            backupCheats();
             clearCheats();
             energizer.reset();
 
@@ -11731,6 +11758,7 @@ var mspacmanCutscene2 = (function() {
 
     var exit = function() {
         // exit to next level
+        restoreCheats();
         switchState(mspacmanCutscene2.nextState, 60);
     };
 
@@ -11754,6 +11782,9 @@ var mspacmanCutscene2 = (function() {
             // set steering functions
             pac.steer = function(){};
             mspac.steer = function(){};
+            
+            backupCheats();
+            clearCheats();
         },
         triggers: {
             0: {
@@ -11853,6 +11884,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
         blinky.mode = GHOST_OUTSIDE;
 
         // clear other states
+        backupCheats();
         clearCheats();
         energizer.reset();
 
@@ -11950,6 +11982,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
                 delete blinky.steer;
 
                 // exit to next level
+                restoreCheats();
                 switchState(cookieCutscene1.nextState, 60);
             },
         },
@@ -12026,6 +12059,7 @@ var cookieCutscene2 = (function() {
         delete pinky.getAnimFrame;
 
         // exit to next level
+        restoreCheats();
         switchState(cookieCutscene2.nextState, 60);
     };
 
@@ -12059,6 +12093,7 @@ var cookieCutscene2 = (function() {
             pinky.faceDirEnum = DIR_LEFT;
 
             // clear other states
+            backupCheats();
             clearCheats();
             energizer.reset();
 

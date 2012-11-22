@@ -1086,9 +1086,8 @@ var drawMonsterSprite = (function(){
     };
 })();
 
-var drawOttoSprite = (function() {
+var drawColoredOttoSprite = function(color,eyeColor) {
     var ctx;
-    var color = "#FF0";
 
     var plotLine = function(points,color) {
         var len = points.length;
@@ -1128,7 +1127,7 @@ var drawOttoSprite = (function() {
             -2,-5,
             -3,-4,
             -4,-4,
-        ],"#00F");
+        ],eyeColor);
     };
 
     var drawRight0 = function() {
@@ -1244,7 +1243,7 @@ var drawOttoSprite = (function() {
             -3,-5,
             -4,-4,
             -5,-4,
-        ],"#00F");
+        ],eyeColor);
         plotSolid([
             3,-6,
             4,-6,
@@ -1252,7 +1251,7 @@ var drawOttoSprite = (function() {
             5,-4,
             4,-4,
             3,-5,
-        ],"#00F");
+        ],eyeColor);
     };
 
     var drawUpDownHead = function() {
@@ -1404,7 +1403,10 @@ var drawOttoSprite = (function() {
 
         ctx.restore();
     };
-})();
+};
+
+var drawOttoSprite = drawColoredOttoSprite("#FF0","#00F");
+var drawMsOttoSprite = drawColoredOttoSprite("#F00","#FFF");
 
 var drawDeadOttoSprite = function(ctx,x,y) {
     var plotOutline = function(points,color) {

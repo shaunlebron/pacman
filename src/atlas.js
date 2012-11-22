@@ -4,7 +4,7 @@ var atlas = (function(){
     var canvas,ctx;
     var size = 22;
     var cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 20;
+    var rows = 22;
 
     var creates = 0;
 
@@ -245,6 +245,21 @@ var atlas = (function(){
         drawAtCell(function(x,y) {
             drawSnail(ctx,x,y, "#FFF");
         }, row, 1);
+
+        var drawMsOttoCells = function(row,col,dir) {
+            var i;
+            for (i=0; i<4; i++) { // frame
+                drawAtCell(function(x,y) { drawMsOttoSprite(ctx, x,y, dir, i); }, row, col);
+                col++;
+            }
+        };
+        row++;
+        drawMsOttoCells(row,0, DIR_UP);
+        drawMsOttoCells(row,4, DIR_RIGHT);
+        row++;
+        drawMsOttoCells(row,0, DIR_DOWN);
+        drawMsOttoCells(row,4, DIR_LEFT);
+
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -412,6 +427,27 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
+    var copyMsOttoSprite = function(destCtx,x,y,dirEnum,frame) {
+        var col,row;
+        if (dirEnum == DIR_UP) {
+            col = frame;
+            row = 19;
+        }
+        else if (dirEnum == DIR_RIGHT) {
+            col = frame+4;
+            row = 19;
+        }
+        else if (dirEnum == DIR_DOWN) {
+            col = frame;
+            row = 20;
+        }
+        else if (dirEnum == DIR_LEFT) {
+            col = frame+4;
+            row = 20;
+        }
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
     var copySnail = function(destCtx,x,y,frame) {
         var row = 18;
         var col = frame;
@@ -472,6 +508,7 @@ var atlas = (function(){
         drawMonsterSprite: copyMonsterSprite,
         drawMuppetSprite: copyMuppetSprite,
         drawOttoSprite: copyOttoSprite,
+        drawMsOttoSprite: copyMsOttoSprite,
         drawPacmanSprite: copyPacmanSprite,
         drawMsPacmanSprite: copyMsPacmanSprite,
         drawCookiemanSprite: copyCookiemanSprite,

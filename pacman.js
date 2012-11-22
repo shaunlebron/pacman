@@ -2447,7 +2447,7 @@ var atlas = (function(){
     var canvas,ctx;
     var size = 22;
     var cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 20;
+    var rows = 22;
 
     var creates = 0;
 
@@ -2688,6 +2688,21 @@ var atlas = (function(){
         drawAtCell(function(x,y) {
             drawSnail(ctx,x,y, "#FFF");
         }, row, 1);
+
+        var drawMsOttoCells = function(row,col,dir) {
+            var i;
+            for (i=0; i<4; i++) { // frame
+                drawAtCell(function(x,y) { drawMsOttoSprite(ctx, x,y, dir, i); }, row, col);
+                col++;
+            }
+        };
+        row++;
+        drawMsOttoCells(row,0, DIR_UP);
+        drawMsOttoCells(row,4, DIR_RIGHT);
+        row++;
+        drawMsOttoCells(row,0, DIR_DOWN);
+        drawMsOttoCells(row,4, DIR_LEFT);
+
     };
 
     var copyCellTo = function(row, col, destCtx, x, y,display) {
@@ -2855,6 +2870,27 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
+    var copyMsOttoSprite = function(destCtx,x,y,dirEnum,frame) {
+        var col,row;
+        if (dirEnum == DIR_UP) {
+            col = frame;
+            row = 19;
+        }
+        else if (dirEnum == DIR_RIGHT) {
+            col = frame+4;
+            row = 19;
+        }
+        else if (dirEnum == DIR_DOWN) {
+            col = frame;
+            row = 20;
+        }
+        else if (dirEnum == DIR_LEFT) {
+            col = frame+4;
+            row = 20;
+        }
+        copyCellTo(row,col,destCtx,x,y);
+    };
+
     var copySnail = function(destCtx,x,y,frame) {
         var row = 18;
         var col = frame;
@@ -2915,6 +2951,7 @@ var atlas = (function(){
         drawMonsterSprite: copyMonsterSprite,
         drawMuppetSprite: copyMuppetSprite,
         drawOttoSprite: copyOttoSprite,
+        drawMsOttoSprite: copyMsOttoSprite,
         drawPacmanSprite: copyPacmanSprite,
         drawMsPacmanSprite: copyMsPacmanSprite,
         drawCookiemanSprite: copyCookiemanSprite,
@@ -5792,9 +5829,8 @@ var drawMonsterSprite = (function(){
     };
 })();
 
-var drawOttoSprite = (function() {
+var drawColoredOttoSprite = function(color,eyeColor) {
     var ctx;
-    var color = "#FF0";
 
     var plotLine = function(points,color) {
         var len = points.length;
@@ -5834,7 +5870,7 @@ var drawOttoSprite = (function() {
             -2,-5,
             -3,-4,
             -4,-4,
-        ],"#00F");
+        ],eyeColor);
     };
 
     var drawRight0 = function() {
@@ -5950,7 +5986,7 @@ var drawOttoSprite = (function() {
             -3,-5,
             -4,-4,
             -5,-4,
-        ],"#00F");
+        ],eyeColor);
         plotSolid([
             3,-6,
             4,-6,
@@ -5958,7 +5994,7 @@ var drawOttoSprite = (function() {
             5,-4,
             4,-4,
             3,-5,
-        ],"#00F");
+        ],eyeColor);
     };
 
     var drawUpDownHead = function() {
@@ -6110,7 +6146,10 @@ var drawOttoSprite = (function() {
 
         ctx.restore();
     };
-})();
+};
+
+var drawOttoSprite = drawColoredOttoSprite("#FF0","#00F");
+var drawMsOttoSprite = drawColoredOttoSprite("#F00","#FFF");
 
 var drawDeadOttoSprite = function(ctx,x,y) {
     var plotOutline = function(points,color) {
@@ -11208,49 +11247,6 @@ var initSwipe = function() {
 // Cutscenes
 //
 
-// TODO: no cutscene after board 17 (last one after completing board 17)
-var triggerCutsceneAtEndLevel = function() {
-    if (gameMode == GAME_PACMAN) {
-        if (level == 2) {
-            playCutScene(pacmanCutscene1, readyNewState);
-            return true;
-        }
-        /*
-        else if (level == 5) {
-            playCutScene(pacmanCutscene2, readyNewState);
-            return true;
-        }
-        else if (level >= 9 && (level-9)%4 == 0) {
-            playCutScene(pacmanCutscene3, readyNewState);
-            return true;
-        }
-        */
-    }
-    else if (gameMode == GAME_MSPACMAN) {
-        if (level == 2) {
-            playCutScene(mspacmanCutscene1, readyNewState);
-            return true;
-        }
-        else if (level == 5) {
-            playCutScene(mspacmanCutscene2, readyNewState);
-            return true;
-        }
-    }
-    else if (gameMode == GAME_COOKIE) {
-        if (level == 2) {
-            playCutScene(cookieCutscene1, readyNewState);
-            return true;
-        }
-        else if (level == 5) {
-            playCutScene(cookieCutscene2, readyNewState);
-            return true;
-        }
-    }
-
-    // no cutscene triggered
-    return false;
-};
-
 var playCutScene = function(cutScene, nextState) {
 
     // redraw map buffer with fruit list but no map structure
@@ -11392,10 +11388,10 @@ var mspacmanCutscene1 = (function() {
         var frame = player.getAnimFrame();
         var func;
         if (player == pac) {
-            func = atlas.drawPacmanSprite;
+            func = gameMode == GAME_MSPACMAN ? atlas.drawPacmanSprite : atlas.drawOttoSprite;
         }
         else if (player == mspac) {
-            func = atlas.drawMsPacmanSprite;
+            func = gameMode == GAME_MSPACMAN ? atlas.drawMsPacmanSprite : atlas.drawMsOttoSprite;
         }
         func(ctx, player.pixel.x, player.pixel.y, player.dirEnum, frame);
     };
@@ -11726,10 +11722,10 @@ var mspacmanCutscene2 = (function() {
         var frame = player.getAnimFrame();
         var func;
         if (player == pac) {
-            func = atlas.drawPacmanSprite;
+            func = gameMode == GAME_MSPACMAN ? atlas.drawPacmanSprite : atlas.drawOttoSprite;
         }
         else if (player == mspac) {
-            func = atlas.drawMsPacmanSprite;
+            func = gameMode == GAME_MSPACMAN ? atlas.drawMsPacmanSprite : atlas.drawMsOttoSprite;
         }
         func(ctx, player.pixel.x, player.pixel.y, player.dirEnum, frame);
     };
@@ -12325,7 +12321,7 @@ var cutscenes = [
     [pacmanCutscene1], // GAME_PACMAN
     [mspacmanCutscene1, mspacmanCutscene2], // GAME_MSPACMAN
     [cookieCutscene1, cookieCutscene2], // GAME_COOKIE
-    [], // GAME_OTTO
+    [mspacmanCutscene1, mspacmanCutscene2], // GAME_OTTO
 ];
 
 var isInCutScene = function() {
@@ -12338,6 +12334,50 @@ var isInCutScene = function() {
     }
     return false;
 };
+
+// TODO: no cutscene after board 17 (last one after completing board 17)
+var triggerCutsceneAtEndLevel = function() {
+    if (gameMode == GAME_PACMAN) {
+        if (level == 2) {
+            playCutScene(pacmanCutscene1, readyNewState);
+            return true;
+        }
+        /*
+        else if (level == 5) {
+            playCutScene(pacmanCutscene2, readyNewState);
+            return true;
+        }
+        else if (level >= 9 && (level-9)%4 == 0) {
+            playCutScene(pacmanCutscene3, readyNewState);
+            return true;
+        }
+        */
+    }
+    else if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO) {
+        if (level == 2) {
+            playCutScene(mspacmanCutscene1, readyNewState);
+            return true;
+        }
+        else if (level == 5) {
+            playCutScene(mspacmanCutscene2, readyNewState);
+            return true;
+        }
+    }
+    else if (gameMode == GAME_COOKIE) {
+        if (level == 2) {
+            playCutScene(cookieCutscene1, readyNewState);
+            return true;
+        }
+        else if (level == 5) {
+            playCutScene(cookieCutscene2, readyNewState);
+            return true;
+        }
+    }
+
+    // no cutscene triggered
+    return false;
+};
+
 //@line 1 "src/maps.js"
 //////////////////////////////////////////////////////////////////////////////////////
 // Maps

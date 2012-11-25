@@ -1,0 +1,78 @@
+Pac-Man Memory layout:
+
+0000-3fff ROM
+		0000 - 0fff	pacman 6e	mspacman boot1
+		1000 - 1fff	pacman 6f	mspacman boot2
+		2000 - 2fff	pacman 6h	mspacman boot3
+		3000 - 3fff	pacman 6j	mspacman boot4
+4000-43ff Video RAM
+4400-47ff Color RAM
+4c00-4fff RAM
+8000-9fff ROM (Ms Pac-Man and Ponpoko only)
+		8000 - 8fff			mspacman boot5
+		9000 - 9fff			mspacman boot6
+		
+a000-bfff ROM (Ponpoko only)
+
+memory mapped ports:
+
+read:
+5000      IN0
+5040      IN1
+5080      DSW 1
+50c0      DSW 2 (Ponpoko only)
+
+IN0:
+    01 up
+    02 left
+    04 right
+    08 down
+    10 rack test
+    20 coin 1
+    40 coin 2
+    80 coin 3
+
+IN1:
+    01 up
+    02 left
+    04 right
+    08 down
+    10 service
+    20 start 1
+    40 start 2
+    80 cabinet (set - upright)
+
+write:
+4ff0-4fff 8 pairs of two bytes:
+          the first byte contains the sprite image number (bits 2-7), 
+		Y flip (bit 0),
+		X flip (bit 1);
+		the second byte the color
+
+5000      interrupt enable
+5001      sound enable
+5002      ????
+5003      flip screen
+5004      1 player start lamp
+5005      2 players start lamp
+5006      coin lockout
+5007      coin counter
+5040-5044 sound voice 1 accumulator (nibbles) (used by the sound hardware only)
+5045      sound voice 1 waveform (nibble)
+5046-5049 sound voice 2 accumulator (nibbles) (used by the sound hardware only)
+504a      sound voice 2 waveform (nibble)
+504b-504e sound voice 3 accumulator (nibbles) (used by the sound hardware only)
+504f      sound voice 3 waveform (nibble)
+5050-5054 sound voice 1 frequency (nibbles)
+5055      sound voice 1 volume (nibble)
+5056-5059 sound voice 2 frequency (nibbles)
+505a      sound voice 2 volume (nibble)
+505b-505e sound voice 3 frequency (nibbles)
+505f      sound voice 3 volume (nibble)
+5060-506f Sprite coordinates, x/y pairs for 8 sprites
+50c0      Watchdog reset
+
+
+I/O ports:
+OUT on port $0 sets the interrupt vector
+

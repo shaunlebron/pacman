@@ -4963,12 +4963,12 @@
 7123    0xd0    RET NC                      ;  Return if CARRY flag is 0
 7124    0x21    LD HL, NN       584d        ;  Load register pair HL with 0x584d (19800)
 7127    0x34    INC (HL)                    ;  Increment location (HL)
-; if ( $4D14 != 0 )
+; if ( $4D14 != 0 ) // if blinky is moving up or down
 ; {
 ;     if ( $4D00 & 0x07 == 4 ) {  jump_7159();  }
 ;                         else {  jump_7222();  }
 ; }
-; else
+; else // if blinky is moving left or right
 ; {
 ;     if ( $4D01 & 0x07 != 4 ) {  jump_7222();  }
 ;                      // else {  jump_7159();  }

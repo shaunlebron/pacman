@@ -1,0 +1,9 @@
+At 8759 (0x2237):
+call_6150();  call_6150();
+call_6966();
+call_3619();
+
+6150 (0x1806)
+6966 (0x1B36)
+    - call_8407 (0x20D7) // set red aggression flags
+3619 (0x0E23)

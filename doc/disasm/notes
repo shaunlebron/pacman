@@ -53,7 +53,15 @@ Enum Directions:
     UP: 3
 
 =====================================================
-MEMORY LOCATIONS
+4c00-4fff RAM
+
+    $4C02-4C0D - Initialized by functions at 9533 and/or 9743
+    $4C80/4C81 - End of message queue
+    $4C82/4C83 - Beginning of message queue
+    $4C8A - Flip-flops between 1 and 2 (seems to mostly be on 1, though)
+    $4C90-4CBD - 3-byte block queue
+    $4CC0-4D00 - Message queue
+    $4D00-4DD2 - Initialized by function at 9533
 
 Pixel XY Position:
 
@@ -63,7 +71,7 @@ Pixel XY Position:
     4D06: clyde
     4D08: pacman
 
-Tile XY Position:
+Next Tile XY Position:
 
     4D0A: blinky
     4D0C: pinky
@@ -102,7 +110,7 @@ Face Enum Direction:
     4D2F: clyde
     4D30: pacman
 
-
+Current Tile XY:
 
     4D31: blinky
     4D33: pinky
@@ -110,9 +118,77 @@ Face Enum Direction:
     4D37: clyde
     4D39: pacman
 
+(Bart's Notes)
 
-Ghost States:
+    $4D3B - Ghost (eyes?) direction [TEMP] ( 0=right, 1=down, 2=left, 3=up )
+    $4D3C - Pacman direction ( 0=right, 1=down, 2=left, 3=up )
+    $4D3D - $4D3B XOR 0x01, slightly lagged
+    $4D3E - Ghost Y (22-3E), $4D3F - Ghost X (21-3A)
+    $4D40 - Ghost's perceived Pacman Y (22-3E)/1D when Ghosts ignoring,
+    $4D41 - Ghost's perceived Pacman X (21-3A)/22 when Ghosts ignoring
+        Red - Red sees exactly where pacman was a split second before
+    $4D42 - Ghost Y (22-3E), $4D43 - Ghost X (21-3A) - but warped somehow
+    $4D44 - scratch
+...
+(Referenced in 6988)
+(controled by flags 4D99, 4DA7, 4DB7, 4DB6)
 
-    4DC0: Sprite (0|1)
-    4DC2/3: chase frames
-    4DC4: Frame (0-15)
+
+4D4E:
+4D50:
+
+4D52:
+4D54:
+
+4D56:
+4D58:
+
+4D5A:
+4D5C:
+
+4D5E:
+4D60:
+
+...
+
+Ghost Outside-Pen Status:
+
+4DA0: blinky - if zero, 6966(0x1b36) returns immediately
+4DA1: pinky
+4DA2: inky
+4DA3: clyde - if zero, set_red_aggression returns immediately
+
+    $4DA4 - 
+    $4DA5 - related to ghost eat-ability (cheat sets to 1 for perpetual eating), also related to 
+    $4DA6 - 0 = normal, 1 = ghosts blue, running away
+    $4DA7 - Red edible
+    $4DA8 - Pink edible
+    $4DA9 - Blue edible
+    $4DAA - Orange edible
+    $4DAB - Fruit edible?
+    $4DAC - Red chomp status ( 0=chase/flee, 1=run back to base, 2=enter base)
+    $4DAD - Pink chomp status ( 0=chase/flee, 1=run back to base, 2=enter base)
+    $4DAE - Blue chomp status ( 0=chase/flee, 1=run back to base, 2=enter base)
+    $4DAF - Orange chomp status ( 0=chase/flee, 1=run back to base, 2=enter base)
+    $4DB1/2/3/4 - Red/Pink/Blue/Orange reversal (?) ( set by frame_counter() )
+    $4DB6 - 1 if 224 dots have been eaten and all 4 ghosts are free, 0 otherwise
+
+4DC0: Ghost Sprite (0|1)
+
+    $4DC1 - ghost reversal status (altered by timer at $4DC2/3
+    $4DC2/3 - chase frames since board/pac start (paused during powerpill)
+
+4DC4: Ghost Frame (0-15)
+
+    $4DC7 - scratch
+    $4DC9 - starts 0x0000 at level start, random gibberish while flee mode, static inbetween
+    $4DCE - 0-255 repeating frame counter?
+    $4DCF - 0-9 repeating frame counter?
+    $4DD0 - how many ghosts eaten this powerpill?
+    $4DD2 - ?
+    $4DD4 - ?
+
+...
+
+    4E9C - Coin insert (==2) or start game (==1)
+    4EBC - Joystick Direction (up=8, left=4, right=16, down=32)

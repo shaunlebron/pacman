@@ -73,7 +73,7 @@ var Button = function(x,y,w,h,onclick) {
     };
     var touchend = function(evt) {
         evt.preventDefault();
-        var registerClick = (that.onclick && that.startedInside && that.isSelected);
+        var registerClick = (that.startedInside && that.isSelected);
         if (registerClick) {
             that.click();
         }
@@ -93,7 +93,7 @@ var Button = function(x,y,w,h,onclick) {
     // mouse events
     var click = function(evt) {
         var pos = getPointerPos(evt);
-        if (that.onclick && that.contains(pos.x, pos.y)) {
+        if (that.contains(pos.x, pos.y)) {
             that.click();
         }
     };
@@ -143,7 +143,9 @@ Button.prototype = {
 
         // set a click delay
         var that = this;
-        this.clickTimeout = setTimeout(function() { that.onclick(); }, 200);
+        if (that.onclick) {
+            this.clickTimeout = setTimeout(function() { that.onclick(); }, 200);
+        }
     },
 
     enable: function() {
@@ -157,10 +159,12 @@ Button.prototype = {
 
     focus: function() {
         this.isSelected = true;
+        this.onfocus && this.onfocus();
     },
 
     blur: function() {
         this.isSelected = false;
+        this.onblur && this.onblur();
     },
 
     setText: function(msg) {

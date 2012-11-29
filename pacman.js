@@ -3166,7 +3166,7 @@ var initRenderer = function(){
             ctx.textBaseline = "bottom";
             ctx.textAlign = "right";
             ctx.fillStyle = "#333";
-            ctx.fillText(executive.getFps().toFixed(2)+" FPS", screenWidth, screenHeight);
+            ctx.fillText(Math.floor(executive.getFps())+" FPS", screenWidth, screenHeight);
 
             // translate to map space
             ctx.translate(mapMargin+mapPad, mapMargin+mapPad);
@@ -4225,7 +4225,7 @@ var Button = function(x,y,w,h,onclick) {
     };
     var touchend = function(evt) {
         evt.preventDefault();
-        var registerClick = (that.onclick && that.startedInside && that.isSelected);
+        var registerClick = (that.startedInside && that.isSelected);
         if (registerClick) {
             that.click();
         }
@@ -4245,7 +4245,7 @@ var Button = function(x,y,w,h,onclick) {
     // mouse events
     var click = function(evt) {
         var pos = getPointerPos(evt);
-        if (that.onclick && that.contains(pos.x, pos.y)) {
+        if (that.contains(pos.x, pos.y)) {
             that.click();
         }
     };
@@ -4295,7 +4295,9 @@ Button.prototype = {
 
         // set a click delay
         var that = this;
-        this.clickTimeout = setTimeout(function() { that.onclick(); }, 200);
+        if (that.onclick) {
+            this.clickTimeout = setTimeout(function() { that.onclick(); }, 200);
+        }
     },
 
     enable: function() {
@@ -4309,10 +4311,12 @@ Button.prototype = {
 
     focus: function() {
         this.isSelected = true;
+        this.onfocus && this.onfocus();
     },
 
     blur: function() {
         this.isSelected = false;
+        this.onblur && this.onblur();
     },
 
     setText: function(msg) {
@@ -9441,7 +9445,7 @@ var homeState = (function(){
         menu.disable();
     };
 
-    var menu = new Menu("ARCADE",2*tileSize,0*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    var menu = new Menu("CHOOSE A GAME",2*tileSize,0*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     var getIconAnimFrame = function(frame) {
         frame = Math.floor(frame/3)+1;
         frame %= 4;
@@ -9470,14 +9474,6 @@ var homeState = (function(){
         },
         function(ctx,x,y,frame) {
             atlas.drawMsPacmanSprite(ctx,x,y,DIR_RIGHT,getIconAnimFrame(frame));
-        });
-    menu.addTextIconButton(getGameName(GAME_OTTO),
-        function() {
-            gameMode = GAME_OTTO;
-            exitTo(preNewGameState);
-        },
-        function(ctx,x,y,frame) {
-            atlas.drawOttoSprite(ctx,x,y,DIR_RIGHT,getOttoAnimFrame(frame));
         });
     menu.addTextIconButton(getGameName(GAME_COOKIE),
         function() {
@@ -9682,46 +9678,69 @@ var gameTitleState = (function() {
 
     var name,nameColor;
 
+    var resetTitle = function() {
+        if (yellowBtn.isSelected) {
+            name = getGameName();
+            nameColor = gameMode == GAME_COOKIE ? "#47b8ff" : pacman.color;
+        }
+        else if (redBtn.isSelected) {
+            name = getGhostNames()[0];
+            nameColor = blinky.color;
+        }
+        else if (pinkBtn.isSelected) {
+            name = getGhostNames()[1];
+            nameColor = pinky.color;
+        }
+        else if (cyanBtn.isSelected) {
+            name = getGhostNames()[2];
+            nameColor = inky.color;
+        }
+        else if (orangeBtn.isSelected) {
+            name = getGhostNames()[3];
+            nameColor = clyde.color;
+        }
+        else {
+            name = getGameName();
+            nameColor = "#FFF";
+        }
+    };
+
     var w = 20;
     var h = 30;
     var x = mapWidth/2 - 3*w;
     var y = 3*tileSize;
-    var yellowBtn = new Button(x,y,w,h,function(){
-        name = getGameName();
-        nameColor = pacman.color;
+    var yellowBtn = new Button(x,y,w,h,function() {
+        if (gameMode == GAME_MSPACMAN) {
+            gameMode = GAME_OTTO;
+        }
+        else if (gameMode == GAME_OTTO) {
+            gameMode = GAME_MSPACMAN;
+        }
     });
     yellowBtn.setIcon(function (ctx,x,y,frame) {
         getPlayerDrawFunc()(ctx,x,y,DIR_RIGHT,pacman.getAnimFrame(pacman.getStepFrame(Math.floor((gameMode==GAME_PACMAN?frame+4:frame)/1.5))),true);
     });
+
     x += 2*w;
-    var redBtn = new Button(x,y,w,h,function(){
-        name = getGhostNames()[0];
-        nameColor = blinky.color;
-    });
+    var redBtn = new Button(x,y,w,h);
     redBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,blinky.color);
     });
+
     x += w;
-    var pinkBtn = new Button(x,y,w,h,function(){
-        name = getGhostNames()[1];
-        nameColor = pinky.color;
-    });
+    var pinkBtn = new Button(x,y,w,h);
     pinkBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,pinky.color);
     });
+
     x += w;
-    var cyanBtn = new Button(x,y,w,h,function(){
-        name = getGhostNames()[2];
-        nameColor = inky.color;
-    });
+    var cyanBtn = new Button(x,y,w,h)
     cyanBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,inky.color);
     });
+
     x += w;
-    var orangeBtn = new Button(x,y,w,h,function(){
-        name = getGhostNames()[3];
-        nameColor = clyde.color;
-    });
+    var orangeBtn = new Button(x,y,w,h);
     orangeBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,clyde.color);
     });
@@ -9739,8 +9758,7 @@ var gameTitleState = (function() {
 
     return {
         init: function() {
-            name = getGameName();
-            nameColor = "#FFF";
+            resetTitle();
             forEachCharBtn(function (btn) {
                 btn.enable();
             });
@@ -9755,6 +9773,7 @@ var gameTitleState = (function() {
                 renderer.renderFunc(btn.draw,btn);
             });
 
+            resetTitle();
             renderer.renderFunc(function(ctx){
                 ctx.font = tileSize+"px ArcadeR";
                 ctx.fillStyle = nameColor;
@@ -9766,10 +9785,10 @@ var gameTitleState = (function() {
         update: function() {
             forEachCharBtn(function (btn) {
                 btn.update();
-                if (btn.isSelected) {
-                    btn.onclick();
-                }
             });
+        },
+        getYellowBtn: function() {
+            return yellowBtn;
         },
     };
 
@@ -10091,13 +10110,13 @@ var aboutGameState = (function() {
         init: function() {
             menu.enable();
             gameTitleState.init();
-            desc = getGameDescription();
-            numDescLines = desc.length;
         },
         draw: function() {
             renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
             gameTitleState.draw();
+            desc = getGameDescription();
+            numDescLines = desc.length;
             renderer.renderFunc(drawDesc);
         },
         update: function() {

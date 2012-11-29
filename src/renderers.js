@@ -201,7 +201,7 @@ var initRenderer = function(){
             ctx.textBaseline = "bottom";
             ctx.textAlign = "right";
             ctx.fillStyle = "#333";
-            ctx.fillText(executive.getFps().toFixed(2)+" FPS", screenWidth, screenHeight);
+            ctx.fillText(Math.floor(executive.getFps())+" FPS", screenWidth, screenHeight);
 
             // translate to map space
             ctx.translate(mapMargin+mapPad, mapMargin+mapPad);

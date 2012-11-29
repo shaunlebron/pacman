@@ -428,6 +428,15 @@ Ghost.prototype.getPathDistLeft = function(fromPixel, dirEnum) {
 };
 
 Ghost.prototype.setTarget = function() {
+    // This sets the target tile when in chase mode.
+    // The "target" is always Pac-Man when in this mode,
+    // except for Clyde.  He runs away back home sometimes,
+    // so the "targetting" parameter is set in getTargetTile
+    // for Clyde only.
+
     this.targetTile = this.getTargetTile();
-    this.targetting = 'pacman';
+
+    if (this != clyde) {
+        this.targetting = 'pacman';
+    }
 };

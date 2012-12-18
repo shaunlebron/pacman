@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+
+<HEAD>
+	<META HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=iso-8859-1">
+<META NAME="VPSiteProject" CONTENT="file:///D|/WalkOfMind/Project.vpp">
+
+	<TITLE>Namco 3-channel Waveform Sound Generator</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="silver">
+
+<H1 ALIGN="CENTER">Namco 3-channel Waveform Sound Generator</H1>
+<P>The sound chip used in Pacman is a 3-channel Waveform Sound Generator (WSG) custom-made by Namco. It allows
+up to three simultaneous voices each with independent control over its volume, frequency and waveform. All of the
+chip functions are controlled by the following 4-bit registers:</P>
+
+<BLOCKQUOTE>
+	<CENTER>
+	<P>
+	<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" WIDTH="50%">
+		<TR>
+			<TD WIDTH="15%" BGCOLOR="#A0A0A4"><B>&nbsp;Register</B></TD>
+			<TD WIDTH="50%" BGCOLOR="#A0A0A4"><B>&nbsp;Description</B></TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;00h-04h</TD>
+			<TD WIDTH="50%">&nbsp;Voice #1 frequency counter</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;05h</TD>
+			<TD WIDTH="50%">&nbsp;Voice #1 waveform (only 3 bits used)</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;06-09h</TD>
+			<TD WIDTH="50%">&nbsp;Voice #2 frequency counter</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;0Ah</TD>
+			<TD WIDTH="50%">&nbsp;Voice #2 waveform (only 3 bits used)</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;0Bh-0Eh</TD>
+			<TD WIDTH="50%">&nbsp;Voice #3 frequency counter</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;0Fh</TD>
+			<TD WIDTH="50%">&nbsp;Voice #3 waveform (only 3 bits used)</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;10h-14h</TD>
+			<TD WIDTH="50%">&nbsp;Voice #1 frequency</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;15h</TD>
+			<TD WIDTH="50%">&nbsp;Voice #1 volume</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;16h-19h</TD>
+			<TD WIDTH="50%">&nbsp;Voice #2 frequency</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;1Ah</TD>
+			<TD WIDTH="50%">&nbsp;Voice #2 volume</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;1Bh-1Eh</TD>
+			<TD WIDTH="50%">&nbsp;Voice #3 frequency</TD>
+		</TR>
+		<TR>
+			<TD WIDTH="15%">&nbsp;1Fh</TD>
+			<TD WIDTH="50%">&nbsp;Voice #3 volume</TD>
+		</TR>
+	</TABLE>
+</P>
+</CENTER>
+</BLOCKQUOTE>
+
+<P>Frequencies and counters are 20-bit values stored with the least significant nibble first. Voice #2 and #3 are
+missing the register for the least significant nibble and it is assumed to be always zero.</P>
+<P>These registers are usually mapped into the memory space of the CPU. In the Pacman hardware the memory locations
+at 5040h-505Fh map the sound registers, so for example writing a value at the address 505Ah sets the volume of
+voice #2.</P>
+<P>Sound generation is based on a table that contains 8 different waveforms, where each waveform is described by
+32 4-bit entries. For versatility and reuseability, this data is kept outside of the chip in a 256 byte PROM.</P>
+<P>The chip itself is clocked at 96 KHz, which is the main CPU clock (3.072 MHz) divided by 32. At each cycle the
+frequency counter for each voice is incremented by the voice frequency, then the most significant 5 bits are used
+as an index to retrieve the current wave sample from the waveform table. The sample is then multiplied by the voice
+volume and sent to the amplifier for output. Note that a voice is actually muted if its volume or frequency is
+zero.</P>
+<P ALIGN="CENTER"><FONT SIZE="2">Copyright (c) 1997-2004 </FONT><A HREF="mailto:dev@ascotti.org"><FONT SIZE="2">Alessandro
+Scotti</FONT></A><FONT SIZE="2">. All rights reserved.</FONT>
+
+</BODY>
+
+</HTML>

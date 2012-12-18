@@ -1,0 +1,62 @@
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "main.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAIN MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Load Midway Pacman",      IDM_LOAD_PACMAN
+        MENUITEM "Load Namco Pacman",       IDM_LOAD_NAMCOPAC
+        MENUITEM "Load Ms. Pacman",         IDM_LOAD_MSPACMAN
+        MENUITEM SEPARATOR
+        MENUITEM "&Restart",                IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Restore F5 Snapshot",     IDM_SNAP_0
+        MENUITEM "Restore F6 Snapshot",     IDM_SNAP_1
+        MENUITEM "Restore F7 Snapshot",     IDM_SNAP_2
+        MENUITEM SEPARATOR
+        MENUITEM "Exit",                    IDM_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "Toggle window size",      IDM_WINDOW_SIZE
+        MENUITEM SEPARATOR
+        MENUITEM "Normal",                  IDM_NORMAL, CHECKED
+        MENUITEM "Hard (more difficult)",   IDM_HARD
+        MENUITEM SEPARATOR
+        MENUITEM "1 Pacman per Game",       IDM_LIFE_0
+        MENUITEM "2 Pacmen per Game",       IDM_LIFE_1
+        MENUITEM "3 Pacmen per Game",       IDM_LIFE_2, CHECKED
+        MENUITEM "5 Pacmen per Game",       IDM_LIFE_3
+        MENUITEM SEPARATOR
+        MENUITEM "Bonus pacman at 10000",	IDM_BONUS_10000, CHECKED
+        MENUITEM "Bonus pacman at 15000",	IDM_BONUS_15000
+        MENUITEM "Bonus pacman at 20000",	IDM_BONUS_20000
+        MENUITEM "No bonus",             	IDM_BONUS_NONE
+        MENUITEM SEPARATOR
+        MENUITEM "Normal Ghost Names",      IDM_GHOST_0, CHECKED
+        MENUITEM "Alternate Ghost Names",   IDM_GHOST_1
+        MENUITEM SEPARATOR
+        MENUITEM "Cabinet upright",         IDM_CABINET_UPRIGHT, CHECKED
+        MENUITEM "Cabinet cocktail",        IDM_CABINET_COCKTAIL
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Keys",                   IDM_HELP_KEYS
+        MENUITEM SEPARATOR
+        MENUITEM "&About",                  IDM_ABOUT
+    END
+END

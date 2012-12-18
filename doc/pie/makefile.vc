@@ -1,0 +1,34 @@
+# Pacman Instructional Emulator
+# Visual C++ makefile
+
+# Compiler, linker and utilities
+CC = cl
+LD = link
+RC = rc
+
+# Link flags
+LDFLAGS =
+LIBS = kernel32.lib user32.lib gdi32.lib dsound.lib ddraw.lib
+
+# Compile flags
+NAME = pacman
+TARGET = $(NAME).exe
+
+CDEFS = -DWIN32 -DWINNT
+
+CFLAGS_BASE = /nologo /GX /YX
+CFLAGS_WARNINGS = /W3
+
+CFLAGS = $(CFLAGS_BASE) $(CFLAGS_WARNINGS)
+
+OBJS = main.obj dib24.obj arcade.obj namcowsg3.obj z80.obj z80op1.obj z80op2cb.obj z80op2dd.obj z80op2ed.obj z80op2fd.obj z80op3xycb.obj z80sub.obj
+
+$(TARGET): $(OBJS) resource.res
+	$(LD) $(LDFLAGS) $** $(LIBS) /OUT:$@
+
+%.res: %.rc
+	$(RC) $<
+
+%.o: %.cxx
+	$(CC) $(CDEFS) $(CFLAGS) /c $<
+

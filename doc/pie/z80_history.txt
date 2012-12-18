@@ -1,0 +1,23 @@
+Version 1.0
+-----------
+Initial release (after so many years!) for Pacman emulator.
+
+Version 1.1
+-----------
+Finally got some official (i.e. Zilog) documentation for the Z80, and
+the correct instructions for DAA!
+
+- Added more comments and explanations to the code.
+- LDIR, LDDR, CPIR, CPDR, INIR, INDR, OTIR, OTDR are now interruptible 
+  and the cycle count is correct.
+- Opcodes of type LD r, RLC/RRC/RL/RR/SLA/SRA/SLL/SRL/RES/SET (IX/IY + d)
+  (undocumented) have been implemented.
+- Changed HALT management.
+- Removed support for undocumented flags to make code more clear.
+- DAA rewritten to avoid lookup table (thanks to S. Donati/S. Young for
+  documenting that).
+- Removed readWord() and writeWord() from Z80Environment interface.
+- Added notification of RETI instruction to Z80Environment interface.
+- Added run() method to the Z80 class.
+- Modified some instruction in order to avoid unnecessary calls to
+  the environment functions (e.g. for conditional branches not taken).

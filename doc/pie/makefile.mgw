@@ -1,0 +1,37 @@
+# Pacman Instructional Emulator
+# MinGW makefile
+
+# Compiler, linker and utilities
+CC = @g++
+LD = @g++
+RC = @windres
+
+# Link flags
+LDFLAGS = -s -mwindows
+LIBS = -ldsound -lddraw
+
+# Compile flags
+NAME = pacman
+TARGET = $(NAME).exe
+
+CDEFS = -DWIN32 -DWINNT
+
+CFLAGS_BASE = -DNDEBUG $(ARCH) -O3 -fomit-frame-pointer -fstrict-aliasing
+CFLAGS_WARNINGS = -Werror -Wall -Wno-sign-compare -Wunused \
+	-Wpointer-arith -Wbad-function-cast -Wcast-align -Waggregate-return \
+	-Wshadow -Wstrict-prototypes -Wundef \
+	-Wformat-security -Wwrite-strings \
+	-Wdisabled-optimization
+
+CFLAGS = $(CFLAGS_BASE) $(CFLAGS_WARNINGS)
+
+OBJS = main.o dib24.o arcade.o namcowsg3.o z80.o z80op1.o z80op2cb.o z80op2dd.o z80op2ed.o z80op2fd.o z80op3xycb.o z80sub.o
+
+$(TARGET): $(OBJS) resource.o
+	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+
+resource.o: resource.rc
+	$(RC) $< -o $@ -O coff
+
+%.o: %.cxx
+	$(CC) $(CDEFS) $(CFLAGS) -c $< -o $@

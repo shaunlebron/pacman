@@ -1,0 +1,486 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+
+<HEAD>
+	<META HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=iso-8859-1">
+<META NAME="VPSiteProject" CONTENT="file:///D|/WalkOfMind/Project.vpp">
+
+	<TITLE>Pacman hardware</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="silver">
+
+<H1 ALIGN="CENTER">Pacman hardware</H1>
+<P>At the core of Pacman is on a Z80 CPU supported by a 224x288 color video with hardware sprites and a 3-voice
+wavetable sound generator... a pretty nice setup for 1980!</P>
+<P>Here is all the information I know about the Pacman hardware. For the most part it has been extracted by looking
+at the sources of various emulators, most notably <A HREF="http://www.mame.net/">MAME</A>, but I have spent many
+hours to re-organize and write it down in a single place. If you find wrong or missing information please <A HREF="mailto:dev@ascotti.org">email
+me</A> so that I can improve the content of these pages.</P>
+<H3><A NAME="CPU"></A>CPU and memory layout</H3>
+<P>The CPU is a Z80 clocked at 3.072 MHz. The game ROM takes 16K at the beginning of the address space, followed
+by 2K of video memory and 2K of RAM for game use:</P>
+<CENTER>
+<P>
+<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" WIDTH="75%">
+	<TR>
+		<TD WIDTH="10%" BGCOLOR="gray"><B><FONT COLOR="black">&nbsp;Offset</FONT></B></TD>
+		<TD WIDTH="10%" BGCOLOR="gray"><B><FONT COLOR="black">&nbsp;Length</FONT></B></TD>
+		<TD BGCOLOR="gray"><B><FONT COLOR="black">&nbsp;Description</FONT></B></TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;0000h</TD>
+		<TD WIDTH="10%">&nbsp;4000h</TD>
+		<TD>&nbsp;Game ROM</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4000h</TD>
+		<TD WIDTH="10%">&nbsp;0400h</TD>
+		<TD>&nbsp;Video RAM (1K, characters)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4400h</TD>
+		<TD WIDTH="10%">&nbsp;0400h</TD>
+		<TD>&nbsp;Video RAM (1K, color information)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4800h</TD>
+		<TD WIDTH="10%">&nbsp;07F0h</TD>
+		<TD>&nbsp;RAM</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FF0h</TD>
+		<TD WIDTH="10%">&nbsp;0010h</TD>
+		<TD>&nbsp;Sprite data</TD>
+	</TR>
+</TABLE>
+</P>
+</CENTER>
+<P>Several registers that interface with other hardware devices are memory mapped directly in the CPU address space:</P>
+<CENTER>
+<P>
+<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" WIDTH="75%">
+	<CAPTION ALIGN="BOTTOM">
+		<P>* All locations within the specified range replicate the same byte value
+	</CAPTION>
+	<TR>
+		<TD WIDTH="10%" BGCOLOR="gray"><B><FONT COLOR="black">&nbsp;Offset</FONT></B></TD>
+		<TD WIDTH="10%" BGCOLOR="gray"><B><FONT COLOR="black">&nbsp;Length</FONT></B></TD>
+		<TD WIDTH="9%" BGCOLOR="gray"><B><FONT COLOR="black">&nbsp;Mode</FONT></B></TD>
+		<TD BGCOLOR="gray"><B><FONT COLOR="black">&nbsp;Description</FONT></B></TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5000h</TD>
+		<TD WIDTH="10%">&nbsp;0001h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Interrupt enable (bit 0: 0=disabled, 1=enabled)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5000h</TD>
+		<TD WIDTH="10%">&nbsp;0040h *</TD>
+		<TD WIDTH="9%">&nbsp;Read</TD>
+		<TD>&nbsp;IN0 port (joystick and coin slot)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5001h</TD>
+		<TD WIDTH="10%">&nbsp;0001h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Sound enable (bit 0: 0=disabled, 1=enabled)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5002h</TD>
+		<TD WIDTH="10%">&nbsp;0001h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Aux board enable?</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5003h</TD>
+		<TD WIDTH="10%">&nbsp;0001h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Flip screen (bit 0: 0=normal, 1=flipped)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5004h</TD>
+		<TD WIDTH="10%">&nbsp;0001h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Player 1 start light (bit 0: 1=on, 2=off)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5005h</TD>
+		<TD WIDTH="10%">&nbsp;0001h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Player 2 start light</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5006h</TD>
+		<TD WIDTH="10%">&nbsp;0001h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Coin lockout (bit 0: 0=unlocked, 1=locked)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5007h</TD>
+		<TD WIDTH="10%">&nbsp;0001h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Coin counter (trigger by changing the bit 0 from 0 to 1)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5040h</TD>
+		<TD WIDTH="10%">&nbsp;0020h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Sound registers</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5040h</TD>
+		<TD WIDTH="10%">&nbsp;0040h *</TD>
+		<TD WIDTH="9%">&nbsp;Read</TD>
+		<TD>&nbsp;IN1 port (joystick and start buttons)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5040h</TD>
+		<TD WIDTH="10%">&nbsp;0020h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Sound registers</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5060h</TD>
+		<TD WIDTH="10%">&nbsp;0010h</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Sprite coordinates</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5080h</TD>
+		<TD WIDTH="10%">&nbsp;0040h *</TD>
+		<TD WIDTH="9%">&nbsp;Read</TD>
+		<TD>&nbsp;DIP switch settings</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;50C0h</TD>
+		<TD WIDTH="10%">&nbsp;0040h *</TD>
+		<TD WIDTH="9%">&nbsp;Write</TD>
+		<TD>&nbsp;Watchdog reset</TD>
+	</TR>
+</TABLE>
+</P>
+</CENTER>
+<P>From looking at the ROM code I think port 5002h is unused in Pacman and used in Ms. Pacman to enable the auxiliary
+board (when 01h is written to the port). At least that's how <A HREF="pie.htm">PIE</A> uses it and it seems to
+work.</P>
+<P>In <I>cocktail</I> (table) mode the screen must be flipped for the second player, otherwise he would see the
+game upside down. This is made in hardware by writing 01h to the port 5003h and only flips the characters, while
+the sprites are flipped and repositioned by the game engine.</P>
+<P>The <B>IN0</B> port is connected to the joystick and the coin slots:</P>
+<CENTER>
+<P>
+<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" WIDTH="75%">
+	<CAPTION ALIGN="BOTTOM">
+		<P>IN0 port (read-only at address 5000h)
+	</CAPTION>
+	<TR>
+		<TD WIDTH="10%" BGCOLOR="gray"><B>&nbsp;Bit</B></TD>
+		<TD BGCOLOR="gray"><B>&nbsp;Description</B></TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;0</TD>
+		<TD>&nbsp;Joystick up (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;1</TD>
+		<TD>&nbsp;Joystick left (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;2</TD>
+		<TD>&nbsp;Joystick right (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;3</TD>
+		<TD>&nbsp;Joystick down (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4</TD>
+		<TD>&nbsp;Rack advance (switch, automatically advance to next game level: 0=on, 1=off)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5</TD>
+		<TD>&nbsp;Coin slot 1 (trigger by changing the bit to 0 then 1)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;6</TD>
+		<TD>&nbsp;Coin slot 2 (trigger by changing the bit to 0 then 1)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;7</TD>
+		<TD>&nbsp;Credit button (0=pressed, 1=released)</TD>
+	</TR>
+</TABLE>
+</P>
+</CENTER>
+<P>The credit button works like the coin slots but adds a credit without incrementing the coin counter. The <B>IN1</B>
+port is connected to the second player joystick (only for cocktail table ) and the start buttons:</P>
+<CENTER>
+<P>
+<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" WIDTH="75%">
+	<CAPTION ALIGN="BOTTOM">
+		<P>IN1 port (read-only at address 5040h)
+	</CAPTION>
+	<TR>
+		<TD WIDTH="10%" BGCOLOR="gray"><B>&nbsp;Bit</B></TD>
+		<TD BGCOLOR="gray"><B>&nbsp;Description</B></TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;0</TD>
+		<TD>&nbsp;Cocktail cabinet: 2nd player joystick up (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;1</TD>
+		<TD>&nbsp;Cocktail cabinet: 2nd player joystick left (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;2</TD>
+		<TD>&nbsp;Cocktail cabinet: 2nd player joystick right (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;3</TD>
+		<TD>&nbsp;Cocktail cabinet: 2nd player joystick down (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4</TD>
+		<TD>&nbsp;Board test (switch: 0=on, 1=off)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5</TD>
+		<TD>&nbsp;One player start button (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;6</TD>
+		<TD>&nbsp;Two players start button (0=pressed, 1=released)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;7</TD>
+		<TD>&nbsp;Cabinet mode (0=table, 1=upright)</TD>
+	</TR>
+</TABLE>
+</P>
+</CENTER>
+<P>Some game settings such as for example the number of lives per game or the game difficulty are controlled by
+DIP (Dual In-line Package) switches that are memory mapped to address 5080h. Each switch is represented by a bit
+that is 1 if the switch is off and 0 if the switch is on:</P>
+<CENTER>
+<P>
+<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" WIDTH="75%">
+	<CAPTION ALIGN="BOTTOM">
+		<P>DIP switches (read-only at address 5080h)
+	</CAPTION>
+	<TR>
+		<TD WIDTH="10%" BGCOLOR="gray"><B>&nbsp;Bit</B></TD>
+		<TD BGCOLOR="gray"><B>&nbsp;Description</B></TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;0, 1</TD>
+		<TD>&nbsp;Coins per game (0=free play, 1=1 coin per game, 2=1 coin per 2 games, 3=2 coins per game)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;2, 3</TD>
+		<TD>&nbsp;Number of lives per game (0=1 life, 1=2 lives, 2=3 lives, 3=5 lives)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4, 5</TD>
+		<TD>&nbsp;Bonus score for extra life (0=10000 points, 1=15000 points, 2=20000 points, 3=none)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;6</TD>
+		<TD>&nbsp;Difficulty (jumper pad: 0=hard, 1=normal)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;7</TD>
+		<TD>&nbsp;Ghost names (jumper pad: 0=alternate, 1=normal)</TD>
+	</TR>
+</TABLE>
+</P>
+</CENTER>
+<P>I don't have specific information on the watchdog reset port at 50C0h, so I can only guess it is the port that
+the game uses to reset the <I>watchdog</I> timer, a CPU-independent clock that resets the CPU after a specified
+timeout elapses. The port is written at costant intervals during the game (three times per frame) mostly with zeroes
+and every now and then with a decreasing counter: this tells the watchdog that the program is alive and forces
+the timer to restart from its initial value.
+<H3><A NAME="Video"></A>Video</H3>
+<P>The display supports a resolution of 224x288 pixels that are actually 8x8 characters arranged in a 28x36 matrix.
+This allows the video to work with just 2K of RAM, 1K for video information and 1K for color information. The video
+and color RAM have a <A HREF="video_memory.htm">very peculiar arrangement</A> with some extra locations that are
+not visible on the screen.</P>
+<P>Colors are defined in a 32-entries palette PROM where each entry contains packed RGB information:</P>
+<CENTER>
+<P>
+<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" WIDTH="75%">
+	<CAPTION ALIGN="BOTTOM">
+		<P>Color palette entry
+	</CAPTION>
+	<TR>
+		<TD WIDTH="10%" BGCOLOR="gray"><B>&nbsp;Bit</B></TD>
+		<TD WIDTH="10%" BGCOLOR="gray"><B>&nbsp;Color</B></TD>
+		<TD BGCOLOR="gray"><B>&nbsp;Connected to</B></TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;0</TD>
+		<TD WIDTH="10%">&nbsp;Red</TD>
+		<TD>&nbsp;1K ohm resistor</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;1</TD>
+		<TD WIDTH="10%">&nbsp;Red</TD>
+		<TD>&nbsp;470 ohm resistor</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;2</TD>
+		<TD WIDTH="10%">&nbsp;Red</TD>
+		<TD>&nbsp;220 ohm resistor</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;3</TD>
+		<TD WIDTH="10%">&nbsp;Green</TD>
+		<TD>&nbsp;1K ohm resistor</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4</TD>
+		<TD WIDTH="10%">&nbsp;Green</TD>
+		<TD>&nbsp;470 ohm resistor</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5</TD>
+		<TD WIDTH="10%">&nbsp;Green</TD>
+		<TD>&nbsp;220 ohm resistor</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;6</TD>
+		<TD WIDTH="10%">&nbsp;Blue</TD>
+		<TD>&nbsp;470 ohm resistor</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;7</TD>
+		<TD WIDTH="10%">&nbsp;Blue</TD>
+		<TD>&nbsp;220 ohm resistor</TD>
+	</TR>
+</TABLE>
+</P>
+</CENTER>
+<P>The resistor values can be used to compute the weights of each bit. The max current output (i.e. intensity)
+for a color is V/220 + V/470 + V/1000 and this corresponds to 0xFF, the max palette value for a RGB component.
+Performing the sum and simplifying, as we're only interested in ratios from now on, we get a total of 7934 and
+individual weights of 4700, 2200 and 1034 respectively (i.e. the 220 ohm resistor allows more current to pass and
+thus has a greater weight, i.e. is brighter). Scaling those to 0xFF we get the &quot;typical&quot; weights of 0x97,
+0x47 and 0x21 that most emulators use.</P>
+
+<P>Although all useable colors are defined in the above palette, character and sprite colors are defined in terms
+of a logical 256-entries color map that is also stored in a 4-bit PROM. Because each color entry takes only 4 bits
+only the first 16 entries in the palette can be used, and in fact in Pacman the remaining entries are all zeroed
+out.</P>
+
+<P>Character definitions are stored in a 4K ROM. There are 256 8x8 characters and each of them is <A HREF="char_defs.htm">defined
+using 2 bits per pixel</A>, so one character takes 16 bytes of ROM space. Note that this approach provides only
+4 colors per characters. In order to display a character its code must be written in the proper location in the
+video memory and also it must be assigned a color by writing in the corresponding color memory location. The character
+color that is actually displayed is obtained by combining 6 bits from the color memory, which apply to the whole
+character, with the 2 bits that define each character pixel:</P>
+<P ALIGN="CENTER">pixel_color(x,y) = (character_color <B>shl</B> 6) <B>or</B> character_pixel_color(x,y)</P>
+<P>Pacman supports 8 independent 16x16 color sprites that can be moved anywhere on the screen without interfering
+with the underlying graphics. Each sprite has its own coordinates, color and display mode. There are 64 different
+sprite shapes and a sprite can take any one of these. The shapes are defined in a 4K ROM with a format that is
+practically identical to that of characters. However, according to the display mode, a sprite can also be displayed
+normally, flipped horizontally, flipped vertically and flipped in both directions.</P>
+<P>As usual, sprite registers are memory mapped too:</P>
+<CENTER>
+<P>
+<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" WIDTH="75%">
+	<CAPTION ALIGN="BOTTOM">
+		<P>Sprite registers
+	</CAPTION>
+	<TR>
+		<TD WIDTH="10%" BGCOLOR="gray"><B>&nbsp;Offset</B></TD>
+		<TD BGCOLOR="gray"><B>&nbsp;Description</B></TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FF0h</TD>
+		<TD>&nbsp;Sprite #0 shape (upper six bits) and mode (lower two bits)</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FF1h</TD>
+		<TD>&nbsp;Sprite #0 color</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FF2/3h</TD>
+		<TD>&nbsp;Sprite #1 shape/color</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FF4/5h</TD>
+		<TD>&nbsp;Sprite #2 shape/color</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FF6/7h</TD>
+		<TD>&nbsp;Sprite #3 shape/color</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FF8/9h</TD>
+		<TD>&nbsp;Sprite #4 shape/color</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FFA/Bh</TD>
+		<TD>&nbsp;Sprite #5 shape/color</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FFC/Dh</TD>
+		<TD>&nbsp;Sprite #6 shape/color</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;4FFE/Fh</TD>
+		<TD>&nbsp;Sprite #7 shape/color</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5060h</TD>
+		<TD>&nbsp;Sprite #0 X coordinate</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5061h</TD>
+		<TD>&nbsp;Sprite #0 Y coordinate</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5062/3h</TD>
+		<TD>&nbsp;Sprite #1 X/Y coordinates</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5064/5h</TD>
+		<TD>&nbsp;Sprite #2 X/Y coordinates</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5066/7h</TD>
+		<TD>&nbsp;Sprite #3 X/Y coordinates</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;5068/9h</TD>
+		<TD>&nbsp;Sprite #4 X/Y coordinates</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;506A/Bh</TD>
+		<TD>&nbsp;Sprite #5 X/Y coordinates</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;506C/Dh</TD>
+		<TD>&nbsp;Sprite #6 X/Y coordinates</TD>
+	</TR>
+	<TR>
+		<TD WIDTH="10%">&nbsp;506E/Fh</TD>
+		<TD>&nbsp;Sprite #7 X/Y coordinates</TD>
+	</TR>
+</TABLE>
+</P>
+</CENTER>
+<P>Sprites are displayed in reverse order, so if two sprites overlap the one with the higher number can be wholly
+or partially covered by the one with the lower number.</P>
+<H3><A NAME="Sound"></A>Sound</H3>
+<P>The sound comes from a <A HREF="wsg3.htm">custom chip made by Namco</A> that is able to play up to 3 simultaneous
+voices using wavetable synthesis.</P>
+<P>
+<P ALIGN="CENTER"><FONT SIZE="2">Copyright (c) 1997-2004 </FONT><A HREF="mailto:dev@ascotti.org"><FONT SIZE="2">Alessandro
+Scotti</FONT></A><FONT SIZE="2">. All rights reserved.</FONT>
+
+</BODY>
+
+</HTML>

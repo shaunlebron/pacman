@@ -1,0 +1,215 @@
+                 Programming For Pac-Man And Pengo Hardware
+
+                         Game Design Considerations
+
+
+	                   Scott "Jerry" Lawrence
+	                   pacman@umlautllama.com
+
+	                      2001-February-11
+
+
+	     This document and all of the information in it is
+	    freely distributable.  I only ask that you leave it 
+	      intact, without modifying its contents.  Enjoy!
+
+
+          The most recent version of this document can be found at:
+                 http://www.cis.rit.edu/~jerry/Software/pengo
+
+========================================
+                             GAME DESIGN
+========================================
+
+Contents:
+	Keep It Simple
+	Hardware Limitations
+	Gameplay States
+	Game Responsiveness
+	Consideration
+
+
+----------------------------------------
+                          Keep It Simple
+
+This should be the number one consideration for every design.
+
+Complex games will require more complex code, and chances are, will be
+more complex to play and program.  If you're working with new hardware,
+or have an idea as good as "Defender" then go for it, but chances are
+that you have neither.  Keep your game design simple.
+
+Regardless of your final project size and complexity, you should always
+start small.  Figure out some subset of the final game to make first.
+Then once you have something that you're comfortable with, expand upon it.
+
+Always save aside versions of your work, and always test!  Constantly
+playtest your game.  Give it to friends that you trust to test it.
+Pay people to test it, whatever... but constantly test it!  Even if you've
+only added a small piece of functionality or a bug-fix, you still better
+make sure you didn't break something else.
+
+It's a pain, but you have to it.
+
+And obviously, if it's simpler, it will be easier to test, and there is
+less chance of something going wrong, or for unfindable bugs to develop.
+
+
+----------------------------------------
+                    Hardware Limitations
+
+Obviously, it would be silly to design a game for the hardware platform
+that would be impossible to implement.  In some cases, there are
+workarounds, and clever tricks you can pull, but in general, you're not
+usually that lucky.
+
+You have a very limited amount of cpu time, number of colors, number of
+floating sprites, ram, etc.
+
+If you look at the game "Pengo", you might notice that it only supports
+6 floating sprites, however,  at any time, you have:  Pengo, four
+snow-bees, a sliding block, a disintegrating block, a shaking wall,
+a hatching egg, etc.
+
+The way they do all of that simultaneously is to be clever with the
+foreground and background.   You won't notice if something moves from
+the front to the back unless attention is brought to it.  Disintegrating
+blocks, shaking walls, and half of the hatching egg animation, along with
+the maze itself are all in background tiles.  The animations of some of
+these are just redrawn a frame at a time, as needed.   The other parts
+are all done in floating sprites.  At any time you will have one floating
+sprite for Pengo, four for snow-bees, and one for a sliding ice block.
+That's it.  Everything else is in the bacground tiles.
+
+You can overcome limitations of your hardware by pulling clever tricks
+like this.  moving things from the foreground to the background when
+they stop, without bringing attention to it.  You can bring attention
+to it by changing its color, position, etc.
+
+The best way to really get a full grasp of the hardware is to experiment
+with it.  Write test code to see how it performs.  That's how I learned
+as much as I did about this hardware.
+
+Once you have a decent grasp of what it is capable of, then you can
+start to figure out the fine details of your game.
+
+Also know the limitations of your tools.  If you are using a C-compiler,
+realize that it can never make code as small as coding directly in asm.
+That's due to the overhead of the C compiler.  If you're getting close
+to the limitations of your ROM space, don't expect the compiler to be
+able to optimize it down.  Be prepared to take the generated asm files,
+and hand optimize it if it really is that important that you have those
+few extra bytes.
+
+
+Since this hardware is not capable of scrolling finely, you will be
+limited to 'board' based games.  You will not be able to implement side
+scrolling games without them looking hideously blocky.  This is why
+most of the 'old style' games had boards where you could see everything
+on screen at once... there never was anything lurking on the map "just
+off screen".
+
+So be aware of the types of games you will and will not be able to
+implement on the hardware.  You may want to switch to a platform that
+supports more floating sprites, like Dig-Dug or Galaga if you need more
+than 6 available.  Most of the games of that era have similar hardware.
+With current tools like MAME and various disassemblers, It should be
+fairly easy to figure out how those platforms work once you have a decent
+understanding of this one.
+
+
+----------------------------------------
+                         Gameplay States
+
+Every arcade game, whether it be the latest Virtua Whoopass, or the
+oldest black and white racing game pretty much follow the same pattern
+for their state machine.  The following states usually occur:
+
+	Attract sequence
+
+	    - show a title screen with copyright information
+
+	    - show the high scores with initials or names
+
+	    - show instructions for how to play the game
+
+	    - demonstrate how to play the game
+
+	    - repeat until coins are dropped in.
+
+
+	Coin insert screen
+
+	    - prompt the user to drop in more coins if they want two-players
+
+	      - sometimes this is just displayed as a number of credits
+	        during the attract sequence, replaced by a "press start"
+                when appropriate
+
+
+	Game play
+
+	    - This is up to you.
+              The user will play the game until their lives run out or 
+	      they run out of credits. 
+
+	    - When they die that last time, perhaps prompt for more 
+              credits to continue.  (This option should be disableable
+	      by the operator, either via an onscreen menu or dipswitch.)
+
+	    - Otherwise, check their score against the high score table.
+
+	      - If it belongs in there, prompt them for initials.
+
+	      - Some games prompt you for a complete name for the 
+                number-one position.  (Tempest 2000 is one of them.)
+
+
+There are some games where the score granularity is based on multiples of
+100 rather than for example Pac-Man which has a score based on multiples
+of 10.  What those games do is that every time the player continues,
+it increments her/his score by one.  They do this so any player can look
+at a high score of "392,119,142" and know that they continued 42 times
+to get such an outrageous score.  The new Namco "Galaga/Ms.Pac-Man"
+machine should do this, but it does not.
+
+
+----------------------------------------
+                     Game Responsiveness
+
+As mentioned in the "Coding Tactics" document, one thing that can really
+annoy players is if their movements or coin drops do not register.
+One way you can account for this is to have a small event handler in
+the VBLANK timing interrupt.  If a coin is dropped in, increment some
+counter somewhere... if the user just moved up, note it somewhere in ram.
+In the very least you should count coin drops here, so that you don't
+have to check for it everywhere in your code.
+
+But remember to keep your irq handler short so that it doesn't re-enter
+itself, which would be bad.
+
+One of the problems with the above state diagram is that you will
+either have to litter your code with "if"s or use the dreaded "goto"
+if you program in C.  For example, if you're in the middle of displaying
+gameplay, and the user drops in a quarter, it should immediately go to
+the "press start" screen.  You could either litter your code with if
+statements around everything checking for the number of credits inserted,
+or you could change the return value on the stack from whithin the IRQ
+handler to be the "press start" screen, or you could have a few well
+placed "if"s which check to see if coins have been dropped, and if so,
+goto the end of the current routine.   There are many ways of doing this.
+Pick your favorite, experiment... but never lose quarters.  Players and
+Operators will not like you if you do.
+
+
+----------------------------------------
+                           Consideration
+
+If you intend for your romset to be used 'in industry' or out in an arcade
+somewhere, it'd probably be a good idea to have some sort of Rack test
+of some kind on power up.  Ie; the first thing you should do is clear
+the screen, draw some stuff, play with the floating sprite hardware,
+and then clear and reset it all back to 0's again.  In the very least,
+it lets them see that the game is resetting. ;)
+
+

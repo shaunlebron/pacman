@@ -1,0 +1,204 @@
+                 Programming For Pac-Man And Pengo Hardware
+
+                               Coding Tactics
+
+
+	                   Scott "Jerry" Lawrence
+	                   pacman@umlautllama.com
+
+	                      2001-February-11
+
+
+	     This document and all of the information in it is
+	    freely distributable.  I only ask that you leave it 
+	      intact, without modifying its contents.  Enjoy!
+
+
+          The most recent version of this document can be found at:
+                 http://www.cis.rit.edu/~jerry/Software/pengo
+
+========================================
+                          CODING TACTICS
+========================================
+
+Contents:
+	Keep It Small
+	Functions
+	Know Your Hardware
+	Exploit Your Hardware
+	Make It Responsive
+	Portability 
+	Tools
+	Memory Protection and the OS
+
+
+----------------------------------------
+                           Keep It Small
+
+As you might have realized already if you read through the hardware doc,
+you don't have too much headroom on the hardware.  Ram and Rom are in
+short supply.
+
+For either platform, you have 1024 bytes of ram.  This is used for both
+program variables and your stack.  There's no memory management, so 
+chances are recursive procedures are a bad idea, since you'll end up 
+overwriting your variable ram, and eventually, your screen ram.
+
+This is why in games like Pac-Man, the high score is actually only 
+stored in screen ram.
+
+
+----------------------------------------
+                               Functions
+
+Functions are your friends, the memory constraint isn't.  If there is
+anything that you are doing more than once, you can save the romspace
+for having that code repeated a second time, by putting that code into a
+function.  This also adds to the modularity and reusability of your code.
+For example, if there are a few functions that you find that you are
+using a lot, in multple projects, you can re-use them much easier than
+some straight inlined code.
+
+It's sort of the same idea where if there is some procedure you need to
+do more than once, you're better off writing a program or script to do
+it rather than typing in the commands twice (or more.)
+
+Obviously, you won't want to functionalize too much, because you'll be
+spending all of your time pushing things onto and popping things off of
+the stack.  And also, if you call too many functions, and get too deep,
+you'll run out of stack space, as explained above.
+
+
+----------------------------------------
+                      Know Your Hardware
+
+To write the best game or whatever for the hardware, your best results
+will come once you know the capabilities and limitations of the
+hardware.  You can do this by writing lots of test apps.  Try anything
+and everything.  Push the hardware to its limits.  Of course, you'll
+probably be building against an emulator, so if you're capable of trying
+it out on the real hardware occasionally, you should.
+
+Remember, even though these machines were some of the best technology of
+their times, their hardware is quite simple and limited.  Don't expect
+the world of it.
+
+
+----------------------------------------
+                   Exploit Your Hardware
+
+Once you know what your hardware is capable of, exploit the heck out
+of it.  For an example, you can use the Z80's BCD routines.  BCD is
+"Binary Coded Decimal".  If you think of a byte, it has two nibbles
+in it, each storing a four bit value 0x0-0xf. (0-15).  If instead,
+you store a value using just 0-9, the byte can only store a max value
+of 99, instead of 255 (0xff).  But what does this buy you?  At runtime
+you won't have to convert a hex value (ie 0x3f) to a decimal value to
+be displayed on the screen as a score or what have you.  
+
+Pac-Man uses a BCD value for the score, since it's displayed on the 
+screen, and that's the only place that it is stored.  The first 16 
+characters in the Pac-Man romset are the characters 0-9 then a-f, 
+so they can display either a BCD or hex value on the screen.
+
+It should be noted that if you want to use BCD routines, and are using a
+c-compiler like ZCC, that you will have to make your own math routines
+in asm.  You can either do it as a straight asm routine, or as asm
+inlined in your c functions.  The former is probably the better way to
+go for maintainability and ease of debugging.
+
+Granted, BCD routines have limited application, but it's just an example.
+
+
+----------------------------------------
+                      Make It Responsive
+
+One thing that will really annoy players, is unresponsive games.  If the
+thing that killed them, or made them lose their quarter, was that they
+wanted to move left, which they moved the joystick to do, but instead
+ended up continuing going straight.
+
+Another situation, would be if they dropped a quarter into the machine,
+and it did not register.
+
+So you should always try to make as responsive of a game as possible.
+In busy loops, idle states, and when you're between functions, you
+should poll the input devices.  More importantly than missing a movement,
+you should never miss a coin drop, so really be sure to check it often.
+
+
+----------------------------------------
+                             Portability 
+
+If you are clever and careful, you can make your program easily portable
+to other game platforms.  This seems oxymoronic.  It would seem that you
+would want to make it as specific for the hardware as possible.  You could
+just write your game in pure assembler, but that can get very tedious.
+The compiler and optimizer are pretty good.  I've noticed that it also
+produces pretty small code.
+
+So what does this mean?   You might as well code in C.  Chances are that
+you're more comfortable programming in C than in Z80 asm.  You also
+get some added bonuses using C instead of asm, namely the pre-processor.
+The pre-processor will let you use macros, #defines and so on.  You can
+use these to your advantage like I have in the sample code.
+
+Since there is a lot of commonality between the two games, you can use
+#define's to explain where similar hardware is between the two platforms.
+So you can write your program using the #defines, then build it for
+either platform.
+
+Afterall, if you make a game that everyone wants, you'll be better off
+having it available for as many platforms as possible.  The more places
+that your game will run on, the more product you can sell.
+
+
+----------------------------------------
+                                   Tools
+
+I've looked around the net for free or cheap tools, and have found many
+useful ones.  Primarilly, I've found:
+
+
+Build Tools:
+
+	Package		Contains
+
+	Zcc		C cross compiler, C pre-processor, assembler, linker.
+	AsmZ80		Assembler (Z80 only)
+	Tasm		Assembler (multi-platform)
+	Genroms		romfile builder  (my creation)
+
+Testing Tools:
+
+	Package		Contains
+
+	MAME		Emulator / Hardware simulator
+	Dasm		disassembler
+
+Links to all packages can be found on my webpage.  The address is atop
+this document.
+
+I've pretty much stuck with the Zcc package, since it seems to be the
+most flexible, and easiest for me to use.  I've set up an environment
+using the above tools (Zcc, Genroms, MAME) and it's gotten to the point
+where it is trivial for me to make simple applications for either Pac-Man
+or Pengo hardware.
+
+Which brings up another point.  Know your tools.  Know their capabilities
+and limitations.  And if there is a tool that is missing that would
+make your job easier, write it.  That is how "Genroms" came about.
+I have this cool compiler that outputs in this specific, known format,
+and i have this arcade hardware that needs a different, known format.
+All i did there was write the little bit that converts one into the other.
+
+
+----------------------------------------
+            Memory Protection and the OS
+
+Unless you already figured this out... there is no Operating System.
+There is no Memory Protection.  It's just you and the hardware directly.
+If you read or write outside of where you should, odd things might happen,
+the game might freeze up, etc.  You won't get a "Stack overflow" error,
+or an "out of memory error".  It will just happpen, so be careful.
+You don't have much space to work with, so use it wisely.

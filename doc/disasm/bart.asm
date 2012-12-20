@@ -1,4 +1,242 @@
+; 
+; 
+; - The stack is initialized to 0x4FC0, 64 bytes from the top of RAM
+; - 4ff0-4fff 8 pairs of two bytes:
+;     the first byte contains the sprite image number (bits 2-7),
+;     Y flip (bit 0), X flip (bit 1); the second byte the color 
+; 
+; palette .7f 32x1 byte   32 discrete colors max
+;     lookup  .4a 64x4 byte   64 four-color entries
+; 
+; strip msdos chars :
+; cat msdoschars | perl -e 'while(<STDIN>){$_=~ s/\015//gem; print $_}' > unixized
+; 
+; - it'd be interesting to perform an FFT on the output from the functions at 521 and 528
+; - How does the coin lockout work? (where is it referenced?)
+; 
+; Important RAM locations
+; -----------------------
+; service mode:
+;     4E9C - Coin insert (==2) or start game (==1)
+;     4EBC - Joystick Direction (up=8, left=4, right=16, down=32)
+; 
+; all other times:
+;     $3B30 - important for fcns at 11735, 11758, 11764
+;     $3B80 -
+;     $403B - 0x2340 during game, 0x4340 otherwise
+;     $4C02-4C0D - Initialized by functions at 9533 and/or 9743
+;     $4C80/4C81 - End of message queue
+;     $4C82/4C83 - Beginning of message queue
+;     $4C8A - Flip-flops between 1 and 2 (seems to mostly be on 1, though)
+;     $4C90-4CBD - 3-byte block queue
+;     $4CC0-4D00 - Message queue
+;     $4D00-4DD2 - Initialized by function at 9533
+;     $4D0A - Red Y
+;     $4D0B - Red X
+;     $4D0C - Pink Y
+;     $4D0D - Pink X
+;     $4D0E - Blue Y
+;     $4D0F - Blue X
+;     $4D10 - Orange Y
+;     $4D11 - Orange X
+;     $4D12 - Pacman Y (predicted?)
+;     $4D13 - Pacman X (predicted?)
+;     $4D14 - Red Ghost Direction Iterator??? ( 0x00FF = right, 0x0100 = down, 0x0001 = left, 0xFF00 = up )
+;     $4D16 - Pink Ghost Direction Iterator??? ( 0x00FF = right, 0x0100 = down, 0x0001 = left, 0xFF00 = up )
+;     $4D18 - Blue Ghost Direction Iterator??? ( 0x00FF = right, 0x0100 = down, 0x0001 = left, 0xFF00 = up )
+;     $4D1A - Orange Ghost Direction Iterator??? ( 0x00FF = right, 0x0100 = down, 0x0001 = left, 0xFF00 = up )
+;     $4D1C - Pacman Position Predictor ( 0xFF00 = up, 0x00FF = right, 0x0100 = down, 0x0001 = left )
+;     $4D1E - Red Position Predictor ( 0xFF00 = up, 0x00FF = right, 0x0100 = down, 0x0001 = left )
+;     $4D26 - ?Delayed? Pacman Position Predictor ( 0xFF00 = up, 0x00FF = right, 0x0100 = down, 0x0001 = left )
+;     // What's the difference?
+;     $4D28 - Red Ghost Direction ( 0=right, 1=down, 2=left, 3=up )
+;     $4D29 - Pink Ghost Direction
+;     $4D2A - Blue Ghost Direction
+;     $4D2B - Orange Ghost Direction
+;     $4D2C - Red Ghost Eye Direction ( 0=right, 1=down, 2=left, 3=up )
+;     $4D2D - Pink Ghost Eye Direction
+;     $4D2E - Blue Ghost Eye Direction
+;     $4D2F - Orange Ghost Eye Direction
+;     $4D39 - Pacman Y (22-3E)
+;     $4D3A - Pacman X (21-3A)
+;     $4D3B - Ghost (eyes?) direction [TEMP] ( 0=right, 1=down, 2=left, 3=up )
+;     $4D3C - Pacman direction ( 0=right, 1=down, 2=left, 3=up )
+;     $4D3D - $4D3B XOR 0x01, slightly lagged
+;     $4D3E - Ghost Y (22-3E), $4D3F - Ghost X (21-3A)
+;     $4D40 - Ghost's perceived Pacman Y (22-3E)/1D when Ghosts ignoring,
+;     $4D41 - Ghost's perceived Pacman X (21-3A)/22 when Ghosts ignoring
+;         Red - Red sees exactly where pacman was a split second before
+;     $4D42 - Ghost Y (22-3E), $4D43 - Ghost X (21-3A) - but warped somehow
+;     $4D44 - scratch
+;     $4DA4 - 
+;     $4DA5 - related to ghost eat-ability (cheat sets to 1 for perpetual eating), also related to 
+;     $4DA6 - 0 = normal, 1 = ghosts blue, running away
+;     $4DA7 - Red edible
+;     $4DA8 - Pink edible
+;     $4DA9 - Blue edible
+;     $4DAA - Orange edible
+;     $4DAB - Fruit edible?
+;     $4DAC - Red chomp status ( 0=chase/flee, 1=run back to base, 2=enter base)
+;     $4DAD - Pink chomp status ( 0=chase/flee, 1=run back to base, 2=enter base)
+;     $4DAE - Blue chomp status ( 0=chase/flee, 1=run back to base, 2=enter base)
+;     $4DAF - Orange chomp status ( 0=chase/flee, 1=run back to base, 2=enter base)
+;     $4DB1/2/3/4 - Red/Pink/Blue/Orange reversal (?) ( set by frame_counter() )
+;     $4DB6 - 1 if 224 dots have been eaten and all 4 ghosts are free, 0 otherwise
+;     $4DC1 - ghost reversal status (altered by timer at $4DC2/3
+;     $4DC2/3 - chase frames since board/pac start (paused during powerpill)
+;     $4DC7 - scratch
+;     $4DC9 - starts 0x0000 at level start, random gibberish while flee mode, static inbetween
+;     $4DCE - 0-255 repeating frame counter?
+;     $4DCF - 0-9 repeating frame counter?
+;     $4DD0 - how many ghosts eaten this powerpill?
+;     $4DD2 - ?
+;     $4DD4 - ?
+;     $4E00 - Sound Bank switcher
+;             00 - Post-boot blanking
+;             01 - Attract Screen
+;             02 - Push Start / Get Ready
+;             03 - Gameplay
+;     $4E02 - Attract screen 'frames'
+;             01 - Character / Nickname
+;             03 - Red Ghost
+;             05 - Shadow
+;             07 - "Blinky"
+;             09 - Pink Ghost
+;             0B - Speedy
+;             0D - "Pinky"
+;             0F - Aqua Ghost
+;             11 - Bashful
+;             13 - "Inky"
+;             15 - Yellow Ghost
+;             17 - Pokey
+;             19 - "Clyde"
+;             1B - 10pts dot, 50pts dot
+;             1D - &copy; 1980 MIDWAY MFG.CO.
+;             1E-22 - Pacman Entrance, Ghost 1-4 Entrance
+;             23 - demo game
+;     $4E03 - Mode
+;             00 - Attract Screen + Gameplay
+;             01 - Push Start Button
+;             03 - Game Start (Ready!)
+;     $4E04 - Game 'frames'
+;             00 - ?
+;             02 - Maze, Ghosts, Pacman, Ready!
+;             03 - Running game
+;             09 - player change?
+;             07 - Game Over
+;             0D-1F - Level Clear Maze Flash
+;             20 - Act 1/2/3
+;             21-24 - Clear Level
+; 
+;     $4E06 - Act I Scenes
+;             00 - Clear Screen
+;             01 - Ghost and Pac across Screen
+;             02-03 - Ghost and Pac offscreen
+;             04 - Ghost going right
+;             05 - Bigpac chasing
+;             06 - Ghost offscreen
+;             00 - Clear Screen
+;     $4E07 - Act I Scenes
+;             00 - Clear Screen
+;             01 - Pac Appears
+;             02 - Ghost Appears
+;             03 - Pac passes peg
+;             04-08 - Ghost Ripping sheet
+;             0A - Ghost Looks up
+;             0C - Ghost Looks at peg
+;     $4E08 - Act III Scenes
+;             00 - Clear screen
+;             01 - Pac and Ghost
+;             02 - Pac and Ghost offscreen
+;             03-04 - unrobed ghost moving right
+; 
+;     $4E09 - current player ( 0=Player1, !0= Player2 )
+;     $4E0C - 0 if num_dots_eaten < 0x40, 1 otherwise
+;     $4E0D - 0 if num_dots_eaten < 0xB0, 1 otherwise
+;     $4E0E - dots eaten this board
+;     $4E13 - current board?
+;     $4E14 - ??  (got extra life already?)
+;     $4E15 - pacs left?
+;     $4E16-$4E33 - bit mask of what dots have/have not been eaten yet 
+;     $4E34-$4E37 - power pill statuses; 0x14 = not eaten, 0x40 - eaten (really, the indexes of the sprites)
+; 
+;     $4E66 - Always 0x0F?
+;     $4E67 - Count up from 0x00..0x0F  Sound for coin2?  Debounce?
+;     $4E68 - Count up from 0x00..0x0F  Sound for coin1?  Debounce?
+;     $4E69 - Number of coins to announce via sound
+;     $4E6B - Coins ( per credit )
+;     $4E6D - Credits ( per coin )
+;     $4E6E - Credits
+;     $4E6F - Lives per game
+;     $4E71 - Kilopoints for bonus pac in BCD. FF = no bonus
+;     $4E72 - Upright ( 0 ) vs Cocktail ( 1 )
+;     $4E73-$4E74 - Difficulty ( Normal=0x6800, Hard=0x7D00 )
+;     $4E75 - Ghost Names ( On = normal, off = alternate )
+;     $4E80-$4E83 - Player 1 score in BCD
+;     $4E84-$4E87 - Player 2 score in BCD
+;     $4E88-$4E8B - High Score in BCD
+;     $4E8C-$4E91 - Sound 1 sound packet?
+;     $4E92-$4E96 - Sound 2 sound packet?
+;     $4E97-$4E9B - Sound 3 sound packet?
+;     $4E9C - Sound 1 Waveform A? ( 0=gameplay, 2=coin drop)
+;     $4EAC - Sound 2 Waveform A?
+;     $4EBC - Sound 3 Waveform A?
+;     $4ECC - Sound 1 Waveform Selector (0=Gameplay, 1=Intro Music, 2=Intermission Music)
+;     $4ECF - Sound 1 Waveform B
+;     $4EDC - Sound 2 Waveform Selector (0=Gameplay, 1=Intro Music, 2=Intermission Music)
+;     $4EDF - Sound 2 Waveform B
+;     $4EEC - Sound 3 Waveform Selector (0=Gameplay, 1=Intro Music, 2=Intermission Music)
+;     $4EEF - Sound 3 Waveform B
+; 
+;     IN:
+;     $5000 - IN0 - coin 3, coin 2, coin 1, rack test, 1 down, 1 right, 1 left, 1 up
+;     $5040 - IN1 - cocktail/upright, Start 2, Start 1, service mode, 2 down, 2 right, 2 left, 2 up
+;     $5080 - Jumper block - ; ghost names, difficulty, bonuslife 1, bonuslife 0 : lives 1, lives 0, coinage 1, coinage 0
+; 
+;     OUT:
+;     $5002 - Enable Ms. Pac-Man aux board
+;     $5003 - Screen Flip
+;     $5004 - Player 1 Lamp
+;     $5005 - Player 2 Lamp
+;     $5006 - Coin Lockout
+;     $5007 - Coin Counter
+;     $5045 - Sound 1 Waveform
+;     $504A - Sound 2 Waveform
+;     $504F - Sound 3 Waveform
+;     $5050-$5054 - Sound 1 Frequency
+;     $5055 - Sound 1 Volume
+;     $5056-$5059 - Sound 2 Frequency
+;     $505A - Sound 2 Volume
+;     $505B-$505E - Sound 3 Frequency
+;     $505F - Sound 3 Volume
+;     $5062-$506F - ??
+;     $50C0 - Sound Enable (or watchdog)
+; 
+; 
+; ----
+; sound packet IX:
+; 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+; M       PS  S   S   S   S   S   S   S  S   VS1         T1  VS2
+; 
+; SQ = Sound Queue
+; PS = Process Sound Data
+; [M==PS==0 -> blindly return without processing sound data]
+; S = copied from HL+((B-1)*8) [b=leftmost bit of $IX)
+; VS1 = Volume Strategy (which RST20 @ 12033 to use?)
+; VS2 = Parameter for vol strategy
+; [note: if VS1&8==0, vol=VS2=9]
+; T1 = Frequency scratch (for nybble-shifting)
+; 
+; 
+; Red - Blinky: Oikake - "Akabei" (oikake-ru = to run down/to pursue/to chase down). Or of course the english "Shadow".. the guy is literally on your tail and can be thought of as your shadow
+; 
+; Pink - Pinky: Machibuse (machibuse = performing an ambush). Or in the english "speedy". He is indeed just as fast as Blinky and works with him to ambush and cut you off.
+; 
+; Blue - Inky: Kimagure - "Aosuke" (kimagure = fickle/moody/uneven temper). Or in english "Bashful". He is unpredictable. Sometimes he follows you, sometimes he goes away from you.
+; 
+; Orange - Clyde: Otoboke - "Guzuta" (Otoboke = Pretending Ignorance). The nick "Guzuta" means someone who lags behind). Or of course "pokey" in english. The guy is slow. He's always going somewhere on his own. But he does sometimes successfully cut you off, but almost never outright chases you.
 ; AF and SP are 0xFFFF on start
+
 ; DISASM is wrong:
 ;    opcode 0x11 generates argument in comments wrong
 ;    opcode 0x30 is jump if CARRY = 0, not CARRY = 1

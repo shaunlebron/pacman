@@ -9297,6 +9297,9 @@ var executive = (function(){
 
     var reqFrame; // id of requestAnimationFrame object
     var tick = function(now) {
+        if (gameTime == undefined) {
+            gameTime = now;
+        }
 
         // Update fps counter.
         updateFps(now);
@@ -9337,7 +9340,7 @@ var executive = (function(){
         },
         setUpdatesPerSecond: function(ups) {
             framePeriod = 1000/ups;
-            gameTime = (new Date).getTime();
+            //gameTime = undefined;
             vcr.onFramePeriodChange();
         },
         init: function() {
@@ -9348,7 +9351,6 @@ var executive = (function(){
         },
         start: function() {
             if (!running) {
-                gameTime = (new Date).getTime();
                 reqFrame = requestAnimationFrame(tick);
                 running = true;
             }

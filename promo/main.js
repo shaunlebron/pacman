@@ -113,6 +113,7 @@ function updateSuns(dt) {
 			fillCirc(w/2,h/2,sunSuns[i].value,backColor);
 			fillCirc(w/2,h/2,sunSuns[i].value,"rgba(255,255,0,"+(i+1)/numSuns+")");
 		}
+		/*
 		var smileStart = spb*13.5;
 		var smileEnd = spb*16;
 		if (time > smileStart) {
@@ -125,6 +126,7 @@ function updateSuns(dt) {
 			ctx.stroke();
 			ctx.globalAlpha = 1;
 		}
+		*/
 	}
 	else {
 		
@@ -279,6 +281,139 @@ function updateClouds(dt) {
 
 	ctx.globalAlpha = 1;
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHOOTING STARS
+
+function StarParticle(totalTime, pos, dir, speed) {
+	this.time = 0;
+	this.totalTime = totalTime;
+	this.pos = pos;
+	this.dir = dir;
+	this.speed = speed;
+};
+
+StarParticle.prototype = {
+	update: function(dt) {
+		this.time += dt;
+		this.pos.x += this.dir.x * this.speed * dt;
+		this.pos.y += this.dir.y * this.speed * dt;
+	},
+	isDone: function() {
+		return this.time >= this.totalTime;
+	},
+	draw: function() {
+		var alpha = Math.max(0,1.0-this.time/this.totalTime);
+		ctx.save();
+		ctx.translate(this.pos.x, this.pos.y);
+		ctx.rotate(Math.PI*2 * this.time);
+		ctx.fillStyle = "rgba(255,255,255,"+alpha+")";
+		var r = 15;
+		ctx.fillRect(-r/2, -r/2, r, r);
+		ctx.restore();
+	},
+};
+
+function StarParticleJet(period, pos, dir, speed) {
+	this.pos = pos;
+	this.dir = dir;
+	this.speed = speed;
+	this.time = 0;
+	this.period = period;
+	this.particles = [];
+};
+
+StarParticleJet.prototype = {
+	makeParticle: function() {
+		var angle = Math.random() * Math.PI/2;
+		var c = Math.cos(angle);
+		var s = Math.sin(angle);
+		// (a+bi)(c+di) = (ac - bd) + (ad + bc)i
+		var vx = c*this.dir.x - s*this.dir.y;
+		var vy = c*this.dir.y + s*this.dir.x;
+		vx = -vx;
+		vy = -vy;
+		this.particles.push(
+			new StarParticle(
+				1.0,
+				{x:this.pos.x,y:this.pos.y},
+				{x:vx, y:vy},
+				this.speed*Math.random()));
+	},
+	update: function(dt) {
+		this.time += dt;
+		var i=0,p;
+		while (this.particles[i]) {
+			p = this.particles[i];
+			p.update(dt);
+			if (p.isDone()) {
+				this.particles.splice(i,1);
+			}
+			else {
+				i++;
+			}
+		}
+		if (this.time > this.period) {
+			this.time = 0;
+			this.makeParticle();
+			this.makeParticle();
+		}
+	},
+	draw: function() {
+		var i;
+		for (i=0; this.particles[i]; i++) {
+			this.particles[i].draw();
+		}
+	},
+};
+
+function ShootingStar(pos, dir, speed) {
+	this.pos = pos;
+	this.dir = dir;
+	this.speed = speed;
+	this.jet = new StarParticleJet(1/40, pos, dir, speed*0.5);
+};
+
+ShootingStar.prototype = {
+	update: function(dt) {
+		this.pos.x += this.dir.x*this.speed*dt;
+		this.pos.y += this.dir.y*this.speed*dt;
+		this.jet.update(dt);
+	},
+	bounce: function() {
+		if (this.pos.x < 0) {
+			this.pos.x = 0;
+			this.dir.x *= -1;
+		}
+		if (this.pos.x >= w) {
+			this.pos.x = w-1;
+			this.dir.x *= -1;
+		}
+		if (this.pos.y < 0) {
+			this.pos.y = 0;
+			this.dir.y *= -1;
+		}
+		if (this.pos.y >= h) {
+			this.pos.y = h-1;
+			this.dir.y *= -1;
+		}
+	},
+	draw: function() {
+		ctx.fillStyle = "#FFF";
+		ctx.fillRect(this.pos.x, this.pos.y, 4,4);
+		this.jet.draw();
+	},
+};
+
+var shootingStar = (function(){
+
+	var angle = Math.PI/4;
+
+	return new ShootingStar(
+		{x: Math.random()*w, y: Math.random()*h},
+		{x: Math.cos(angle), y: Math.sin(angle)},
+		200
+	);
+})();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // STARS
@@ -355,6 +490,16 @@ function updateStars(dt) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+function updateSky(dt) {
+	if (time < spb*16) {
+		ctx.fillStyle = backColor;
+	}
+	else {
+		ctx.fillStyle = "#000";
+	}
+	ctx.fillRect(0,0,w,h);
+};
+
 function tick(t) {
 	var dt;
 	if (!last_tick_t) {
@@ -365,17 +510,19 @@ function tick(t) {
 	}
 	last_tick_t = t;
 
-	if (time < spb*16) {
-		ctx.fillStyle = backColor;
-	}
-	else {
-		ctx.fillStyle = "#000";
-	}
-	ctx.fillRect(0,0,w,h);
-
+	updateSky();
 	updateStars(dt);
 	updateSuns(dt);
 	updateClouds(dt);
+
+/*
+	ctx.fillStyle = "#000";
+	ctx.fillRect(0,0,w,h);
+
+	shootingStar.update(dt/1000);
+	shootingStar.bounce();
+	shootingStar.draw();
+*/
 
 
 	time += dt;
@@ -393,6 +540,6 @@ window.addEventListener("load", function() {
 	ctx = canvas.getContext('2d');
 	createSuns();
 	initClouds();
-	playSong();
+	//playSong();
 	window.mozRequestAnimationFrame(tick);
 });

@@ -61,7 +61,7 @@ function DancingSun(timesteps,radii,color) {
 	this.numsteps = timesteps.length;
 	this.timesteps = timesteps;
 	this.radii = radii;
-	this.radius = radii[0];
+	this.radius = (radii[0]+1)/6*240;
 	this.color = color;
 	this.time = 0;
 };
@@ -91,17 +91,105 @@ function createSuns() {
 	var color = "rgba(255,255,0,0.7)";
 	dancingSuns = [
 		new DancingSun(
-			//[0,2,3,4,5,6,7, 8,10,11,12,13,14,15],
-			[0,2,3,4,5,6,7],
-			[5,4,3,2,4,0,2, 5,4,3,2,4,0,2],
+			[0,2,3,4,5,6,7, 8,10,11,12,13,14],
+			//[0,2,3,4,5,6,7],
+			[5,4,3,2,4,0,2, 5,4,3,2,5,4],
 			color),
 		new DancingSun(
-			//[0,1,2,2.5,3,3.5,4,5,6,7,7.5,   8,9,10,10.5,11,11.5,12,13,14,15,15.5],
-			[0,1,2,2.5,3,3.5,4,5,6,7,7.5],
-			[-1,5,4,1.5,2,2.5,3,4,5,3,4,5, -1,5,4,1.5,2,2.5,3,4,5,3,4,5],
+			[0,1,2,2.5,3,3.5,4,5,6,7,7.5,   8,9,10,10.5,11,11.5,12,13,14],
+			//[0,1,2,2.5,3,3.5,4,5,6,7,7.5],
+			[-1,5,4,1.5,2,2.5,3,4,5,3,4,5, -1,5,4,1.5,2,2.5,3,5],
 			color),
 	];
 }
+
+function EatingSun (r,r2) {
+	this.r = r;
+	this.r2 = r2;
+	this.nextFaceAngle = 0;
+	this.timeSteps = [ 0,0.5,0.6,1 ];
+	this.faceAngles = [
+		Math.PI + Math.PI,
+		Math.PI + Math.PI,
+		Math.PI + Math.PI,
+		Math.PI + Math.PI,
+	];
+	this.faceAngle = this.faceAngles[0];
+
+	this.mouthAngle = Math.PI/6;
+	this.mouthAngles = [
+		Math.PI/3,
+		0,
+		Math.PI/3,
+		0,
+	];
+	this.time = 0;
+
+	this.stars = [
+		{x: w*1.5, y: h/2},
+		{x: w*1.5, y: h/2},
+	];
+	this.starTimes = [ 0.2, 0.6 ];
+}
+
+EatingSun.prototype = {
+	update: function(dt) {
+		var i,len=this.timeSteps.length;
+		for (i=0; i<len; i++) {
+			if (this.timeSteps[i]*spb <= this.time) {
+				this.nextFaceAngle = this.faceAngles[i];
+				this.nextMouthAngle = this.mouthAngles[i];
+			}
+		}
+		if (Math.abs(this.faceAngle - this.nextFaceAngle) > 0.001) {
+			this.faceAngle += (this.nextFaceAngle - this.faceAngle) * 0.2;
+		}
+		if (Math.abs(this.mouthAngle - this.nextMouthAngle) > 0.001) {
+			this.mouthAngle += (this.nextMouthAngle - this.mouthAngle) * 0.5;
+		}
+		len=this.starTimes.length;
+		var s;
+		for (i=0; i<len; i++) {
+			s = this.stars[i];
+			if (this.starTimes[i]*spb <= this.time) {
+				s.x -= 5*dt;
+				if (s.x <= w/2) {
+					s.x = -w;
+				}
+			}
+		}
+		this.time += dt;
+	},
+	draw: function() {
+		var color = "rgba(255,255,0,0.7)";
+		var m = this.mouthAngle/2;
+
+		var i,len=this.starTimes.length;
+		var s,sr = 32;
+		ctx.fillStyle = "#FFF";
+		for (i=0; i<len; i++) {
+			s = this.stars[i];
+			ctx.fillRect(s.x-sr/2,s.y-sr/2,sr,sr);
+		}
+
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,this.r2, 0, Math.PI*2);
+		ctx.fillStyle = color;
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,this.r, this.faceAngle+m, this.faceAngle-m);
+		ctx.lineTo(
+			w/2 - Math.cos(this.faceAngle) * this.r/4,
+			h/2 - Math.sin(this.faceAngle) * this.r/4
+		);
+		ctx.closePath();
+		ctx.fill();
+	},
+};
+
+var eatingSun = new EatingSun(5/6*240, 240);
+
 function updateSuns(dt) {
 	if (time < spb*16) {
 		var timeStep = duration/numSuns;
@@ -128,13 +216,15 @@ function updateSuns(dt) {
 		}
 		*/
 	}
-	else {
-		
+	else if (time < spb*30.5) {
 		dancingSuns[0].update(dt);
 		dancingSuns[1].update(dt);
 	}
+	else {
+		eatingSun.update(dt);
+		eatingSun.draw();
+	}
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Clouds
@@ -370,14 +460,14 @@ function ShootingStar(pos, dir, speed) {
 	this.pos = pos;
 	this.dir = dir;
 	this.speed = speed;
-	this.jet = new StarParticleJet(1/40, pos, dir, speed*0.5);
+	//this.jet = new StarParticleJet(1/40, pos, dir, speed*0.5);
 };
 
 ShootingStar.prototype = {
 	update: function(dt) {
 		this.pos.x += this.dir.x*this.speed*dt;
 		this.pos.y += this.dir.y*this.speed*dt;
-		this.jet.update(dt);
+		//this.jet.update(dt);
 	},
 	bounce: function() {
 		if (this.pos.x < 0) {
@@ -398,22 +488,63 @@ ShootingStar.prototype = {
 		}
 	},
 	draw: function() {
-		ctx.fillStyle = "#FFF";
-		ctx.fillRect(this.pos.x, this.pos.y, 4,4);
-		this.jet.draw();
+		ctx.strokeStyle = "#FFF";
+		ctx.lineWidth = 8;
+		ctx.beginPath();
+		ctx.moveTo(this.pos.x, this.pos.y);
+		var length = 500;
+		ctx.lineTo(
+			this.pos.x + -this.dir.x*length,
+			this.pos.y + -this.dir.y*length);
+		ctx.stroke();
+		//this.jet.draw();
 	},
 };
 
-var shootingStar = (function(){
-
-	var angle = Math.PI/4;
-
+var makeShootingStar = function() {
+	var angle = Math.PI;
 	return new ShootingStar(
-		{x: Math.random()*w, y: Math.random()*h},
+		{x: w, y: Math.random()*h},
 		{x: Math.cos(angle), y: Math.sin(angle)},
-		200
+		5
 	);
-})();
+};
+
+var starTimeSteps = [
+	2,
+	2.5,
+	3,
+	3.5,
+	3.75,
+	5,
+	5.25,
+	5.5,
+	5.75,
+	6,
+	6.25,
+];
+var starTime = 0;
+
+var shootingStars = [];
+function initShootingStars() {
+	var i,len=starTimeSteps.length;
+	for (i=0; i<len; i++) {
+		shootingStars[i] = makeShootingStar();
+	}
+}
+
+function updateShootingStars(dt) {
+	var i,len=starTimeSteps.length;
+	if (time >= spb * 24) {
+		for (i=0; i<len; i++) {
+			if (starTime >= starTimeSteps[i]*spb) {
+				shootingStars[i].update(dt);
+				shootingStars[i].draw();
+			}
+		}
+		starTime += dt;
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // STARS
@@ -454,22 +585,7 @@ var stars = [
 	new Star(123,594),
 	new Star(133,252),
 ];
-var starTimeSteps = [
-	2,
-	2.5,
-	3,
-	3.5,
-	3.75,
-	5,
-	5.25,
-	5.5,
-	5.75,
-	6,
-	6.25,
-	7,
-];
 var numStars = stars.length;
-var starTime = 0;
 
 function updateStars(dt) {
 	var i,p;
@@ -483,7 +599,6 @@ function updateStars(dt) {
 				//break;
 			//}
 		}
-		starTime += dt;
 	}
 };
 
@@ -514,16 +629,7 @@ function tick(t) {
 	updateStars(dt);
 	updateSuns(dt);
 	updateClouds(dt);
-
-/*
-	ctx.fillStyle = "#000";
-	ctx.fillRect(0,0,w,h);
-
-	shootingStar.update(dt/1000);
-	shootingStar.bounce();
-	shootingStar.draw();
-*/
-
+	updateShootingStars(dt);
 
 	time += dt;
 	window.mozRequestAnimationFrame(tick);
@@ -531,8 +637,17 @@ function tick(t) {
 
 function playSong() {
 	var song = new Audio();
+	var first = false;
+	song.onloadeddata = function() {
+		if (!first) {
+			song.currentTime = time / 1000;
+			song.play();
+			song.currentTime = time / 1000;
+			window.mozRequestAnimationFrame(tick);
+		}
+		first = true;
+	};
 	song.src = "philipp.ogg";
-	song.play();
 }
 
 window.addEventListener("load", function() {
@@ -540,6 +655,6 @@ window.addEventListener("load", function() {
 	ctx = canvas.getContext('2d');
 	createSuns();
 	initClouds();
-	//playSong();
-	window.mozRequestAnimationFrame(tick);
+	initShootingStars();
+	playSong();
 });

@@ -11,7 +11,7 @@ var w = 1280;
 var h = 720;
 
 var last_tick_t = 0;
-//var time = 33*spb;
+var time = 32*spb;
 var time = 0;
 
 function LinearInterp(min,max,duration) {
@@ -283,62 +283,153 @@ function updateSuns(dt) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Clouds
 
+function CloudBubble(x,y,r,r2,color,color2,color3,color4) {
+	this.x = x;
+	this.y = y;
+	this.lift = 0;
+	this.r = r;
+	this.r2 = r2;
+	this.color = color;
+	this.color2 = color2;
+	this.color3 = color3;
+	this.color4 = color4;
+	this.angle = Math.random()*Math.PI*2;
+}
+
+CloudBubble.prototype = {
+	update: function(dt) {
+		this.angle += Math.PI*2/3000 * dt;
+		this.angle %= (Math.PI*2);
+		var ar = 3;
+		this.lift = Math.sin(this.angle) * ar;
+	},
+	getY: function() {
+		return this.y + this.lift;
+	},
+	draw: function() {
+
+		var y = this.getY();
+		ctx.save();
+		ctx.translate(this.x,y);
+		ctx.rotate(this.rotAngle || 0);
+
+		ctx.beginPath();
+		ctx.arc(0,0, this.r, Math.PI, Math.PI*2);
+		ctx.lineTo(this.r, this.r);
+		ctx.lineTo(-this.r, this.r);
+		ctx.closePath();
+		if (this.alpha != undefined) {
+			ctx.fillStyle = this.color3;
+			ctx.fill();
+			ctx.fillStyle = "rgba(255,255,255,"+this.alpha+")";
+		}
+		else {
+			ctx.fillStyle = this.color;
+		}
+		ctx.fill();
+		ctx.strokeStyle = ctx.fillStyle;
+		ctx.lineWidth = pad;
+		ctx.lineJoin = "round";
+		ctx.stroke();
+		ctx.restore();
+	},
+	drawBorder: function() {
+		var y = this.getY();
+		ctx.save();
+		ctx.translate(this.x,y);
+		ctx.rotate(this.rotAngle || 0);
+
+		ctx.beginPath();
+		ctx.arc(0,0, this.r, Math.PI, Math.PI*2);
+		ctx.lineTo(this.r, this.r);
+		ctx.lineTo(-this.r, this.r);
+		ctx.closePath();
+		ctx.strokeStyle = this.color2;
+		ctx.lineWidth = pad*2;
+		ctx.lineJoin = "round";
+		ctx.stroke();
+
+		ctx.restore();
+	},
+};
+
 function Cloud() {
-	this.angles = [
-		Math.random()*Math.PI*2,
-		Math.random()*Math.PI*2,
-		Math.random()*Math.PI*2,
-		Math.random()*Math.PI*2,
-		Math.random()*Math.PI*2,
-	];
+	this.angle = Math.random()*Math.PI*2;
 	this.x = 0;
 	this.y = 0;
+	this.lift = 0;
+	this.r = 80;
+	this.r2 = this.r + pad;
+	this.w = this.r*5;
+	this.h = 200;
+
+	var color = "#FFF";
+	var color2 = "rgba(255,255,255,0.2)";
+	var r = this.r;
+	var r2 = this.r2;
+	var h = this.h;
+
+	var blinkyColor = "#FF0000";
+	var blinkyPathColor = "rgba(255,0,0,0.5)";
+
+	var pinkyColor = "#FFB8FF";
+	var pinkyPathColor = "rgba(255,184,255,0.5)";
+
+	var inkyColor = "#00FFFF";
+	var inkyPathColor = "rgba(0,255,255,0.5)";
+
+	var clydeColor = "#FFB851";
+	var clydePathColor = "rgba(255,184,81,0.5)";
+
+	this.bubbles = [
+		new CloudBubble(r,   h,       r, r2, color, color2, clydeColor, clydePathColor),
+		new CloudBubble(2*r, h-0.8*r, r, r2, color, color2, inkyColor, inkyPathColor),
+		new CloudBubble(3*r, h-r,     r, r2, color, color2, blinkyColor, blinkyPathColor),
+		new CloudBubble(4*r, h,       r, r2, color, color2, pinkyColor, pinkyPathColor),
+	];
+	this.disconnect = false;
 }
+
 
 Cloud.prototype = {
 	update: function(dt) {
-		var i;
-		for (i=0; i<5; i++) {
-			this.angles[i] += Math.PI*2/3000 * dt;
-			this.angles[i] %= (Math.PI*2);
+		this.angle += Math.PI*2/3000 * dt;
+		this.angle %= (Math.PI*2);
+		this.lift = Math.sin(this.angle) * 3;
+
+		if (!this.disconnect) {
+			var i,len=this.bubbles.length;
+			for (i=0; i<len; i++ ) {
+				this.bubbles[i].update(dt);
+			}
 		}
 	},
-	drawCloud: function(x,y,r,i,color) {
-		var ar = 3;
-		var a = this.angles[i];
-		y += Math.sin(a) * ar;
-		fillCirc(x,y,r,color);
+	getY: function() {
+		return this.y + this.lift;
 	},
 	setPos: function(x,y) {
 		this.x = x;
 		this.y = y;
 	},
 	draw: function() {
-		var r = 80;
-		var w = r*5;
-		var h = 200;
+		var y = this.getY();
 		ctx.save();
-		var y = this.y + Math.sin(this.angles[4]) * 3;
 		ctx.translate(this.x,y);
 		ctx.beginPath();
-		ctx.rect(-pad,-pad,w+pad*2,h+pad*2);
+		ctx.rect(-pad,-pad,this.w+pad*2,this.h+pad*2);
 		ctx.clip();
 
-		var r2 = r + pad;
-		var color = "rgba(255,255,255,0.2)";
-		this.drawCloud(r,h,r2,0,color)
-		this.drawCloud(2*r,h-0.8*r,r2,1,color);
-		this.drawCloud(3*r,h-r,r2,2,color);
-		this.drawCloud(4*r,h,r2,3,color);
+		if (!this.disconnect) {
+			var i,len=this.bubbles.length;
+			for (i=0; i<len; i++ ) {
+				this.bubbles[i].drawBorder();
+			}
+			for (i=0; i<len; i++ ) {
+				this.bubbles[i].draw();
+			}
+		}
 
-		var r2 = r;
-		var color = "#FFF";
-		this.drawCloud(r,h,r2,0,color)
-		this.drawCloud(2*r,h-0.8*r,r2,1,color);
-		this.drawCloud(3*r,h-r,r2,2,color);
-		this.drawCloud(4*r,h,r2,3,color);
-
-		fillCirc(2.5*r,h,1.5*r,"#FFF");
+		fillCirc(2.5*this.r,this.h,1.5*this.r,"#FFF");
 
 		ctx.restore();
 	},
@@ -706,14 +797,132 @@ var updateGhostCloud = (function(){
 	var t = 0;
 	var c = new Cloud();
 	c.setPos(w/3+20,h/2);
+	var bows = [
+		0,0,0,0,
+	];
+	var bowTimes = [
+		3,4,5,6
+	];
+
+	var bowCenterX = -w/4;
+	var bottomY;
+
+	var interpMade = false;
+	var interps = [];
 
 	return function(dt) {
 		if (time <= spb*33) {
 			return;
 		}
 
-		c.update(dt);
-		c.draw();
+		if (time <= spb*40) {
+			c.update(dt);
+
+			bottomY = c.getY() + c.h;
+			var i,len=bowTimes.length;
+			for (i=0; i<len; i++) {
+				if (t >= bowTimes[i]*spb) {
+					bows[i] += Math.PI * (dt/1000);
+
+					var b = c.bubbles[i];
+					var x = c.x + b.x;
+					var y = c.getY() + b.getY();
+					var dx = x-bowCenterX;
+					var dy = bottomY - y;
+					var r = Math.sqrt(dx*dx+dy*dy);
+					//var startAngle = Math.atan(dy/dx);
+					var startAngle = 0;
+					var endAngle = Math.min(Math.PI/2, bows[i]);
+					endAngle = Math.max(startAngle, endAngle);
+
+					ctx.beginPath();
+					//ctx.arc(bowCenterX, bottomY, r, 0, Math.PI*2);
+					ctx.arc(bowCenterX, bottomY, r, -endAngle, -startAngle);
+					ctx.strokeStyle = b.color3;
+					ctx.lineWidth = b.r*1.25;
+					ctx.stroke();
+				}
+			}
+
+			c.draw();
+		}
+		else {
+			if (!interpMade) {
+				c.disconnect = true;
+				t = 0;
+				interpMade = true;
+				var points = [];
+				for (i=0; i<4; i++) {
+					points.push({
+							alpha: 1,
+							angle: Math.random()*Math.PI*2,
+							x: c.x + c.bubbles[i].x,
+							y: c.getY() + c.bubbles[i].getY()});
+				}
+				var points3 = [
+					{angle: 2*Math.PI*3, alpha: 0, x:w/5,   y:h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:2*w/5, y:h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:3*w/5, y:h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:4*w/5, y:h/2},
+				];
+				var points4 = [
+					{angle: 2*Math.PI*3, alpha: 0, x:w/5,   y:-h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:2*w/5, y:-h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:3*w/5, y:-h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:4*w/5, y:-h/2},
+				];
+				var points2 = [
+					{angle: 2*Math.PI*3*Math.random(), alpha: 0.9, x:w/5,   y:h/3*Math.random()},
+					{angle: 2*Math.PI*3*Math.random(), alpha: 0.9, x:2*w/5, y:h/3*Math.random()},
+					{angle: 2*Math.PI*3*Math.random(), alpha: 0.9, x:3*w/5, y:h/3*Math.random()},
+					{angle: 2*Math.PI*3*Math.random(), alpha: 0.9, x:4*w/5, y:h/3*Math.random()},
+				];
+				for (i=0; i<4; i++) {
+					points2[i].x = points[i].x + (points3[i].x - points[i].x)/2;
+				}
+				var delta_times = [ 0,spb,2*spb,0.5*spb ];
+				var keys = ['angle', 'alpha','x','y'];
+
+				interps = [];
+				for (i=0; i<4; i++) {
+					interps.push(Ptero.makeHermiteInterpForObjs([points[i], points2[i], points3[i], points4[i]],keys,delta_times));
+				};
+			}
+			ctx.save();
+			if (t < spb) {
+				ctx.beginPath();
+				ctx.rect(0,0,w,bottomY);
+				ctx.clip();
+			}
+			for (i=0; i<4; i++) {
+				var b = c.bubbles[i];
+				var o = interps[i](t);
+				if (o) {
+					b.x = o.x;
+					b.y = o.y;
+					b.rotAngle = o.angle;
+					b.alpha = o.alpha;
+				}
+				b.drawBorder();
+			}
+			for (i=0; i<4; i++) {
+				var b = c.bubbles[i];
+				b.draw();
+			}
+			ctx.restore();
+			if (time >= spb*43) {
+				for (i=0; i<4; i++) {
+					var b = c.bubbles[i];
+					ctx.fillStyle = b.color4;
+					var r = 30;
+					ctx.fillRect(
+						b.x-r,
+						b.y+2*r,
+						2*r,2*h
+					);
+				}
+			}
+		}
 
 		t += dt;
 	};

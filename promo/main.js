@@ -11,6 +11,7 @@ var w = 1280;
 var h = 720;
 
 var last_tick_t = 0;
+//var time = 33*spb;
 var time = 0;
 
 function LinearInterp(min,max,duration) {
@@ -190,6 +191,55 @@ EatingSun.prototype = {
 
 var eatingSun = new EatingSun(5/6*240, 240);
 
+var sunBurst = (function() {
+
+	var rings = [];
+	var i,len=20;
+	for (i=0; i<len; i++) {
+		rings[i] = 0;
+	}
+	var t=0;
+	var period = 15;
+	var speed = 2;
+
+	function update(dt) {
+		for (i=0; i<len; i++) {
+			if (i*20 <= t) {
+				rings[i] += dt*speed;
+			}
+		}
+		t += dt;
+	}
+
+	function draw() {
+		ctx.strokeStyle = "rgba(255,255,0,0.1)";
+		ctx.lineWidth = 20;
+		for (i=0; i<len; i++) {
+			ctx.beginPath();
+			ctx.arc(w/2,h/2,rings[i],0,Math.PI*2);
+			ctx.stroke();
+		}
+
+		var color = "rgba(255,255,0,0.7)";
+		ctx.fillStyle = color;
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,5/6*240,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,240,0,Math.PI*2);
+		ctx.fill();
+
+		var alpha = Math.min(1,t/(1*spb));
+		ctx.fillStyle = "rgba(255,255,255,"+alpha+")";
+		ctx.fillRect(0,0,w,h);
+	}
+
+	return {
+		update: update,
+		draw: draw,
+	};
+})();
+
 function updateSuns(dt) {
 	if (time < spb*16) {
 		var timeStep = duration/numSuns;
@@ -220,9 +270,13 @@ function updateSuns(dt) {
 		dancingSuns[0].update(dt);
 		dancingSuns[1].update(dt);
 	}
-	else {
+	else if (time < spb*32) {
 		eatingSun.update(dt);
 		eatingSun.draw();
+	}
+	else if (time < spb*33) {
+		sunBurst.update(dt);
+		sunBurst.draw();
 	}
 }
 
@@ -488,8 +542,9 @@ ShootingStar.prototype = {
 		}
 	},
 	draw: function() {
-		ctx.strokeStyle = "#FFF";
-		ctx.lineWidth = 8;
+		var alpha = Math.min(1,Math.max(0,(this.pos.x+w/3)/(2*w)));
+		ctx.strokeStyle = "rgba(255,255,255,"+alpha+")";
+		ctx.lineWidth = 20;
 		ctx.beginPath();
 		ctx.moveTo(this.pos.x, this.pos.y);
 		var length = 500;
@@ -497,6 +552,9 @@ ShootingStar.prototype = {
 			this.pos.x + -this.dir.x*length,
 			this.pos.y + -this.dir.y*length);
 		ctx.stroke();
+		ctx.fillStyle = "#FFF";
+		var r = 20;
+		ctx.fillRect(this.pos.x - r/2, this.pos.y - r/2, r, r);
 		//this.jet.draw();
 	},
 };
@@ -589,7 +647,7 @@ var numStars = stars.length;
 
 function updateStars(dt) {
 	var i,p;
-	if (time >= spb * 16) {
+	if (time >= spb * 16 && time <= spb * 32) {
 		for(i=0; i<numStars; i++) {
 			//if (starTime >= starTimeSteps[i]*spb) {
 				stars[i].update(dt);
@@ -602,6 +660,64 @@ function updateStars(dt) {
 	}
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var skyFallTime=0;
+var skyFallRays = [0,0,0,0,0];
+var skyFallSteps = [
+	1,1.5,2,2.5,2.75
+];
+function updateSkyFall(dt) {
+	if (time <= spb*33) {
+		return;
+	}
+
+	if (skyFallTime < spb*1) {
+		var alpha = 1-skyFallTime/spb;
+		ctx.fillStyle = "rgba(255,255,255,"+alpha+")";
+		ctx.fillRect(0,0,w,h);
+	}
+	else {
+		ctx.lineWidth = 20;
+		var i,len=skyFallSteps.length;
+		for (i=0; i<len; i++) {
+			if (skyFallTime >= skyFallSteps[i]*spb) {
+				skyFallRays[i] += dt*2;
+				var y = skyFallRays[i];
+				var j,jlen=5;
+				for (j=0; j<jlen; j++) {
+					alpha = (jlen-1-j)/(jlen);
+					ctx.strokeStyle = "rgba(255,255,0,"+alpha+")";
+					var jy=y-j*20;
+					ctx.beginPath();
+					ctx.moveTo(0,jy);
+					ctx.lineTo(w,jy);
+					ctx.stroke();
+				}
+			}
+		}
+	}
+	skyFallTime += dt;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var updateGhostCloud = (function(){
+	var t = 0;
+	var c = new Cloud();
+	c.setPos(w/3+20,h/2);
+
+	return function(dt) {
+		if (time <= spb*33) {
+			return;
+		}
+
+		c.update(dt);
+		c.draw();
+
+		t += dt;
+	};
+})();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -609,8 +725,11 @@ function updateSky(dt) {
 	if (time < spb*16) {
 		ctx.fillStyle = backColor;
 	}
-	else {
+	else if (time < spb*33) {
 		ctx.fillStyle = "#000";
+	}
+	else {
+		ctx.fillStyle = backColor;
 	}
 	ctx.fillRect(0,0,w,h);
 };
@@ -630,6 +749,8 @@ function tick(t) {
 	updateSuns(dt);
 	updateClouds(dt);
 	updateShootingStars(dt);
+	updateSkyFall(dt);
+	updateGhostCloud(dt);
 
 	time += dt;
 	window.mozRequestAnimationFrame(tick);

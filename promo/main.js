@@ -11,6 +11,7 @@ var w = 1280;
 var h = 720;
 
 var last_tick_t = 0;
+var time = 32*spb;
 var time = 0;
 
 function LinearInterp(min,max,duration) {
@@ -61,7 +62,7 @@ function DancingSun(timesteps,radii,color) {
 	this.numsteps = timesteps.length;
 	this.timesteps = timesteps;
 	this.radii = radii;
-	this.radius = radii[0];
+	this.radius = (radii[0]+1)/6*240;
 	this.color = color;
 	this.time = 0;
 };
@@ -91,17 +92,154 @@ function createSuns() {
 	var color = "rgba(255,255,0,0.7)";
 	dancingSuns = [
 		new DancingSun(
-			//[0,2,3,4,5,6,7, 8,10,11,12,13,14,15],
-			[0,2,3,4,5,6,7],
-			[5,4,3,2,4,0,2, 5,4,3,2,4,0,2],
+			[0,2,3,4,5,6,7, 8,10,11,12,13,14],
+			//[0,2,3,4,5,6,7],
+			[5,4,3,2,4,0,2, 5,4,3,2,5,4],
 			color),
 		new DancingSun(
-			//[0,1,2,2.5,3,3.5,4,5,6,7,7.5,   8,9,10,10.5,11,11.5,12,13,14,15,15.5],
-			[0,1,2,2.5,3,3.5,4,5,6,7,7.5],
-			[-1,5,4,1.5,2,2.5,3,4,5,3,4,5, -1,5,4,1.5,2,2.5,3,4,5,3,4,5],
+			[0,1,2,2.5,3,3.5,4,5,6,7,7.5,   8,9,10,10.5,11,11.5,12,13,14],
+			//[0,1,2,2.5,3,3.5,4,5,6,7,7.5],
+			[-1,5,4,1.5,2,2.5,3,4,5,3,4,5, -1,5,4,1.5,2,2.5,3,5],
 			color),
 	];
 }
+
+function EatingSun (r,r2) {
+	this.r = r;
+	this.r2 = r2;
+	this.nextFaceAngle = 0;
+	this.timeSteps = [ 0,0.5,0.6,1 ];
+	this.faceAngles = [
+		Math.PI + Math.PI,
+		Math.PI + Math.PI,
+		Math.PI + Math.PI,
+		Math.PI + Math.PI,
+	];
+	this.faceAngle = this.faceAngles[0];
+
+	this.mouthAngle = Math.PI/6;
+	this.mouthAngles = [
+		Math.PI/3,
+		0,
+		Math.PI/3,
+		0,
+	];
+	this.time = 0;
+
+	this.stars = [
+		{x: w*1.5, y: h/2},
+		{x: w*1.5, y: h/2},
+	];
+	this.starTimes = [ 0.2, 0.6 ];
+}
+
+EatingSun.prototype = {
+	update: function(dt) {
+		var i,len=this.timeSteps.length;
+		for (i=0; i<len; i++) {
+			if (this.timeSteps[i]*spb <= this.time) {
+				this.nextFaceAngle = this.faceAngles[i];
+				this.nextMouthAngle = this.mouthAngles[i];
+			}
+		}
+		if (Math.abs(this.faceAngle - this.nextFaceAngle) > 0.001) {
+			this.faceAngle += (this.nextFaceAngle - this.faceAngle) * 0.2;
+		}
+		if (Math.abs(this.mouthAngle - this.nextMouthAngle) > 0.001) {
+			this.mouthAngle += (this.nextMouthAngle - this.mouthAngle) * 0.5;
+		}
+		len=this.starTimes.length;
+		var s;
+		for (i=0; i<len; i++) {
+			s = this.stars[i];
+			if (this.starTimes[i]*spb <= this.time) {
+				s.x -= 5*dt;
+				if (s.x <= w/2) {
+					s.x = -w;
+				}
+			}
+		}
+		this.time += dt;
+	},
+	draw: function() {
+		var color = "rgba(255,255,0,0.7)";
+		var m = this.mouthAngle/2;
+
+		var i,len=this.starTimes.length;
+		var s,sr = 32;
+		ctx.fillStyle = "#FFF";
+		for (i=0; i<len; i++) {
+			s = this.stars[i];
+			ctx.fillRect(s.x-sr/2,s.y-sr/2,sr,sr);
+		}
+
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,this.r2, 0, Math.PI*2);
+		ctx.fillStyle = color;
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,this.r, this.faceAngle+m, this.faceAngle-m);
+		ctx.lineTo(
+			w/2 - Math.cos(this.faceAngle) * this.r/4,
+			h/2 - Math.sin(this.faceAngle) * this.r/4
+		);
+		ctx.closePath();
+		ctx.fill();
+	},
+};
+
+var eatingSun = new EatingSun(5/6*240, 240);
+
+var sunBurst = (function() {
+
+	var rings = [];
+	var i,len=20;
+	for (i=0; i<len; i++) {
+		rings[i] = 0;
+	}
+	var t=0;
+	var period = 15;
+	var speed = 2;
+
+	function update(dt) {
+		for (i=0; i<len; i++) {
+			if (i*20 <= t) {
+				rings[i] += dt*speed;
+			}
+		}
+		t += dt;
+	}
+
+	function draw() {
+		ctx.strokeStyle = "rgba(255,255,0,0.1)";
+		ctx.lineWidth = 20;
+		for (i=0; i<len; i++) {
+			ctx.beginPath();
+			ctx.arc(w/2,h/2,rings[i],0,Math.PI*2);
+			ctx.stroke();
+		}
+
+		var color = "rgba(255,255,0,0.7)";
+		ctx.fillStyle = color;
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,5/6*240,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,240,0,Math.PI*2);
+		ctx.fill();
+
+		var alpha = Math.min(1,t/(1*spb));
+		ctx.fillStyle = "rgba(255,255,255,"+alpha+")";
+		ctx.fillRect(0,0,w,h);
+	}
+
+	return {
+		update: update,
+		draw: draw,
+	};
+})();
+
 function updateSuns(dt) {
 	if (time < spb*16) {
 		var timeStep = duration/numSuns;
@@ -128,73 +266,170 @@ function updateSuns(dt) {
 		}
 		*/
 	}
-	else {
-		
+	else if (time < spb*30.5) {
 		dancingSuns[0].update(dt);
 		dancingSuns[1].update(dt);
 	}
+	else if (time < spb*32) {
+		eatingSun.update(dt);
+		eatingSun.draw();
+	}
+	else if (time < spb*33) {
+		sunBurst.update(dt);
+		sunBurst.draw();
+	}
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Clouds
 
+function CloudBubble(x,y,r,r2,color,color2,color3,color4) {
+	this.x = x;
+	this.y = y;
+	this.lift = 0;
+	this.r = r;
+	this.r2 = r2;
+	this.color = color;
+	this.color2 = color2;
+	this.color3 = color3;
+	this.color4 = color4;
+	this.angle = Math.random()*Math.PI*2;
+}
+
+CloudBubble.prototype = {
+	update: function(dt) {
+		this.angle += Math.PI*2/3000 * dt;
+		this.angle %= (Math.PI*2);
+		var ar = 3;
+		this.lift = Math.sin(this.angle) * ar;
+	},
+	getY: function() {
+		return this.y + this.lift;
+	},
+	draw: function() {
+
+		var y = this.getY();
+		ctx.save();
+		ctx.translate(this.x,y);
+		ctx.rotate(this.rotAngle || 0);
+
+		ctx.beginPath();
+		ctx.arc(0,0, this.r, Math.PI, Math.PI*2);
+		ctx.lineTo(this.r, this.r);
+		ctx.lineTo(-this.r, this.r);
+		ctx.closePath();
+		if (this.alpha != undefined) {
+			ctx.fillStyle = this.color3;
+			ctx.fill();
+			ctx.fillStyle = "rgba(255,255,255,"+this.alpha+")";
+		}
+		else {
+			ctx.fillStyle = this.color;
+		}
+		ctx.fill();
+		ctx.strokeStyle = ctx.fillStyle;
+		ctx.lineWidth = pad;
+		ctx.lineJoin = "round";
+		ctx.stroke();
+		ctx.restore();
+	},
+	drawBorder: function() {
+		var y = this.getY();
+		ctx.save();
+		ctx.translate(this.x,y);
+		ctx.rotate(this.rotAngle || 0);
+
+		ctx.beginPath();
+		ctx.arc(0,0, this.r, Math.PI, Math.PI*2);
+		ctx.lineTo(this.r, this.r);
+		ctx.lineTo(-this.r, this.r);
+		ctx.closePath();
+		ctx.strokeStyle = this.color2;
+		ctx.lineWidth = pad*2;
+		ctx.lineJoin = "round";
+		ctx.stroke();
+
+		ctx.restore();
+	},
+};
+
 function Cloud() {
-	this.angles = [
-		Math.random()*Math.PI*2,
-		Math.random()*Math.PI*2,
-		Math.random()*Math.PI*2,
-		Math.random()*Math.PI*2,
-		Math.random()*Math.PI*2,
-	];
+	this.angle = Math.random()*Math.PI*2;
 	this.x = 0;
 	this.y = 0;
+	this.lift = 0;
+	this.r = 80;
+	this.r2 = this.r + pad;
+	this.w = this.r*5;
+	this.h = 200;
+
+	var color = "#FFF";
+	var color2 = "rgba(255,255,255,0.2)";
+	var r = this.r;
+	var r2 = this.r2;
+	var h = this.h;
+
+	var blinkyColor = "#FF0000";
+	var blinkyPathColor = "rgba(255,0,0,0.5)";
+
+	var pinkyColor = "#FFB8FF";
+	var pinkyPathColor = "rgba(255,184,255,0.5)";
+
+	var inkyColor = "#00FFFF";
+	var inkyPathColor = "rgba(0,255,255,0.5)";
+
+	var clydeColor = "#FFB851";
+	var clydePathColor = "rgba(255,184,81,0.5)";
+
+	this.bubbles = [
+		new CloudBubble(r,   h,       r, r2, color, color2, clydeColor, clydePathColor),
+		new CloudBubble(2*r, h-0.8*r, r, r2, color, color2, inkyColor, inkyPathColor),
+		new CloudBubble(3*r, h-r,     r, r2, color, color2, blinkyColor, blinkyPathColor),
+		new CloudBubble(4*r, h,       r, r2, color, color2, pinkyColor, pinkyPathColor),
+	];
+	this.disconnect = false;
 }
+
 
 Cloud.prototype = {
 	update: function(dt) {
-		var i;
-		for (i=0; i<5; i++) {
-			this.angles[i] += Math.PI*2/3000 * dt;
-			this.angles[i] %= (Math.PI*2);
+		this.angle += Math.PI*2/3000 * dt;
+		this.angle %= (Math.PI*2);
+		this.lift = Math.sin(this.angle) * 3;
+
+		if (!this.disconnect) {
+			var i,len=this.bubbles.length;
+			for (i=0; i<len; i++ ) {
+				this.bubbles[i].update(dt);
+			}
 		}
 	},
-	drawCloud: function(x,y,r,i,color) {
-		var ar = 3;
-		var a = this.angles[i];
-		y += Math.sin(a) * ar;
-		fillCirc(x,y,r,color);
+	getY: function() {
+		return this.y + this.lift;
 	},
 	setPos: function(x,y) {
 		this.x = x;
 		this.y = y;
 	},
 	draw: function() {
-		var r = 80;
-		var w = r*5;
-		var h = 200;
+		var y = this.getY();
 		ctx.save();
-		var y = this.y + Math.sin(this.angles[4]) * 3;
 		ctx.translate(this.x,y);
 		ctx.beginPath();
-		ctx.rect(-pad,-pad,w+pad*2,h+pad*2);
+		ctx.rect(-pad,-pad,this.w+pad*2,this.h+pad*2);
 		ctx.clip();
 
-		var r2 = r + pad;
-		var color = "rgba(255,255,255,0.2)";
-		this.drawCloud(r,h,r2,0,color)
-		this.drawCloud(2*r,h-0.8*r,r2,1,color);
-		this.drawCloud(3*r,h-r,r2,2,color);
-		this.drawCloud(4*r,h,r2,3,color);
+		if (!this.disconnect) {
+			var i,len=this.bubbles.length;
+			for (i=0; i<len; i++ ) {
+				this.bubbles[i].drawBorder();
+			}
+			for (i=0; i<len; i++ ) {
+				this.bubbles[i].draw();
+			}
+		}
 
-		var r2 = r;
-		var color = "#FFF";
-		this.drawCloud(r,h,r2,0,color)
-		this.drawCloud(2*r,h-0.8*r,r2,1,color);
-		this.drawCloud(3*r,h-r,r2,2,color);
-		this.drawCloud(4*r,h,r2,3,color);
-
-		fillCirc(2.5*r,h,1.5*r,"#FFF");
+		fillCirc(2.5*this.r,this.h,1.5*this.r,"#FFF");
 
 		ctx.restore();
 	},
@@ -370,14 +605,14 @@ function ShootingStar(pos, dir, speed) {
 	this.pos = pos;
 	this.dir = dir;
 	this.speed = speed;
-	this.jet = new StarParticleJet(1/40, pos, dir, speed*0.5);
+	//this.jet = new StarParticleJet(1/40, pos, dir, speed*0.5);
 };
 
 ShootingStar.prototype = {
 	update: function(dt) {
 		this.pos.x += this.dir.x*this.speed*dt;
 		this.pos.y += this.dir.y*this.speed*dt;
-		this.jet.update(dt);
+		//this.jet.update(dt);
 	},
 	bounce: function() {
 		if (this.pos.x < 0) {
@@ -398,22 +633,67 @@ ShootingStar.prototype = {
 		}
 	},
 	draw: function() {
+		var alpha = Math.min(1,Math.max(0,(this.pos.x+w/3)/(2*w)));
+		ctx.strokeStyle = "rgba(255,255,255,"+alpha+")";
+		ctx.lineWidth = 20;
+		ctx.beginPath();
+		ctx.moveTo(this.pos.x, this.pos.y);
+		var length = 500;
+		ctx.lineTo(
+			this.pos.x + -this.dir.x*length,
+			this.pos.y + -this.dir.y*length);
+		ctx.stroke();
 		ctx.fillStyle = "#FFF";
-		ctx.fillRect(this.pos.x, this.pos.y, 4,4);
-		this.jet.draw();
+		var r = 20;
+		ctx.fillRect(this.pos.x - r/2, this.pos.y - r/2, r, r);
+		//this.jet.draw();
 	},
 };
 
-var shootingStar = (function(){
-
-	var angle = Math.PI/4;
-
+var makeShootingStar = function() {
+	var angle = Math.PI;
 	return new ShootingStar(
-		{x: Math.random()*w, y: Math.random()*h},
+		{x: w, y: Math.random()*h},
 		{x: Math.cos(angle), y: Math.sin(angle)},
-		200
+		5
 	);
-})();
+};
+
+var starTimeSteps = [
+	2,
+	2.5,
+	3,
+	3.5,
+	3.75,
+	5,
+	5.25,
+	5.5,
+	5.75,
+	6,
+	6.25,
+];
+var starTime = 0;
+
+var shootingStars = [];
+function initShootingStars() {
+	var i,len=starTimeSteps.length;
+	for (i=0; i<len; i++) {
+		shootingStars[i] = makeShootingStar();
+	}
+}
+
+function updateShootingStars(dt) {
+	var i,len=starTimeSteps.length;
+	if (time >= spb * 24) {
+		for (i=0; i<len; i++) {
+			if (starTime >= starTimeSteps[i]*spb) {
+				shootingStars[i].update(dt);
+				shootingStars[i].draw();
+			}
+		}
+		starTime += dt;
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // STARS
@@ -454,26 +734,11 @@ var stars = [
 	new Star(123,594),
 	new Star(133,252),
 ];
-var starTimeSteps = [
-	2,
-	2.5,
-	3,
-	3.5,
-	3.75,
-	5,
-	5.25,
-	5.5,
-	5.75,
-	6,
-	6.25,
-	7,
-];
 var numStars = stars.length;
-var starTime = 0;
 
 function updateStars(dt) {
 	var i,p;
-	if (time >= spb * 16) {
+	if (time >= spb * 16 && time <= spb * 32) {
 		for(i=0; i<numStars; i++) {
 			//if (starTime >= starTimeSteps[i]*spb) {
 				stars[i].update(dt);
@@ -483,10 +748,185 @@ function updateStars(dt) {
 				//break;
 			//}
 		}
-		starTime += dt;
 	}
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var skyFallTime=0;
+var skyFallRays = [0,0,0,0,0];
+var skyFallSteps = [
+	1,1.5,2,2.5,2.75
+];
+function updateSkyFall(dt) {
+	if (time <= spb*33) {
+		return;
+	}
+
+	if (skyFallTime < spb*1) {
+		var alpha = 1-skyFallTime/spb;
+		ctx.fillStyle = "rgba(255,255,255,"+alpha+")";
+		ctx.fillRect(0,0,w,h);
+	}
+	else {
+		ctx.lineWidth = 20;
+		var i,len=skyFallSteps.length;
+		for (i=0; i<len; i++) {
+			if (skyFallTime >= skyFallSteps[i]*spb) {
+				skyFallRays[i] += dt*2;
+				var y = skyFallRays[i];
+				var j,jlen=5;
+				for (j=0; j<jlen; j++) {
+					alpha = (jlen-1-j)/(jlen);
+					ctx.strokeStyle = "rgba(255,255,0,"+alpha+")";
+					var jy=y-j*20;
+					ctx.beginPath();
+					ctx.moveTo(0,jy);
+					ctx.lineTo(w,jy);
+					ctx.stroke();
+				}
+			}
+		}
+	}
+	skyFallTime += dt;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var updateGhostCloud = (function(){
+	var t = 0;
+	var c = new Cloud();
+	c.setPos(w/3+20,h/2);
+	var bows = [
+		0,0,0,0,
+	];
+	var bowTimes = [
+		3,4,5,6
+	];
+
+	var bowCenterX = -w/4;
+	var bottomY;
+
+	var interpMade = false;
+	var interps = [];
+
+	return function(dt) {
+		if (time <= spb*33) {
+			return;
+		}
+
+		if (time <= spb*40) {
+			c.update(dt);
+
+			bottomY = c.getY() + c.h;
+			var i,len=bowTimes.length;
+			for (i=0; i<len; i++) {
+				if (t >= bowTimes[i]*spb) {
+					bows[i] += Math.PI * (dt/1000);
+
+					var b = c.bubbles[i];
+					var x = c.x + b.x;
+					var y = c.getY() + b.getY();
+					var dx = x-bowCenterX;
+					var dy = bottomY - y;
+					var r = Math.sqrt(dx*dx+dy*dy);
+					//var startAngle = Math.atan(dy/dx);
+					var startAngle = 0;
+					var endAngle = Math.min(Math.PI/2, bows[i]);
+					endAngle = Math.max(startAngle, endAngle);
+
+					ctx.beginPath();
+					//ctx.arc(bowCenterX, bottomY, r, 0, Math.PI*2);
+					ctx.arc(bowCenterX, bottomY, r, -endAngle, -startAngle);
+					ctx.strokeStyle = b.color3;
+					ctx.lineWidth = b.r*1.25;
+					ctx.stroke();
+				}
+			}
+
+			c.draw();
+		}
+		else {
+			if (!interpMade) {
+				c.disconnect = true;
+				t = 0;
+				interpMade = true;
+				var points = [];
+				for (i=0; i<4; i++) {
+					points.push({
+							alpha: 1,
+							angle: Math.random()*Math.PI*2,
+							x: c.x + c.bubbles[i].x,
+							y: c.getY() + c.bubbles[i].getY()});
+				}
+				var points3 = [
+					{angle: 2*Math.PI*3, alpha: 0, x:w/5,   y:h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:2*w/5, y:h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:3*w/5, y:h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:4*w/5, y:h/2},
+				];
+				var points4 = [
+					{angle: 2*Math.PI*3, alpha: 0, x:w/5,   y:-h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:2*w/5, y:-h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:3*w/5, y:-h/2},
+					{angle: 2*Math.PI*3, alpha: 0, x:4*w/5, y:-h/2},
+				];
+				var points2 = [
+					{angle: 2*Math.PI*3*Math.random(), alpha: 0.9, x:w/5,   y:h/3*Math.random()},
+					{angle: 2*Math.PI*3*Math.random(), alpha: 0.9, x:2*w/5, y:h/3*Math.random()},
+					{angle: 2*Math.PI*3*Math.random(), alpha: 0.9, x:3*w/5, y:h/3*Math.random()},
+					{angle: 2*Math.PI*3*Math.random(), alpha: 0.9, x:4*w/5, y:h/3*Math.random()},
+				];
+				for (i=0; i<4; i++) {
+					points2[i].x = points[i].x + (points3[i].x - points[i].x)/2;
+				}
+				var delta_times = [ 0,spb,2*spb,0.5*spb ];
+				var keys = ['angle', 'alpha','x','y'];
+
+				interps = [];
+				for (i=0; i<4; i++) {
+					interps.push(Ptero.makeHermiteInterpForObjs([points[i], points2[i], points3[i], points4[i]],keys,delta_times));
+				};
+			}
+			ctx.save();
+			if (t < spb) {
+				ctx.beginPath();
+				ctx.rect(0,0,w,bottomY);
+				ctx.clip();
+			}
+			for (i=0; i<4; i++) {
+				var b = c.bubbles[i];
+				var o = interps[i](t);
+				if (o) {
+					b.x = o.x;
+					b.y = o.y;
+					b.rotAngle = o.angle;
+					b.alpha = o.alpha;
+				}
+				b.drawBorder();
+			}
+			for (i=0; i<4; i++) {
+				var b = c.bubbles[i];
+				b.draw();
+			}
+			ctx.restore();
+			if (time >= spb*43) {
+				for (i=0; i<4; i++) {
+					var b = c.bubbles[i];
+					ctx.fillStyle = b.color4;
+					var r = 30;
+					ctx.fillRect(
+						b.x-r,
+						b.y+2*r,
+						2*r,2*h
+					);
+				}
+			}
+		}
+
+		t += dt;
+	};
+})();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -494,8 +934,11 @@ function updateSky(dt) {
 	if (time < spb*16) {
 		ctx.fillStyle = backColor;
 	}
-	else {
+	else if (time < spb*33) {
 		ctx.fillStyle = "#000";
+	}
+	else {
+		ctx.fillStyle = backColor;
 	}
 	ctx.fillRect(0,0,w,h);
 };
@@ -514,16 +957,9 @@ function tick(t) {
 	updateStars(dt);
 	updateSuns(dt);
 	updateClouds(dt);
-
-/*
-	ctx.fillStyle = "#000";
-	ctx.fillRect(0,0,w,h);
-
-	shootingStar.update(dt/1000);
-	shootingStar.bounce();
-	shootingStar.draw();
-*/
-
+	updateShootingStars(dt);
+	updateSkyFall(dt);
+	updateGhostCloud(dt);
 
 	time += dt;
 	window.mozRequestAnimationFrame(tick);
@@ -531,8 +967,17 @@ function tick(t) {
 
 function playSong() {
 	var song = new Audio();
+	var first = false;
+	song.onloadeddata = function() {
+		if (!first) {
+			song.currentTime = time / 1000;
+			song.play();
+			song.currentTime = time / 1000;
+			window.mozRequestAnimationFrame(tick);
+		}
+		first = true;
+	};
 	song.src = "philipp.ogg";
-	song.play();
 }
 
 window.addEventListener("load", function() {
@@ -540,6 +985,6 @@ window.addEventListener("load", function() {
 	ctx = canvas.getContext('2d');
 	createSuns();
 	initClouds();
-	//playSong();
-	window.mozRequestAnimationFrame(tick);
+	initShootingStars();
+	playSong();
 });

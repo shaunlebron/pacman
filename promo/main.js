@@ -43,7 +43,6 @@ var w = 1280;
 var h = 720;
 
 var last_tick_t = 0;
-var time = 32*spb;
 var time = 0;
 
 function LinearInterp(min,max,duration) {
@@ -223,6 +222,72 @@ EatingSun.prototype = {
 
 var eatingSun = new EatingSun(5/6*240, 240);
 
+function DyingSun (r,r2) {
+	this.r = r;
+	this.r2 = r2;
+
+	this.faceAngle = 0;
+	this.mouthAngle = 0;
+
+	this.time = 0;
+	this.scaleInterp = Ptero.makeHermiteInterp([1, 1, 0.5, 0], [0, spb, spb*2, spb]);
+	this.angleInterp = Ptero.makeHermiteInterp([0, Math.PI, Math.PI*3, Math.PI*2.5], [spb, spb, spb, spb]);
+	this.alphaInterp = Ptero.makeHermiteInterp([0, 0.5, 0.1], [spb, spb, spb*2]);
+
+	this.colors = [
+		 "rgba(255,0,0,",
+		 "rgba(255,184,255,",
+		 "rgba(0,255,255,",
+		 "rgba(255,184,81,",
+	];
+}
+
+DyingSun.prototype = {
+	update: function(dt) {
+		this.scale = this.scaleInterp(this.time);
+		this.angle = this.angleInterp(this.time);
+		this.alpha = this.alphaInterp(this.time);
+		this.time += dt;
+	},
+	draw: function() {
+
+		if (this.angle != undefined && this.alpha != undefined) {
+			ctx.save();
+			ctx.translate(w/2,h/2);
+			ctx.rotate(this.angle);
+
+			var i;
+			var pad = Math.PI/20;
+			for (i=0; i<4; i++) {
+				ctx.beginPath();
+				ctx.arc(0,0,h,i*Math.PI/2+pad,(i+1)*Math.PI/2-pad);
+				ctx.lineTo(0,0);
+				ctx.closePath();
+				ctx.fillStyle = this.colors[i]+this.alpha+")";
+				ctx.fill();
+			}
+
+			ctx.restore();
+		}
+
+		var color = "rgba(255,255,0,0.7)";
+		var m = this.mouthAngle/2;
+
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,this.r2*this.scale, 0, Math.PI*2);
+		ctx.fillStyle = color;
+		ctx.fill();
+
+		ctx.fillStyle = "#FF0";
+		ctx.beginPath();
+		ctx.arc(w/2,h/2,this.r*this.scale, 0, Math.PI*2);
+		ctx.closePath();
+		ctx.fill();
+	},
+};
+
+var dyingSun = new DyingSun(200,240);
+
 var sunBurst = (function() {
 
 	var rings = [];
@@ -309,6 +374,10 @@ function updateSuns(dt) {
 	else if (time < spb*33) {
 		sunBurst.update(dt);
 		sunBurst.draw();
+	}
+	else if (time >= spb*44) {
+		dyingSun.update(dt);
+		dyingSun.draw();
 	}
 }
 
@@ -770,7 +839,7 @@ var numStars = stars.length;
 
 function updateStars(dt) {
 	var i,p;
-	if (time >= spb * 16 && time <= spb * 32) {
+	if ((time >= spb * 16 && time <= spb * 32) || time >= spb*44) {
 		for(i=0; i<numStars; i++) {
 			//if (starTime >= starTimeSteps[i]*spb) {
 				stars[i].update(dt);
@@ -840,6 +909,7 @@ var updateGhostCloud = (function(){
 	var bottomY;
 
 	var interpMade = false;
+	var interpMade2 = false;
 	var interps = [];
 
 	return function(dt) {
@@ -878,7 +948,7 @@ var updateGhostCloud = (function(){
 
 			c.draw();
 		}
-		else {
+		else if (time <= spb*44) {
 			if (!interpMade) {
 				c.disconnect = true;
 				t = 0;
@@ -953,12 +1023,89 @@ var updateGhostCloud = (function(){
 						2*r,2*h
 					);
 				}
+
+				if (time >= spb*43.5) {
+					ctx.fillStyle = "rgba(0,0,0," + (1-(44*spb-time)/(spb*0.5)) + ")";
+					ctx.fillRect(0,0,w,h);
+				}
 			}
+		}
+		else {
+			if (!interpMade2) {
+				c.disconnect = true;
+				t = 0;
+				interpMade2 = true;
+				var points = [];
+				for (i=0; i<4; i++) {
+					points.push({
+							alpha: 0,
+							angle: 0,
+							x: w/2,
+							y: h*1.2,
+					});
+				}
+				var points2 = [
+					{angle: 0, alpha: 0, x:w/2, y:h/2},
+					{angle: 0, alpha: 0, x:w/2, y:h/2},
+					{angle: 0, alpha: 0, x:w/2, y:h/2},
+					{angle: 0, alpha: 0, x:w/2, y:h/2},
+				];
+				var delta_times = [
+					[0,spb*0.2 ],
+					[spb*0.2,spb*0.2 ],
+					[spb*0.4,spb*0.2 ],
+					[spb*0.6,spb*0.2 ],
+				];
+				var keys = ['angle', 'alpha','x','y'];
+
+				interps = [];
+				for (i=0; i<4; i++) {
+					interps.push(Ptero.makeHermiteInterpForObjs([points[i], points2[i] ],keys,delta_times[i]));
+				};
+			}
+			if (t < spb*1) {
+				for (i=0; i<4; i++) {
+					var b = c.bubbles[i];
+					var o = interps[i](t);
+					if (o) {
+						b.x = o.x;
+						b.y = o.y;
+						b.rotAngle = o.angle;
+						b.alpha = o.alpha;
+					}
+					b.drawBorder();
+				}
+				for (i=0; i<4; i++) {
+					var b = c.bubbles[i];
+					b.draw();
+				}
+			}
+
 		}
 
 		t += dt;
 	};
 })();
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function updateFinalFade(dt) {
+	var start = 44*spb;
+	var end = 48*spb;
+	var len = spb*0.5;
+	
+	if (time >= start && time <= start+len) {
+		var alpha = 1-(time-start)/len;
+		ctx.fillStyle = "rgba(0,0,0,"+alpha+")";
+		ctx.fillRect(0,0,w,h);
+	}
+
+	if (time >= end-len) {
+		var alpha = Math.max(0,1-(end-time)/len);
+		ctx.fillStyle = "rgba(0,0,0,"+alpha+")";
+		ctx.fillRect(0,0,w,h);
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -969,8 +1116,11 @@ function updateSky(dt) {
 	else if (time < spb*33) {
 		ctx.fillStyle = "#000";
 	}
-	else {
+	else if (time < spb*44) {
 		ctx.fillStyle = backColor;
+	}
+	else {
+		ctx.fillStyle = "#000";
 	}
 	ctx.fillRect(0,0,w,h);
 };
@@ -986,12 +1136,14 @@ function tick(t) {
 	last_tick_t = t;
 
 	updateSky();
+	updateGhostCloud(dt);
 	updateStars(dt);
 	updateSuns(dt);
 	updateClouds(dt);
 	updateShootingStars(dt);
 	updateSkyFall(dt);
-	updateGhostCloud(dt);
+
+	updateFinalFade(dt);
 
 	time += dt;
 	window.requestAnimationFrame(tick);

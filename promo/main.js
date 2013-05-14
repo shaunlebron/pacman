@@ -233,6 +233,8 @@ function DyingSun (r,r2) {
 	this.scaleInterp = Ptero.makeHermiteInterp([1, 1, 0.5, 0], [0, spb, spb*2, spb]);
 	this.angleInterp = Ptero.makeHermiteInterp([0, Math.PI, Math.PI*3, Math.PI*2.5], [spb, spb, spb, spb]);
 	this.alphaInterp = Ptero.makeHermiteInterp([0, 0.5, 0.1], [spb, spb, spb*2]);
+	this.mouthAngleInterp = Ptero.makeHermiteInterp([0, Math.PI/2, Math.PI], [spb, spb, spb]);
+	this.mouthDistInterp = Ptero.makeHermiteInterp([0.5, 0, -0.5], [spb, spb, spb]);
 
 	this.colors = [
 		 "rgba(255,0,0,",
@@ -247,6 +249,8 @@ DyingSun.prototype = {
 		this.scale = this.scaleInterp(this.time);
 		this.angle = this.angleInterp(this.time);
 		this.alpha = this.alphaInterp(this.time);
+		this.mouthAngle = this.mouthAngleInterp(this.time);
+		this.mouthDist = this.mouthDistInterp(this.time);
 		this.time += dt;
 	},
 	draw: function() {
@@ -273,22 +277,34 @@ DyingSun.prototype = {
 		var color = "rgba(255,255,0,0.7)";
 		var m = this.mouthAngle/2;
 
-		ctx.beginPath();
-		ctx.arc(w/2,h/2,this.r2*this.scale, 0, Math.PI*2);
-		ctx.fillStyle = color;
-		ctx.fill();
+		if (time <= spb*47) {
+			ctx.beginPath();
+			ctx.arc(w/2,h/2,this.r2*this.scale, 0, Math.PI*2);
+			ctx.fillStyle = color;
+			ctx.fill();
 
-		ctx.fillStyle = "#FF0";
-		ctx.beginPath();
-		ctx.arc(w/2,h/2,this.r*this.scale, 0, Math.PI*2);
-		ctx.closePath();
-		ctx.fill();
+			ctx.fillStyle = "#FF0";
+			if (!this.mouthAngle) {
+				ctx.beginPath();
+				ctx.arc(w/2,h/2,this.r*this.scale, 0, Math.PI*2);
+				ctx.closePath();
+				ctx.fill();
+			}
+			else {
+				ctx.beginPath();
+				var a = this.mouthAngle;
+				ctx.arc(w/2,h/2,this.r*this.scale, -Math.PI/2+a, 3*Math.PI/2-a);
+				ctx.lineTo(w/2,h/2+this.r*this.scale*this.mouthDist);
+				ctx.closePath();
+				ctx.fill();
+			}
+		}
 	},
 };
 
 var dyingSun = new DyingSun(200,240);
 
-var sunBurst = (function() {
+function makeSunBurst() {
 
 	var rings = [];
 	var i,len=20;
@@ -335,7 +351,47 @@ var sunBurst = (function() {
 		update: update,
 		draw: draw,
 	};
-})();
+};
+
+function makeSunBurst2() {
+
+	var rings = [];
+	var i,len=20;
+	for (i=0; i<len; i++) {
+		rings[i] = 0;
+	}
+	var t=0;
+	var period = 15;
+	var speed = 2;
+
+	function update(dt) {
+		for (i=0; i<len; i++) {
+			if (i*20 <= t) {
+				rings[i] += dt*speed;
+			}
+		}
+		t += dt;
+	}
+
+	function draw() {
+		ctx.strokeStyle = "rgba(255,255,0,0.1)";
+		ctx.lineWidth = 20;
+		for (i=0; i<len; i++) {
+			ctx.beginPath();
+			ctx.arc(w/2,h/2,rings[i],0,Math.PI*2);
+			ctx.stroke();
+		}
+
+	}
+
+	return {
+		update: update,
+		draw: draw,
+	};
+};
+
+var sunBurst = makeSunBurst();
+var sunBurst2 = makeSunBurst2();
 
 function updateSuns(dt) {
 	if (time < spb*16) {
@@ -378,6 +434,10 @@ function updateSuns(dt) {
 	else if (time >= spb*44) {
 		dyingSun.update(dt);
 		dyingSun.draw();
+		if (time >= spb*47) {
+			sunBurst2.update(dt);
+			sunBurst2.draw();
+		}
 	}
 }
 

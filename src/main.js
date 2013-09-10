@@ -6,6 +6,12 @@ window.addEventListener("load", function() {
     initRenderer();
     atlas.create();
     initSwipe();
-    switchState(homeState);
+	var anchor = window.location.hash.substring(1);
+	if (anchor == "learn") {
+		switchState(learnState);
+	}
+	else {
+		switchState(homeState);
+	}
     executive.init();
 });

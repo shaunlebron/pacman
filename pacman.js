@@ -1077,6 +1077,7 @@ var mapgen = (function(){
 
     var genRandom = function() {
 
+		// Gathers all the non-filled cells of the left-most column not completely filled.
         var getLeftMostEmptyCells = function() {
             var x;
             var leftCells = [];
@@ -1094,6 +1095,12 @@ var mapgen = (function(){
             }
             return leftCells;
         };
+
+		// determines if the given cell can grow in the given direction.
+		// cell: the source cell object
+		// i: the growth direction
+		// prevDir: last growth direction
+		// size: number of cells currently in this group
         var isOpenCell = function(cell,i,prevDir,size) {
 
             // prevent wall from going through starting position
@@ -1120,6 +1127,8 @@ var mapgen = (function(){
 
             return false;
         };
+
+		// get the cells that can be the given cell can be grown toward
         var getOpenCells = function(cell,prevDir,size) {
             var openCells = [];
             var numOpenCells = 0;
@@ -1131,6 +1140,8 @@ var mapgen = (function(){
             }
             return { openCells: openCells, numOpenCells: numOpenCells };
         };
+
+		// grow a cell in the given direction
         var connectCell = function(cell,dir) {
             cell.connect[dir] = true;
             cell.next[dir].connect[rotateAboutFace(dir)] = true;
@@ -2999,6 +3010,7 @@ var getDevicePixelRatio = function() {
     // Only consider the device pixel ratio for devices that are <= 320 pixels in width.
     // This is necessary for the iPhone4's retina display; otherwise the game would be blurry.
     // The iPad3's retina display @ 2048x1536 starts slowing the game down.
+    return 1;
     if (window.innerWidth <= 320) {
         return window.devicePixelRatio || 1;
     }
@@ -13369,7 +13381,13 @@ window.addEventListener("load", function() {
     initRenderer();
     atlas.create();
     initSwipe();
-    switchState(homeState);
+	var anchor = window.location.hash.substring(1);
+	if (anchor == "learn") {
+		switchState(learnState);
+	}
+	else {
+		switchState(homeState);
+	}
     executive.init();
 });
 })();

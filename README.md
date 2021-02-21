@@ -177,7 +177,7 @@ Links to Public Feedback
 
 
 
-[1]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/montage2.png
-[2]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/learn.png
-[3]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/practice.png
-[4]: https://bitbucket.org/shaunew/pac-man/raw/4714800233a9/shots/procedural.png
+[1]: shots/montage2.png
+[2]: shots/learn.png
+[3]: shots/practice.png
+[4]: shots/procedural.png

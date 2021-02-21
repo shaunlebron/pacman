@@ -3,7 +3,7 @@ Pac-Man
 
 A historical tribute and accurate remake of the original Pac-Man arcade game
 
-Inspired by [The Pac-Man Dossier](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html)
+Inspired by [The Pac-Man Dossier][dossier]
 
 ### Under Construction
 
@@ -145,7 +145,7 @@ Credits
 
 ### Reverse-Engineers
 
-Thanks to **Jamey Pittman** for compiling [The Pac-Man Dossier](http://home.comcast.net/~jpittman2/pacman/pacmandossier.html) from his own research and those of other reverse-engineers, notably 'Dav' and 'JamieVegas' from [this Atari Age forum thread](http://www.atariage.com/forums/topic/68707-pac-man-ghost-ai-question/).  Further thanks to Jamey Pittman for replying to my arcade implementation-specific questions with some very elaborate details to meet the accuracy requirements of this project.
+Thanks to **Jamey Pittman** for compiling [The Pac-Man Dossier][dossier] from his own research and those of other reverse-engineers, notably 'Dav' and 'JamieVegas' from [this Atari Age forum thread](http://www.atariage.com/forums/topic/68707-pac-man-ghost-ai-question/).  Further thanks to Jamey Pittman for replying to my arcade implementation-specific questions with some very elaborate details to meet the accuracy requirements of this project.
 
 Thanks to **Bart Grantham** for sharing his expert knowledge on Ms. Pac-Man's internals, providing me with an annotated disassembly and notes on how fruit paths work in meticulous detail.
 
@@ -176,6 +176,7 @@ Links to Public Feedback
 - http://news.dice.com/2012/09/04/pac-man-online-open-source/
 
 
+[dossier]:https://pacman.holenet.info
 
 [1]: shots/montage2.png
 [2]: shots/learn.png

@@ -36,6 +36,7 @@ Player.prototype.load = function(t) {
     this.eatPauseFramesLeft = this.savedEatPauseFramesLeft[t];
     this.setNextDir(this.savedNextDirEnum[t]);
     this.stopped = this.savedStopped[t];
+    this.inputDirEnum = undefined;
 
     Actor.prototype.load.call(this,t);
 };

@@ -81,8 +81,5 @@ done
 # end anonymous function wrapper
 echo "})();" >> $output
 
-# update time stamp
-sed -i "s/last updated:[^<]*/last updated: $(date)/" index.htm
-
 # build debug.htm from index.htm adding debug includes
 sed "s:.*$output.*:$debug_includes:" index.htm > debug.htm

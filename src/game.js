@@ -18,9 +18,12 @@ var GAME_OTTO = 3;
 
 var practiceMode = false;
 var turboMode = false;
+var setPracticeMode = function(m) { practiceMode = m; };
+var setTurboMode = function(m) { turboMode = m; };
 
 // current game mode
 var gameMode = GAME_PACMAN;
+var setGameMode = function(m) { gameMode = m; };
 var getGameName = (function(){
 
     var names = ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"];
@@ -179,6 +182,8 @@ var clearCheats, backupCheats, restoreCheats;
 // current level, lives, and score
 var level = 1;
 var extraLives = 0;
+var setLevel = function(l) { level = l; };
+var setExtraLives = function(e) { extraLives = e; };
 
 // VCR functions
 

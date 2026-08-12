@@ -30,6 +30,7 @@
 
 // current game state
 var state;
+var setState = function(s) { state = s; };
 
 // switches to another game state
 var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {

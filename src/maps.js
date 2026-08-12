@@ -13,6 +13,7 @@
 
 // current map
 var map;
+var setMap = function(m) { map = m; };
 
 // actor starting states
 

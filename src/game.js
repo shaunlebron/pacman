@@ -208,7 +208,7 @@ var loadGame = function(t) {
     }
     setHighScore(savedHighScore[t]);
     setScore(savedScore[t]);
-    state = savedState[t];
+    setState(savedState[t]);
 };
 
 /// SCORING

@@ -129,7 +129,7 @@ var homeState = (function(){
     };
     menu.addTextIconButton(getGameName(GAME_PACMAN),
         function() {
-            gameMode = GAME_PACMAN;
+            setGameMode(GAME_PACMAN);
             exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
@@ -137,7 +137,7 @@ var homeState = (function(){
         });
     menu.addTextIconButton(getGameName(GAME_MSPACMAN),
         function() {
-            gameMode = GAME_MSPACMAN;
+            setGameMode(GAME_MSPACMAN);
             exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
@@ -145,7 +145,7 @@ var homeState = (function(){
         });
     menu.addTextIconButton(getGameName(GAME_COOKIE),
         function() {
-            gameMode = GAME_COOKIE;
+            setGameMode(GAME_COOKIE);
             exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
@@ -269,14 +269,14 @@ var learnState = (function(){
             });
 
             // set map
-            map = mapLearn;
+            setMap(mapLearn);
             renderer.drawMap();
 
             // set game parameters
-            level = 1;
-            practiceMode = false;
-            turboMode = false;
-            gameMode = GAME_PACMAN;
+            setLevel(1);
+            setPracticeMode(false);
+            setTurboMode(false);
+            setGameMode(GAME_PACMAN);
 
             // reset relevant game state
             ghostCommander.reset();
@@ -379,10 +379,10 @@ var gameTitleState = (function() {
     var y = 3*tileSize;
     var yellowBtn = new Button(x,y,w,h,function() {
         if (gameMode == GAME_MSPACMAN) {
-            gameMode = GAME_OTTO;
+            setGameMode(GAME_OTTO);
         }
         else if (gameMode == GAME_OTTO) {
-            gameMode = GAME_MSPACMAN;
+            setGameMode(GAME_MSPACMAN);
         }
     });
     yellowBtn.setIcon(function (ctx,x,y,frame) {
@@ -479,22 +479,22 @@ var preNewGameState = (function() {
     menu.addSpacer(2);
     menu.addTextButton("PLAY",
         function() { 
-            practiceMode = false;
-            turboMode = false;
+            setPracticeMode(false);
+            setTurboMode(false);
             newGameState.setStartLevel(1);
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PLAY TURBO",
         function() { 
-            practiceMode = false;
-            turboMode = true;
+            setPracticeMode(false);
+            setTurboMode(true);
             newGameState.setStartLevel(1);
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PRACTICE",
         function() { 
-            practiceMode = true;
-            turboMode = false;
+            setPracticeMode(true);
+            setTurboMode(false);
             exitTo(selectActState);
         });
     menu.addSpacer(0.5);
@@ -517,7 +517,7 @@ var preNewGameState = (function() {
         init: function() {
             menu.enable();
             gameTitleState.init();
-            map = undefined;
+            setMap(undefined);
         },
         draw: function() {
             renderer.clearMapFrame();
@@ -842,7 +842,7 @@ var cutSceneMenuState = (function() {
         init: function() {
             menu.enable();
             gameTitleState.init();
-            level = 0;
+            setLevel(0);
         },
         draw: function() {
             renderer.clearMapFrame();
@@ -1187,8 +1187,8 @@ var newGameState = (function() {
         init: function() {
             clearCheats();
             frames = 0;
-            level = startLevel-1;
-            extraLives = practiceMode ? Infinity : 3;
+            setLevel(startLevel-1);
+            setExtraLives(practiceMode ? Infinity : 3);
             setScore(0);
             setFruitFromGameMode();
             readyNewState.init();
@@ -1262,9 +1262,9 @@ var readyNewState = newChildObject(readyState, {
     init: function() {
 
         // increment level and ready the next map
-        level++;
+        setLevel(level+1);
         if (gameMode == GAME_PACMAN) {
-            map = mapPacman;
+            setMap(mapPacman);
         }
         else if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO) {
             setNextMsPacMap();

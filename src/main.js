@@ -21,8 +21,8 @@ window.addEventListener("load", function() {
 		switchState(learnState);
 	}
 	else if (anchor == "cheat_pac" || anchor == "cheat_mspac") {
-		gameMode = (anchor == "cheat_pac") ? GAME_PACMAN : GAME_MSPACMAN;
-		practiceMode = true;
+		setGameMode((anchor == "cheat_pac") ? GAME_PACMAN : GAME_MSPACMAN);
+		setPracticeMode(true);
         switchState(newGameState);
 		for (var i=0; i<4; i++) {
 			ghosts[i].isDrawTarget = true;

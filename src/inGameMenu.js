@@ -76,7 +76,7 @@ var inGameMenu = (function() {
     });
     practiceMenu.addTextButton("RESTART LEVEL", function() {
         showConfirm("RESTART LEVEL?", function() {
-            level--;
+            setLevel(level-1);
             switchState(readyNewState, 60);
         });
     });
@@ -112,7 +112,7 @@ var inGameMenu = (function() {
             return turboMode;
         },
         function(on) {
-            turboMode = on;
+            setTurboMode(on);
         });
     cheatsMenu.addToggleTextButton("SHOW TARGETS",
         function() {

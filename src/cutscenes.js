@@ -22,7 +22,7 @@
 var playCutScene = function(cutScene, nextState) {
 
     // redraw map buffer with fruit list but no map structure
-    map = undefined;
+    setMap(undefined);
     renderer.drawMap(true);
 
     cutScene.nextState = nextState;

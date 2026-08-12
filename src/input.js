@@ -197,7 +197,7 @@
 
     // Miscellaneous Cheats
     addKeyDown(KEY_I, function() { pacman.invincible = !pacman.invincible; }, isPracticeMode);
-    addKeyDown(KEY_O, function() { turboMode = !turboMode; }, isPracticeMode);
+    addKeyDown(KEY_O, function() { setTurboMode(!turboMode); }, isPracticeMode);
     addKeyDown(KEY_P, function() { pacman.ai = !pacman.ai; }, isPracticeMode);
 
     addKeyDown(KEY_END, function() { executive.togglePause(); });

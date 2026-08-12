@@ -69,8 +69,8 @@ const energizer = (function() {
             active = false;
             points = 100;
             pointsFramesLeft = 0;
-            for (i=0; i<4; i++)
-                ghosts[i].scared = false;
+            for (const g of ghosts)
+                g.scared = false;
         },
         update: function() {
             if (active) {
@@ -84,8 +84,8 @@ const energizer = (function() {
             active = true;
             count = 0;
             points = 100;
-            for (let i=0; i<4; i++) {
-                ghosts[i].onEnergized();
+            for (const g of ghosts) {
+                g.onEnergized();
             }
             if (getDuration() == 0) { // if no duration, then immediately reset
                 this.reset();

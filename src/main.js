@@ -24,9 +24,9 @@ window.addEventListener("load", function() {
         setGameMode((anchor == "cheat_pac") ? GAME_PACMAN : GAME_MSPACMAN);
         setPracticeMode(true);
         switchState(newGameState);
-        for (let i=0; i<4; i++) {
-            ghosts[i].isDrawTarget = true;
-            ghosts[i].isDrawPath = true;
+        for (const g of ghosts) {
+            g.isDrawTarget = true;
+            g.isDrawPath = true;
         }
     }
     else {

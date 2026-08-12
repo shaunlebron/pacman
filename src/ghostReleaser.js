@@ -108,8 +108,7 @@ const ghostReleaser = (function(){
         update: function() {
             // use personal dot counter
             if (mode == MODE_PERSONAL) {
-                for (let i=1;i<4;i++) {
-                    const g = ghosts[i];
+                for (const [i,g] of ghosts.entries()) {
                     if (g.mode == GHOST_PACING_HOME) {
                         if (ghostCounts[i] >= personalDotLimit[i]()) {
                             g.leaveHome();
@@ -140,8 +139,7 @@ const ghostReleaser = (function(){
             // also use time since last dot was eaten
             if (framesSinceLastDot > getTimeoutLimit()) {
                 framesSinceLastDot = 0;
-                for (let i=1;i<4;i++) {
-                    const g = ghosts[i];
+                for (const g of ghosts) {
                     if (g.mode == GHOST_PACING_HOME) {
                         g.leaveHome();
                         break;

@@ -119,8 +119,8 @@ const inGameMenu = (function() {
             return blinky.isDrawTarget;
         },
         function(on) {
-            for (let i=0; i<4; i++) {
-                ghosts[i].isDrawTarget = on;
+            for (const g of ghosts) {
+                g.isDrawTarget = on;
             }
         });
     cheatsMenu.addToggleTextButton("SHOW PATHS",
@@ -128,8 +128,8 @@ const inGameMenu = (function() {
             return blinky.isDrawPath;
         },
         function(on) {
-            for (let i=0; i<4; i++) {
-                ghosts[i].isDrawPath = on;
+            for (const g of ghosts) {
+                g.isDrawPath = on;
             }
         });
     cheatsMenu.addSpacer(1);
@@ -141,9 +141,7 @@ const inGameMenu = (function() {
 
     const menus = [menu, practiceMenu, confirmMenu, cheatsMenu];
     const getVisibleMenu = function() {
-        const len = menus.length;
-        for (let i=0; i<len; i++) {
-            const m = menus[i];
+        for (const m of menus) {
             if (m.isEnabled()) {
                 return m;
             }

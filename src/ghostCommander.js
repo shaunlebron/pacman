@@ -94,8 +94,8 @@ const ghostCommander = (function() {
                 const newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     command = newCmd;
-                    for (i=0; i<4; i++)
-                        ghosts[i].reverse();
+                    for (const g of ghosts)
+                        g.reverse();
                 }
                 frame++;
             }

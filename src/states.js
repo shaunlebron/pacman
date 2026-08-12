@@ -286,10 +286,9 @@ const learnState = (function(){
             elroyTimer.onNewLevel();
 
             // set ghost states
-            for (i=0; i<4; i++) {
-                const a = actors[i];
-                a.reset();
-                a.mode = GHOST_OUTSIDE;
+            for (const g of ghosts) {
+                g.reset();
+                g.mode = GHOST_OUTSIDE;
             }
             blinky.setPos(14*tileSize-1, 13*tileSize+midTile.y);
             pinky.setPos(15*tileSize+midTile.x, 13*tileSize+midTile.y);
@@ -323,12 +322,12 @@ const learnState = (function(){
             });
             for (let j=0; j<2; j++) {
                 pacman.update(j);
-                for (let i=0;i<4;i++) {
-                    actors[i].update(j);
+                for (const g of ghosts) {
+                    g.update(j);
                 }
             }
-            for (let i=0; i<5; i++)
-                actors[i].frames++;
+            for (const a of actors)
+                a.frames++;
         },
         getMenu: function() {
             return menu;
@@ -1218,8 +1217,8 @@ const readyState =  (function(){
     
     return {
         init: function() {
-            for (let i=0; i<5; i++)
-                actors[i].reset();
+            for (const a of actors)
+                a.reset();
             ghostCommander.reset();
             fruit.reset();
             energizer.reset();
@@ -1318,8 +1317,7 @@ const playState = {
     // handles collision between pac-man and ghosts
     // returns true if collision happened
     isPacmanCollide: function() {
-        for (let i = 0; i<4; i++) {
-            const g = ghosts[i];
+        for (const g of ghosts) {
             if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y && g.mode == GHOST_OUTSIDE) {
                 if (g.scared) { // eat ghost
                     energizer.addPoints();
@@ -1352,17 +1350,17 @@ const playState = {
             // but update ghosts running home
             if (energizer.showingPoints()) {
                 for (let j=0; j<maxSteps; j++)
-                    for (let i=0; i<4; i++)
-                        if (ghosts[i].mode == GHOST_GOING_HOME || ghosts[i].mode == GHOST_ENTERING_HOME)
-                            ghosts[i].update(j);
+                    for (const g of ghosts)
+                        if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
+                            g.update(j);
                 energizer.updatePointsTimer();
                 skip = true;
             }
             else { // make ghosts go home immediately after points disappear
-                for (let i=0; i<4; i++)
-                    if (ghosts[i].mode == GHOST_EATEN) {
-                        ghosts[i].mode = GHOST_GOING_HOME;
-                        ghosts[i].targetting = 'door';
+                for (const g of ghosts)
+                    if (g.mode == GHOST_EATEN) {
+                        g.mode = GHOST_GOING_HOME;
+                        g.targetting = 'door';
                     }
             }
             
@@ -1395,13 +1393,13 @@ const playState = {
                     // (redundant to prevent pass-throughs)
                     // (if collision happens, stop immediately.)
                     if (this.isPacmanCollide()) break;
-                    for (let i=0;i<4;i++) actors[i].update(j);
+                    for (const g of ghosts) g.update(j);
                     if (this.isPacmanCollide()) break;
                 }
 
                 // update frame counts
-                for (let i=0; i<5; i++)
-                    actors[i].frames++;
+                for (const a of actors)
+                    a.frames++;
             }
         }
     },
@@ -1512,8 +1510,8 @@ const deadState = (function() {
         triggers: {
             0: { // freeze
                 update: function() {
-                    for (let i=0; i<4; i++) 
-                        actors[i].frames++; // keep animating ghosts
+                    for (const g of ghosts) 
+                        g.frames++; // keep animating ghosts
                 },
                 draw: function() {
                     commonDraw();

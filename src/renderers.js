@@ -297,17 +297,17 @@ const initRenderer = function(){
             ctx.lineWidth = "1.5";
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
-            for (let i=0;i<5;i++)
-                if (actors[i].isDrawTarget)
-                    actors[i].drawTarget(ctx);
+            for (const a of actors)
+                if (a.isDrawTarget)
+                    a.drawTarget(ctx);
         },
 
         drawPaths: function() {
             const backupAlpha = ctx.globalAlpha;
             ctx.globalAlpha = 0.7;
-            for (let i=0;i<5;i++)
-                if (actors[i].isDrawPath)
-                    this.drawPath(actors[i]);
+            for (const a of actors)
+                if (a.isDrawPath)
+                    this.drawPath(a);
             ctx.globalAlpha = backupAlpha;
         },
 
@@ -461,8 +461,8 @@ const initRenderer = function(){
         drawActors: function() {
             // draw such that pacman appears on top
             if (energizer.isActive()) {
-                for (let i=0; i<4; i++) {
-                    this.drawGhost(ghosts[i]);
+                for (const g of ghosts) {
+                    this.drawGhost(g);
                 }
                 if (!energizer.showingPoints())
                     this.drawPlayer();
@@ -473,8 +473,9 @@ const initRenderer = function(){
             else {
                 this.drawPlayer();
                 for (let i=3; i>=0; i--) {
-                    if (ghosts[i].isVisible) {
-                        this.drawGhost(ghosts[i]);
+                    const g = ghosts[i];
+                    if (g.isVisible) {
+                        this.drawGhost(g);
                     }
                 }
                 if (inky.isVisible && !blinky.isVisible) {

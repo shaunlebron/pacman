@@ -111,8 +111,8 @@ const vcr = (function() {
 
     // load the state of the current time
     const load = function() {
-        for (let i=0; i<5; i++) {
-            actors[i].load(frame);
+        for (const a of actors) {
+            a.load(frame);
         }
         elroyTimer.load(frame);
         energizer.load(frame);
@@ -131,8 +131,8 @@ const vcr = (function() {
 
     // save the state of the current time
     const save = function() {
-        for (let i=0; i<5; i++) {
-            actors[i].save(frame);
+        for (const a of actors) {
+            a.save(frame);
         }
         elroyTimer.save(frame);
         energizer.save(frame);
@@ -395,7 +395,7 @@ const vcr = (function() {
 
             // determine start frame
             const maxReverse = getForwardDist(startFrame,frame);
-            const start = (frame - Math.min(maxReverse,speedPrints[speedIndex])) % maxFrames;
+            let start = (frame - Math.min(maxReverse,speedPrints[speedIndex])) % maxFrames;
             if (start < 0) {
                 start += maxFrames;
             }

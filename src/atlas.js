@@ -26,14 +26,13 @@ const atlas = (function(){
         canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0,0,w,h);
-        let x,y;
         const step = size*renderScale;
         ctx.beginPath();
-        for (x=0; x<=w; x+=step) {
+        for (let x=0; x<=w; x+=step) {
             ctx.moveTo(x,0);
             ctx.lineTo(x,h);
         }
-        for (y=0; y<=h; y+=step) {
+        for (let y=0; y<=h; y+=step) {
             ctx.moveTo(0,y);
             ctx.lineTo(w,y);
         }
@@ -89,11 +88,9 @@ const atlas = (function(){
         drawAtCell(function(x,y) { drawCookieFlash(ctx,x,y); },      row,12);
 
         const drawGhostCells = function(row,color) {
-            let col = 0;
-            for (let i=0; i<4; i++) { // dirEnum
-                for (let f=0; f<2; f++) { // frame
+            for (let col=0, i=0; i<4; i++) { // dirEnum
+                for (let f=0; f<2; f++, col++) { // frame
                     drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
-                    col++;
                 }
             }
         };
@@ -110,10 +107,8 @@ const atlas = (function(){
         row++;
         // draw disembodied eyes
         (function(){
-            let col = 0;
-            for (let i=0; i<4; i++) { // dirEnum
+            for (let col=0, i=0; i<4; i++, col++) { // dirEnum
                 drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
-                col++;
             }
         })();
 
@@ -134,10 +129,8 @@ const atlas = (function(){
 
         // draw pacman directions
         (function(){
-            let col=1;
-            for (let i=0; i<4; i++) {
+            for (let col=1, i=0; i<4; i++, col+=2) {
                 drawPacCells(row,col,i);
-                col+=2;
             }
         })();
 
@@ -148,10 +141,8 @@ const atlas = (function(){
         };
         row++;
         (function(){
-            let col=0;
-            for (let i=0; i<4; i++) {
+            for (let col=0, i=0; i<4; i++, col+=3) {
                 drawMsPacCells(row,col,i);
-                col+=3;
             }
         })();
 
@@ -162,19 +153,15 @@ const atlas = (function(){
         };
         row++;
         (function(){
-            let col=0;
-            for (let i=0; i<4; i++) {
+            for (let col=0, i=0; i<4; i++, col+=3) {
                 drawCookieCells(row,col,i);
-                col+=3;
             }
         })();
 
         const drawMonsterCells = function(row,color) {
-            let col=0;
-            for (let i=0; i<4; i++) { // dirEnum
-                for (let f=0; f<2; f++) { // frame
+            for (let col=0, i=0; i<4; i++) { // dirEnum
+                for (let f=0; f<2; f++, col++) { // frame
                     drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
-                    col++;
                 }
             }
         };
@@ -190,10 +177,8 @@ const atlas = (function(){
 
         row++;
         (function(){
-            let col = 0;
-            for (let i=0; i<4; i++) { // dirEnum
+            for (let col=0, i=0; i<4; i++, col++) { // dirEnum
                 drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
-                col++;
             }
         })();
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
@@ -202,9 +187,8 @@ const atlas = (function(){
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
 
         const drawOttoCells = function(row,col,dir) {
-            for (let i=0; i<4; i++) { // frame
+            for (let i=0; i<4; i++, col++) { // frame
                 drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, i); }, row, col);
-                col++;
             }
         };
         row++;
@@ -245,9 +229,8 @@ const atlas = (function(){
         }, row, 1);
 
         const drawMsOttoCells = function(row,col,dir) {
-            for (let i=0; i<4; i++) { // frame
+            for (let i=0; i<4; i++, col++) { // frame
                 drawAtCell(function(x,y) { drawMsOttoSprite(ctx, x,y, dir, i); }, row, col);
-                col++;
             }
         };
         row++;

@@ -151,20 +151,20 @@ let clearCheats, backupCheats, restoreCheats;
     clearCheats = function() {
         pacman.invincible = false;
         pacman.ai = false;
-        for (i=0; i<5; i++) {
-            actors[i].isDrawPath = false;
-            actors[i].isDrawTarget = false;
+        for (const a of actors) {
+            a.isDrawPath = false;
+            a.isDrawTarget = false;
         }
         executive.setUpdatesPerSecond(60);
     };
 
-    let i, invincible, ai, isDrawPath, isDrawTarget;
-    isDrawPath = {};
-    isDrawTarget = {};
+    let invincible, ai;
+    const isDrawPath = {};
+    const isDrawTarget = {};
     backupCheats = function() {
         invincible = pacman.invincible;
         ai = pacman.ai;
-        for (i=0; i<5; i++) {
+        for (let i=0; i<5; i++) {
             isDrawPath[i] = actors[i].isDrawPath;
             isDrawTarget[i] = actors[i].isDrawTarget;
         }
@@ -172,7 +172,7 @@ let clearCheats, backupCheats, restoreCheats;
     restoreCheats = function() {
         pacman.invincible = invincible;
         pacman.ai = ai;
-        for (i=0; i<5; i++) {
+        for (let i=0; i<5; i++) {
             actors[i].isDrawPath = isDrawPath[i];
             actors[i].isDrawTarget = isDrawTarget[i];
         }

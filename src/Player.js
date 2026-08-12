@@ -1,3 +1,16 @@
+
+// REFERENCED GLOBALS:
+// import { Actor } from './Actor.js';
+// import { newChildObject } from './inherit.js';
+// import { map } from './maps.js';
+// import { setDirFromEnum, isNextTileFloor, getOpenTiles, getTurnClosestToTarget } from './direction.js';
+// import { turboMode, level, gameMode, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, addScore } from './game.js';
+// import { energizer } from './energizer.js';
+// import { STEP_PACMAN_FRIGHT, STEP_PACMAN } from './Actor.js';
+// import { state, deadState } from './states.js';
+// import { ghostReleaser } from './ghostReleaser.js';
+// import { fruit } from './fruit.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Player is the controllable character (Pac-Man)
 

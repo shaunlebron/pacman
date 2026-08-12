@@ -1,3 +1,20 @@
+
+// REFERENCED GLOBALS:
+// import { scriptState, state, switchState, readyNewState } from './states.js';
+// import { newChildObject } from './inherit.js';
+// import { map, setMap, mapPacman, mapMsPacman1 } from './maps.js';
+// import { renderer } from './renderers.js';
+// import { gameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, backupCheats, restoreCheats } from './game.js';
+// import { energizer } from './energizer.js';
+// import { actors, pacman, blinky, pinky, inky } from './actors.js';
+// import { Ghost, GHOST_OUTSIDE, GHOST_GOING_HOME } from './Ghost.js';
+// import { Player } from './Player.js';
+// import { Actor } from './Actor.js';
+// import { DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN } from './direction.js';
+// import { drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawOttoSprite, drawGhostSprite, drawMonsterSprite, drawCherry, drawStrawberry, drawOrange, drawApple, drawMelon, drawGalaxian, drawBell, drawKey, drawPretzel, drawPear, drawBanana, drawCookie, drawCookieFlash } from './sprites.js';
+// import { tileSize } from './Map.js';
+// import { atlas } from './atlas.js';
+
 ////////////////////////////////////////////////
 // Cutscenes
 //

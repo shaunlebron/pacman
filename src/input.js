@@ -1,3 +1,14 @@
+
+// REFERENCED GLOBALS:
+// import { vcr, VCR_NONE, VCR_RECORD } from './vcr.js';
+// import { state, learnState, newGameState, playState, readyNewState, readyRestartState, switchState, finishState, deadState, overState } from './states.js';
+// import { pacman, blinky, pinky, inky, clyde } from './actors.js';
+// import { DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN } from './direction.js';
+// import { practiceMode, turboMode, setTurboMode } from './game.js';
+// import { executive } from './executive.js';
+// import { inGameMenu } from './inGameMenu.js';
+// import { hud } from './hud.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Input
 // (Handles all key presses and touches)

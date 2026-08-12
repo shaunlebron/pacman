@@ -1,3 +1,12 @@
+
+// REFERENCED GLOBALS:
+// import { pacman, actors } from './actors.js';
+// import { executive } from './executive.js';
+// import { renderer } from './renderers.js';
+// import { atlas } from './atlas.js';
+// import { state, setState } from './states.js';
+// import { drawCookiemanSprite } from './sprites.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Game
 

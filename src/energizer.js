@@ -1,3 +1,8 @@
+
+// REFERENCED GLOBALS:
+// import { level, addScore } from './game.js';
+// import { ghosts } from './actors.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Energizer
 

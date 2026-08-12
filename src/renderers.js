@@ -1,3 +1,23 @@
+
+// REFERENCED GLOBALS:
+// import { tileSize, midTile } from './Map.js';
+// import { atlas } from './atlas.js';
+// import { newChildObject } from './inherit.js';
+// import { actors, ghosts, pacman, blinky, inky } from './actors.js';
+// import { energizer } from './energizer.js';
+// import { vcr } from './vcr.js';
+// import { executive } from './executive.js';
+// import { inGameMenu } from './inGameMenu.js';
+// import { hud } from './hud.js';
+// import { actorPathLength } from './targets.js';
+// import { getOpenTiles, getTurnClosestToTarget, setDirFromEnum, DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT } from './direction.js';
+// import { GHOST_EATEN, GHOST_GOING_HOME, GHOST_ENTERING_HOME } from './Ghost.js';
+// import { gameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, extraLives, practiceMode, getScore, getHighScore } from './game.js';
+// import { fruit } from './fruit.js';
+// import { state, finishState } from './states.js';
+// import { getSpriteFuncFromFruitName, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawOttoSprite, drawDeadOttoSprite, drawExclamationPoint } from './sprites.js';
+// import { map } from './maps.js';
+
 //////////////////////////////////////////////////////////////
 // Renderers
 

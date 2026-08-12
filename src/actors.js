@@ -1,3 +1,10 @@
+
+// REFERENCED GLOBALS:
+// import { Ghost, GHOST_OUTSIDE, GHOST_PACING_HOME, GHOST_LEAVING_HOME } from './Ghost.js';
+// import { Player } from './Player.js';
+// import { tileSize, midTile } from './Map.js';
+// import { DIR_LEFT, DIR_DOWN, DIR_UP } from './direction.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // create all the actors
 

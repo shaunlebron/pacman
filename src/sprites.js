@@ -1,3 +1,8 @@
+
+// REFERENCED GLOBALS:
+// import { DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN } from './direction.js';
+// import { tileSize } from './Map.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Sprites
 // (sprites are created using canvas paths)

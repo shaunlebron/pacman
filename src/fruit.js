@@ -1,3 +1,12 @@
+
+// REFERENCED GLOBALS:
+// import { newChildObject } from './inherit.js';
+// import { map } from './maps.js';
+// import { tileSize, midTile } from './Map.js';
+// import { pacman } from './actors.js';
+// import { getRandomInt } from './random.js';
+// import { addScore, gameMode, GAME_PACMAN, level } from './game.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Fruit
 

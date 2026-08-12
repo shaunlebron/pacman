@@ -1,3 +1,9 @@
+
+// REFERENCED GLOBALS:
+// import { tileSize } from './Map.js';
+// import { newChildObject } from './inherit.js';
+// import { canvas, renderScale, getDevicePixelRatio, mapMargin } from './renderers.js';
+
 var getPointerPos = function(evt) {
     var obj = canvas;
     var top = 0;

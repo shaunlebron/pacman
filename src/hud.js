@@ -1,4 +1,9 @@
 
+// REFERENCED GLOBALS:
+// import { inGameMenu } from './inGameMenu.js';
+// import { vcr } from './vcr.js';
+// import { state, playState, newGameState, readyNewState, readyRestartState, finishState, deadState, overState } from './states.js';
+
 var hud = (function(){
 
     var on = false;

@@ -1,3 +1,10 @@
+
+// REFERENCED GLOBALS:
+// import { level } from './game.js';
+// import { blinky, clyde } from './actors.js';
+// import { GHOST_PACING_HOME } from './Ghost.js';
+// import { map } from './maps.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Elroy Timer
 

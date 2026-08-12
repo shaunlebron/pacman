@@ -1,3 +1,14 @@
+
+// REFERENCED GLOBALS:
+// import { tileSize } from './Map.js';
+// import { mapWidth, mapHeight, mapPad, renderer } from './renderers.js';
+// import { Button } from './Button.js';
+// import { Menu } from './Menu.js';
+// import { vcr } from './vcr.js';
+// import { practiceMode, turboMode, setTurboMode, level, setLevel, clearCheats } from './game.js';
+// import { switchState, homeState, readyNewState } from './states.js';
+// import { blinky, pacman, ghosts } from './actors.js';
+
 ////////////////////////////////////////////////////
 // In-Game Menu
 var inGameMenu = (function() {

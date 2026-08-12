@@ -1,3 +1,12 @@
+
+// REFERENCED GLOBALS:
+// import { midTile, tileSize } from './Map.js';
+// import { pacman, blinky, pinky, inky, clyde } from './actors.js';
+// import { ghostCommander, GHOST_CMD_CHASE } from './ghostCommander.js';
+// import { renderer } from './renderers.js';
+// import { DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT } from './direction.js';
+// import { GHOST_GOING_HOME } from './Ghost.js';
+
 /////////////////////////////////////////////////////////////////
 // Targetting
 // (a definition for each actor's targetting algorithm and a draw function to visualize it)

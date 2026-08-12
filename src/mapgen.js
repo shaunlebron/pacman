@@ -1,3 +1,10 @@
+
+// REFERENCED GLOBALS:
+// import { getRandomInt } from './random.js';
+// import { rotateAboutFace, DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT } from './direction.js';
+// import { Map } from './Map.js';
+// import { rgbString, hslToRgb } from './colors.js';
+
 var mapgen = (function(){
 
     var shuffle = function(list) {

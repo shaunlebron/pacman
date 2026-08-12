@@ -1,3 +1,7 @@
+
+// REFERENCED GLOBALS:
+// import { map } from './maps.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Directions
 // (variables and utility functions for representing actor heading direction)

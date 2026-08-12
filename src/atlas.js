@@ -1,4 +1,10 @@
 
+// REFERENCED GLOBALS:
+// import { renderScale } from './renderers.js';
+// import { DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT } from './direction.js';
+// import { blinky, pinky, inky, clyde } from './actors.js';
+// import { drawGhostSprite, drawMonsterSprite, drawOttoSprite, drawMsOttoSprite, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawCherry, drawStrawberry, drawOrange, drawApple, drawMelon, drawGalaxian, drawBell, drawKey, drawPretzel, drawPear, drawBanana, drawCookie, drawCookieFlash, drawSnail, drawPacPoints, drawMsPacPoints } from './sprites.js';
+
 var atlas = (function(){
 
     var canvas,ctx;

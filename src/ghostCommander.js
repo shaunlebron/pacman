@@ -1,3 +1,9 @@
+
+// REFERENCED GLOBALS:
+// import { level, gameMode, GAME_PACMAN } from './game.js';
+// import { energizer } from './energizer.js';
+// import { ghosts } from './actors.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander
 // Determines when a ghost should be chasing a target

@@ -1,3 +1,28 @@
+
+// REFERENCED GLOBALS:
+// import { newChildObject } from './inherit.js';
+// import { renderer, mapWidth, mapHeight } from './renderers.js';
+// import { executive } from './executive.js';
+// import { map, setMap, mapLearn, mapPacman, setNextMsPacMap, setNextCookieMap, getLevelAct, getActColor, getActRange, getMsPacActColor, getCookieActColor, mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4 } from './maps.js';
+// import { tileSize, midTile } from './Map.js';
+// import { actors, ghosts, pacman, blinky, pinky, inky, clyde } from './actors.js';
+// import { ghostCommander, GHOST_CMD_CHASE } from './ghostCommander.js';
+// import { ghostReleaser } from './ghostReleaser.js';
+// import { elroyTimer } from './elroyTimer.js';
+// import { energizer } from './energizer.js';
+// import { fruit, setFruitFromGameMode } from './fruit.js';
+// import { vcr, VCR_NONE, VCR_RECORD } from './vcr.js';
+// import { galagaStars } from './galagaStars.js';
+// import { gameMode, setGameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, setLevel, extraLives, setExtraLives, practiceMode, setPracticeMode, turboMode, setTurboMode, getScore, getHighScore, setScore, addScore, getGameName, getGameDescription, getGhostNames, getGhostDrawFunc, getPlayerDrawFunc, clearCheats, backupCheats, restoreCheats, saveGame, loadGame } from './game.js';
+// import { GHOST_EATEN, GHOST_GOING_HOME, GHOST_ENTERING_HOME, GHOST_PACING_HOME, GHOST_LEAVING_HOME, GHOST_OUTSIDE } from './Ghost.js';
+// import { DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN } from './direction.js';
+// import { cutscenes } from './cutscenes.js';
+// import { Button } from './Button.js';
+// import { Menu } from './Menu.js';
+// import { atlas } from './atlas.js';
+// import { getSpriteFuncFromFruitName, drawHeartSprite, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawOttoSprite, drawMsOttoSprite, drawDeadOttoSprite, drawExclamationPoint } from './sprites.js';
+// import { STEP_PACMAN, STEP_GHOST } from './Actor.js';
+
 //////////////////////////////////////////////////////////////////////////////////////
 // States
 // (main loops for each state of the game)

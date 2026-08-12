@@ -1,3 +1,11 @@
+
+// REFERENCED GLOBALS:
+// import { inGameMenu } from './inGameMenu.js';
+// import { hud } from './hud.js';
+// import { state } from './states.js';
+// import { renderer } from './renderers.js';
+// import { vcr } from './vcr.js';
+
 var executive = (function(){
 
     var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)

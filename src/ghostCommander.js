@@ -12,12 +12,12 @@
 const GHOST_CMD_CHASE = 0;
 const GHOST_CMD_SCATTER = 1;
 
-var ghostCommander = (function() {
+const ghostCommander = (function() {
 
     // determine if there is to be a new command issued at the given time
-    var getNewCommand = (function(){
-        var t;
-        var times = [{},{},{}];
+    const getNewCommand = (function(){
+        let t;
+        const times = [{},{},{}];
         // level 1
         times[0][t=7*60] = GHOST_CMD_CHASE;
         times[0][t+=20*60] = GHOST_CMD_SCATTER;
@@ -44,14 +44,14 @@ var ghostCommander = (function() {
         times[2][t+=1] = GHOST_CMD_CHASE;
 
         return function(frame) {
-            var i;
+            let i;
             if (level == 1)
                 i = 0;
             else if (level >= 2 && level <= 4)
                 i = 1;
             else
                 i = 2;
-            var newCmd = times[i][frame];
+            const newCmd = times[i][frame];
 
             if (gameMode == GAME_PACMAN) {
                 return newCmd;
@@ -64,20 +64,20 @@ var ghostCommander = (function() {
         };
     })();
 
-    var frame;   // current frame
-    var command; // last command given to ghosts
+    let frame;   // current frame
+    let command; // last command given to ghosts
 
-    var savedFrame = {};
-    var savedCommand = {};
+    const savedFrame = {};
+    const savedCommand = {};
 
     // save state at time t
-    var save = function(t) {
+    const save = function(t) {
         savedFrame[t] = frame;
         savedCommand[t] = command;
     };
 
     // load state at time t
-    var load = function(t) {
+    const load = function(t) {
         frame = savedFrame[t];
         command = savedCommand[t];
     };
@@ -90,9 +90,8 @@ var ghostCommander = (function() {
             frame = 0;
         },
         update: function() {
-            var newCmd;
             if (!energizer.isActive()) {
-                newCmd = getNewCommand(frame);
+                const newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     command = newCmd;
                     for (i=0; i<4; i++)

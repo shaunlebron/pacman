@@ -16,24 +16,24 @@ const DIR_LEFT = 1;
 const DIR_DOWN = 2;
 const DIR_RIGHT = 3;
 
-var getClockwiseAngleFromTop = function(dirEnum) {
+const getClockwiseAngleFromTop = function(dirEnum) {
     return -dirEnum*Math.PI/2;
 };
 
-var rotateLeft = function(dirEnum) {
+const rotateLeft = function(dirEnum) {
     return (dirEnum+1)%4;
 };
 
-var rotateRight = function(dirEnum) {
+const rotateRight = function(dirEnum) {
     return (dirEnum+3)%4;
 };
 
-var rotateAboutFace = function(dirEnum) {
+const rotateAboutFace = function(dirEnum) {
     return (dirEnum+2)%4;
 };
 
 // get direction enum from a direction vector
-var getEnumFromDir = function(dir) {
+const getEnumFromDir = function(dir) {
     if (dir.x==-1) return DIR_LEFT;
     if (dir.x==1) return DIR_RIGHT;
     if (dir.y==-1) return DIR_UP;
@@ -41,7 +41,7 @@ var getEnumFromDir = function(dir) {
 };
 
 // set direction vector from a direction enum
-var setDirFromEnum = function(dir,dirEnum) {
+const setDirFromEnum = function(dir,dirEnum) {
     if (dirEnum == DIR_UP)         { dir.x = 0; dir.y =-1; }
     else if (dirEnum == DIR_RIGHT)  { dir.x =1; dir.y = 0; }
     else if (dirEnum == DIR_DOWN)  { dir.x = 0; dir.y = 1; }
@@ -49,14 +49,13 @@ var setDirFromEnum = function(dir,dirEnum) {
 };
 
 // return the direction of the open, surrounding tile closest to our target
-var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
+const getTurnClosestToTarget = function(tile,targetTile,openTiles) {
 
-    var dx,dy,dist;                      // variables used for euclidean distance
-    var minDist = Infinity;              // variable used for finding minimum distance path
-    var dir = {};
-    var dirEnum = 0;
-    var i;
-    for (i=0; i<4; i++) {
+    let dx,dy,dist;                      // variables used for euclidean distance
+    let minDist = Infinity;              // variable used for finding minimum distance path
+    const dir = {};
+    let dirEnum = 0;
+    for (let i=0; i<4; i++) {
         if (openTiles[i]) {
             setDirFromEnum(dir,i);
             dx = dir.x + tile.x - targetTile.x;
@@ -72,21 +71,20 @@ var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
 };
 
 // retrieve four surrounding tiles and indicate whether they are open
-var getOpenTiles = function(tile,dirEnum) {
+const getOpenTiles = function(tile,dirEnum) {
 
     // get open passages
-    var openTiles = {};
+    const openTiles = {};
     openTiles[DIR_UP] =    map.isFloorTile(tile.x, tile.y-1);
     openTiles[DIR_RIGHT] = map.isFloorTile(tile.x+1, tile.y);
     openTiles[DIR_DOWN] =  map.isFloorTile(tile.x, tile.y+1);
     openTiles[DIR_LEFT] =  map.isFloorTile(tile.x-1, tile.y);
 
-    var numOpenTiles = 0;
-    var i;
+    let numOpenTiles = 0;
     if (dirEnum != undefined) {
 
         // count number of open tiles
-        for (i=0; i<4; i++)
+        for (let i=0; i<4; i++)
             if (openTiles[i])
                 numOpenTiles++;
 

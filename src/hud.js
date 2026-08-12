@@ -4,14 +4,14 @@
 // import { vcr } from './vcr.js';
 // import { state, playState, newGameState, readyNewState, readyRestartState, finishState, deadState, overState } from './states.js';
 
-var hud = (function(){
+const hud = (function(){
 
-    var on = false;
+    let on = false;
 
     return {
 
         update: function() {
-            var valid = this.isValidState();
+            const valid = this.isValidState();
             if (valid != on) {
                 on = valid;
                 if (on) {

@@ -28,21 +28,21 @@ const VCR_REWIND = 1;
 const VCR_FORWARD = 2;
 const VCR_PAUSE = 3;
 
-var vcr = (function() {
+const vcr = (function() {
 
-    var mode;
+    let mode;
 
     // controls whether to increment the frame before recording.
-    var initialized;
+    let initialized;
 
     // current time
-    var time;
+    let time;
 
     // tracking speed
-    var speedIndex;
-    var speeds = [-8,-4,-2,-1,0,1,2,4,8];
-    var speedCount = speeds.length;
-    var speedColors = [
+    let speedIndex;
+    const speeds = [-8,-4,-2,-1,0,1,2,4,8];
+    const speedCount = speeds.length;
+    const speedColors = [
         "rgba(255,255,0,0.25)",
         "rgba(255,255,0,0.20)",
         "rgba(255,255,0,0.15)",
@@ -62,7 +62,7 @@ var vcr = (function() {
     // For example: 
     //   nextFrames = speedPrints[speedIndex];
     //   prevFrames = speedPrints[speedCount-1-speedIndex];
-    var speedPrints = [
+    const speedPrints = [
         18,// -8x
         13,// -4x
         8, // -2x
@@ -76,7 +76,7 @@ var vcr = (function() {
 
     // The distance between each footprint used in the rewind/forward blurring.
     // Step size grows when seeking speed increases to show emphasize time dilation.
-    var speedPrintStep = [
+    const speedPrintStep = [
         6,  // -8x
         5,  // -4x
         4,  // -2x
@@ -90,17 +90,17 @@ var vcr = (function() {
 
     // current frame associated with current time
     // (frame == time % maxFrames)
-    var frame;
+    let frame;
 
     // maximum number of frames to record
-    var maxFrames = 15*60;
+    const maxFrames = 15*60;
 
     // rolling bounds of the recorded frames
-    var startFrame; // can't rewind past this
-    var stopFrame; // can't replay past this
+    let startFrame; // can't rewind past this
+    let stopFrame; // can't replay past this
 
     // reset the VCR
-    var reset = function() {
+    const reset = function() {
         time = 0;
         frame = 0;
         startFrame = 0;
@@ -110,9 +110,8 @@ var vcr = (function() {
     };
 
     // load the state of the current time
-    var load = function() {
-        var i;
-        for (i=0; i<5; i++) {
+    const load = function() {
+        for (let i=0; i<5; i++) {
             actors[i].load(frame);
         }
         elroyTimer.load(frame);
@@ -131,9 +130,8 @@ var vcr = (function() {
     };
 
     // save the state of the current time
-    var save = function() {
-        var i;
-        for (i=0; i<5; i++) {
+    const save = function() {
+        for (let i=0; i<5; i++) {
             actors[i].save(frame);
         }
         elroyTimer.save(frame);
@@ -153,13 +151,13 @@ var vcr = (function() {
 
     // erase any states after the current time
     // (only necessary for saves that do interpolation)
-    var eraseFuture = function() {
+    const eraseFuture = function() {
         map.eraseFuture(time);
         stopFrame = frame;
     };
 
     // increment or decrement the time
-    var addTime = function(dt) {
+    const addTime = function(dt) {
         time += dt;
         frame = (frame+dt)%maxFrames;
         if (frame < 0) {
@@ -168,26 +166,26 @@ var vcr = (function() {
     };
 
     // measures the modular distance if increasing from x0 to x1 on our circular frame buffer.
-    var getForwardDist = function(x0,x1) {
+    const getForwardDist = function(x0,x1) {
         return (x0 <= x1) ? x1-x0 : x1+maxFrames-x0;
     };
 
     // caps the time increment or decrement to prevent going over our rolling bounds.
-    var capSeekTime = function(dt) {
+    const capSeekTime = function(dt) {
         if (!initialized || dt == 0) {
             return 0;
         }
-        var maxForward = getForwardDist(frame,stopFrame);
-        var maxReverse = getForwardDist(startFrame,frame);
+        const maxForward = getForwardDist(frame,stopFrame);
+        const maxReverse = getForwardDist(startFrame,frame);
         return (dt > 0) ? Math.min(maxForward,dt) : Math.max(-maxReverse,dt);
     };
 
-    var init = function() {
+    const init = function() {
         mode = VCR_NONE;
     };
 
     // seek to the state at the given relative time difference.
-    var seek = function(dt) {
+    const seek = function(dt) {
         if (dt == undefined) {
             dt = speeds[speedIndex];
         }
@@ -198,7 +196,7 @@ var vcr = (function() {
     };
 
     // record a new state.
-    var record = function() {
+    const record = function() {
         if (initialized) {
             addTime(1);
             if (frame == startFrame) {
@@ -212,7 +210,7 @@ var vcr = (function() {
         save();
     };
 
-    var startRecording = function() {
+    const startRecording = function() {
         mode = VCR_RECORD;
         initialized = false;
         eraseFuture();
@@ -224,11 +222,11 @@ var vcr = (function() {
         seekToggleBtn.setText();
     };
 
-    var refreshSeekDisplay = function() {
+    const refreshSeekDisplay = function() {
         seekToggleBtn.setText(speeds[speedIndex]+"x");
     };
 
-    var startSeeking = function() {
+    const startSeeking = function() {
         speedIndex = 3;
         updateMode();
         seekUpBtn.enable();
@@ -237,7 +235,7 @@ var vcr = (function() {
         refreshSeekDisplay();
     };
 
-    var nextSpeed = function(di) {
+    const nextSpeed = function(di) {
         if (speeds[speedIndex+di] != undefined) {
             speedIndex = speedIndex+di;
         }
@@ -245,27 +243,27 @@ var vcr = (function() {
         refreshSeekDisplay();
     };
 
-    var x,y,w,h;
-    var pad = 5;
-    x = mapWidth+1;
-    h = 25;
-    w = 25;
-    y = mapHeight/2-h/2;
-    var seekUpBtn = new Button(x,y-h-pad,w,h,
+    const pad = 5;
+    const x = mapWidth+1;
+    const h = 25;
+    const w = 25;
+    const y = mapHeight/2-h/2;
+
+    const seekUpBtn = new Button(x,y-h-pad,w,h,
         function() {
             nextSpeed(1);
         });
     seekUpBtn.setIcon(function(ctx,x,y,frame) {
         drawUpSymbol(ctx,x,y,"#FFF");
     });
-    var seekDownBtn = new Button(x,y+h+pad,w,h,
+    const seekDownBtn = new Button(x,y+h+pad,w,h,
         function() {
             nextSpeed(-1);
         });
     seekDownBtn.setIcon(function(ctx,x,y,frame) {
         drawDownSymbol(ctx,x,y,"#FFF");
     });
-    var seekToggleBtn = new ToggleButton(x,y,w,h,
+    const seekToggleBtn = new ToggleButton(x,y,w,h,
         function() {
             return mode != VCR_RECORD;
         },
@@ -276,7 +274,7 @@ var vcr = (function() {
         drawRewindSymbol(ctx,x,y,"#FFF");
     });
     seekToggleBtn.setFont((tileSize-1)+"px ArcadeR", "#FFF");
-    var slowBtn = new ToggleButton(-w-pad-1,y,w,h,
+    const slowBtn = new ToggleButton(-w-pad-1,y,w,h,
         function() {
             return executive.getFramePeriod() == 1000/15;
         },
@@ -287,7 +285,7 @@ var vcr = (function() {
         atlas.drawSnail(ctx,x,y,1);
     });
 
-    var onFramePeriodChange = function() {
+    const onFramePeriodChange = function() {
         if (slowBtn.isOn()) {
             slowBtn.setIcon(function(ctx,x,y) {
                 atlas.drawSnail(ctx,x,y,0);
@@ -300,7 +298,7 @@ var vcr = (function() {
         }
     };
 
-    var onHudEnable = function() {
+    const onHudEnable = function() {
         if (practiceMode) {
             if (mode == VCR_NONE || mode == VCR_RECORD) {
                 seekUpBtn.disable();
@@ -315,7 +313,7 @@ var vcr = (function() {
         }
     };
 
-    var onHudDisable = function() {
+    const onHudDisable = function() {
         if (practiceMode) {
             seekUpBtn.disable();
             seekDownBtn.disable();
@@ -324,7 +322,7 @@ var vcr = (function() {
         }
     };
 
-    var isValidState = function() {
+    const isValidState = function() {
         return (
             !inGameMenu.isOpen() && (
             state == playState ||
@@ -332,7 +330,7 @@ var vcr = (function() {
             state == deadState));
     };
 
-    var draw = function(ctx) {
+    const draw = function(ctx) {
         if (practiceMode) {
             if (isValidState() && vcr.getMode() != VCR_RECORD) {
                 // change the hue to reflect speed
@@ -354,8 +352,8 @@ var vcr = (function() {
         }
     };
 
-    var updateMode = function() {
-        var speed = speeds[speedIndex];
+    const updateMode = function() {
+        const speed = speeds[speedIndex];
         if (speed == 0) {
             mode = VCR_PAUSE;
         }
@@ -396,21 +394,21 @@ var vcr = (function() {
             }
 
             // determine start frame
-            var maxReverse = getForwardDist(startFrame,frame);
-            var start = (frame - Math.min(maxReverse,speedPrints[speedIndex])) % maxFrames;
+            const maxReverse = getForwardDist(startFrame,frame);
+            const start = (frame - Math.min(maxReverse,speedPrints[speedIndex])) % maxFrames;
             if (start < 0) {
                 start += maxFrames;
             }
 
             // determine end frame
-            var maxForward = getForwardDist(frame,stopFrame);
-            var end = (frame + Math.min(maxForward,speedPrints[speedCount-1-speedIndex])) % maxFrames;
+            const maxForward = getForwardDist(frame,stopFrame);
+            const end = (frame + Math.min(maxForward,speedPrints[speedCount-1-speedIndex])) % maxFrames;
 
-            var backupAlpha = ctx.globalAlpha;
+            const backupAlpha = ctx.globalAlpha;
             ctx.globalAlpha = 0.2;
             
-            var t = start;
-            var step = speedPrintStep[speedIndex];
+            let t = start;
+            const step = speedPrintStep[speedIndex];
             if (start > end) {
                 for (; t<maxFrames; t+=step) {
                     callback(t);

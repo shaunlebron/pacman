@@ -19,7 +19,7 @@
 // Cutscenes
 //
 
-var playCutScene = function(cutScene, nextState) {
+const playCutScene = function(cutScene, nextState) {
 
     // redraw map buffer with fruit list but no map structure
     setMap(undefined);
@@ -29,7 +29,7 @@ var playCutScene = function(cutScene, nextState) {
     switchState(cutScene, 60);
 };
 
-var pacmanCutscene1 = newChildObject(scriptState, {
+const pacmanCutscene1 = newChildObject(scriptState, {
     init: function() {
         scriptState.init.call(this);
 
@@ -67,8 +67,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
         // Blinky chases Pac-Man
         0: {
             update: function() {
-                var j;
-                for (j=0; j<2; j++) {
+                for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
                 }
@@ -107,8 +106,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
                 };
             },
             update: function() {
-                var j;
-                for (j=0; j<2; j++) {
+                for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
                 }
@@ -120,7 +118,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
                 renderer.beginMapClip();
                 renderer.drawGhost(blinky);
                 renderer.renderFunc(function(ctx) {
-                    var frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
+                    const frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
                     if (frame == 3) {
                         frame = 1;
                     }
@@ -149,16 +147,16 @@ var pacmanCutscene1 = newChildObject(scriptState, {
     },
 });
 
-var mspacmanCutscene1 = (function() {
+const mspacmanCutscene1 = (function() {
 
     // create new players pac and mspac for this scene
-    var pac = new Player();
-    var mspac = new Player();
+    const pac = new Player();
+    const mspac = new Player();
 
     // draws pac or mspac
-    var drawPlayer = function(ctx,player) {
-        var frame = player.getAnimFrame();
-        var func;
+    const drawPlayer = function(ctx,player) {
+        const frame = player.getAnimFrame();
+        let func;
         if (player == pac) {
             func = gameMode == GAME_MSPACMAN ? atlas.drawPacmanSprite : atlas.drawOttoSprite;
         }
@@ -169,7 +167,7 @@ var mspacmanCutscene1 = (function() {
     };
 
     // draws all actors
-    var draw = function() {
+    const draw = function() {
         renderer.blitMap();
         renderer.beginMapClip();
         renderer.renderFunc(function(ctx) {
@@ -182,9 +180,8 @@ var mspacmanCutscene1 = (function() {
     };
 
     // updates all actors
-    var update = function() {
-        var j;
-        for (j=0; j<2; j++) {
+    const update = function() {
+        for (let j=0; j<2; j++) {
             pac.update(j);
             mspac.update(j);
             inky.update(j);
@@ -196,7 +193,7 @@ var mspacmanCutscene1 = (function() {
         pinky.frames++;
     };
 
-    var exit = function() {
+    const exit = function() {
         // disable custom steps
         delete inky.getNumSteps;
         delete pinky.getNumSteps;
@@ -291,36 +288,36 @@ var mspacmanCutscene1 = (function() {
             300: (function(){
 
                 // bounce animation when ghosts bump heads
-                var inkyBounceX =  [ 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
-                var inkyBounceY =  [-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1];
-                var pinkyBounceX = [ 0, 0, 0, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0];
-                var pinkyBounceY = [ 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
-                var inkyBounceFrame = 0;
-                var pinkyBounceFrame = 0;
-                var inkyBounceFrameLen = inkyBounceX.length;
-                var pinkyBounceFrameLen = pinkyBounceX.length;
+                const inkyBounceX =  [ 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+                const inkyBounceY =  [-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1];
+                const pinkyBounceX = [ 0, 0, 0, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0];
+                const pinkyBounceY = [ 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
+                let inkyBounceFrame = 0;
+                let pinkyBounceFrame = 0;
+                const inkyBounceFrameLen = inkyBounceX.length;
+                const pinkyBounceFrameLen = pinkyBounceX.length;
 
                 // ramp animation for players
-                var rampX = [0, 1, 1, 1, 1, 0, 0];
-                var rampY = [0, 0,-1,-1,-1, 0, 0];
-                var rampFrame = 0;
-                var rampFrameLen = rampX.length;
+                const rampX = [0, 1, 1, 1, 1, 0, 0];
+                const rampY = [0, 0,-1,-1,-1, 0, 0];
+                let rampFrame = 0;
+                const rampFrameLen = rampX.length;
 
                 // climbing
-                var climbFrame = 0;
+                let climbFrame = 0;
 
                 // meeting
-                var meetFrame = 0;
+                let meetFrame = 0;
 
-                var ghostMode;
-                var GHOST_RUN = 0;
-                var GHOST_BUMP = 1;
+                let ghostMode;
+                const GHOST_RUN = 0;
+                const GHOST_BUMP = 1;
 
-                var playerMode;
-                var PLAYER_RUN = 0;
-                var PLAYER_RAMP = 1;
-                var PLAYER_CLIMB = 2;
-                var PLAYER_MEET = 3;
+                let playerMode;
+                const PLAYER_RUN = 0;
+                const PLAYER_RAMP = 1;
+                const PLAYER_CLIMB = 2;
+                const PLAYER_MEET = 3;
                      
                 return {
                     init: function() {
@@ -352,11 +349,10 @@ var mspacmanCutscene1 = (function() {
                         };
                     },
                     update: function() {
-                        var j;
 
                         // update players
                         if (playerMode == PLAYER_RUN) {
-                            for (j=0; j<2; j++) {
+                            for (let j=0; j<2; j++) {
                                 pac.update(j);
                                 mspac.update(j);
                             }
@@ -389,7 +385,7 @@ var mspacmanCutscene1 = (function() {
                                 pac.setDir(DIR_UP);
                             }
                             else {
-                                for (j=0; j<2; j++) {
+                                for (let j=0; j<2; j++) {
                                     pac.update(j);
                                     mspac.update(j);
                                 }
@@ -427,7 +423,7 @@ var mspacmanCutscene1 = (function() {
 
                         // update ghosts
                         if (ghostMode == GHOST_RUN) {
-                            for (j=0; j<2; j++) {
+                            for (let j=0; j<2; j++) {
                                 inky.update(j);
                                 pinky.update(j);
                             }
@@ -483,16 +479,16 @@ var mspacmanCutscene1 = (function() {
     }); // returned object
 })(); // mspacCutscene1
 
-var mspacmanCutscene2 = (function() {
+const mspacmanCutscene2 = (function() {
 
     // create new players pac and mspac for this scene
-    var pac = new Player();
-    var mspac = new Player();
+    const pac = new Player();
+    const mspac = new Player();
 
     // draws pac or mspac
-    var drawPlayer = function(ctx,player) {
-        var frame = player.getAnimFrame();
-        var func;
+    const drawPlayer = function(ctx,player) {
+        const frame = player.getAnimFrame();
+        let func;
         if (player == pac) {
             func = gameMode == GAME_MSPACMAN ? atlas.drawPacmanSprite : atlas.drawOttoSprite;
         }
@@ -503,7 +499,7 @@ var mspacmanCutscene2 = (function() {
     };
 
     // draws all actors
-    var draw = function() {
+    const draw = function() {
         renderer.blitMap();
         renderer.beginMapClip();
         renderer.renderFunc(function(ctx) {
@@ -514,9 +510,8 @@ var mspacmanCutscene2 = (function() {
     };
 
     // updates all actors
-    var update = function() {
-        var j;
-        for (j=0; j<7; j++) {
+    const update = function() {
+        for (let j=0; j<7; j++) {
             pac.update(j);
             mspac.update(j);
         }
@@ -524,15 +519,15 @@ var mspacmanCutscene2 = (function() {
         mspac.frames++;
     };
 
-    var exit = function() {
+    const exit = function() {
         // exit to next level
         restoreCheats();
         switchState(mspacmanCutscene2.nextState, 60);
     };
 
-    var getChaseSteps = function() { return 3; };
-    var getFleeSteps = function() { return "32"[this.frames%2]; };
-    var getDartSteps = function() { return 7; };
+    const getChaseSteps = function() { return 3; };
+    const getFleeSteps = function() { return "32"[this.frames%2]; };
+    const getDartSteps = function() { return 7; };
 
     return newChildObject(scriptState, {
 
@@ -633,7 +628,7 @@ var mspacmanCutscene2 = (function() {
     }); // returned object
 })(); // mspacCutscene2
 
-var cookieCutscene1 = newChildObject(scriptState, {
+const cookieCutscene1 = newChildObject(scriptState, {
 
     init: function() {
         scriptState.init.call(this);
@@ -672,8 +667,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
         // Blinky chases Pac-Man
         0: {
             update: function() {
-                var j;
-                for (j=0; j<2; j++) {
+                for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
                 }
@@ -712,8 +706,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
                 };
             },
             update: function() {
-                var j;
-                for (j=0; j<2; j++) {
+                for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
                 }
@@ -725,11 +718,11 @@ var cookieCutscene1 = newChildObject(scriptState, {
                 renderer.beginMapClip();
                 renderer.drawPlayer();
                 renderer.renderFunc(function(ctx) {
-                    var y = blinky.getBounceY(blinky.pixel.x, blinky.pixel.y, DIR_RIGHT);
-                    var x = blinky.pixel.x;
+                    const y = blinky.getBounceY(blinky.pixel.x, blinky.pixel.y, DIR_RIGHT);
+                    const x = blinky.pixel.x;
                     ctx.save();
                     ctx.translate(x,y);
-                    var s = 16/6;
+                    const s = 16/6;
                     ctx.scale(s,s);
                     drawCookie(ctx,0,0);
                     ctx.restore();
@@ -757,7 +750,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
     },
 });
 
-var cookieCutscene2 = (function() {
+const cookieCutscene2 = (function() {
 
     /*
     NOTE:
@@ -767,17 +760,17 @@ var cookieCutscene2 = (function() {
     */
 
     // create new players pac and mspac for this scene
-    var pac = new Ghost();
+    const pac = new Ghost();
     pac.scared = true;
     pac.mode = GHOST_OUTSIDE;
-    var mspac = new Player();
+    const mspac = new Player();
 
     // draws pac or mspac
-    var drawPlayer = function(ctx,player) {
-        var frame = player.getAnimFrame();
-        var func;
+    const drawPlayer = function(ctx,player) {
+        const frame = player.getAnimFrame();
+        let func;
         if (player == pac) {
-            var y = player.getBounceY(player.pixel.x, player.pixel.y, player.dirEnum);
+            const y = player.getBounceY(player.pixel.x, player.pixel.y, player.dirEnum);
             atlas.drawMuppetSprite(ctx, player.pixel.x, y, 0, player.dirEnum, true, false);
         }
         else if (player == mspac) {
@@ -786,7 +779,7 @@ var cookieCutscene2 = (function() {
     };
 
     // draws all actors
-    var draw = function() {
+    const draw = function() {
         renderer.blitMap();
         renderer.beginMapClip();
         renderer.renderFunc(function(ctx) {
@@ -799,9 +792,8 @@ var cookieCutscene2 = (function() {
     };
 
     // updates all actors
-    var update = function() {
-        var j;
-        for (j=0; j<2; j++) {
+    const update = function() {
+        for (let j=0; j<2; j++) {
             pac.update(j);
             mspac.update(j);
             inky.update(j);
@@ -813,7 +805,7 @@ var cookieCutscene2 = (function() {
         pinky.frames++;
     };
 
-    var exit = function() {
+    const exit = function() {
         // disable custom steps
         delete inky.getNumSteps;
         delete pinky.getNumSteps;
@@ -908,36 +900,36 @@ var cookieCutscene2 = (function() {
             300: (function(){
 
                 // bounce animation when ghosts bump heads
-                var inkyBounceX =  [ 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
-                var inkyBounceY =  [-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1];
-                var pinkyBounceX = [ 0, 0, 0, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0];
-                var pinkyBounceY = [ 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
-                var inkyBounceFrame = 0;
-                var pinkyBounceFrame = 0;
-                var inkyBounceFrameLen = inkyBounceX.length;
-                var pinkyBounceFrameLen = pinkyBounceX.length;
+                const inkyBounceX =  [ 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+                const inkyBounceY =  [-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1];
+                const pinkyBounceX = [ 0, 0, 0, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0];
+                const pinkyBounceY = [ 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
+                let inkyBounceFrame = 0;
+                let pinkyBounceFrame = 0;
+                const inkyBounceFrameLen = inkyBounceX.length;
+                const pinkyBounceFrameLen = pinkyBounceX.length;
 
                 // ramp animation for players
-                var rampX = [0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1];
-                var rampY = [0, 0,-1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0];
-                var rampFrame = 0;
-                var rampFrameLen = rampX.length;
+                const rampX = [0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1];
+                const rampY = [0, 0,-1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0];
+                let rampFrame = 0;
+                const rampFrameLen = rampX.length;
 
                 // climbing
-                var climbFrame = 0;
+                let climbFrame = 0;
 
                 // meeting
-                var meetFrame = 0;
+                let meetFrame = 0;
 
-                var ghostMode;
-                var GHOST_RUN = 0;
-                var GHOST_BUMP = 1;
+                let ghostMode;
+                const GHOST_RUN = 0;
+                const GHOST_BUMP = 1;
 
-                var playerMode;
-                var PLAYER_RUN = 0;
-                var PLAYER_RAMP = 1;
-                var PLAYER_CLIMB = 2;
-                var PLAYER_MEET = 3;
+                let playerMode;
+                const PLAYER_RUN = 0;
+                const PLAYER_RAMP = 1;
+                const PLAYER_CLIMB = 2;
+                const PLAYER_MEET = 3;
                      
                 return {
                     init: function() {
@@ -969,11 +961,10 @@ var cookieCutscene2 = (function() {
                         };
                     },
                     update: function() {
-                        var j;
 
                         // update players
                         if (playerMode == PLAYER_RUN) {
-                            for (j=0; j<2; j++) {
+                            for (let j=0; j<2; j++) {
                                 pac.update(j);
                                 mspac.update(j);
                             }
@@ -1001,7 +992,7 @@ var cookieCutscene2 = (function() {
                                 mspac.setDir(DIR_UP);
                             }
                             else {
-                                for (j=0; j<2; j++) {
+                                for (let j=0; j<2; j++) {
                                     mspac.update(j);
                                 }
                             }
@@ -1031,7 +1022,7 @@ var cookieCutscene2 = (function() {
 
                         // update ghosts
                         if (ghostMode == GHOST_RUN) {
-                            for (j=0; j<2; j++) {
+                            for (let j=0; j<2; j++) {
                                 inky.update(j);
                                 pinky.update(j);
                             }
@@ -1089,17 +1080,17 @@ var cookieCutscene2 = (function() {
     }); // returned object
 })(); // mspacCutscene1
 
-var cutscenes = [
+const cutscenes = [
     [pacmanCutscene1], // GAME_PACMAN
     [mspacmanCutscene1, mspacmanCutscene2], // GAME_MSPACMAN
     [cookieCutscene1, cookieCutscene2], // GAME_COOKIE
     [mspacmanCutscene1, mspacmanCutscene2], // GAME_OTTO
 ];
 
-var isInCutScene = function() {
-    var scenes = cutscenes[gameMode];
-    var i,len = scenes.length;
-    for (i=0; i<len; i++) {
+const isInCutScene = function() {
+    const scenes = cutscenes[gameMode];
+    const len = scenes.length;
+    for (let i=0; i<len; i++) {
         if (state == scenes[i]) {
             return true;
         }
@@ -1108,7 +1099,7 @@ var isInCutScene = function() {
 };
 
 // TODO: no cutscene after board 17 (last one after completing board 17)
-var triggerCutsceneAtEndLevel = function() {
+const triggerCutsceneAtEndLevel = function() {
     if (gameMode == GAME_PACMAN) {
         if (level == 2) {
             playCutScene(pacmanCutscene1, readyNewState);

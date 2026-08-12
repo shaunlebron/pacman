@@ -16,21 +16,21 @@ window.addEventListener("load", function() {
     initRenderer();
     atlas.create();
     initSwipe();
-	var anchor = window.location.hash.substring(1);
-	if (anchor == "learn") {
-		switchState(learnState);
-	}
-	else if (anchor == "cheat_pac" || anchor == "cheat_mspac") {
-		setGameMode((anchor == "cheat_pac") ? GAME_PACMAN : GAME_MSPACMAN);
-		setPracticeMode(true);
+    const anchor = window.location.hash.substring(1);
+    if (anchor == "learn") {
+        switchState(learnState);
+    }
+    else if (anchor == "cheat_pac" || anchor == "cheat_mspac") {
+        setGameMode((anchor == "cheat_pac") ? GAME_PACMAN : GAME_MSPACMAN);
+        setPracticeMode(true);
         switchState(newGameState);
-		for (var i=0; i<4; i++) {
-			ghosts[i].isDrawTarget = true;
-			ghosts[i].isDrawPath = true;
-		}
-	}
-	else {
-		switchState(homeState);
-	}
+        for (let i=0; i<4; i++) {
+            ghosts[i].isDrawTarget = true;
+            ghosts[i].isDrawPath = true;
+        }
+    }
+    else {
+        switchState(homeState);
+    }
     executive.init();
 });

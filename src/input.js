@@ -16,7 +16,7 @@
 (function(){
 
     // A Key Listener class (each key maps to an array of callbacks)
-    var KeyEventListener = function() {
+    const KeyEventListener = function() {
         this.listeners = {};
     };
     KeyEventListener.prototype = {
@@ -28,14 +28,13 @@
             });
         },
         exec: function(key, e) {
-            var keyListeners = this.listeners[key];
+            const keyListeners = this.listeners[key];
             if (!keyListeners) {
                 return;
             }
-            var i,l;
-            var numListeners = keyListeners.length;
-            for (i=0; i<numListeners; i++) {
-                l = keyListeners[i];
+            const numListeners = keyListeners.length;
+            for (let i=0; i<numListeners; i++) {
+                const l = keyListeners[i];
                 if (!l.isActive || l.isActive()) {
                     e.preventDefault();
                     if (l.callback()) { // do not propagate keys if returns true
@@ -47,19 +46,19 @@
     };
 
     // declare key event listeners
-    var keyDownListeners = new KeyEventListener();
-    var keyUpListeners = new KeyEventListener();
+    const keyDownListeners = new KeyEventListener();
+    const keyUpListeners = new KeyEventListener();
 
     // helper functions for adding custom key listeners
-    var addKeyDown = function(key,callback,isActive) { keyDownListeners.add(key,callback,isActive); };
-    var addKeyUp   = function(key,callback,isActive) { keyUpListeners.add(key,callback,isActive); };
+    const addKeyDown = function(key,callback,isActive) { keyDownListeners.add(key,callback,isActive); };
+    const addKeyUp   = function(key,callback,isActive) { keyUpListeners.add(key,callback,isActive); };
 
     // boolean states of each key
-    var keyStates = {};
+    const keyStates = {};
 
     // hook my key listeners to the window's listeners
     window.addEventListener("keydown", function(e) {
-        var key = (e||window.event).keyCode;
+        const key = (e||window.event).keyCode;
 
         // only execute at first press event
         if (!keyStates[key]) {
@@ -68,7 +67,7 @@
         }
     });
     window.addEventListener("keyup",function(e) {
-        var key = (e||window.event).keyCode;
+        const key = (e||window.event).keyCode;
 
         keyStates[key] = false;
         keyUpListeners.exec(key, e);
@@ -77,48 +76,48 @@
 
     // key enumerations
 
-    var KEY_ENTER = 13;
-    var KEY_ESC = 27;
+    const KEY_ENTER = 13;
+    const KEY_ESC = 27;
 
-    var KEY_LEFT = 37;
-    var KEY_RIGHT = 39;
-    var KEY_UP = 38;
-    var KEY_DOWN = 40;
+    const KEY_LEFT = 37;
+    const KEY_RIGHT = 39;
+    const KEY_UP = 38;
+    const KEY_DOWN = 40;
 
-    var KEY_SHIFT = 16;
-    var KEY_CTRL = 17;
-    var KEY_ALT = 18;
+    const KEY_SHIFT = 16;
+    const KEY_CTRL = 17;
+    const KEY_ALT = 18;
 
-    var KEY_SPACE = 32;
+    const KEY_SPACE = 32;
 
-    var KEY_M = 77;
-    var KEY_N = 78;
-    var KEY_Q = 81;
-    var KEY_W = 87;
-    var KEY_E = 69;
-    var KEY_R = 82;
-    var KEY_T = 84;
+    const KEY_M = 77;
+    const KEY_N = 78;
+    const KEY_Q = 81;
+    const KEY_W = 87;
+    const KEY_E = 69;
+    const KEY_R = 82;
+    const KEY_T = 84;
 
-    var KEY_A = 65;
-    var KEY_S = 83;
-    var KEY_D = 68;
-    var KEY_F = 70;
-    var KEY_G = 71;
+    const KEY_A = 65;
+    const KEY_S = 83;
+    const KEY_D = 68;
+    const KEY_F = 70;
+    const KEY_G = 71;
 
-    var KEY_I = 73;
-    var KEY_O = 79;
-    var KEY_P = 80;
+    const KEY_I = 73;
+    const KEY_O = 79;
+    const KEY_P = 80;
 
-    var KEY_1 = 49;
-    var KEY_2 = 50;
+    const KEY_1 = 49;
+    const KEY_2 = 50;
 
-    var KEY_END = 35;
+    const KEY_END = 35;
 
     // Custom Key Listeners
 
     // Menu Navigation Keys
-    var menu;
-    var isInMenu = function() {
+    let menu;
+    const isInMenu = function() {
         menu = (state.getMenu && state.getMenu());
         if (!menu && inGameMenu.isOpen()) {
             menu = inGameMenu.getMenu();
@@ -127,19 +126,19 @@
     };
     addKeyDown(KEY_ESC,   function(){ menu.backButton ? menu.backButton.onclick():0; return true; }, isInMenu);
     addKeyDown(KEY_ENTER, function(){ menu.clickCurrentOption(); }, isInMenu);
-    var isMenuKeysAllowed = function() {
-        var menu = isInMenu();
+    const isMenuKeysAllowed = function() {
+        const menu = isInMenu();
         return menu && !menu.noArrowKeys;
     };
     addKeyDown(KEY_UP,    function(){ menu.selectPrevOption(); }, isMenuKeysAllowed);
     addKeyDown(KEY_DOWN,  function(){ menu.selectNextOption(); }, isMenuKeysAllowed);
-    var isInGameMenuButtonClickable = function() {
+    const isInGameMenuButtonClickable = function() {
         return hud.isValidState() && !inGameMenu.isOpen();
     };
     addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
     // Move Pac-Man
-    var isPlayState = function() { return !vcr.isSeeking() && (state == learnState || state == newGameState || state == playState || state == readyNewState || state == readyRestartState); };
+    const isPlayState = function() { return !vcr.isSeeking() && (state == learnState || state == newGameState || state == playState || state == readyNewState || state == readyRestartState); };
     addKeyDown(KEY_LEFT,  function() { pacman.setInputDir(DIR_LEFT); },  isPlayState);
     addKeyDown(KEY_RIGHT, function() { pacman.setInputDir(DIR_RIGHT); }, isPlayState);
     addKeyDown(KEY_UP,    function() { pacman.setInputDir(DIR_UP); },    isPlayState);
@@ -150,7 +149,7 @@
     addKeyUp  (KEY_DOWN,  function() { pacman.clearInputDir(DIR_DOWN); },  isPlayState);
 
     // Slow-Motion
-    var isPracticeMode = function() { return isPlayState() && practiceMode; };
+    const isPracticeMode = function() { return isPlayState() && practiceMode; };
     //isPracticeMode = function() { return true; };
     addKeyDown(KEY_1, function() { executive.setUpdatesPerSecond(30); }, isPracticeMode);
     addKeyDown(KEY_2,  function() { executive.setUpdatesPerSecond(15); }, isPracticeMode);
@@ -158,17 +157,17 @@
     addKeyUp  (KEY_2,  function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
 
     // Toggle VCR
-    var canSeek = function() { return !isInMenu() && vcr.getMode() != VCR_NONE; };
+    const canSeek = function() { return !isInMenu() && vcr.getMode() != VCR_NONE; };
     addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   canSeek);
     addKeyUp  (KEY_SHIFT, function() { vcr.startRecording(); }, canSeek);
 
     // Adjust VCR seeking
-    var isSeekState = function() { return vcr.isSeeking(); };
+    const isSeekState = function() { return vcr.isSeeking(); };
     addKeyDown(KEY_UP,   function() { vcr.nextSpeed(1); },  isSeekState);
     addKeyDown(KEY_DOWN, function() { vcr.nextSpeed(-1); }, isSeekState);
 
     // Skip Level
-    var canSkip = function() {
+    const canSkip = function() {
         return isPracticeMode() && 
             (state == newGameState ||
             state == readyNewState ||
@@ -204,22 +203,22 @@
 
 })();
 
-var initSwipe = function() {
+const initSwipe = function() {
 
     // position of anchor
-    var x = 0;
-    var y = 0;
+    let x = 0;
+    let y = 0;
 
     // current distance from anchor
-    var dx = 0;
-    var dy = 0;
+    let dx = 0;
+    let dy = 0;
 
     // minimum distance from anchor before direction is registered
-    var r = 4;
+    const r = 4;
     
-    var touchStart = function(event) {
+    const touchStart = function(event) {
         event.preventDefault();
-        var fingerCount = event.touches.length;
+        const fingerCount = event.touches.length;
         if (fingerCount == 1) {
 
             // commit new anchor
@@ -232,9 +231,9 @@ var initSwipe = function() {
         }
     };
 
-    var touchMove = function(event) {
+    const touchMove = function(event) {
         event.preventDefault();
-        var fingerCount = event.touches.length;
+        const fingerCount = event.touches.length;
         if (fingerCount == 1) {
 
             // get current distance from anchor
@@ -262,16 +261,16 @@ var initSwipe = function() {
         }
     };
 
-    var touchEnd = function(event) {
+    const touchEnd = function(event) {
         event.preventDefault();
     };
 
-    var touchCancel = function(event) {
+    const touchCancel = function(event) {
         event.preventDefault();
         x=y=dx=dy=0;
     };
 
-    var touchTap = function(event) {
+    const touchTap = function(event) {
         // tap to clear input directions
         pacman.clearInputDir(undefined);
     };

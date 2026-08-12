@@ -10,7 +10,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Fruit
 
-var BaseFruit = function() {
+const BaseFruit = function() {
     // pixel
     this.pixel = {x:0, y:0};
 
@@ -69,7 +69,7 @@ BaseFruit.prototype = {
 
 // PAC-MAN FRUIT
 
-var PacFruit = function() {
+const PacFruit = function() {
     BaseFruit.call(this);
     this.fruits = [
         {name:'cherry',     points:100},
@@ -126,15 +126,14 @@ PacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
     buildFruitHistory: function() {
         this.fruitHistory = {};
-        var i;
-        for (i=1; i<= level; i++) {
+        for (let i=1; i<= level; i++) {
             this.fruitHistory[i] = this.fruits[this.getFruitIndexFromLevel(i)];
         }
     },
 
     initiate: function() {
-        var x = 13;
-        var y = 20;
+        const x = 13;
+        const y = 20;
         this.pixel.x = tileSize*(1+x)-1;
         this.pixel.y = tileSize*y + midTile.y;
         this.framesLeft = 60*this.duration;
@@ -169,11 +168,11 @@ PacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
 // MS. PAC-MAN FRUIT
 
-var PATH_ENTER = 0;
-var PATH_PEN = 1;
-var PATH_EXIT = 2;
+const PATH_ENTER = 0;
+const PATH_PEN = 1;
+const PATH_EXIT = 2;
 
-var MsPacFruit = function() {
+const MsPacFruit = function() {
     BaseFruit.call(this);
     this.fruits = [
         {name: 'cherry',     points: 100},
@@ -225,8 +224,7 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
     buildFruitHistory: function() {
         this.fruitHistory = {};
-        var i;
-        for (i=1; i<= Math.max(level,7); i++) {
+        for (let i=1; i<= Math.max(level,7); i++) {
             this.fruitHistory[i] = this.fruits[i-1];
         }
     },
@@ -249,8 +247,8 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
         if (this.shouldRandomizeFruit()) {
             this.setCurrentFruit(getRandomInt(0,6));
         }
-        var entrances = map.fruitPaths.entrances;
-        var e = entrances[getRandomInt(0,entrances.length-1)];
+        const {entrances} = map.fruitPaths;
+        const e = entrances[getRandomInt(0,entrances.length-1)];
         this.initiatePath(e.path);
         this.pathMode = PATH_ENTER;
         this.pixel.x = e.start.x;
@@ -262,15 +260,15 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
     },
 
     bounceFrames: (function(){
-        var U = { dx:0, dy:-1 };
-        var D = { dx:0, dy:1 };
-        var L = { dx:-1, dy:0 };
-        var R = { dx:1, dy:0 };
-        var UL = { dx:-1, dy:-1 };
-        var UR = { dx:1, dy:-1 };
-        var DL = { dx:-1, dy:1 };
-        var DR = { dx:1, dy:1 };
-        var Z = { dx:0, dy:0 };
+        const U = { dx:0, dy:-1 };
+        const D = { dx:0, dy:1 };
+        const L = { dx:-1, dy:0 };
+        const R = { dx:1, dy:0 };
+        const UL = { dx:-1, dy:-1 };
+        const UR = { dx:1, dy:-1 };
+        const DL = { dx:-1, dy:1 };
+        const DR = { dx:1, dy:1 };
+        const Z = { dx:0, dy:0 };
 
         // A 16-frame animation for moving 8 pixels either up, down, left, or right.
         return {
@@ -282,8 +280,8 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
     })(),
 
     move: function() {
-        var p = this.path[Math.floor(this.frame/16)]; // get current path frame
-        var b = this.bounceFrames[p][this.frame%16]; // get current bounce animation frame
+        const p = this.path[Math.floor(this.frame/16)]; // get current path frame
+        const b = this.bounceFrames[p][this.frame%16]; // get current bounce animation frame
         this.pixel.x += b.dx;
         this.pixel.y += b.dy;
         this.frame++;
@@ -296,8 +294,8 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
         }
         else if (this.pathMode == PATH_PEN) {
             this.pathMode = PATH_EXIT;
-            var exits = map.fruitPaths.exits;
-            var e = exits[getRandomInt(0,exits.length-1)];
+            const {exits} = map.fruitPaths;
+            const e = exits[getRandomInt(0,exits.length-1)];
             this.initiatePath(e.path);
         }
         else if (this.pathMode == PATH_EXIT) {
@@ -340,10 +338,10 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
     },
 });
 
-var fruit;
-var setFruitFromGameMode = (function() {
-    var pacfruit = new PacFruit();
-    var mspacfruit = new MsPacFruit();
+let fruit;
+const setFruitFromGameMode = (function() {
+    const pacfruit = new PacFruit();
+    const mspacfruit = new MsPacFruit();
     fruit = pacfruit;
     return function() {
         if (gameMode == GAME_PACMAN) {

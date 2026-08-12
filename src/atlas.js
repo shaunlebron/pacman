@@ -5,29 +5,29 @@
 // import { blinky, pinky, inky, clyde } from './actors.js';
 // import { drawGhostSprite, drawMonsterSprite, drawOttoSprite, drawMsOttoSprite, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawCherry, drawStrawberry, drawOrange, drawApple, drawMelon, drawGalaxian, drawBell, drawKey, drawPretzel, drawPear, drawBanana, drawCookie, drawCookieFlash, drawSnail, drawPacPoints, drawMsPacPoints } from './sprites.js';
 
-var atlas = (function(){
+const atlas = (function(){
 
-    var canvas,ctx;
+    let canvas,ctx;
     const size = 22;
     const cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
     const rows = 22;
 
-    var creates = 0;
+    let creates = 0;
 
-    var drawGrid = function() {
+    const drawGrid = function() {
         // draw grid overlay
-        var canvas = document.getElementById('gridcanvas');
+        const canvas = document.getElementById('gridcanvas');
         if (!canvas) {
             return;
         }
-        var w = size*cols*renderScale;
-        var h = size*rows*renderScale;
+        const w = size*cols*renderScale;
+        const h = size*rows*renderScale;
         canvas.width = w;
         canvas.height = h;
-        var ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
         ctx.clearRect(0,0,w,h);
-        var x,y;
-        var step = size*renderScale;
+        let x,y;
+        const step = size*renderScale;
         ctx.beginPath();
         for (x=0; x<=w; x+=step) {
             ctx.moveTo(x,0);
@@ -43,7 +43,7 @@ var atlas = (function(){
         ctx.stroke();
     };
 
-    var create = function() {
+    const create = function() {
         drawGrid();
         canvas = document.getElementById('atlas');
         ctx = canvas.getContext("2d");
@@ -53,8 +53,8 @@ var atlas = (function(){
         canvas.style.position = "absolute";
         */
 
-        var w = size*cols*renderScale;
-        var h = size*rows*renderScale;
+        const w = size*cols*renderScale;
+        const h = size*rows*renderScale;
         canvas.width = w;
         canvas.height = h;
 
@@ -67,13 +67,13 @@ var atlas = (function(){
         ctx.clearRect(0,0,w,h);
         ctx.scale(renderScale,renderScale);
 
-        var drawAtCell = function(f,row,col) {
-            var x = col*size + size/2;
-            var y = row*size + size/2;
+        const drawAtCell = function(f,row,col) {
+            const x = col*size + size/2;
+            const y = row*size + size/2;
             f(x,y);
         };
 
-        var row = 0;
+        let row = 0;
         drawAtCell(function(x,y) { drawCherry(ctx,x,y); },      row,0);
         drawAtCell(function(x,y) { drawStrawberry(ctx,x,y); },  row,1);
         drawAtCell(function(x,y) { drawOrange(ctx,x,y); },      row,2);
@@ -88,11 +88,10 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawCookie(ctx,x,y); },      row,11);
         drawAtCell(function(x,y) { drawCookieFlash(ctx,x,y); },      row,12);
 
-        var drawGhostCells = function(row,color) {
-            var i,f;
-            var col = 0;
-            for (i=0; i<4; i++) { // dirEnum
-                for (f=0; f<2; f++) { // frame
+        const drawGhostCells = function(row,color) {
+            let col = 0;
+            for (let i=0; i<4; i++) { // dirEnum
+                for (let f=0; f<2; f++) { // frame
                     drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
                     col++;
                 }
@@ -111,9 +110,8 @@ var atlas = (function(){
         row++;
         // draw disembodied eyes
         (function(){
-            var i;
-            var col = 0;
-            for (i=0; i<4; i++) { // dirEnum
+            let col = 0;
+            for (let i=0; i<4; i++) { // dirEnum
                 drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
                 col++;
             }
@@ -125,7 +123,7 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
 
-        var drawPacCells = function(row,col,dir) {
+        const drawPacCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/6); }, row, col);
             drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/3); }, row, col+1);
         };
@@ -136,49 +134,45 @@ var atlas = (function(){
 
         // draw pacman directions
         (function(){
-            var i;
-            var col=1;
-            for (i=0; i<4; i++) {
+            let col=1;
+            for (let i=0; i<4; i++) {
                 drawPacCells(row,col,i);
                 col+=2;
             }
         })();
 
-        var drawMsPacCells = function(row,col,dir) {
+        const drawMsPacCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 0); }, row, col);
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 1); }, row, col+1);
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 2); }, row, col+2);
         };
         row++;
         (function(){
-            var i;
-            var col=0;
-            for (i=0; i<4; i++) {
+            let col=0;
+            for (let i=0; i<4; i++) {
                 drawMsPacCells(row,col,i);
                 col+=3;
             }
         })();
 
-        var drawCookieCells = function(row,col,dir) {
+        const drawCookieCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 0, true); }, row, col);
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 1, true); }, row, col+1);
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 2, true); }, row, col+2);
         };
         row++;
         (function(){
-            var i;
-            var col=0;
-            for (i=0; i<4; i++) {
+            let col=0;
+            for (let i=0; i<4; i++) {
                 drawCookieCells(row,col,i);
                 col+=3;
             }
         })();
 
-        var drawMonsterCells = function(row,color) {
-            var i,f;
-            var col=0;
-            for (i=0; i<4; i++) { // dirEnum
-                for (f=0; f<2; f++) { // frame
+        const drawMonsterCells = function(row,color) {
+            let col=0;
+            for (let i=0; i<4; i++) { // dirEnum
+                for (let f=0; f<2; f++) { // frame
                     drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
                     col++;
                 }
@@ -196,9 +190,8 @@ var atlas = (function(){
 
         row++;
         (function(){
-            var i;
-            var col = 0;
-            for (i=0; i<4; i++) { // dirEnum
+            let col = 0;
+            for (let i=0; i<4; i++) { // dirEnum
                 drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
                 col++;
             }
@@ -208,9 +201,8 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
 
-        var drawOttoCells = function(row,col,dir) {
-            var i;
-            for (i=0; i<4; i++) { // frame
+        const drawOttoCells = function(row,col,dir) {
+            for (let i=0; i<4; i++) { // frame
                 drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, i); }, row, col);
                 col++;
             }
@@ -252,9 +244,8 @@ var atlas = (function(){
             drawSnail(ctx,x,y, "#FFF");
         }, row, 1);
 
-        var drawMsOttoCells = function(row,col,dir) {
-            var i;
-            for (i=0; i<4; i++) { // frame
+        const drawMsOttoCells = function(row,col,dir) {
+            for (let i=0; i<4; i++) { // frame
                 drawAtCell(function(x,y) { drawMsOttoSprite(ctx, x,y, dir, i); }, row, col);
                 col++;
             }
@@ -268,16 +259,16 @@ var atlas = (function(){
 
     };
 
-    var copyCellTo = function(row, col, destCtx, x, y,display) {
-        var sx = col*size*renderScale;
-        var sy = row*size*renderScale;
-        var sw = renderScale*size;
-        var sh = renderScale*size;
+    const copyCellTo = function(row, col, destCtx, x, y,display) {
+        const sx = col*size*renderScale;
+        const sy = row*size*renderScale;
+        const sw = renderScale*size;
+        const sh = renderScale*size;
 
-        var dx = x - size/2;
-        var dy = y - size/2;
-        var dw = size;
-        var dh = size;
+        const dx = x - size/2;
+        const dy = y - size/2;
+        const dw = size;
+        const dh = size;
 
         if (display) {
             console.log(sx,sy,sw,sh,dw,dy,dw,dh);
@@ -286,9 +277,9 @@ var atlas = (function(){
         destCtx.drawImage(canvas,sx,sy,sw,sh,dx,dy,dw,dh);
     };
 
-    var copyGhostPoints = function(destCtx,x,y,points) {
-        var row = 16;
-        var col = {
+    const copyGhostPoints = function(destCtx,x,y,points) {
+        const row = 16;
+        const col = {
             200: 0,
             400: 1,
             800: 2,
@@ -299,9 +290,9 @@ var atlas = (function(){
         }
     };
 
-    var copyPacFruitPoints = function(destCtx,x,y,points) {
-        var row = 16;
-        var col = {
+    const copyPacFruitPoints = function(destCtx,x,y,points) {
+        const row = 16;
+        const col = {
             100: 4,
             300: 5,
             500: 6,
@@ -316,9 +307,9 @@ var atlas = (function(){
         }
     };
 
-    var copyMsPacFruitPoints = function(destCtx,x,y,points) {
-        var row = 17;
-        var col = {
+    const copyMsPacFruitPoints = function(destCtx,x,y,points) {
+        const row = 17;
+        const col = {
             100: 0,
             200: 1,
             500: 2,
@@ -332,8 +323,8 @@ var atlas = (function(){
         }
     };
 
-    var copyGhostSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
-        var row,col;
+    const copyGhostSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        let row,col;
         if (eyes_only) {
             row = 5;
             col = dirEnum;
@@ -365,7 +356,7 @@ var atlas = (function(){
         copyCellTo(row, col, destCtx, x, y);
     };
 
-    var copyMuppetSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+    const copyMuppetSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
         if (scared) {
             if (flash) {
                 copyFruitSprite(destCtx,x,y,"cookieface");
@@ -379,8 +370,8 @@ var atlas = (function(){
         }
     };
 
-    var copyMonsterSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
-        var row,col;
+    const copyMonsterSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        let row,col;
         if (eyes_only) {
             row = 13;
             col = dirEnum;
@@ -412,8 +403,8 @@ var atlas = (function(){
         copyCellTo(row, col, destCtx, x, y);
     };
 
-    var copyOttoSprite = function(destCtx,x,y,dirEnum,frame) {
-        var col,row;
+    const copyOttoSprite = function(destCtx,x,y,dirEnum,frame) {
+        let col,row;
         if (dirEnum == DIR_UP) {
             col = frame;
             row = 14;
@@ -433,8 +424,8 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyMsOttoSprite = function(destCtx,x,y,dirEnum,frame) {
-        var col,row;
+    const copyMsOttoSprite = function(destCtx,x,y,dirEnum,frame) {
+        let col,row;
         if (dirEnum == DIR_UP) {
             col = frame;
             row = 19;
@@ -454,15 +445,15 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copySnail = function(destCtx,x,y,frame) {
-        var row = 18;
-        var col = frame;
+    const copySnail = function(destCtx,x,y,frame) {
+        const row = 18;
+        const col = frame;
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
-        var row = 6;
-        var col;
+    const copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
+        const row = 6;
+        let col;
         if (frame == 0) {
             col = 0;
         }
@@ -472,23 +463,23 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyMsPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
+    const copyMsPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
         // TODO: determine row, col
         //copyCellTo(row,col,destCtx,x,y);
-        var row = 7;
-        var col = dirEnum*3+frame;
+        const row = 7;
+        const col = dirEnum*3+frame;
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyCookiemanSprite = function(destCtx,x,y,dirEnum,frame) {
-        var row = 8;
-        var col = dirEnum*3+frame;
+    const copyCookiemanSprite = function(destCtx,x,y,dirEnum,frame) {
+        const row = 8;
+        const col = dirEnum*3+frame;
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyFruitSprite = function(destCtx,x,y,name) {
-        var row = 0;
-        var col = {
+    const copyFruitSprite = function(destCtx,x,y,name) {
+        const row = 0;
+        const col = {
             "cherry": 0,
             "strawberry": 1,
             "orange": 2,

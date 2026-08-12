@@ -16,17 +16,17 @@
 //          hello: function() { return "world"; },
 //      };
 
-var newChildObject = function(parentObj, newObj) {
+const newChildObject = function(parentObj, newObj) {
 
     // equivalent to: var resultObj = { __proto__: parentObj };
-    var x = function(){};
+    const x = function(){};
     x.prototype = parentObj;
-    var resultObj = new x();
+    const resultObj = new x();
 
     // store new members in resultObj
     if (newObj) {
-        var hasProp = {}.hasOwnProperty;
-        for (var name in newObj) {
+        const hasProp = {}.hasOwnProperty;
+        for (const name in newObj) {
             if (hasProp.call(newObj, name)) {
                 resultObj[name] = newObj[name];
             }

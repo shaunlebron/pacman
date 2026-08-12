@@ -9,7 +9,7 @@
 
 // Determines when to release ghosts from home
 
-var ghostReleaser = (function(){
+const ghostReleaser = (function(){
     // two separate counter modes for releasing the ghosts from home
     const MODE_PERSONAL = 0;
     const MODE_GLOBAL = 1;
@@ -20,10 +20,10 @@ var ghostReleaser = (function(){
     const CLYDE = 3;
 
     // this is how many frames it will take to release a ghost after pacman stops eating
-    var getTimeoutLimit = function() { return (level < 5) ? 4*60 : 3*60; };
+    const getTimeoutLimit = function() { return (level < 5) ? 4*60 : 3*60; };
 
     // dot limits used in personal mode to release ghost after # of dots have been eaten
-    var personalDotLimit = {};
+    const personalDotLimit = {};
     personalDotLimit[PINKY] = function() { return 0; };
     personalDotLimit[INKY] = function() { return (level==1) ? 30 : 0; };
     personalDotLimit[CLYDE] = function() {
@@ -33,22 +33,22 @@ var ghostReleaser = (function(){
     };
 
     // dot limits used in global mode to release ghost after # of dots have been eaten
-    var globalDotLimit = {};
+    const globalDotLimit = {};
     globalDotLimit[PINKY] = 7;
     globalDotLimit[INKY] = 17;
     globalDotLimit[CLYDE] = 32;
 
-    var framesSinceLastDot; // frames elapsed since last dot was eaten
-    var mode;               // personal or global dot counter mode
-    var ghostCounts = {};   // personal dot counts for each ghost
-    var globalCount;        // global dot count
+    let framesSinceLastDot; // frames elapsed since last dot was eaten
+    let mode;               // personal or global dot counter mode
+    const ghostCounts = {};   // personal dot counts for each ghost
+    let globalCount;        // global dot count
 
-    var savedGlobalCount = {};
-    var savedFramesSinceLastDot = {};
-    var savedGhostCounts = {};
+    const savedGlobalCount = {};
+    const savedFramesSinceLastDot = {};
+    const savedGhostCounts = {};
 
     // save state at time t
-    var save = function(t) {
+    const save = function(t) {
         savedFramesSinceLastDot[t] = framesSinceLastDot;
         if (mode == MODE_GLOBAL) {
             savedGlobalCount[t] = globalCount;
@@ -62,7 +62,7 @@ var ghostReleaser = (function(){
     };
 
     // load state at time t
-    var load = function(t) {
+    const load = function(t) {
         framesSinceLastDot = savedFramesSinceLastDot[t];
         if (mode == MODE_GLOBAL) {
             globalCount = savedGlobalCount[t];
@@ -90,15 +90,13 @@ var ghostReleaser = (function(){
             globalCount = 0;
         },
         onDotEat: function() {
-            var i;
-
             framesSinceLastDot = 0;
 
             if (mode == MODE_GLOBAL) {
                 globalCount++;
             }
             else {
-                for (i=1;i<4;i++) {
+                for (let i=1;i<4;i++) {
                     if (ghosts[i].mode == GHOST_PACING_HOME) {
                         ghostCounts[i]++;
                         break;
@@ -108,12 +106,10 @@ var ghostReleaser = (function(){
 
         },
         update: function() {
-            var g;
-
             // use personal dot counter
             if (mode == MODE_PERSONAL) {
-                for (i=1;i<4;i++) {
-                    g = ghosts[i];
+                for (let i=1;i<4;i++) {
+                    const g = ghosts[i];
                     if (g.mode == GHOST_PACING_HOME) {
                         if (ghostCounts[i] >= personalDotLimit[i]()) {
                             g.leaveHome();
@@ -144,8 +140,8 @@ var ghostReleaser = (function(){
             // also use time since last dot was eaten
             if (framesSinceLastDot > getTimeoutLimit()) {
                 framesSinceLastDot = 0;
-                for (i=1;i<4;i++) {
-                    g = ghosts[i];
+                for (let i=1;i<4;i++) {
+                    const g = ghosts[i];
                     if (g.mode == GHOST_PACING_HOME) {
                         g.leaveHome();
                         break;

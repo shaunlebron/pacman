@@ -25,12 +25,12 @@
 // to enable to different front-end displays for Pac-Man.
 
 // list of available renderers
-var renderer_list;
+let renderer_list;
 
 // current renderer
-var renderer;
+let renderer;
 
-var renderScale;
+let renderScale;
 
 const mapMargin = 4*tileSize; // margin between the map and the screen
 const mapPad = tileSize/8; // padding between the map and its clipping
@@ -42,15 +42,15 @@ const screenWidth = mapWidth+mapMargin*2;
 const screenHeight = mapHeight+mapMargin*2;
 
 // all rendering will be shown on this canvas
-var canvas;
+let canvas;
 
 // switch to the given renderer index
-var switchRenderer = function(i) {
+const switchRenderer = function(i) {
     renderer = renderer_list[i];
     renderer.drawMap();
 };
 
-var getDevicePixelRatio = function() {
+const getDevicePixelRatio = function() {
     // Only consider the device pixel ratio for devices that are <= 320 pixels in width.
     // This is necessary for the iPhone4's retina display; otherwise the game would be blurry.
     // The iPad3's retina display @ 2048x1536 starts slowing the game down.
@@ -61,28 +61,28 @@ var getDevicePixelRatio = function() {
     return 1;
 };
 
-var initRenderer = function(){
+const initRenderer = function(){
 
-    var bgCanvas;
-    var ctx, bgCtx;
+    let bgCanvas;
+    let ctx, bgCtx;
 
     // drawing scale
-    var scale = 2;        // scale everything by this amount
+    let scale = 2;        // scale everything by this amount
 
     // (temporary global version of scale just to get things quickly working)
     renderScale = scale; 
 
-    var resets = 0;
+    let resets = 0;
 
     // rescale the canvases
-    var resetCanvasSizes = function() {
+    const resetCanvasSizes = function() {
 
         // set the size of the canvas in actual pixels
         canvas.width = screenWidth * scale;
         canvas.height = screenHeight * scale;
 
         // set the size of the canvas in browser pixels
-        var ratio = getDevicePixelRatio();
+        const ratio = getDevicePixelRatio();
         canvas.style.width = canvas.width / ratio;
         canvas.style.height = canvas.height / ratio;
 
@@ -104,16 +104,16 @@ var initRenderer = function(){
     };
 
     // get the target scale that will cause the canvas to fit the window
-    var getTargetScale = function() {
-        var sx = (window.innerWidth - 10) / screenWidth;
-        var sy = (window.innerHeight - 10) / screenHeight;
-        var s = Math.min(sx,sy);
+    const getTargetScale = function() {
+        const sx = (window.innerWidth - 10) / screenWidth;
+        const sy = (window.innerHeight - 10) / screenHeight;
+        let s = Math.min(sx,sy);
         s *= getDevicePixelRatio();
         return s;
     };
 
     // maximize the scale to fit the window
-    var fullscreen = function() {
+    const fullscreen = function() {
         // NOTE: css-scaling alternative at https://gist.github.com/1184900
         renderScale = scale = getTargetScale();
         resetCanvasSizes();
@@ -125,11 +125,11 @@ var initRenderer = function(){
     };
 
     // center the canvas in the window
-    var center = function() {
-        var s = getTargetScale()/getDevicePixelRatio();
-        var w = screenWidth*s;
-        var x = Math.max(0,(window.innerWidth-10)/2 - w/2);
-        var y = 0;
+    const center = function() {
+        const s = getTargetScale()/getDevicePixelRatio();
+        const w = screenWidth*s;
+        const x = Math.max(0,(window.innerWidth-10)/2 - w/2);
+        const y = 0;
         /*
         canvas.style.position = "absolute";
         canvas.style.left = x;
@@ -149,7 +149,7 @@ var initRenderer = function(){
     fullscreen();
 
     // adapt placement and size to window resizes
-    var resizeTimeout;
+    let resizeTimeout;
     window.addEventListener('resize', function () {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(fullscreen, 100);
@@ -157,13 +157,13 @@ var initRenderer = function(){
 
     //////////////////////
 
-    var beginMapFrame = function() {
+    const beginMapFrame = function() {
         bgCtx.fillStyle = "#000";
         bgCtx.fillRect(0,0,mapWidth,mapHeight);
         bgCtx.translate(mapPad, mapPad);
     };
 
-    var endMapFrame = function() {
+    const endMapFrame = function() {
         bgCtx.translate(-mapPad, -mapPad);
     };
 
@@ -172,7 +172,7 @@ var initRenderer = function(){
     // (attributes and functionality that are currently common to all renderers)
 
     // constructor
-    var CommonRenderer = function() {
+    const CommonRenderer = function() {
         this.actorSize = (tileSize-1)*2;
         this.energizerSize = tileSize+2;
         this.pointsEarnedTextSize = tileSize;
@@ -255,7 +255,7 @@ var initRenderer = function(){
         // This function extends the width and height of the tile if it is adjacent to equivalent tiles
         // that are to the bottom or right of the given tile
         drawNoGroutTile: function(ctx,x,y,w) {
-            var tileChar = map.getTile(x,y);
+            const tileChar = map.getTile(x,y);
             this.drawCenterTileSq(ctx,x,y,tileSize,
                     map.getTile(x+1,y) == tileChar,
                     map.getTile(x,y+1) == tileChar,
@@ -273,7 +273,7 @@ var initRenderer = function(){
             ctx.fillRect(px-w/2, py-w/2,w,w);
 
             // fill "floating point grout" gaps between tiles
-            var gap = 1;
+            const gap = 1;
             if (rightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w);
             if (downGrout) ctx.fillRect(px-w/2, py-w/2,w,w+gap);
             //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
@@ -293,21 +293,19 @@ var initRenderer = function(){
 
         // draw the target visualizers for each actor
         drawTargets: function() {
-            var i;
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
             ctx.lineWidth = "1.5";
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
-            for (i=0;i<5;i++)
+            for (let i=0;i<5;i++)
                 if (actors[i].isDrawTarget)
                     actors[i].drawTarget(ctx);
         },
 
         drawPaths: function() {
-            var backupAlpha = ctx.globalAlpha;
+            const backupAlpha = ctx.globalAlpha;
             ctx.globalAlpha = 0.7;
-            var i;
-            for (i=0;i<5;i++)
+            for (let i=0;i<5;i++)
                 if (actors[i].isDrawPath)
                     this.drawPath(actors[i]);
             ctx.globalAlpha = backupAlpha;
@@ -318,11 +316,11 @@ var initRenderer = function(){
             if (!actor.targetting) return;
 
             // current state of the predicted path
-            var tile = { x: actor.tile.x, y: actor.tile.y};
-            var target = actor.targetTile;
-            var dir = { x: actor.dir.x, y: actor.dir.y };
-            var dirEnum = actor.dirEnum;
-            var openTiles;
+            const tile = { x: actor.tile.x, y: actor.tile.y};
+            const target = actor.targetTile;
+            const dir = { x: actor.dir.x, y: actor.dir.y };
+            let dirEnum = actor.dirEnum;
+            let openTiles;
 
             // exit if we're already on the target
             if (tile.x == target.x && tile.y == target.y) {
@@ -337,13 +335,13 @@ var initRenderer = function(){
                 tile.x += dir.x;
                 tile.y += dir.y;
             }
-            var pixel = { x:tile.x*tileSize+midTile.x, y:tile.y*tileSize+midTile.y };
+            const pixel = { x:tile.x*tileSize+midTile.x, y:tile.y*tileSize+midTile.y };
             
             // dist keeps track of how far we're going along this path, stopping at maxDist
             // distLeft determines how long the last line should be
-            var dist = Math.abs(tile.x*tileSize+midTile.x - actor.pixel.x + tile.y*tileSize+midTile.y - actor.pixel.y);
-            var maxDist = actorPathLength*tileSize;
-            var distLeft;
+            let dist = Math.abs(tile.x*tileSize+midTile.x - actor.pixel.x + tile.y*tileSize+midTile.y - actor.pixel.y);
+            const maxDist = actorPathLength*tileSize;
+            let distLeft;
             
             // add the first line
             ctx.strokeStyle = actor.pathColor;
@@ -401,12 +399,12 @@ var initRenderer = function(){
             }
 
             // calculate final endpoint
-            var px = pixel.x+actor.pathCenter.x+distLeft*dir.x;
-            var py = pixel.y+actor.pathCenter.y+distLeft*dir.y;
+            const px = pixel.x+actor.pathCenter.x+distLeft*dir.x;
+            const py = pixel.y+actor.pathCenter.y+distLeft*dir.y;
 
             // add an arrow head
             ctx.lineTo(px,py);
-            var s = 3;
+            const s = 3;
             if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
                 ctx.lineTo(px-s*dir.x,py+s*dir.x);
                 ctx.moveTo(px,py);
@@ -461,10 +459,9 @@ var initRenderer = function(){
 
         // draw each actor (ghosts and pacman)
         drawActors: function() {
-            var i;
             // draw such that pacman appears on top
             if (energizer.isActive()) {
-                for (i=0; i<4; i++) {
+                for (let i=0; i<4; i++) {
                     this.drawGhost(ghosts[i]);
                 }
                 if (!energizer.showingPoints())
@@ -475,7 +472,7 @@ var initRenderer = function(){
             // draw such that pacman appears on bottom
             else {
                 this.drawPlayer();
-                for (i=3; i>=0; i--) {
+                for (let i=3; i>=0; i--) {
                     if (ghosts[i].isVisible) {
                         this.drawGhost(ghosts[i]);
                     }
@@ -493,7 +490,7 @@ var initRenderer = function(){
     // (render a minimal Pac-Man display using nothing but squares)
 
     // constructor
-    var SimpleRenderer = function() {
+    const SimpleRenderer = function() {
 
         // inherit attributes from Common Renderer
         CommonRenderer.call(this,ctx,bgCtx);
@@ -510,40 +507,43 @@ var initRenderer = function(){
 
     SimpleRenderer.prototype = newChildObject(CommonRenderer.prototype, {
 
+        // copy background canvas to the foreground canvas
+        blitMap: function() {
+            ctx.scale(1/scale,1/scale);
+            ctx.drawImage(bgCanvas,-1-mapPad*scale,-1-mapPad*scale); // offset map to compenstate for misalignment
+            ctx.scale(scale,scale);
+            //ctx.clearRect(-mapPad,-mapPad,mapWidth,mapHeight);
+        },
+
+
         drawMap: function() {
 
             beginMapFrame();
 
-            var x,y;
-            var i;
-            var tile;
-
             // draw floor tiles
             bgCtx.fillStyle = (this.flashLevel ? this.flashFloorColor : this.floorColor);
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                tile = map.currentTiles[i++];
-                if (tile == ' ')
-                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
-            }
+            for (let i=0, y=0; y<map.numRows; y++)
+                for (let x=0; x<map.numCols; x++) {
+                    const tile = map.currentTiles[i++];
+                    if (tile == ' ')
+                        this.drawNoGroutTile(bgCtx,x,y,tileSize);
+                }
 
             // draw pellet tiles
             bgCtx.fillStyle = this.pelletColor;
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                tile = map.currentTiles[i++];
-                if (tile == '.')
-                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
-            }
+            for (let i=0, y=0; y<map.numRows; y++)
+                for (let x=0; x<map.numCols; x++) {
+                    const tile = map.currentTiles[i++];
+                    if (tile == '.')
+                        this.drawNoGroutTile(bgCtx,x,y,tileSize);
+                }
 
             endMapFrame();
         },
 
         refreshPellet: function(x,y) {
-            var i = map.posToIndex(x,y);
-            var tile = map.currentTiles[i];
+            const i = map.posToIndex(x,y);
+            const tile = map.currentTiles[i];
             if (tile == ' ') {
                 this.erasePellet(x,y);
             }
@@ -571,30 +571,26 @@ var initRenderer = function(){
 
         // draw the extra lives indicator
         drawExtraLives: function() {
-            var i;
             ctx.fillStyle = "rgba(255,255,0,0.6)";
-            var lives = extraLives == Infinity ? 1 : extraLives;
-            for (i=0; i<extraLives; i++)
+            const lives = extraLives == Infinity ? 1 : extraLives;
+            for (let i=0; i<extraLives; i++)
                 this.drawCenterPixelSq(ctx, (2*i+3)*tileSize, (map.numRows-2)*tileSize+midTile.y,this.actorSize);
         },
 
         // draw the current level indicator
         drawLevelIcons: function() {
-            var i;
             ctx.fillStyle = "rgba(255,255,255,0.5)";
-            var w = 2;
-            var h = this.actorSize;
-            for (i=0; i<level; i++)
+            const w = 2;
+            const h = this.actorSize;
+            for (let i=0; i<level; i++)
                 ctx.fillRect((map.numCols-2)*tileSize - i*2*w, (map.numRows-2)*tileSize+midTile.y-h/2, w, h);
         },
 
         // draw energizer items on foreground
         drawEnergizers: function() {
             ctx.fillStyle = this.energizerColor;
-            var e;
-            var i;
-            for (i=0; i<map.numEnergizers; i++) {
-                e = map.energizers[i];
+            for (let i=0; i<map.numEnergizers; i++) {
+                const e = map.energizers[i];
                 if (map.currentTiles[e.x+e.y*map.numCols] == 'o')
                     this.drawCenterTileSq(ctx,e.x,e.y,this.energizerSize);
             }
@@ -610,7 +606,7 @@ var initRenderer = function(){
 
         // draw dying pacman animation (with 0<=t<=1)
         drawDyingPlayer: function(t) {
-            var f = t*85;
+            let f = t*85;
             if (f <= 60) {
                 t = f/60;
                 this.drawPlayer(1-t);
@@ -626,7 +622,7 @@ var initRenderer = function(){
         drawGhost: function(g) {
             if (g.mode == GHOST_EATEN)
                 return;
-            var color = g.color;
+            let color = g.color;
             if (g.scared)
                 color = energizer.isFlash() ? "#FFF" : "#2121ff";
             else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
@@ -657,7 +653,7 @@ var initRenderer = function(){
     // (render a display close to the original arcade)
 
     // constructor
-    var ArcadeRenderer = function(ctx,bgCtx) {
+    const ArcadeRenderer = function(ctx,bgCtx) {
 
         // inherit attributes from Common Renderer
         CommonRenderer.call(this,ctx,bgCtx);
@@ -696,20 +692,14 @@ var initRenderer = function(){
                     this.flashLevel = false;
                 }
 
-                var x,y;
-                var i,j;
-                var tile;
-
                 // ghost house door
-                i=0;
-                for (y=0; y<map.numRows; y++)
-                for (x=0; x<map.numCols; x++) {
-                    if (map.currentTiles[i] == '-' && map.currentTiles[i+1] == '-') {
-                        bgCtx.fillStyle = "#ffb8de";
-                        bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize*2,2);
+                for (let i=0, y=0; y<map.numRows; y++)
+                    for (let x=0; x<map.numCols; x++, i++) {
+                        if (map.currentTiles[i] == '-' && map.currentTiles[i+1] == '-') {
+                            bgCtx.fillStyle = "#ffb8de";
+                            bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize*2,2);
+                        }
                     }
-                    i++;
-                }
 
                 if (this.flashLevel) {
                     bgCtx.fillStyle = "#000";
@@ -719,28 +709,27 @@ var initRenderer = function(){
                     bgCtx.fillStyle = map.wallFillColor;
                     bgCtx.strokeStyle = map.wallStrokeColor;
                 }
-                for (i=0; i<map.paths.length; i++) {
-                    var path = map.paths[i];
+                for (let i=0; i<map.paths.length; i++) {
+                    const path = map.paths[i];
                     bgCtx.beginPath();
                     bgCtx.moveTo(path[0].x, path[0].y);
-                    for (j=1; j<path.length; j++) {
+                    for (let j=1; j<path.length; j++) {
                         if (path[j].cx != undefined)
                             bgCtx.quadraticCurveTo(path[j].cx, path[j].cy, path[j].x, path[j].y);
                         else
                             bgCtx.lineTo(path[j].x, path[j].y);
                     }
-                    bgCtx.quadraticCurveTo(path[j-1].x, path[0].y, path[0].x, path[0].y);
+                    bgCtx.quadraticCurveTo(path[path.length-1].x, path[0].y, path[0].x, path[0].y);
                     bgCtx.fill();
                     bgCtx.stroke();
                 }
 
                 // draw pellet tiles
                 bgCtx.fillStyle = map.pelletColor;
-                i=0;
-                for (y=0; y<map.numRows; y++)
-                for (x=0; x<map.numCols; x++) {
-                    this.refreshPellet(x,y,true);
-                }
+                for (let y=0; y<map.numRows; y++)
+                    for (let x=0; x<map.numCols; x++) {
+                        this.refreshPellet(x,y,true);
+                    }
 
                 if (map.onDraw) {
                     map.onDraw(bgCtx);
@@ -753,38 +742,37 @@ var initRenderer = function(){
             }
             if (level > 0) {
 
-                var numRows = 36;
-                var numCols = 28;
+                const numRows = 36;
+                const numCols = 28;
 
                 if (!isCutscene) {
                     // draw extra lives
-                    var i;
                     bgCtx.fillStyle = pacman.color;
 
                     bgCtx.save();
                     bgCtx.translate(3*tileSize, (numRows-1)*tileSize);
                     bgCtx.scale(0.85, 0.85);
-                    var lives = extraLives == Infinity ? 1 : extraLives;
+                    const lives = extraLives == Infinity ? 1 : extraLives;
                     if (gameMode == GAME_PACMAN) {
-                        for (i=0; i<lives; i++) {
+                        for (let i=0; i<lives; i++) {
                             drawPacmanSprite(bgCtx, 0,0, DIR_LEFT, Math.PI/6);
                             bgCtx.translate(2*tileSize,0);
                         }
                     }
                     else if (gameMode == GAME_MSPACMAN) {
-                        for (i=0; i<lives; i++) {
+                        for (let i=0; i<lives; i++) {
                             drawMsPacmanSprite(bgCtx, 0,0, DIR_RIGHT, 1);
                             bgCtx.translate(2*tileSize,0);
                         }
                     }
                     else if (gameMode == GAME_COOKIE) {
-                        for (i=0; i<lives; i++) {
+                        for (let i=0; i<lives; i++) {
                             drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
                             bgCtx.translate(2*tileSize,0);
                         }
                     }
                     else if (gameMode == GAME_OTTO) {
-                        for (i=0; i<lives; i++) {
+                        for (let i=0; i<lives; i++) {
                             drawOttoSprite(bgCtx, 0,0,DIR_RIGHT, 0);
                             bgCtx.translate(2*tileSize,0);
                         }
@@ -795,7 +783,7 @@ var initRenderer = function(){
                         // draw X
                         /*
                         bgCtx.translate(-s*2,0);
-                        var s = 2; // radius of each stroke
+                        const s = 2; // radius of each stroke
                         bgCtx.beginPath();
                         bgCtx.moveTo(-s,-s);
                         bgCtx.lineTo(s,s);
@@ -807,8 +795,8 @@ var initRenderer = function(){
                         */
 
                         // draw Infinity symbol
-                        var r = 2; // radius of each half-circle
-                        var d = 3; // distance between the two focal points
+                        const r = 2; // radius of each half-circle
+                        const d = 3; // distance between the two focal points
                         bgCtx.beginPath();
                         bgCtx.moveTo(-d-r,0);
                         bgCtx.quadraticCurveTo(-d-r,-r,-d,-r);
@@ -825,21 +813,19 @@ var initRenderer = function(){
                 }
 
                 // draw level fruit
-                var fruits = fruit.fruitHistory;
-                var i,j;
-                var f,drawFunc;
-                var numFruit = 7;
-                var startLevel = Math.max(numFruit,level);
+                const fruits = fruit.fruitHistory;
+                const numFruit = 7;
+                let startLevel = Math.max(numFruit,level);
                 if (gameMode != GAME_PACMAN) {
                     // for the Pac-Man game, display the last 7 fruit
                     // for the Ms Pac-Man game, display stop after the 7th fruit
                     startLevel = Math.min(numFruit,startLevel);
                 }
-                var scale = 0.85;
-                for (i=0, j=startLevel-numFruit+1; i<numFruit && j<=level; j++, i++) {
-                    f = fruits[j];
+                const scale = 0.85;
+                for (let i=0, j=startLevel-numFruit+1; i<numFruit && j<=level; j++, i++) {
+                    const f = fruits[j];
                     if (f) {
-                        drawFunc = getSpriteFuncFromFruitName(f.name);
+                        const drawFunc = getSpriteFuncFromFruitName(f.name);
                         if (drawFunc) {
                             bgCtx.save();
                             bgCtx.translate((numCols-3)*tileSize - i*16*scale, (numRows-1)*tileSize);
@@ -870,8 +856,8 @@ var initRenderer = function(){
                 bgCtx.translate(mapPad,mapPad);
             }
             bgCtx.fillStyle = "#000";
-            var i = map.posToIndex(x,y);
-            var size = map.tiles[i] == 'o' ? this.energizerSize : this.pelletSize;
+            const i = map.posToIndex(x,y);
+            const size = map.tiles[i] == 'o' ? this.energizerSize : this.pelletSize;
             this.drawCenterTileSq(bgCtx,x,y,size+2);
             if (!isTranslated) {
                 bgCtx.translate(-mapPad,-mapPad);
@@ -882,8 +868,8 @@ var initRenderer = function(){
             if (!isTranslated) {
                 bgCtx.translate(mapPad,mapPad);
             }
-            var i = map.posToIndex(x,y);
-            var tile = map.currentTiles[i];
+            const i = map.posToIndex(x,y);
+            const tile = map.currentTiles[i];
             if (tile == ' ') {
                 this.erasePellet(x,y,isTranslated);
             }
@@ -916,15 +902,15 @@ var initRenderer = function(){
             //ctx.fillText("2UP", 25*tileSize, 0);
 
             // TODO: player two score
-            var score = getScore();
+            let score = getScore();
             if (score == 0) {
                 score = "00";
             }
-            var y = tileSize+1;
+            const y = tileSize+1;
             ctx.fillText(score, 7*tileSize, y);
 
             if (!practiceMode) {
-                var highScore = getHighScore();
+                let highScore = getHighScore();
                 if (highScore == 0) {
                     highScore = "00";
                 }
@@ -934,20 +920,20 @@ var initRenderer = function(){
 
         // draw ghost
         drawGhost: function(g,alpha) {
-            var backupAlpha;
+            let backupAlpha;
             if (alpha) {
                 backupAlpha = ctx.globalAlpha;
                 ctx.globalAlpha = alpha;
             }
 
-            var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color, dirEnum) {
+            const draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color, dirEnum) {
                 if (mode == GHOST_EATEN)
                     return;
-                var frame = g.getAnimFrame(frames);
-                var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
-                var func = getGhostDrawFunc();
-                var y = g.getBounceY(pixel.x, pixel.y, dirEnum);
-                var x = (g == blinky && scared) ? pixel.x+1 : pixel.x; // blinky's sprite is shifted right when scared
+                const frame = g.getAnimFrame(frames);
+                const eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
+                const func = getGhostDrawFunc();
+                const y = g.getBounceY(pixel.x, pixel.y, dirEnum);
+                const x = (g == blinky && scared) ? pixel.x+1 : pixel.x; // blinky's sprite is shifted right when scared
 
                 func(ctx,x,y,frame,faceDirEnum,scared,isFlash,eyes,color);
             };
@@ -970,14 +956,13 @@ var initRenderer = function(){
 
         // draw pacman
         drawPlayer: function() {
-            var frame = pacman.getAnimFrame();
             if (pacman.invincible) {
                 ctx.globalAlpha = 0.6;
             }
 
-            var draw = function(pixel, dirEnum, steps) {
-                var frame = pacman.getAnimFrame(pacman.getStepFrame(steps));
-                var func = getPlayerDrawFunc();
+            const draw = function(pixel, dirEnum, steps) {
+                const frame = pacman.getAnimFrame(pacman.getStepFrame(steps));
+                const func = getPlayerDrawFunc();
                 func(ctx, pixel.x, pixel.y, dirEnum, frame, true);
             };
 
@@ -995,16 +980,16 @@ var initRenderer = function(){
 
         // draw dying pacman animation (with 0<=t<=1)
         drawDyingPlayer: function(t) {
-            var frame = pacman.getAnimFrame();
+            const frame = pacman.getAnimFrame();
 
             if (gameMode == GAME_PACMAN) {
                 // 60 frames dying
                 // 15 frames exploding
-                var f = t*75;
+                let f = t*75;
                 if (f <= 60) {
                     // open mouth all the way while shifting corner of mouth forward
-                    t = f/60;
-                    var a = frame*Math.PI/6;
+                    const t = f/60;
+                    const a = frame*Math.PI/6;
                     drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, a + t*(Math.PI-a),4*t);
                 }
                 else {
@@ -1016,14 +1001,14 @@ var initRenderer = function(){
             else if (gameMode == GAME_OTTO) {
                 // TODO: spin around
                 if (t < 0.8) {
-                    var dirEnum = Math.floor((pacman.dirEnum - t*16))%4;
+                    let dirEnum = Math.floor((pacman.dirEnum - t*16))%4;
                     if (dirEnum < 0) {
                         dirEnum += 4;
                     }
                     drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
                 }
                 else if (t < 0.95) {
-                    var dirEnum = Math.floor((pacman.dirEnum - 0.8*16))%4;
+                    let dirEnum = Math.floor((pacman.dirEnum - 0.8*16))%4;
                     if (dirEnum < 0) {
                         dirEnum += 4;
                     }
@@ -1035,23 +1020,22 @@ var initRenderer = function(){
             }
             else if (gameMode == GAME_MSPACMAN) {
                 // spin 540 degrees
-                var maxAngle = Math.PI*5;
-                var step = (Math.PI/4) / maxAngle; // 45 degree steps
-                var angle = Math.floor(t/step)*step*maxAngle;
+                const maxAngle = Math.PI*5;
+                const step = (Math.PI/4) / maxAngle; // 45 degree steps
+                const angle = Math.floor(t/step)*step*maxAngle;
                 drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame, angle);
             }
             else if (gameMode == GAME_COOKIE) {
                 // spin 540 degrees
-                var maxAngle = Math.PI*5;
-                var step = (Math.PI/4) / maxAngle; // 45 degree steps
-                var angle = Math.floor(t/step)*step*maxAngle;
+                const maxAngle = Math.PI*5;
+                const step = (Math.PI/4) / maxAngle; // 45 degree steps
+                const angle = Math.floor(t/step)*step*maxAngle;
                 drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame, false, angle);
             }
         },
 
         // draw exploding pacman animation (with 0<=t<=1)
         drawExplodingPlayer: function(t) {
-            var frame = pacman.getAnimFrame();
             drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, 0, 0, t,-3,1-t);
         },
 
@@ -1059,12 +1043,12 @@ var initRenderer = function(){
         drawFruit: function() {
 
             if (fruit.getCurrentFruit()) {
-                var name = fruit.getCurrentFruit().name;
+                const {name} = fruit.getCurrentFruit();
 
                 // draw history trails of the fruit if applicable
                 if (fruit.savedPixel) {
                     vcr.drawHistory(ctx, function(t) {
-                        var pixel = fruit.savedPixel[t];
+                        const pixel = fruit.savedPixel[t];
                         if (pixel) {
                             atlas.drawFruitSprite(ctx, pixel.x, pixel.y, name);
                         }

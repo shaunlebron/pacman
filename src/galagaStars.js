@@ -3,27 +3,26 @@
 // import { mapWidth, mapHeight } from './renderers.js';
 // import { getRandomInt, getRandomColor } from './random.js';
 
-var galagaStars = (function() {
+const galagaStars = (function() {
 
-    var stars = {};
-    var numStars = 200;
+    const stars = {};
+    const numStars = 200;
 
-    var width = mapWidth;
-    var height = Math.floor(mapHeight*1.5);
+    const width = mapWidth;
+    const height = Math.floor(mapHeight*1.5);
 
-    var ypos;
-    var yspeed=-0.5;
+    let ypos;
+    const yspeed=-0.5;
 
-    var t;
-    var flickerPeriod = 120;
-    var flickerSteps = 4;
-    var flickerGap = flickerPeriod / flickerSteps;
+    let t;
+    const flickerPeriod = 120;
+    const flickerSteps = 4;
+    const flickerGap = flickerPeriod / flickerSteps;
 
-    var init = function() {
+    const init = function() {
         t = 0;
         ypos = 0;
-        var i;
-        for (i=0; i<numStars; i++) {
+        for (let i=0; i<numStars; i++) {
             stars[i] = {
                 x: getRandomInt(0,width-1),
                 y: getRandomInt(0,height-1),
@@ -33,7 +32,7 @@ var galagaStars = (function() {
         }
     };
 
-    var update = function() {
+    const update = function() {
         t++;
         t %= flickerPeriod;
 
@@ -44,17 +43,13 @@ var galagaStars = (function() {
         }
     };
 
-    var draw = function(ctx) {
-        var i;
-        var star;
-        var time;
-        var y;
+    const draw = function(ctx) {
         ctx.fillStyle = "#FFF";
-        for (i=0; i<numStars; i++) {
-            star = stars[i];
-            time = (t + star.phase) % flickerPeriod;
+        for (let i=0; i<numStars; i++) {
+            const star = stars[i];
+            const time = (t + star.phase) % flickerPeriod;
             if (time >= flickerGap) {
-                y = star.y - ypos;
+                const y = star.y - ypos;
                 if (y < 0) {
                     y += height;
                 }

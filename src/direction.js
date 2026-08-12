@@ -11,10 +11,10 @@
 //       I've tried abstracting away the uses by creating functions to rotate them.
 // NOTE: This order determines tie-breakers in the shortest distance turn logic.
 //       (i.e. higher priority turns have lower enum values)
-var DIR_UP = 0;
-var DIR_LEFT = 1;
-var DIR_DOWN = 2;
-var DIR_RIGHT = 3;
+const DIR_UP = 0;
+const DIR_LEFT = 1;
+const DIR_DOWN = 2;
+const DIR_RIGHT = 3;
 
 var getClockwiseAngleFromTop = function(dirEnum) {
     return -dirEnum*Math.PI/2;

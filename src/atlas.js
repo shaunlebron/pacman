@@ -8,9 +8,9 @@
 var atlas = (function(){
 
     var canvas,ctx;
-    var size = 22;
-    var cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 22;
+    const size = 22;
+    const cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
+    const rows = 22;
 
     var creates = 0;
 

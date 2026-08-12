@@ -9,10 +9,10 @@
 // (an ascii map of tiles representing a level maze)
 
 // size of a square tile in pixels
-var tileSize = 8;
+const tileSize = 8;
 
 // the center pixel of a tile
-var midTile = {x:3, y:4};
+const midTile = {x:3, y:4};
 
 // constructor
 var Map = function(numCols, numRows, tiles) {

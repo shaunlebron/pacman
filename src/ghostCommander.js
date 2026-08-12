@@ -9,8 +9,8 @@
 // Determines when a ghost should be chasing a target
 
 // modes representing the ghosts' current command
-var GHOST_CMD_CHASE = 0;
-var GHOST_CMD_SCATTER = 1;
+const GHOST_CMD_CHASE = 0;
+const GHOST_CMD_SCATTER = 1;
 
 var ghostCommander = (function() {
 

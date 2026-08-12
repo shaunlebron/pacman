@@ -11,13 +11,13 @@
 
 var ghostReleaser = (function(){
     // two separate counter modes for releasing the ghosts from home
-    var MODE_PERSONAL = 0;
-    var MODE_GLOBAL = 1;
+    const MODE_PERSONAL = 0;
+    const MODE_GLOBAL = 1;
 
     // ghost enumerations
-    var PINKY = 1;
-    var INKY = 2;
-    var CLYDE = 3;
+    const PINKY = 1;
+    const INKY = 2;
+    const CLYDE = 3;
 
     // this is how many frames it will take to release a ghost after pacman stops eating
     var getTimeoutLimit = function() { return (level < 5) ? 4*60 : 3*60; };

@@ -14,12 +14,12 @@
 // Ghost class
 
 // modes representing the ghost's current state
-var GHOST_OUTSIDE = 0;
-var GHOST_EATEN = 1;
-var GHOST_GOING_HOME = 2;
-var GHOST_ENTERING_HOME = 3;
-var GHOST_PACING_HOME = 4;
-var GHOST_LEAVING_HOME = 5;
+const GHOST_OUTSIDE = 0;
+const GHOST_EATEN = 1;
+const GHOST_GOING_HOME = 2;
+const GHOST_ENTERING_HOME = 3;
+const GHOST_PACING_HOME = 4;
+const GHOST_LEAVING_HOME = 5;
 
 // Ghost constructor
 var Ghost = function() {

@@ -13,12 +13,12 @@
 // (getPathDistLeft is used to obtain a smoothly interpolated path endpoint)
 
 // the tile length of the path drawn toward the target
-var actorPathLength = 16;
+const actorPathLength = 16;
 
 (function() {
 
 // the size of the square rendered over a target tile (just half a tile)
-var targetSize = midTile.y;
+const targetSize = midTile.y;
 
 // when drawing paths, use these offsets so they don't completely overlap each other
 pacman.pathCenter = { x:0, y:0};

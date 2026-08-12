@@ -32,14 +32,14 @@ var renderer;
 
 var renderScale;
 
-var mapMargin = 4*tileSize; // margin between the map and the screen
-var mapPad = tileSize/8; // padding between the map and its clipping
+const mapMargin = 4*tileSize; // margin between the map and the screen
+const mapPad = tileSize/8; // padding between the map and its clipping
 
-var mapWidth = 28*tileSize+mapPad*2;
-var mapHeight = 36*tileSize+mapPad*2;
+const mapWidth = 28*tileSize+mapPad*2;
+const mapHeight = 36*tileSize+mapPad*2;
 
-var screenWidth = mapWidth+mapMargin*2;
-var screenHeight = mapHeight+mapMargin*2;
+const screenWidth = mapWidth+mapMargin*2;
+const screenHeight = mapHeight+mapMargin*2;
 
 // all rendering will be shown on this canvas
 var canvas;

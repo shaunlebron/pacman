@@ -11,10 +11,10 @@
 // Game
 
 // game modes
-var GAME_PACMAN = 0;
-var GAME_MSPACMAN = 1;
-var GAME_COOKIE = 2;
-var GAME_OTTO = 3;
+const GAME_PACMAN = 0;
+const GAME_MSPACMAN = 1;
+const GAME_COOKIE = 2;
+const GAME_OTTO = 3;
 
 var practiceMode = false;
 var turboMode = false;

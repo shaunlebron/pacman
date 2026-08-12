@@ -22,11 +22,11 @@
 // This coordinates the recording, rewinding, and replaying of the game state.
 // Inspired by Braid.
 
-var VCR_NONE = -1;
-var VCR_RECORD = 0;
-var VCR_REWIND = 1;
-var VCR_FORWARD = 2;
-var VCR_PAUSE = 3;
+const VCR_NONE = -1;
+const VCR_RECORD = 0;
+const VCR_REWIND = 1;
+const VCR_FORWARD = 2;
+const VCR_PAUSE = 3;
 
 var vcr = (function() {
 

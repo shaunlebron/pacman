@@ -91,7 +91,7 @@ const getOpenTiles = function(tile,dirEnum) {
         // By design, no mazes should have dead ends,
         // but allow player to turn around if and only if it's necessary.
         // Only close the passage behind the player if there are other openings.
-        var oppDirEnum = rotateAboutFace(dirEnum); // current opposite direction enum
+        const oppDirEnum = rotateAboutFace(dirEnum); // current opposite direction enum
         if (numOpenTiles > 1)
             openTiles[oppDirEnum] = false;
     }
@@ -100,7 +100,7 @@ const getOpenTiles = function(tile,dirEnum) {
 };
 
 // returns if the given tile coordinate plus the given direction vector has a walkable floor tile
-var isNextTileFloor = function(tile,dir) {
+const isNextTileFloor = function(tile,dir) {
     return map.isFloorTile(tile.x+dir.x,tile.y+dir.y);
 };
 

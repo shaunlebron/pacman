@@ -63,8 +63,11 @@ const getDevicePixelRatio = function() {
 
 const initRenderer = function(){
 
-    let bgCanvas;
-    let ctx, bgCtx;
+    // create foreground and background canvases
+    canvas = document.getElementById('canvas');
+    const bgCanvas = document.createElement('canvas');
+    const ctx = canvas.getContext("2d");
+    const bgCtx = bgCanvas.getContext("2d");
 
     // drawing scale
     let scale = 2;        // scale everything by this amount
@@ -138,12 +141,6 @@ const initRenderer = function(){
         */
         document.body.style.marginLeft = (window.innerWidth - w)/2 + "px";
     };
-
-    // create foreground and background canvases
-    canvas = document.getElementById('canvas');
-    bgCanvas = document.createElement('canvas');
-    ctx = canvas.getContext("2d");
-    bgCtx = bgCanvas.getContext("2d");
 
     // initialize placement and size
     fullscreen();

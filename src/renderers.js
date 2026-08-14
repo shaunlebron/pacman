@@ -1,22 +1,22 @@
 
 // REFERENCED GLOBALS:
-/*global tileSize, midTile -- Map.js */
-/*global atlas -- atlas.js */
-/*global newChildObject -- inherit.js */
-/*global actors, ghosts, pacman, blinky, inky -- actors.js */
-/*global energizer -- energizer.js */
-/*global vcr -- vcr.js */
-/*global executive -- executive.js */
-/*global inGameMenu -- inGameMenu.js */
-/*global hud -- hud.js */
-/*global actorPathLength -- targets.js */
-/*global getOpenTiles, getTurnClosestToTarget, setDirFromEnum, DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT -- direction.js */
-/*global GHOST_EATEN, GHOST_GOING_HOME, GHOST_ENTERING_HOME -- Ghost.js */
-/*global getPlayerDrawFunc, getGhostDrawFunc, gameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, extraLives, practiceMode, getScore, getHighScore -- game.js */
-/*global fruit -- fruit.js */
-/*global state, finishState -- states.js */
-/*global getSpriteFuncFromFruitName, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawOttoSprite, drawDeadOttoSprite, drawExclamationPoint -- sprites.js */
-/*global map -- maps.js */
+/* global tileSize, midTile -- Map.js */
+/* global atlas -- atlas.js */
+/* global newChildObject -- inherit.js */
+/* global actors, ghosts, pacman, blinky, inky -- actors.js */
+/* global energizer -- energizer.js */
+/* global vcr -- vcr.js */
+/* global executive -- executive.js */
+/* global inGameMenu -- inGameMenu.js */
+/* global hud -- hud.js */
+/* global actorPathLength -- targets.js */
+/* global getOpenTiles, getTurnClosestToTarget, setDirFromEnum, DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT -- direction.js */
+/* global GHOST_EATEN, GHOST_GOING_HOME, GHOST_ENTERING_HOME -- Ghost.js */
+/* global getPlayerDrawFunc, getGhostDrawFunc, gameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, extraLives, practiceMode, getScore, getHighScore -- game.js */
+/* global fruit -- fruit.js */
+/* global state, finishState -- states.js */
+/* global getSpriteFuncFromFruitName, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawOttoSprite, drawDeadOttoSprite, drawExclamationPoint -- sprites.js */
+/* global map -- maps.js */
 
 //////////////////////////////////////////////////////////////
 // Renderers

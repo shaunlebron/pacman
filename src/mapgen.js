@@ -1,9 +1,9 @@
 
 // REFERENCED GLOBALS:
-/*global getRandomInt -- random.js */
-/*global rotateAboutFace, DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT -- direction.js */
-/*global Map -- Map.js */
-/*global rgbString, hslToRgb -- colors.js */
+/* global getRandomInt -- random.js */
+/* global rotateAboutFace, DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT -- direction.js */
+/* global Map -- Map.js */
+/* global rgbString, hslToRgb -- colors.js */
 
 const mapgen = (function(){
 

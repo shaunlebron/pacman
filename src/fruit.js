@@ -1,11 +1,11 @@
 
 // REFERENCED GLOBALS:
-/*global newChildObject -- inherit.js */
-/*global map -- maps.js */
-/*global tileSize, midTile -- Map.js */
-/*global pacman -- actors.js */
-/*global getRandomInt -- random.js */
-/*global addScore, gameMode, GAME_PACMAN, level -- game.js */
+/* global newChildObject -- inherit.js */
+/* global map -- maps.js */
+/* global tileSize, midTile -- Map.js */
+/* global pacman -- actors.js */
+/* global getRandomInt -- random.js */
+/* global addScore, gameMode, GAME_PACMAN, level -- game.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Fruit

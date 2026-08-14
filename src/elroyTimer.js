@@ -1,9 +1,9 @@
 
 // REFERENCED GLOBALS:
-/*global level -- game.js */
-/*global blinky, clyde -- actors.js */
-/*global GHOST_PACING_HOME -- Ghost.js */
-/*global map -- maps.js */
+/* global level -- game.js */
+/* global blinky, clyde -- actors.js */
+/* global GHOST_PACING_HOME -- Ghost.js */
+/* global map -- maps.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Elroy Timer

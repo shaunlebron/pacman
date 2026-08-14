@@ -76,7 +76,7 @@ do
     # concatenate file to output (with global refs stripped)
     cat src/$file \
         | grep -v '^// REFERENCED GLOBALS' \
-        | grep -v '^/\*global' \
+        | grep -v '^/\*\s*global' \
         >> $output
 
     # add this file to debug includes

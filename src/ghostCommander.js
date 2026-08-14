@@ -1,8 +1,8 @@
 
 // REFERENCED GLOBALS:
-/*global level, gameMode, GAME_PACMAN -- game.js */
-/*global energizer -- energizer.js */
-/*global ghosts -- actors.js */
+/* global level, gameMode, GAME_PACMAN -- game.js */
+/* global energizer -- energizer.js */
+/* global ghosts -- actors.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander

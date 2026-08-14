@@ -1,21 +1,21 @@
 
 // REFERENCED GLOBALS:
-/*global actors -- actors.js */
-/*global elroyTimer -- elroyTimer.js */
-/*global energizer -- energizer.js */
-/*global fruit -- fruit.js */
-/*global ghostCommander -- ghostCommander.js */
-/*global ghostReleaser -- ghostReleaser.js */
-/*global map -- maps.js */
-/*global loadGame, saveGame, practiceMode -- game.js */
-/*global state, deadState, finishState, playState -- states.js */
-/*global inGameMenu -- inGameMenu.js */
-/*global renderer, mapWidth, mapHeight -- renderers.js */
-/*global atlas -- atlas.js */
-/*global Button, ToggleButton -- Button.js */
-/*global drawRewindSymbol, drawUpSymbol, drawDownSymbol -- sprites.js */
-/*global executive -- executive.js */
-/*global tileSize -- Map.js */
+/* global actors -- actors.js */
+/* global elroyTimer -- elroyTimer.js */
+/* global energizer -- energizer.js */
+/* global fruit -- fruit.js */
+/* global ghostCommander -- ghostCommander.js */
+/* global ghostReleaser -- ghostReleaser.js */
+/* global map -- maps.js */
+/* global loadGame, saveGame, practiceMode -- game.js */
+/* global state, deadState, finishState, playState -- states.js */
+/* global inGameMenu -- inGameMenu.js */
+/* global renderer, mapWidth, mapHeight -- renderers.js */
+/* global atlas -- atlas.js */
+/* global Button, ToggleButton -- Button.js */
+/* global drawRewindSymbol, drawUpSymbol, drawDownSymbol -- sprites.js */
+/* global executive -- executive.js */
+/* global tileSize -- Map.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // VCR

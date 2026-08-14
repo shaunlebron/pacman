@@ -1,8 +1,8 @@
 
 // REFERENCED GLOBALS:
-/*global DIR_RIGHT, DIR_DOWN, setDirFromEnum, getClockwiseAngleFromTop, rotateLeft, rotateRight, rotateAboutFace -- direction.js */
-/*global vcr -- vcr.js */
-/*global renderer -- renderers.js */
+/* global DIR_RIGHT, DIR_DOWN, setDirFromEnum, getClockwiseAngleFromTop, rotateLeft, rotateRight, rotateAboutFace -- direction.js */
+/* global vcr -- vcr.js */
+/* global renderer -- renderers.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Map

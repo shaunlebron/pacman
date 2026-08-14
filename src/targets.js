@@ -1,11 +1,11 @@
 
 // REFERENCED GLOBALS:
-/*global midTile, tileSize -- Map.js */
-/*global pacman, blinky, pinky, inky, clyde -- actors.js */
-/*global ghostCommander, GHOST_CMD_CHASE -- ghostCommander.js */
-/*global renderer -- renderers.js */
-/*global DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT -- direction.js */
-/*global GHOST_GOING_HOME -- Ghost.js */
+/* global midTile, tileSize -- Map.js */
+/* global pacman, blinky, pinky, inky, clyde -- actors.js */
+/* global ghostCommander, GHOST_CMD_CHASE -- ghostCommander.js */
+/* global renderer -- renderers.js */
+/* global DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT -- direction.js */
+/* global GHOST_GOING_HOME -- Ghost.js */
 
 /////////////////////////////////////////////////////////////////
 // Targetting

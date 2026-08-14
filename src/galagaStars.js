@@ -1,7 +1,7 @@
 
 // REFERENCED GLOBALS:
-/*global mapWidth, mapHeight -- renderers.js */
-/*global getRandomInt, getRandomColor -- random.js */
+/* global mapWidth, mapHeight -- renderers.js */
+/* global getRandomInt, getRandomColor -- random.js */
 
 const galagaStars = (function() {
 

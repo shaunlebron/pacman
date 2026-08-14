@@ -1,8 +1,8 @@
 
 // REFERENCED GLOBALS:
-/*global tileSize, midTile -- Map.js */
-/*global setDirFromEnum -- direction.js */
-/*global map -- maps.js */
+/* global tileSize, midTile -- Map.js */
+/* global setDirFromEnum -- direction.js */
+/* global map -- maps.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // The actor class defines common data functions for the ghosts and pacman

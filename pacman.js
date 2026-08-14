@@ -41,17 +41,17 @@
 //          hello: function() { return "world"; },
 //      };
 
-var newChildObject = function(parentObj, newObj) {
+const newChildObject = function(parentObj, newObj) {
 
     // equivalent to: var resultObj = { __proto__: parentObj };
-    var x = function(){};
+    const x = function(){};
     x.prototype = parentObj;
-    var resultObj = new x();
+    const resultObj = new x();
 
     // store new members in resultObj
     if (newObj) {
-        var hasProp = {}.hasOwnProperty;
-        for (var name in newObj) {
+        const hasProp = {}.hasOwnProperty;
+        for (const name in newObj) {
             if (hasProp.call(newObj, name)) {
                 resultObj[name] = newObj[name];
             }
@@ -62,32 +62,37 @@ var newChildObject = function(parentObj, newObj) {
 };
 //@line 1 "src/random.js"
 
-var getRandomColor = function() {
+const getRandomColor = function() {
     return '#'+('00000'+(Math.random()*(1<<24)|0).toString(16)).slice(-6);
 };
 
-var getRandomInt = function(min,max) {
+const getRandomInt = function(min,max) {
     return Math.floor(Math.random() * (max-min+1)) + min;
 };
 
 //@line 1 "src/game.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Game
 
 // game modes
-var GAME_PACMAN = 0;
-var GAME_MSPACMAN = 1;
-var GAME_COOKIE = 2;
-var GAME_OTTO = 3;
+const GAME_PACMAN = 0;
+const GAME_MSPACMAN = 1;
+const GAME_COOKIE = 2;
+const GAME_OTTO = 3;
 
-var practiceMode = false;
-var turboMode = false;
+let practiceMode = false;
+let turboMode = false;
+const setPracticeMode = function(m) { practiceMode = m; };
+const setTurboMode = function(m) { turboMode = m; };
 
 // current game mode
-var gameMode = GAME_PACMAN;
-var getGameName = (function(){
+let gameMode = GAME_PACMAN;
+const setGameMode = function(m) { gameMode = m; };
+const getGameName = (function(){
 
-    var names = ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"];
+    const names = ["PAC-MAN", "MS PAC-MAN", "COOKIE-MAN","CRAZY OTTO"];
     
     return function(mode) {
         if (mode == undefined) {
@@ -97,9 +102,9 @@ var getGameName = (function(){
     };
 })();
 
-var getGameDescription = (function(){
+const getGameDescription = (function(){
 
-    var desc = [
+    const desc = [
         [
             "ORIGINAL ARCADE:",
             "NAMCO (C) 1980",
@@ -153,7 +158,7 @@ var getGameDescription = (function(){
     };
 })();
 
-var getGhostNames = function(mode) {
+const getGhostNames = function(mode) {
     if (mode == undefined) {
         mode = gameMode;
     }
@@ -171,7 +176,7 @@ var getGhostNames = function(mode) {
     }
 };
 
-var getGhostDrawFunc = function(mode) {
+const getGhostDrawFunc = function(mode) {
     if (mode == undefined) {
         mode = gameMode;
     }
@@ -186,7 +191,7 @@ var getGhostDrawFunc = function(mode) {
     }
 };
 
-var getPlayerDrawFunc = function(mode) {
+const getPlayerDrawFunc = function(mode) {
     if (mode == undefined) {
         mode = gameMode;
     }
@@ -207,25 +212,25 @@ var getPlayerDrawFunc = function(mode) {
 
 
 // for clearing, backing up, and restoring cheat states (before and after cutscenes presently)
-var clearCheats, backupCheats, restoreCheats;
+let clearCheats, backupCheats, restoreCheats;
 (function(){
     clearCheats = function() {
         pacman.invincible = false;
         pacman.ai = false;
-        for (i=0; i<5; i++) {
-            actors[i].isDrawPath = false;
-            actors[i].isDrawTarget = false;
+        for (const a of actors) {
+            a.isDrawPath = false;
+            a.isDrawTarget = false;
         }
         executive.setUpdatesPerSecond(60);
     };
 
-    var i, invincible, ai, isDrawPath, isDrawTarget;
-    isDrawPath = {};
-    isDrawTarget = {};
+    let invincible, ai;
+    const isDrawPath = {};
+    const isDrawTarget = {};
     backupCheats = function() {
         invincible = pacman.invincible;
         ai = pacman.ai;
-        for (i=0; i<5; i++) {
+        for (let i=0; i<5; i++) {
             isDrawPath[i] = actors[i].isDrawPath;
             isDrawTarget[i] = actors[i].isDrawTarget;
         }
@@ -233,7 +238,7 @@ var clearCheats, backupCheats, restoreCheats;
     restoreCheats = function() {
         pacman.invincible = invincible;
         pacman.ai = ai;
-        for (i=0; i<5; i++) {
+        for (let i=0; i<5; i++) {
             actors[i].isDrawPath = isDrawPath[i];
             actors[i].isDrawTarget = isDrawTarget[i];
         }
@@ -241,25 +246,27 @@ var clearCheats, backupCheats, restoreCheats;
 })();
 
 // current level, lives, and score
-var level = 1;
-var extraLives = 0;
+let level = 1;
+let extraLives = 0;
+const setLevel = function(l) { level = l; };
+const setExtraLives = function(e) { extraLives = e; };
 
 // VCR functions
 
-var savedLevel = {};
-var savedExtraLives = {};
-var savedHighScore = {};
-var savedScore = {};
-var savedState = {};
+const savedLevel = {};
+const savedExtraLives = {};
+const savedHighScore = {};
+const savedScore = {};
+const savedState = {};
 
-var saveGame = function(t) {
+const saveGame = function(t) {
     savedLevel[t] = level;
     savedExtraLives[t] = extraLives;
     savedHighScore[t] = getHighScore();
     savedScore[t] = getScore();
     savedState[t] = state;
 };
-var loadGame = function(t) {
+const loadGame = function(t) {
     level = savedLevel[t];
     if (extraLives != savedExtraLives[t]) {
         extraLives = savedExtraLives[t];
@@ -267,26 +274,26 @@ var loadGame = function(t) {
     }
     setHighScore(savedHighScore[t]);
     setScore(savedScore[t]);
-    state = savedState[t];
+    setState(savedState[t]);
 };
 
 /// SCORING
 // (manages scores and high scores for each game type)
 
-var scores = [
+const scores = [
     0,0, // pacman
     0,0, // mspac
     0,0, // cookie
     0,0, // otto
     0 ];
-var highScores = [
+const highScores = [
     10000,10000, // pacman
     10000,10000, // mspac
     10000,10000, // cookie
     10000,10000, // otto
     ];
 
-var getScoreIndex = function() {
+const getScoreIndex = function() {
     if (practiceMode) {
         return 8;
     }
@@ -294,10 +301,10 @@ var getScoreIndex = function() {
 };
 
 // handle a score increment
-var addScore = function(p) {
+const addScore = function(p) {
 
     // get current scores
-    var score = getScore();
+    let score = getScore();
 
     // handle extra life at 10000 points
     if (score < 10000 && score+p >= 10000) {
@@ -315,40 +322,39 @@ var addScore = function(p) {
     }
 };
 
-var getScore = function() {
+const getScore = function() {
     return scores[getScoreIndex()];
 };
-var setScore = function(score) {
+const setScore = function(score) {
     scores[getScoreIndex()] = score;
 };
 
-var getHighScore = function() {
+const getHighScore = function() {
     return highScores[getScoreIndex()];
 };
-var setHighScore = function(highScore) {
+const setHighScore = function(highScore) {
     highScores[getScoreIndex()] = highScore;
     saveHighScores();
 };
 // High Score Persistence
 
-var loadHighScores = function() {
-    var hs;
-    var hslen;
-    var i;
+const loadHighScores = function() {
     if (localStorage && localStorage.highScores) {
-        hs = JSON.parse(localStorage.highScores);
-        hslen = hs.length;
-        for (i=0; i<hslen; i++) {
+        const hs = JSON.parse(localStorage.highScores);
+        const hslen = hs.length;
+        for (let i=0; i<hslen; i++) {
             highScores[i] = Math.max(highScores[i],hs[i]);
         }
     }
 };
-var saveHighScores = function() {
+const saveHighScores = function() {
     if (localStorage) {
         localStorage.highScores = JSON.stringify(highScores);
     }
 };
 //@line 1 "src/direction.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Directions
 // (variables and utility functions for representing actor heading direction)
@@ -358,29 +364,29 @@ var saveHighScores = function() {
 //       I've tried abstracting away the uses by creating functions to rotate them.
 // NOTE: This order determines tie-breakers in the shortest distance turn logic.
 //       (i.e. higher priority turns have lower enum values)
-var DIR_UP = 0;
-var DIR_LEFT = 1;
-var DIR_DOWN = 2;
-var DIR_RIGHT = 3;
+const DIR_UP = 0;
+const DIR_LEFT = 1;
+const DIR_DOWN = 2;
+const DIR_RIGHT = 3;
 
-var getClockwiseAngleFromTop = function(dirEnum) {
+const getClockwiseAngleFromTop = function(dirEnum) {
     return -dirEnum*Math.PI/2;
 };
 
-var rotateLeft = function(dirEnum) {
+const rotateLeft = function(dirEnum) {
     return (dirEnum+1)%4;
 };
 
-var rotateRight = function(dirEnum) {
+const rotateRight = function(dirEnum) {
     return (dirEnum+3)%4;
 };
 
-var rotateAboutFace = function(dirEnum) {
+const rotateAboutFace = function(dirEnum) {
     return (dirEnum+2)%4;
 };
 
 // get direction enum from a direction vector
-var getEnumFromDir = function(dir) {
+const getEnumFromDir = function(dir) {
     if (dir.x==-1) return DIR_LEFT;
     if (dir.x==1) return DIR_RIGHT;
     if (dir.y==-1) return DIR_UP;
@@ -388,7 +394,7 @@ var getEnumFromDir = function(dir) {
 };
 
 // set direction vector from a direction enum
-var setDirFromEnum = function(dir,dirEnum) {
+const setDirFromEnum = function(dir,dirEnum) {
     if (dirEnum == DIR_UP)         { dir.x = 0; dir.y =-1; }
     else if (dirEnum == DIR_RIGHT)  { dir.x =1; dir.y = 0; }
     else if (dirEnum == DIR_DOWN)  { dir.x = 0; dir.y = 1; }
@@ -396,14 +402,13 @@ var setDirFromEnum = function(dir,dirEnum) {
 };
 
 // return the direction of the open, surrounding tile closest to our target
-var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
+const getTurnClosestToTarget = function(tile,targetTile,openTiles) {
 
-    var dx,dy,dist;                      // variables used for euclidean distance
-    var minDist = Infinity;              // variable used for finding minimum distance path
-    var dir = {};
-    var dirEnum = 0;
-    var i;
-    for (i=0; i<4; i++) {
+    let dx,dy,dist;                      // variables used for euclidean distance
+    let minDist = Infinity;              // variable used for finding minimum distance path
+    const dir = {};
+    let dirEnum = 0;
+    for (let i=0; i<4; i++) {
         if (openTiles[i]) {
             setDirFromEnum(dir,i);
             dx = dir.x + tile.x - targetTile.x;
@@ -419,28 +424,27 @@ var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
 };
 
 // retrieve four surrounding tiles and indicate whether they are open
-var getOpenTiles = function(tile,dirEnum) {
+const getOpenTiles = function(tile,dirEnum) {
 
     // get open passages
-    var openTiles = {};
+    const openTiles = {};
     openTiles[DIR_UP] =    map.isFloorTile(tile.x, tile.y-1);
     openTiles[DIR_RIGHT] = map.isFloorTile(tile.x+1, tile.y);
     openTiles[DIR_DOWN] =  map.isFloorTile(tile.x, tile.y+1);
     openTiles[DIR_LEFT] =  map.isFloorTile(tile.x-1, tile.y);
 
-    var numOpenTiles = 0;
-    var i;
+    let numOpenTiles = 0;
     if (dirEnum != undefined) {
 
         // count number of open tiles
-        for (i=0; i<4; i++)
+        for (let i=0; i<4; i++)
             if (openTiles[i])
                 numOpenTiles++;
 
         // By design, no mazes should have dead ends,
         // but allow player to turn around if and only if it's necessary.
         // Only close the passage behind the player if there are other openings.
-        var oppDirEnum = rotateAboutFace(dirEnum); // current opposite direction enum
+        const oppDirEnum = rotateAboutFace(dirEnum); // current opposite direction enum
         if (numOpenTiles > 1)
             openTiles[oppDirEnum] = false;
     }
@@ -449,23 +453,25 @@ var getOpenTiles = function(tile,dirEnum) {
 };
 
 // returns if the given tile coordinate plus the given direction vector has a walkable floor tile
-var isNextTileFloor = function(tile,dir) {
+const isNextTileFloor = function(tile,dir) {
     return map.isFloorTile(tile.x+dir.x,tile.y+dir.y);
 };
 
 //@line 1 "src/Map.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Map
 // (an ascii map of tiles representing a level maze)
 
 // size of a square tile in pixels
-var tileSize = 8;
+const tileSize = 8;
 
 // the center pixel of a tile
-var midTile = {x:3, y:4};
+const midTile = {x:3, y:4};
 
 // constructor
-var Map = function(numCols, numRows, tiles) {
+const Map = function(numCols, numRows, tiles) {
 
     // sizes
     this.numCols = numCols;
@@ -500,8 +506,7 @@ Map.prototype.save = function(t) {
 Map.prototype.eraseFuture = function(t) {
     // current state at t.
     // erase all states after t.
-    var i;
-    for (i=0; i<this.numTiles; i++) {
+    for (let i=0; i<this.numTiles; i++) {
         if (t <= this.timeEaten[i]) {
             delete this.timeEaten[i];
         }
@@ -509,16 +514,13 @@ Map.prototype.eraseFuture = function(t) {
 };
 
 Map.prototype.load = function(t,abs_t) {
-    var firstTile,curTile;
-    var refresh = function(i) {
-        var x,y;
-        x = i%this.numCols;
-        y = Math.floor(i/this.numCols);
+    const refresh = function(i) {
+        const x = i%this.numCols;
+        const y = Math.floor(i/this.numCols);
         renderer.refreshPellet(x,y);
     };
-    var i;
-    for (i=0; i<this.numTiles; i++) {
-        firstTile = this.startTiles[i];
+    for (let i=0; i<this.numTiles; i++) {
+        const firstTile = this.startTiles[i];
         if (firstTile == '.' || firstTile == 'o') {
             if (abs_t <= this.timeEaten[i]) { // dot should be present
                 if (this.currentTiles[i] != firstTile) {
@@ -554,45 +556,44 @@ Map.prototype.resetCurrent = function() {
 // map without a spritesheet.
 Map.prototype.parseWalls = function() {
 
-    var that = this;
+    const that = this;
 
     // creates a list of drawable canvas paths to render the map walls
     this.paths = [];
 
     // a map of wall tiles that already belong to a built path
-    var visited = {};
+    const visited = {};
 
     // we extend the x range to suggest the continuation of the tunnels
-    var toIndex = function(x,y) {
+    const toIndex = function(x,y) {
         if (x>=-2 && x<that.numCols+2 && y>=0 && y<that.numRows)
             return (x+2)+y*(that.numCols+4);
     };
 
     // a map of which wall tiles that are not completely surrounded by other wall tiles
-    var edges = {};
-    var i=0,x,y;
-    for (y=0;y<this.numRows;y++) {
-        for (x=-2;x<this.numCols+2;x++,i++) {
+    const edges = {};
+    for (let i=0,y=0;y<this.numRows;y++) {
+        for (let x=-2;x<this.numCols+2;x++,i++) {
             if (this.getTile(x,y) == '|' &&
                 (this.getTile(x-1,y) != '|' ||
-                this.getTile(x+1,y) != '|' ||
-                this.getTile(x,y-1) != '|' ||
-                this.getTile(x,y+1) != '|' ||
-                this.getTile(x-1,y-1) != '|' ||
-                this.getTile(x-1,y+1) != '|' ||
-                this.getTile(x+1,y-1) != '|' ||
-                this.getTile(x+1,y+1) != '|')) {
+                    this.getTile(x+1,y) != '|' ||
+                    this.getTile(x,y-1) != '|' ||
+                    this.getTile(x,y+1) != '|' ||
+                    this.getTile(x-1,y-1) != '|' ||
+                    this.getTile(x-1,y+1) != '|' ||
+                    this.getTile(x+1,y-1) != '|' ||
+                    this.getTile(x+1,y+1) != '|')) {
                 edges[i] = true;
             }
         }
     }
 
     // walks along edge wall tiles starting at the given index to build a canvas path
-    var makePath = function(tx,ty) {
+    const makePath = function(tx,ty) {
 
         // get initial direction
-        var dir = {};
-        var dirEnum;
+        const dir = {};
+        let dirEnum;
         if (toIndex(tx+1,ty) in edges)
             dirEnum = DIR_RIGHT;
         else if (toIndex(tx, ty+1) in edges)
@@ -606,16 +607,16 @@ Map.prototype.parseWalls = function() {
         ty += dir.y;
 
         // backup initial location and direction
-        var init_tx = tx;
-        var init_ty = ty;
-        var init_dirEnum = dirEnum;
+        const init_tx = tx;
+        const init_ty = ty;
+        const init_dirEnum = dirEnum;
 
-        var path = [];
-        var pad; // (persists for each call to getStartPoint)
-        var point;
-        var lastPoint;
+        const path = [];
+        let pad; // (persists for each call to getStartPoint)
+        let point;
+        let lastPoint;
 
-        var turn,turnAround;
+        let turn,turnAround;
 
         /*
 
@@ -631,16 +632,16 @@ Map.prototype.parseWalls = function() {
            left.  In that case, there will be a padding distance applied.
            
         */
-        var getStartPoint = function(tx,ty,dirEnum) {
-            var dir = {};
+        const getStartPoint = function(tx,ty,dirEnum) {
+            const dir = {};
             setDirFromEnum(dir, dirEnum);
             if (!(toIndex(tx+dir.y,ty-dir.x) in edges))
                 pad = that.isFloorTile(tx+dir.y,ty-dir.x) ? 5 : 0;
-            var px = -tileSize/2+pad;
-            var py = tileSize/2;
-            var a = getClockwiseAngleFromTop(dirEnum);
-            var c = Math.cos(a);
-            var s = Math.sin(a);
+            const px = -tileSize/2+pad;
+            const py = tileSize/2;
+            const a = getClockwiseAngleFromTop(dirEnum);
+            const c = Math.cos(a);
+            const s = Math.sin(a);
             return {
                 // the first expression is the rotated point centered at origin
                 // the second expression is to translate it to the tile
@@ -713,9 +714,8 @@ Map.prototype.parseWalls = function() {
     };
 
     // iterate through all edges, making a new path after hitting an unvisited wall edge
-    i=0;
-    for (y=0;y<this.numRows;y++)
-        for (x=-2;x<this.numCols+2;x++,i++)
+    for (let i=0,y=0;y<this.numRows;y++)
+        for (let x=-2;x<this.numCols+2;x++,i++)
             if (i in edges && !(i in visited)) {
                 visited[i] = true;
                 makePath(x,y);
@@ -729,21 +729,19 @@ Map.prototype.parseDots = function() {
     this.numEnergizers = 0;
     this.energizers = [];
 
-    var x,y;
-    var i = 0;
-    var tile;
-    for (y=0; y<this.numRows; y++) for (x=0; x<this.numCols; x++) {
-        tile = this.tiles[i];
-        if (tile == '.') {
-            this.numDots++;
+    for (let i=0,y=0; y<this.numRows; y++)
+        for (let x=0; x<this.numCols; x++) {
+            const tile = this.tiles[i];
+            if (tile == '.') {
+                this.numDots++;
+            }
+            else if (tile == 'o') {
+                this.numDots++;
+                this.numEnergizers++;
+                this.energizers.push({'x':x,'y':y});
+            }
+            i++;
         }
-        else if (tile == 'o') {
-            this.numDots++;
-            this.numEnergizers++;
-            this.energizers.push({'x':x,'y':y});
-        }
-        i++;
-    }
 };
 
 // get remaining dots left
@@ -761,7 +759,7 @@ Map.prototype.parseTunnels = (function(){
     
     // starting from x,y and increment x by dx...
     // determine where the tunnel entrance begins
-    var getTunnelEntrance = function(x,y,dx) {
+    const getTunnelEntrance = function(x,y,dx) {
         while (!this.isFloorTile(x,y-1) && !this.isFloorTile(x,y+1) && this.isFloorTile(x,y))
             x += dx;
         return x;
@@ -769,14 +767,11 @@ Map.prototype.parseTunnels = (function(){
 
     // the number of margin tiles outside of the map on one side of a tunnel
     // There are (2*marginTiles) tiles outside of the map per tunnel.
-    var marginTiles = 2;
+    const marginTiles = 2;
 
     return function() {
         this.tunnelRows = {};
-        var y;
-        var i;
-        var left,right;
-        for (y=0;y<this.numRows;y++)
+        for (let y=0;y<this.numRows;y++)
             // a map row is a tunnel if opposite ends are both walkable tiles
             if (this.isFloorTile(0,y) && this.isFloorTile(this.numCols-1,y))
                 this.tunnelRows[y] = {
@@ -790,8 +785,7 @@ Map.prototype.parseTunnels = (function(){
 
 // teleport actor to other side of tunnel if necessary
 Map.prototype.teleport = function(actor){
-    var i;
-    var t = this.tunnelRows[actor.tile.y];
+    const t = this.tunnelRows[actor.tile.y];
     if (t) {
         if (actor.pixel.x < t.leftExit)       actor.pixel.x = t.rightExit;
         else if (actor.pixel.x > t.rightExit) actor.pixel.x = t.leftExit;
@@ -805,7 +799,7 @@ Map.prototype.posToIndex = function(x,y) {
 
 // define which tiles are inside the tunnel
 Map.prototype.isTunnelTile = function(x,y) {
-    var tunnel = this.tunnelRows[y];
+    const tunnel = this.tunnelRows[y];
     return tunnel && (x < tunnel.leftEntrance || x > tunnel.rightEntrance);
 };
 
@@ -833,7 +827,7 @@ Map.prototype.isFloorTile = function(x,y) {
 // mark the dot at the given coordinate eaten
 Map.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
-    var i = this.posToIndex(x,y);
+    const i = this.posToIndex(x,y);
     this.currentTiles[i] = ' ';
     this.timeEaten[i] = vcr.getTime();
     renderer.erasePellet(x,y);
@@ -854,13 +848,14 @@ Map.prototype.onDotEat = function(x,y) {
  */
 function rgbToHsl(r, g, b){
     r /= 255, g /= 255, b /= 255;
-    var max = Math.max(r, g, b), min = Math.min(r, g, b);
-    var h, s, l = (max + min) / 2;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s;
+    const l = (max + min) / 2;
 
     if(max == min){
         h = s = 0; // achromatic
     }else{
-        var d = max - min;
+        const d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         switch(max){
             case r: h = (g - b) / d + (g < b ? 6 : 0); break;
@@ -885,7 +880,7 @@ function rgbToHsl(r, g, b){
  * @return  Array           The RGB representation
  */
 function hslToRgb(h, s, l){
-    var r, g, b;
+    let r, g, b;
 
     if(s == 0){
         r = g = b = l; // achromatic
@@ -899,8 +894,8 @@ function hslToRgb(h, s, l){
             return p;
         }
 
-        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        var p = 2 * l - q;
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
         r = hue2rgb(p, q, h + 1/3);
         g = hue2rgb(p, q, h);
         b = hue2rgb(p, q, h - 1/3);
@@ -926,11 +921,12 @@ function hslToRgb(h, s, l){
  */
 function rgbToHsv(r, g, b){
     r = r/255, g = g/255, b = b/255;
-    var max = Math.max(r, g, b), min = Math.min(r, g, b);
-    var h, s, v = max;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h;
+    const v = max;
 
-    var d = max - min;
-    s = max == 0 ? 0 : d / max;
+    const d = max - min;
+    const s = max == 0 ? 0 : d / max;
 
     if(max == min){
         h = 0; // achromatic
@@ -958,13 +954,13 @@ function rgbToHsv(r, g, b){
  * @return  Array           The RGB representation
  */
 function hsvToRgb(h, s, v){
-    var r, g, b;
+    let r, g, b;
 
-    var i = Math.floor(h * 6);
-    var f = h * 6 - i;
-    var p = v * (1 - s);
-    var q = v * (1 - f * s);
-    var t = v * (1 - (1 - f) * s);
+    const i = Math.floor(h * 6);
+    const f = h * 6 - i;
+    const p = v * (1 - s);
+    const q = v * (1 - f * s);
+    const t = v * (1 - (1 - f) * s);
 
     switch(i % 6){
         case 0: r = v, g = t, b = p; break;
@@ -983,51 +979,49 @@ function hsvToRgb(h, s, v){
 }
 
 function rgbString(rgb) {
-    var r = Math.floor(rgb[0]);
-    var g = Math.floor(rgb[1]);
-    var b = Math.floor(rgb[2]);
+    const r = Math.floor(rgb[0]);
+    const g = Math.floor(rgb[1]);
+    const b = Math.floor(rgb[2]);
     return 'rgb('+r+','+g+','+b+')';
 }
 //@line 1 "src/mapgen.js"
-var mapgen = (function(){
 
-    var shuffle = function(list) {
-        var len = list.length;
-        var i,j;
-        var temp;
-        for (i=0; i<len; i++) {
-            j = getRandomInt(0,len-1);
-            temp = list[i];
+
+const mapgen = (function(){
+
+    const shuffle = function(list) {
+        const len = list.length;
+        for (let i=0; i<len; i++) {
+            const j = getRandomInt(0,len-1);
+            const temp = list[i];
             list[i] = list[j];
             list[j] = temp;
         }
     };
 
-    var randomElement = function(list) {
-        var len = list.length;
+    const randomElement = function(list) {
+        const len = list.length;
         if (len > 0) {
             return list[getRandomInt(0,len-1)];
         }
     };
 
-    var UP = 0;
-    var RIGHT = 1;
-    var DOWN = 2;
-    var LEFT = 3;
+    const UP = 0;
+    const RIGHT = 1;
+    const DOWN = 2;
+    const LEFT = 3;
 
-    var cells = [];
-    var tallRows = [];
-    var narrowCols = [];
+    const cells = [];
+    const tallRows = [];
+    const narrowCols = [];
 
-    var rows = 9;
-    var cols = 5;
+    const rows = 9;
+    const cols = 5;
 
-    var reset = function() {
-        var i;
-        var c;
+    const reset = function() {
 
         // initialize cells
-        for (i=0; i<rows*cols; i++) {
+        for (let i=0; i<rows*cols; i++) {
             cells[i] = {
                 x: i%cols,
                 y: Math.floor(i/cols),
@@ -1040,8 +1034,8 @@ var mapgen = (function(){
         }
 
         // allow each cell to refer to surround cells by direction
-        for (i=0; i<rows*cols; i++) {
-            var c = cells[i];
+        for (let i=0; i<rows*cols; i++) {
+            const c = cells[i];
             if (c.x > 0)
                 c.next[LEFT] = cells[i-1];
             if (c.x < cols - 1)
@@ -1054,8 +1048,8 @@ var mapgen = (function(){
 
         // define the ghost home square
 
-        i = 3*cols;
-        c = cells[i];
+        let i = 3*cols;
+        let c = cells[i];
         c.filled=true;
         c.connect[LEFT] = c.connect[RIGHT] = c.connect[DOWN] = true;
 
@@ -1075,15 +1069,14 @@ var mapgen = (function(){
         c.connect[UP] = c.connect[LEFT] = true;
     };
 
-    var genRandom = function() {
+    const genRandom = function() {
 
-		// Gathers all the non-filled cells of the left-most column not completely filled.
-        var getLeftMostEmptyCells = function() {
-            var x;
-            var leftCells = [];
-            for (x=0; x<cols; x++) {
-                for (y=0; y<rows; y++) {
-                    var c = cells[x+y*cols];
+        // Gathers all the non-filled cells of the left-most column not completely filled.
+        const getLeftMostEmptyCells = function() {
+            const leftCells = [];
+            for (let x=0; x<cols; x++) {
+                for (let y=0; y<rows; y++) {
+                    const c = cells[x+y*cols];
                     if (!c.filled) {
                         leftCells.push(c);
                     }
@@ -1096,12 +1089,12 @@ var mapgen = (function(){
             return leftCells;
         };
 
-		// determines if the given cell can grow in the given direction.
-		// cell: the source cell object
-		// i: the growth direction
-		// prevDir: last growth direction
-		// size: number of cells currently in this group
-        var isOpenCell = function(cell,i,prevDir,size) {
+        // determines if the given cell can grow in the given direction.
+        // cell: the source cell object
+        // i: the growth direction
+        // prevDir: last growth direction
+        // size: number of cells currently in this group
+        const isOpenCell = function(cell,i,prevDir,size) {
 
             // prevent wall from going through starting position
             if (cell.y == 6 && cell.x == 0 && i == DOWN ||
@@ -1128,11 +1121,11 @@ var mapgen = (function(){
             return false;
         };
 
-		// get the cells that can be the given cell can be grown toward
-        var getOpenCells = function(cell,prevDir,size) {
-            var openCells = [];
-            var numOpenCells = 0;
-            for (i=0; i<4; i++) {
+        // get the cells that can be the given cell can be grown toward
+        const getOpenCells = function(cell,prevDir,size) {
+            const openCells = [];
+            let numOpenCells = 0;
+            for (let i=0; i<4; i++) {
                 if (isOpenCell(cell,i,prevDir,size)) {
                     openCells.push(i);
                     numOpenCells++;
@@ -1141,8 +1134,8 @@ var mapgen = (function(){
             return { openCells: openCells, numOpenCells: numOpenCells };
         };
 
-		// grow a cell in the given direction
-        var connectCell = function(cell,dir) {
+        // grow a cell in the given direction
+        const connectCell = function(cell,dir) {
             cell.connect[dir] = true;
             cell.next[dir].connect[rotateAboutFace(dir)] = true;
             if (cell.x == 0 && dir == RIGHT) {
@@ -1150,22 +1143,21 @@ var mapgen = (function(){
             }
         };
 
-        var gen = function() {
+        const gen = function() {
         
-            var cell;      // cell at the center of growth (open cells are chosen around this cell)
-            var newCell;   // most recent cell filled
-            var firstCell; // the starting cell of the current group
+            let cell;      // cell at the center of growth (open cells are chosen around this cell)
+            let newCell;   // most recent cell filled
+            let firstCell; // the starting cell of the current group
 
-            var openCells;    // list of open cells around the center cell
-            var numOpenCells; // size of openCells
+            let openCells;    // list of open cells around the center cell
+            let numOpenCells; // size of openCells
 
-            var dir; // the most recent direction of growth relative to the center cell
-            var i;   // loop control variable used for iterating directions
+            let dir; // the most recent direction of growth relative to the center cell
+            let i;   // loop control variable used for iterating directions
 
-            var numFilled = 0;  // current count of total cells filled
-            var numGroups;      // current count of cell groups created
-            var size;           // current number of cells in the current group
-            var probStopGrowingAtSize = [ // probability of stopping growth at sizes...
+            let numFilled = 0;  // current count of total cells filled
+            let size;           // current number of cells in the current group
+            const probStopGrowingAtSize = [ // probability of stopping growth at sizes...
                     0,     // size 0
                     0,     // size 1
                     0.10,  // size 2
@@ -1175,23 +1167,23 @@ var mapgen = (function(){
 
             // A single cell group of size 1 is allowed at each row at y=0 and y=rows-1,
             // so keep count of those created.
-            var singleCount = {};
+            const singleCount = {};
             singleCount[0] = singleCount[rows-1] = 0;
-            var probTopAndBotSingleCellJoin = 0.35;
+            const probTopAndBotSingleCellJoin = 0.35;
 
             // A count and limit of the number long pieces (i.e. an "L" of size 4 or "T" of size 5)
-            var longPieces = 0;
-            var maxLongPieces = 1;
-            var probExtendAtSize2 = 1;
-            var probExtendAtSize3or4 = 0.5;
+            let longPieces = 0;
+            const maxLongPieces = 1;
+            const probExtendAtSize2 = 1;
+            const probExtendAtSize3or4 = 0.5;
 
-            var fillCell = function(cell) {
-                cell.filled = true;
-                cell.no = numFilled++;
-                cell.group = numGroups;
-            };
 
-            for (numGroups=0; ; numGroups++) {
+            for (let numGroups=0; ; numGroups++) { // current count of cell groups created
+                const fillCell = function(cell) {
+                    cell.filled = true;
+                    cell.no = numFilled++;
+                    cell.group = numGroups;
+                };
 
                 // find all the leftmost empty cells
                 openCells = getLeftMostEmptyCells();
@@ -1227,17 +1219,17 @@ var mapgen = (function(){
                     // only allow the piece to grow to 5 cells at most.
                     while (size < 5) {
 
-                        var stop = false;
+                        let stop = false;
 
                         if (size == 2) {
                             // With a horizontal 2-cell group, try to turn it into a 4-cell "L" group.
                             // This is done here because this case cannot be reached when a piece has already grown to size 3.
-                            var c = firstCell;
+                            let c = firstCell;
                             if (c.x > 0 && c.connect[RIGHT] && c.next[RIGHT] && c.next[RIGHT].next[RIGHT]) {
                                 if (longPieces < maxLongPieces && Math.random() <= probExtendAtSize2) {
 
                                     c = c.next[RIGHT].next[RIGHT];
-                                    var dirs = {};
+                                    const dirs = {};
                                     if (isOpenCell(c,UP)) {
                                         dirs[UP] = true;
                                     }
@@ -1273,7 +1265,7 @@ var mapgen = (function(){
 
                         if (!stop) {
                             // find available open adjacent cells.
-                            var result = getOpenCells(cell,dir,size);
+                            let result = getOpenCells(cell,dir,size);
                             openCells = result['openCells'];
                             numOpenCells = result['numOpenCells'];
 
@@ -1326,7 +1318,7 @@ var mapgen = (function(){
                             else if (size == 2) {
 
                                 // With a vertical 2-cell group, attach to the right wall if adjacent.
-                                var c = firstCell;
+                                let c = firstCell;
                                 if (c.x == cols-1) {
 
                                     // select the top cell
@@ -1341,17 +1333,17 @@ var mapgen = (function(){
 
                                 // Try to extend group to have a long leg
                                 if (longPieces < maxLongPieces && firstCell.x > 0 && Math.random() <= probExtendAtSize3or4) {
-                                    var dirs = [];
-                                    var dirsLength = 0;
-                                    for (i=0; i<4; i++) {
+                                    const dirs = [];
+                                    let dirsLength = 0;
+                                    for (let i=0; i<4; i++) {
                                         if (cell.connect[i] && isOpenCell(cell.next[i],i)) {
                                             dirs.push(i);
                                             dirsLength++;
                                         }
                                     }
                                     if (dirsLength > 0) {
-                                        i = dirs[getRandomInt(0,dirsLength-1)];
-                                        c = cell.next[i];
+                                        const i = dirs[getRandomInt(0,dirsLength-1)];
+                                        const c = cell.next[i];
                                         connectCell(c,i);
                                         fillCell(c.next[i]);
                                         longPieces++;
@@ -1368,14 +1360,11 @@ var mapgen = (function(){
         };
 
 
-        var setResizeCandidates = function() {
-            var i;
-            var c,q,c2,q2;
-            var x,y;
-            for (i=0; i<rows*cols; i++) {
-                c = cells[i];
-                x = i % cols;
-                y = Math.floor(i/cols);
+        const setResizeCandidates = function() {
+            for (let i=0; i<rows*cols; i++) {
+                const c = cells[i];
+                // const x = i % cols;
+                // const y = Math.floor(i/cols);
 
                 // determine if it has flexible height
 
@@ -1386,7 +1375,7 @@ var mapgen = (function(){
                 //  _
                 // | |
                 //
-                q = c.connect;
+                const q = c.connect;
                 if ((c.x == 0 || !q[LEFT]) &&
                     (c.x == cols-1 || !q[RIGHT]) &&
                     q[UP] != q[DOWN]) {
@@ -1396,9 +1385,9 @@ var mapgen = (function(){
                 //  _ _
                 // |_ _|
                 //
-                c2 = c.next[RIGHT];
+                const c2 = c.next[RIGHT];
                 if (c2 != undefined) {
-                    q2 = c2.connect;
+                    const q2 = c2.connect;
                     if (((c.x == 0 || !q[LEFT]) && !q[UP] && !q[DOWN]) &&
                         ((c2.x == cols-1 || !q2[RIGHT]) && !q2[UP] && !q2[DOWN])
                         ) {
@@ -1430,13 +1419,13 @@ var mapgen = (function(){
         };
 
         // Identify if a cell is the center of a cross.
-        var cellIsCrossCenter = function(c) {
+        const cellIsCrossCenter = function(c) {
             return c.connect[UP] && c.connect[RIGHT] && c.connect[DOWN] && c.connect[LEFT];
         };
 
-        var chooseNarrowCols = function() {
+        const chooseNarrowCols = function() {
 
-            var canShrinkWidth = function(x,y) {
+            const canShrinkWidth = function(x,y) {
 
                 // Can cause no more tight turns.
                 if (y==rows-1) {
@@ -1444,11 +1433,10 @@ var mapgen = (function(){
                 }
 
                 // get the right-hand-side bound
-                var x0;
-                var c,c2;
-                for (x0=x; x0<cols; x0++) {
-                    c = cells[x0+y*cols];
-                    c2 = c.next[DOWN]
+                let c2;
+                for (let x0=x; x0<cols; x0++) {
+                    const c = cells[x0+y*cols];
+                    c2 = c.next[DOWN];
                     if ((!c.connect[RIGHT] || cellIsCrossCenter(c)) &&
                         (!c2.connect[RIGHT] || cellIsCrossCenter(c2))) {
                         break;
@@ -1456,8 +1444,8 @@ var mapgen = (function(){
                 }
 
                 // build candidate list
-                var candidates = [];
-                var numCandidates = 0;
+                const candidates = [];
+                let numCandidates = 0;
                 for (; c2; c2=c2.next[LEFT]) {
                     if (c2.isShrinkWidthCandidate) {
                         candidates.push(c2);
@@ -1472,8 +1460,7 @@ var mapgen = (function(){
                 }
                 shuffle(candidates);
 
-                var i;
-                for (i=0; i<numCandidates; i++) {
+                for (let i=0; i<numCandidates; i++) {
                     c2 = candidates[i];
                     if (canShrinkWidth(c2.x,c2.y)) {
                         c2.shrinkWidth = true;
@@ -1485,10 +1472,8 @@ var mapgen = (function(){
                 return false;
             };
 
-            var x;
-            var c;
-            for (x=cols-1; x>=0; x--) {
-                c = cells[x];
+            for (let x=cols-1; x>=0; x--) {
+                const c = cells[x];
                 if (c.isShrinkWidthCandidate && canShrinkWidth(x,0)) {
                     c.shrinkWidth = true;
                     narrowCols[c.y] = c.x;
@@ -1499,9 +1484,9 @@ var mapgen = (function(){
             return false;
         };
 
-        var chooseTallRows = function() {
+        const chooseTallRows = function() {
 
-            var canRaiseHeight = function(x,y) {
+            const canRaiseHeight = function(x,y) {
 
                 // Can cause no more tight turns.
                 if (x==cols-1) {
@@ -1509,12 +1494,10 @@ var mapgen = (function(){
                 }
 
                 // find the first cell below that will create too tight a turn on the right
-                var y0;
-                var c;
-                var c2;
-                for (y0=y; y0>=0; y0--) {
-                    c = cells[x+y0*cols];
-                    c2 = c.next[RIGHT]
+                let c2;
+                for (let y0=y; y0>=0; y0--) {
+                    const c = cells[x+y0*cols];
+                    c2 = c.next[RIGHT];
                     if ((!c.connect[UP] || cellIsCrossCenter(c)) && 
                         (!c2.connect[UP] || cellIsCrossCenter(c2))) {
                         break;
@@ -1522,8 +1505,8 @@ var mapgen = (function(){
                 }
 
                 // Proceed from the right cell upwards, looking for a cell that can be raised.
-                var candidates = [];
-                var numCandidates = 0;
+                const candidates = [];
+                let numCandidates = 0;
                 for (; c2; c2=c2.next[DOWN]) {
                     if (c2.isRaiseHeightCandidate) {
                         candidates.push(c2);
@@ -1538,8 +1521,7 @@ var mapgen = (function(){
                 }
                 shuffle(candidates);
 
-                var i;
-                for (i=0; i<numCandidates; i++) {
+                for (let i=0; i<numCandidates; i++) {
                     c2 = candidates[i];
                     if (canRaiseHeight(c2.x,c2.y)) {
                         c2.raiseHeight = true;
@@ -1553,10 +1535,8 @@ var mapgen = (function(){
 
             // From the top left, examine cells below until hitting top of ghost house.
             // A raisable cell must be found before the ghost house.
-            var y;
-            var c;
-            for (y=0; y<3; y++) {
-                c = cells[y*cols];
+            for (let y=0; y<3; y++) {
+                const c = cells[y*cols];
                 if (c.isRaiseHeightCandidate && canRaiseHeight(0,y)) {
                     c.raiseHeight = true;
                     tallRows[c.x] = c.y;
@@ -1568,10 +1548,10 @@ var mapgen = (function(){
         };
 
         // This is a function to detect impurities in the map that have no heuristic implemented to avoid it yet in gen().
-        var isDesirable = function() {
+        const isDesirable = function() {
 
             // ensure a solid top right corner
-            var c = cells[4];
+            let c = cells[4];
             if (c.connect[UP] || c.connect[RIGHT]) {
                 return false;
             }
@@ -1583,15 +1563,15 @@ var mapgen = (function(){
             }
 
             // ensure there are no two stacked/side-by-side 2-cell pieces.
-            var isHori = function(x,y) {
-                var q1 = cells[x+y*cols].connect;
-                var q2 = cells[x+1+y*cols].connect;
+            const isHori = function(x,y) {
+                const q1 = cells[x+y*cols].connect;
+                const q2 = cells[x+1+y*cols].connect;
                 return !q1[UP] && !q1[DOWN] && (x==0 || !q1[LEFT]) && q1[RIGHT] && 
                        !q2[UP] && !q2[DOWN] && q2[LEFT] && !q2[RIGHT];
             };
-            var isVert = function(x,y) {
-                var q1 = cells[x+y*cols].connect;
-                var q2 = cells[x+(y+1)*cols].connect;
+            const isVert = function(x,y) {
+                const q1 = cells[x+y*cols].connect;
+                const q2 = cells[x+(y+1)*cols].connect;
                 if (x==cols-1) {
                     // special case (we can consider two single cells as vertical at the right edge)
                     return !q1[LEFT] && !q1[UP] && !q1[DOWN] &&
@@ -1600,10 +1580,8 @@ var mapgen = (function(){
                 return !q1[LEFT] && !q1[RIGHT] && !q1[UP] && q1[DOWN] && 
                        !q2[LEFT] && !q2[RIGHT] && q2[UP] && !q2[DOWN];
             };
-            var x,y;
-            var g;
-            for (y=0; y<rows-1; y++) {
-                for (x=0; x<cols-1; x++) {
+            for (let y=0; y<rows-1; y++) {
+                for (let x=0; x<cols-1; x++) {
                     if (isHori(x,y) && isHori(x,y+1) ||
                         isVert(x,y) && isVert(x+1,y)) {
 
@@ -1615,7 +1593,7 @@ var mapgen = (function(){
                         // Join the four cells to create a square.
                         cells[x+y*cols].connect[DOWN] = true;
                         cells[x+y*cols].connect[RIGHT] = true;
-                        g = cells[x+y*cols].group;
+                        const g = cells[x+y*cols].group;
 
                         cells[x+1+y*cols].connect[DOWN] = true;
                         cells[x+1+y*cols].connect[LEFT] = true;
@@ -1644,10 +1622,9 @@ var mapgen = (function(){
         };
 
         // set the final position and size of each cell when upscaling the simple model to actual size
-        var setUpScaleCoords = function() {
-            var i,c;
-            for (i=0; i<rows*cols; i++) {
-                c = cells[i];
+        const setUpScaleCoords = function() {
+            for (let i=0; i<rows*cols; i++) {
+                const c = cells[i];
                 c.final_x = c.x*3;
                 if (narrowCols[c.y] < c.x) {
                     c.final_x--;
@@ -1661,43 +1638,37 @@ var mapgen = (function(){
             }
         };
 
-        var reassignGroup = function(oldg,newg) {
-            var i;
-            var c;
-            for (i=0; i<rows*cols; i++) {
-                c = cells[i];
-                if (c.group == oldg) {
-                    c.group = newg;
-                }
-            }
-        };
+        // const reassignGroup = function(oldg,newg) {
+        //     for (let i=0; i<rows*cols; i++) {
+        //         const c = cells[i];
+        //         if (c.group == oldg) {
+        //             c.group = newg;
+        //         }
+        //     }
+        // };
 
-        var createTunnels = function() {
+        const createTunnels = function() {
 
             // declare candidates
-            var singleDeadEndCells = [];
-            var topSingleDeadEndCells = [];
-            var botSingleDeadEndCells = [];
+            const singleDeadEndCells = [];
+            const topSingleDeadEndCells = [];
+            const botSingleDeadEndCells = [];
 
-            var voidTunnelCells = [];
-            var topVoidTunnelCells = [];
-            var botVoidTunnelCells = [];
+            const voidTunnelCells = [];
+            const topVoidTunnelCells = [];
+            const botVoidTunnelCells = [];
 
-            var edgeTunnelCells = [];
-            var topEdgeTunnelCells = [];
-            var botEdgeTunnelCells = [];
+            const edgeTunnelCells = [];
+            const topEdgeTunnelCells = [];
+            const botEdgeTunnelCells = [];
 
-            var doubleDeadEndCells = [];
+            const doubleDeadEndCells = [];
 
-            var numTunnelsCreated = 0;
+            let numTunnelsCreated = 0;
 
             // prepare candidates
-            var y;
-            var c;
-            var upDead;
-            var downDead;
-            for (y=0; y<rows; y++) {
-                c = cells[cols-1+y*cols];
+            for (let y=0; y<rows; y++) {
+                const c = cells[cols-1+y*cols];
                 if (c.connect[UP]) {
                     continue;
                 }
@@ -1711,8 +1682,8 @@ var mapgen = (function(){
                         botEdgeTunnelCells.push(c);
                     }
                 }
-                upDead = (!c.next[UP] || c.next[UP].connect[RIGHT]);
-                downDead = (!c.next[DOWN] || c.next[DOWN].connect[RIGHT]);
+                const upDead = (!c.next[UP] || c.next[UP].connect[RIGHT]);
+                const downDead = (!c.next[DOWN] || c.next[DOWN].connect[RIGHT]);
                 if (c.connect[RIGHT]) {
                     if (upDead) {
                         c.isVoidTunnelCandidate = true;
@@ -1734,7 +1705,7 @@ var mapgen = (function(){
                             singleDeadEndCells.push(c);
                             c.isSingleDeadEndCandidate = true;
                             c.singleDeadEndDir = upDead ? UP : DOWN;
-                            var offset = upDead ? 1 : 0;
+                            const offset = upDead ? 1 : 0;
                             if (c.y <= 1+offset) {
                                 topSingleDeadEndCells.push(c);
                             }
@@ -1757,9 +1728,8 @@ var mapgen = (function(){
             }
 
             // choose tunnels from candidates
-            var numTunnelsDesired = Math.random() <= 0.45 ? 2 : 1;
-            var c;
-            var selectSingleDeadEnd = function(c) {
+            const numTunnelsDesired = Math.random() <= 0.45 ? 2 : 1;
+            const selectSingleDeadEnd = function(c) {
                 c.connect[RIGHT] = true;
                 if (c.singleDeadEndDir == UP) {
                     c.topTunnel = true;
@@ -1768,7 +1738,9 @@ var mapgen = (function(){
                     c.next[DOWN].topTunnel = true;
                 }
             };
+
             if (numTunnelsDesired == 1) {
+                let c;
                 if (c = randomElement(voidTunnelCells)) {
                     c.topTunnel = true;
                 }
@@ -1783,6 +1755,7 @@ var mapgen = (function(){
                 }
             }
             else if (numTunnelsDesired == 2) {
+                let c;
                 if (c = randomElement(doubleDeadEndCells)) {
                     c.connect[RIGHT] = true;
                     c.topTunnel = true;
@@ -1823,12 +1796,11 @@ var mapgen = (function(){
             }
 
             // don't allow a horizontal path to cut straight through a map (through tunnels)
-            var exit,topy;
-            for (y=0; y<rows; y++) {
-                c = cells[cols-1+y*cols];
+            for (let y=0; y<rows; y++) {
+                let c = cells[cols-1+y*cols];
                 if (c.topTunnel) {
-                    exit = true;
-                    topy = c.final_y;
+                    let exit = true;
+                    const topy = c.final_y;
                     while (c.next[LEFT]) {
                         c = c.next[LEFT];
                         if (!c.connect[UP] && c.final_y == topy) {
@@ -1846,20 +1818,18 @@ var mapgen = (function(){
             }
 
             // clear unused void tunnels (dead ends)
-            var len = voidTunnelCells.length;
-            var i;
+            const len = voidTunnelCells.length;
 
-            var replaceGroup = function(oldg,newg) {
-                var i,c;
-                for (i=0; i<rows*cols; i++) {
-                    c = cells[i];
+            const replaceGroup = function(oldg,newg) {
+                for (let i=0; i<rows*cols; i++) {
+                    const c = cells[i];
                     if (c.group == oldg) {
                         c.group = newg;
                     }
                 }
             };
-            for (i=0; i<len; i++) {
-                c = voidTunnelCells[i];
+            for (let i=0; i<len; i++) {
+                const c = voidTunnelCells[i];
                 if (!c.topTunnel) {
                     replaceGroup(c.group, c.next[UP].group);
                     c.connect[UP] = true;
@@ -1870,16 +1840,13 @@ var mapgen = (function(){
             return true;
         };
 
-        var joinWalls = function() {
+        const joinWalls = function() {
 
             // randomly join wall pieces to the boundary to increase difficulty
 
-            var x,y;
-            var c;
-
             // join cells to the top boundary
-            for (x=0; x<cols; x++) {
-                c = cells[x];
+            for (let x=0; x<cols; x++) {
+                const c = cells[x];
                 if (!c.connect[LEFT] && !c.connect[RIGHT] && !c.connect[UP] &&
                     (!c.connect[DOWN] || !c.next[DOWN].connect[DOWN])) {
 
@@ -1899,8 +1866,8 @@ var mapgen = (function(){
             }
 
             // join cells to the bottom boundary
-            for (x=0; x<cols; x++) {
-                c = cells[x+(rows-1)*cols];
+            for (let x=0; x<cols; x++) {
+                const c = cells[x+(rows-1)*cols];
                 if (!c.connect[LEFT] && !c.connect[RIGHT] && !c.connect[DOWN] &&
                     (!c.connect[UP] || !c.next[UP].connect[UP])) {
 
@@ -1920,16 +1887,15 @@ var mapgen = (function(){
             }
 
             // join cells to the right boundary
-            var c2;
-            for (y=1; y<rows-1; y++) {
-                c = cells[cols-1+y*cols];
+            for (let y=1; y<rows-1; y++) {
+                const c = cells[cols-1+y*cols];
                 if (c.raiseHeight) {
                     continue;
                 }
                 if (!c.connect[RIGHT] && !c.connect[UP] && !c.connect[DOWN] &&
                     !c.next[UP].connect[RIGHT] && !c.next[DOWN].connect[RIGHT]) {
                     if (c.connect[LEFT]) {
-                        c2 = c.next[LEFT];
+                        const c2 = c.next[LEFT];
                         if (!c2.connect[UP] && !c2.connect[DOWN] && !c2.connect[LEFT]) {
                             c.isJoinCandidate = true;
                             if (Math.random() <= 0.5) {
@@ -1942,7 +1908,7 @@ var mapgen = (function(){
         };
 
         // try to generate a valid map, and keep count of tries.
-        var genCount = 0;
+        let genCount = 0;
         while (true) {
             reset();
             gen();
@@ -1963,18 +1929,18 @@ var mapgen = (function(){
     };
 
     // Transform the simple cells to a tile array used for creating the map.
-    var getTiles = function() {
+    const getTiles = function() {
 
-        var tiles = []; // each is a character indicating a wall(|), path(.), or blank(_).
-        var tileCells = []; // maps each tile to a specific cell of our simple map
-        var subrows = rows*3+1+3;
-        var subcols = cols*3-1+2;
+        const tiles = []; // each is a character indicating a wall(|), path(.), or blank(_).
+        const tileCells = []; // maps each tile to a specific cell of our simple map
+        const subrows = rows*3+1+3;
+        const subcols = cols*3-1+2;
 
-        var midcols = subcols-2;
-        var fullcols = (subcols-2)*2;
+        const midcols = subcols-2;
+        const fullcols = (subcols-2)*2;
 
         // getter and setter for tiles (ensures vertical symmetry axis)
-        var setTile = function(x,y,v) {
+        const setTile = function(x,y,v) {
             if (x<0 || x>subcols-1 || y<0 || y>subrows-1) {
                 return;
             }
@@ -1982,7 +1948,7 @@ var mapgen = (function(){
             tiles[midcols+x+y*fullcols] = v;
             tiles[midcols-1-x+y*fullcols] = v;
         };
-        var getTile = function(x,y) {
+        const getTile = function(x,y) {
             if (x<0 || x>subcols-1 || y<0 || y>subrows-1) {
                 return undefined;
             }
@@ -1991,14 +1957,14 @@ var mapgen = (function(){
         };
 
         // getter and setter for tile cells
-        var setTileCell = function(x,y,cell) {
+        const setTileCell = function(x,y,cell) {
             if (x<0 || x>subcols-1 || y<0 || y>subrows-1) {
                 return;
             }
             x -= 2;
             tileCells[x+y*subcols] = cell;
         };
-        var getTileCell = function(x,y) {
+        const getTileCell = function(x,y) {
             if (x<0 || x>subcols-1 || y<0 || y>subrows-1) {
                 return undefined;
             }
@@ -2007,34 +1973,29 @@ var mapgen = (function(){
         };
 
         // initialize tiles
-        var i;
-        for (i=0; i<subrows*fullcols; i++) {
+        for (let i=0; i<subrows*fullcols; i++) {
             tiles.push('_');
         }
-        for (i=0; i<subrows*subcols; i++) {
+        for (let i=0; i<subrows*subcols; i++) {
             tileCells.push(undefined);
         }
 
         // set tile cells
-        var c;
-        var x,y,w,h;
-        var x0,y0;
-        for (i=0; i<rows*cols; i++) {
-            c = cells[i];
-            for (x0=0; x0<c.final_w; x0++) {
-                for (y0=0; y0<c.final_h; y0++) {
+        for (let i=0; i<rows*cols; i++) {
+            const c = cells[i];
+            for (let x0=0; x0<c.final_w; x0++) {
+                for (let y0=0; y0<c.final_h; y0++) {
                     setTileCell(c.final_x+x0,c.final_y+1+y0,c);
                 }
             }
         }
 
         // set path tiles
-        var cl, cu;
-        for (y=0; y<subrows; y++) {
-            for (x=0; x<subcols; x++) {
-                c = getTileCell(x,y); // cell
-                cl = getTileCell(x-1,y); // left cell
-                cu = getTileCell(x,y-1); // up cell
+        for (let y=0; y<subrows; y++) {
+            for (let x=0; x<subcols; x++) {
+                const c = getTileCell(x,y); // cell
+                const cl = getTileCell(x-1,y); // left cell
+                const cu = getTileCell(x,y-1); // up cell
 
                 if (c) {
                     // inside map
@@ -2060,18 +2021,17 @@ var mapgen = (function(){
         }
 
         // extend tunnels
-        var y;
-        for (c=cells[cols-1]; c; c = c.next[DOWN]) {
+        for (let c=cells[cols-1]; c; c = c.next[DOWN]) {
             if (c.topTunnel) {
-                y = c.final_y+1;
+                const y = c.final_y+1;
                 setTile(subcols-1, y,'.');
                 setTile(subcols-2, y,'.');
             }
         }
 
         // fill in walls
-        for (y=0; y<subrows; y++) {
-            for (x=0; x<subcols; x++) {
+        for (let y=0; y<subrows; y++) {
+            for (let x=0; x<subcols; x++) {
                 // any blank tile that shares a vertex with a path tile should be a wall tile
                 if (getTile(x,y) != '.' && (getTile(x-1,y) == '.' || getTile(x,y-1) == '.' || getTile(x+1,y) == '.' || getTile(x,y+1) == '.' ||
                     getTile(x-1,y-1) == '.' || getTile(x+1,y-1) == '.' || getTile(x+1,y+1) == '.' || getTile(x-1,y+1) == '.')) {
@@ -2084,19 +2044,18 @@ var mapgen = (function(){
         setTile(2,12,'-');
 
         // set energizers
-        var getTopEnergizerRange = function() {
-            var miny;
-            var maxy = subrows/2;
-            var x = subcols-2;
-            var y;
-            for (y=2; y<maxy; y++) {
+        const getTopEnergizerRange = function() {
+            let miny;
+            let maxy = subrows/2;
+            const x = subcols-2;
+            for (let y=2; y<maxy; y++) {
                 if (getTile(x,y) == '.' && getTile(x,y+1) == '.') {
                     miny = y+1;
                     break;
                 }
             }
             maxy = Math.min(maxy,miny+7);
-            for (y=miny+1; y<maxy; y++) {
+            for (let y=miny+1; y<maxy; y++) {
                 if (getTile(x-1,y) == '.') {
                     maxy = y-1;
                     break;
@@ -2104,19 +2063,18 @@ var mapgen = (function(){
             }
             return {miny:miny, maxy:maxy};
         };
-        var getBotEnergizerRange = function() {
-            var miny = subrows/2;
-            var maxy;
-            var x = subcols-2;
-            var y;
-            for (y=subrows-3; y>=miny; y--) {
+        const getBotEnergizerRange = function() {
+            let miny = subrows/2;
+            let maxy;
+            const x = subcols-2;
+            for (let y=subrows-3; y>=miny; y--) {
                 if (getTile(x,y) == '.' && getTile(x,y+1) == '.') {
                     maxy = y;
                     break;
                 }
             }
             miny = Math.max(miny,maxy-7);
-            for (y=maxy-1; y>miny; y--) {
+            for (let y=maxy-1; y>miny; y--) {
                 if (getTile(x-1,y) == '.') {
                     miny = y+1;
                     break;
@@ -2124,23 +2082,23 @@ var mapgen = (function(){
             }
             return {miny:miny, maxy:maxy};
         };
-        var x = subcols-2;
-        var y;
-        var range;
-        if (range = getTopEnergizerRange()) {
-            y = getRandomInt(range.miny, range.maxy);
-            setTile(x,y,'o');
-        }
-        if (range = getBotEnergizerRange()) {
-            y = getRandomInt(range.miny, range.maxy);
-            setTile(x,y,'o');
+        {
+            const x = subcols-2;
+            let range;
+            if (range = getTopEnergizerRange()) {
+                const y = getRandomInt(range.miny, range.maxy);
+                setTile(x,y,'o');
+            }
+            if (range = getBotEnergizerRange()) {
+                const y = getRandomInt(range.miny, range.maxy);
+                setTile(x,y,'o');
+            }
         }
 
         // erase pellets in the tunnels
-        var eraseUntilIntersection = function(x,y) {
-            var adj;
+        const eraseUntilIntersection = function(x,y) {
             while (true) {
-                adj = [];
+                const adj = [];
                 if (getTile(x-1,y) == '.') {
                     adj.push({x:x-1,y:y});
                 }
@@ -2163,10 +2121,12 @@ var mapgen = (function(){
                 }
             }
         };
-        x = subcols-1;
-        for (y=0; y<subrows; y++) {
-            if (getTile(x,y) == '.') {
-                eraseUntilIntersection(x,y);
+        {
+            const x = subcols-1;
+            for (let y=0; y<subrows; y++) {
+                if (getTile(x,y) == '.') {
+                    eraseUntilIntersection(x,y);
+                }
             }
         }
 
@@ -2174,51 +2134,53 @@ var mapgen = (function(){
         setTile(1,subrows-8,' ');
 
         // erase pellets around the ghost house
-        var i,j;
-        var y;
-        for (i=0; i<7; i++) {
+        for (let i=0; i<7; i++) {
 
             // erase pellets from bottom of the ghost house proceeding down until
             // reaching a pellet tile that isn't surround by walls
             // on the left and right
-            y = subrows-14;
-            setTile(i, y, ' ');
-            j = 1;
-            while (getTile(i,y+j) == '.' &&
+            {
+                const y = subrows-14;
+                setTile(i, y, ' ');
+                for (let j=1;
+                    getTile(i,y+j) == '.' &&
                     getTile(i-1,y+j) == '|' &&
-                    getTile(i+1,y+j) == '|') {
-                setTile(i,y+j,' ');
-                j++;
+                    getTile(i+1,y+j) == '|';
+                    j++) {
+                    setTile(i,y+j,' ');
+                }
             }
 
             // erase pellets from top of the ghost house proceeding up until
             // reaching a pellet tile that isn't surround by walls
             // on the left and right
-            y = subrows-20;
-            setTile(i, y, ' ');
-            j = 1;
-            while (getTile(i,y-j) == '.' &&
+            {
+                const y = subrows-20;
+                setTile(i, y, ' ');
+                for (let j=1;
+                    getTile(i,y-j) == '.' &&
                     getTile(i-1,y-j) == '|' &&
-                    getTile(i+1,y-j) == '|') {
-                setTile(i,y-j,' ');
-                j++;
+                    getTile(i+1,y-j) == '|';
+                    j++) {
+                    setTile(i,y-j,' ');
+                }
             }
         }
         // erase pellets on the side of the ghost house
-        for (i=0; i<7; i++) {
+        for (let i=0; i<7; i++) {
 
             // erase pellets from side of the ghost house proceeding right until
             // reaching a pellet tile that isn't surround by walls
             // on the top and bottom.
-            x = 6;
-            y = subrows-14-i;
+            const x = 6;
+            const y = subrows-14-i;
             setTile(x, y, ' ');
-            j = 1;
-            while (getTile(x+j,y) == '.' &&
-                    getTile(x+j,y-1) == '|' &&
-                    getTile(x+j,y+1) == '|') {
+            for (let j=1;
+                getTile(x+j,y) == '.' &&
+                getTile(x+j,y-1) == '|' &&
+                getTile(x+j,y+1) == '|';
+                j++) {
                 setTile(x+j,y,' ');
-                j++;
             }
         }
 
@@ -2232,7 +2194,7 @@ var mapgen = (function(){
             "____________________________");
     };
 
-    var randomColor = function() {
+    const randomColor = function() {
         return '#'+('00000'+(Math.random()*(1<<24)|0).toString(16)).slice(-6);
     };
 
@@ -2240,23 +2202,22 @@ var mapgen = (function(){
     // we also remove (destroyX,destroyY) from the map to try to constrain the path
     // from going a certain way from the start.
     // (We created this because the ghost's minimum distance direction is not always sufficient in procedural maps)
-    var getShortestDistGraph = function(map,x0,y0,isNodeTile) {
+    const getShortestDistGraph = function(map,x0,y0,isNodeTile) {
 
         // build graph
-        var graph = {};
-        var x,y,i,j;
-        for (y=0; y<36; y++) {
-            for (x=0; x<28; x++) {
+        const graph = {};
+        for (let y=0; y<36; y++) {
+            for (let x=0; x<28; x++) {
                 if (isNodeTile(x,y)) {
-                    i = x+y*28;
+                    const i = x+y*28;
                     graph[i] = {'x':x, 'y':y, 'dist':Infinity, 'penult':undefined, 'neighbors':[], 'completed':false};
                     if (isNodeTile(x-1,y)) {
-                        j = i-1;
+                        const j = i-1;
                         graph[i].neighbors.push(graph[j]);
                         graph[j].neighbors.push(graph[i]);
                     }
                     if (isNodeTile(x,y-1)) {
-                        j = i-28;
+                        const j = i-28;
                         graph[i].neighbors.push(graph[j]);
                         graph[j].neighbors.push(graph[i]);
                     }
@@ -2264,18 +2225,16 @@ var mapgen = (function(){
             }
         }
 
-        var node = graph[x0+y0*28];
+        let node = graph[x0+y0*28];
         node.completed = true;
         node.dist = 0;
-        var d;
-        var next_node,min_dist,dist;
         while (true) {
 
             // update distances of current node's neighbors
-            for (i=0; i<4; i++) {
-                d = node.neighbors[i];
+            for (let i=0; i<4; i++) {
+                const d = node.neighbors[i];
                 if (d && !d.completed) {
-                    dist = node.dist+1;
+                    const dist = node.dist+1;
                     if (dist == d.dist) {
                         if (Math.random() < 0.5) {
                             d.penult = node;
@@ -2289,10 +2248,10 @@ var mapgen = (function(){
             }
 
             // find next node to process (closest fringe node)
-            next_node = undefined;
-            min_dist = Infinity;
-            for (i=0; i<28*36; i++) {
-                d = graph[i];
+            let next_node = undefined;
+            let min_dist = Infinity;
+            for (let i=0; i<28*36; i++) {
+                const d = graph[i];
                 if (d && !d.completed) {
                     if (d.dist < min_dist) { 
                         next_node = d;
@@ -2313,12 +2272,12 @@ var mapgen = (function(){
     };
 
     // retrieves the direction enum from a node's penultimate node to itself.
-    var getDirFromPenult = function(node) {
+    const getDirFromPenult = function(node) {
         if (!node.penult) {
             return undefined;
         }
-        var dx = node.x - node.penult.x;
-        var dy = node.y - node.penult.y;
+        const dx = node.x - node.penult.x;
+        const dy = node.y - node.penult.y;
         if (dy == -1) {
             return DIR_UP;
         }
@@ -2335,22 +2294,22 @@ var mapgen = (function(){
 
     // sometimes the ghosts can get stuck in loops when trying to return home
     // so we build a path from all tiles to the ghost door tile
-    var makeExitPaths = function(map) {
-        var isNodeTile = function(x,y) {
+    const makeExitPaths = function(map) {
+        const isNodeTile = function(x,y) {
             if (x<0 || x>=28 || y<0 || y>=36) {
                 return false;
             }
             return map.isFloorTile(x,y);
         };
-        var graph = getShortestDistGraph(map,map.doorTile.x,map.doorTile.y,isNodeTile);
+        const graph = getShortestDistGraph(map,map.doorTile.x,map.doorTile.y,isNodeTile);
 
         // give the map a function that tells the ghost which direction to go to return home
         map.getExitDir = function(x,y) {
             if (x<0 || x>=28 || y<0 || y>=36) {
                 return undefined;
             }
-            var node = graph[x+y*28];
-            var dirEnum = getDirFromPenult(node);
+            const node = graph[x+y*28];
+            const dirEnum = getDirFromPenult(node);
             if (dirEnum != undefined) {
                 return rotateAboutFace(dirEnum); // reverse direction (door->ghost to door<-ghost)
             }
@@ -2358,56 +2317,53 @@ var mapgen = (function(){
     };
 
     // add fruit paths to a map
-    var makeFruitPaths = (function(){
-        var reversed = {
+    const makeFruitPaths = (function(){
+        const reversed = {
             'v':'^',
             '^':'v',
             '<':'>',
             '>':'<',
         };
-        var reversePath = function(path) {
-            var rpath = "";
-            var i;
-            for (i=path.length-1; i>=0; i--) {
+        const reversePath = function(path) {
+            let rpath = "";
+            for (let i=path.length-1; i>=0; i--) {
                 rpath += reversed[path[i]];
             }
             return rpath;
         };
 
-        var dirChars = {};
+        const dirChars = {};
         dirChars[DIR_UP] = '^';
         dirChars[DIR_DOWN] = 'v';
         dirChars[DIR_LEFT] = '<';
         dirChars[DIR_RIGHT] = '>';
 
-        var getPathFromGraph = function(graph,x0,y0,x1,y1,reverse) {
+        const getPathFromGraph = function(graph,x0,y0,x1,y1,reverse) {
             // from (x0,y0) to (x1,y1)
-            var start_node = graph[x0+y0*28];
-            var dx,dy;
-            var path = "";
-            var node;
-            for (node=graph[x1+y1*28]; node!=start_node; node=node.penult) {
+            const start_node = graph[x0+y0*28];
+            let path = "";
+            for (let node=graph[x1+y1*28]; node!=start_node; node=node.penult) {
                 path = dirChars[getDirFromPenult(node)] + path;
             }
             return reverse ? reversePath(path) : path;
-        }
+        };
 
         return function(map) {
 
-            paths = {entrances:[], exits:[]};
+            const paths = {entrances:[], exits:[]};
 
-            var isFloorTile = function(x,y) {
+            const isFloorTile = function(x,y) {
                 if (x<0 || x>=28 || y<0 || y>=36) {
-                    return false
+                    return false;
                 }
                 return map.isFloorTile(x,y);
             };
 
-            enter_graph = getShortestDistGraph(map,15,20, function(x,y) { return (x==14 && y==20) ? false : isFloorTile(x,y); });
-            exit_graph =  getShortestDistGraph(map,16,20, function(x,y) { return (x==17 && y==20) ? false : isFloorTile(x,y); });
+            const enter_graph = getShortestDistGraph(map,15,20, function(x,y) { return (x==14 && y==20) ? false : isFloorTile(x,y); });
+            const exit_graph =  getShortestDistGraph(map,16,20, function(x,y) { return (x==17 && y==20) ? false : isFloorTile(x,y); });
 
             // start at (15,20)
-            for (y=0; y<36; y++) {
+            for (let y=0; y<36; y++) {
                 if (map.isFloorTile(-1,y)) {
 
                     // left entrance
@@ -2438,7 +2394,7 @@ var mapgen = (function(){
 
     return function() {
         genRandom();
-        var map = new Map(28,36,getTiles());
+        const map = new Map(28,36,getTiles());
 
         makeFruitPaths(map);
         makeExitPaths(map);
@@ -2453,35 +2409,35 @@ var mapgen = (function(){
 })();
 //@line 1 "src/atlas.js"
 
-var atlas = (function(){
 
-    var canvas,ctx;
-    var size = 22;
-    var cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
-    var rows = 22;
+const atlas = (function(){
 
-    var creates = 0;
+    let canvas,ctx;
+    const size = 22;
+    const cols = 14; // has to be ONE MORE than intended to fix some sort of CHROME BUG (last cell always blank?)
+    const rows = 22;
 
-    var drawGrid = function() {
+    let creates = 0;
+
+    const drawGrid = function() {
         // draw grid overlay
-        var canvas = document.getElementById('gridcanvas');
+        const canvas = document.getElementById('gridcanvas');
         if (!canvas) {
             return;
         }
-        var w = size*cols*renderScale;
-        var h = size*rows*renderScale;
+        const w = size*cols*renderScale;
+        const h = size*rows*renderScale;
         canvas.width = w;
         canvas.height = h;
-        var ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
         ctx.clearRect(0,0,w,h);
-        var x,y;
-        var step = size*renderScale;
+        const step = size*renderScale;
         ctx.beginPath();
-        for (x=0; x<=w; x+=step) {
+        for (let x=0; x<=w; x+=step) {
             ctx.moveTo(x,0);
             ctx.lineTo(x,h);
         }
-        for (y=0; y<=h; y+=step) {
+        for (let y=0; y<=h; y+=step) {
             ctx.moveTo(0,y);
             ctx.lineTo(w,y);
         }
@@ -2491,7 +2447,7 @@ var atlas = (function(){
         ctx.stroke();
     };
 
-    var create = function() {
+    const create = function() {
         drawGrid();
         canvas = document.getElementById('atlas');
         ctx = canvas.getContext("2d");
@@ -2501,8 +2457,8 @@ var atlas = (function(){
         canvas.style.position = "absolute";
         */
 
-        var w = size*cols*renderScale;
-        var h = size*rows*renderScale;
+        const w = size*cols*renderScale;
+        const h = size*rows*renderScale;
         canvas.width = w;
         canvas.height = h;
 
@@ -2515,13 +2471,13 @@ var atlas = (function(){
         ctx.clearRect(0,0,w,h);
         ctx.scale(renderScale,renderScale);
 
-        var drawAtCell = function(f,row,col) {
-            var x = col*size + size/2;
-            var y = row*size + size/2;
+        const drawAtCell = function(f,row,col) {
+            const x = col*size + size/2;
+            const y = row*size + size/2;
             f(x,y);
         };
 
-        var row = 0;
+        let row = 0;
         drawAtCell(function(x,y) { drawCherry(ctx,x,y); },      row,0);
         drawAtCell(function(x,y) { drawStrawberry(ctx,x,y); },  row,1);
         drawAtCell(function(x,y) { drawOrange(ctx,x,y); },      row,2);
@@ -2536,13 +2492,10 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawCookie(ctx,x,y); },      row,11);
         drawAtCell(function(x,y) { drawCookieFlash(ctx,x,y); },      row,12);
 
-        var drawGhostCells = function(row,color) {
-            var i,f;
-            var col = 0;
-            for (i=0; i<4; i++) { // dirEnum
-                for (f=0; f<2; f++) { // frame
+        const drawGhostCells = function(row,color) {
+            for (let col=0, i=0; i<4; i++) { // dirEnum
+                for (let f=0; f<2; f++, col++) { // frame
                     drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
-                    col++;
                 }
             }
         };
@@ -2559,11 +2512,8 @@ var atlas = (function(){
         row++;
         // draw disembodied eyes
         (function(){
-            var i;
-            var col = 0;
-            for (i=0; i<4; i++) { // dirEnum
+            for (let col=0, i=0; i<4; i++, col++) { // dirEnum
                 drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
-                col++;
             }
         })();
 
@@ -2573,7 +2523,7 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
         drawAtCell(function(x,y) { drawGhostSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
 
-        var drawPacCells = function(row,col,dir) {
+        const drawPacCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/6); }, row, col);
             drawAtCell(function(x,y) { drawPacmanSprite(ctx, x,y, dir, Math.PI/3); }, row, col+1);
         };
@@ -2584,51 +2534,39 @@ var atlas = (function(){
 
         // draw pacman directions
         (function(){
-            var i;
-            var col=1;
-            for (i=0; i<4; i++) {
+            for (let col=1, i=0; i<4; i++, col+=2) {
                 drawPacCells(row,col,i);
-                col+=2;
             }
         })();
 
-        var drawMsPacCells = function(row,col,dir) {
+        const drawMsPacCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 0); }, row, col);
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 1); }, row, col+1);
             drawAtCell(function(x,y) { drawMsPacmanSprite(ctx, x,y, dir, 2); }, row, col+2);
         };
         row++;
         (function(){
-            var i;
-            var col=0;
-            for (i=0; i<4; i++) {
+            for (let col=0, i=0; i<4; i++, col+=3) {
                 drawMsPacCells(row,col,i);
-                col+=3;
             }
         })();
 
-        var drawCookieCells = function(row,col,dir) {
+        const drawCookieCells = function(row,col,dir) {
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 0, true); }, row, col);
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 1, true); }, row, col+1);
             drawAtCell(function(x,y) { drawCookiemanSprite(ctx, x,y, dir, 2, true); }, row, col+2);
         };
         row++;
         (function(){
-            var i;
-            var col=0;
-            for (i=0; i<4; i++) {
+            for (let col=0, i=0; i<4; i++, col+=3) {
                 drawCookieCells(row,col,i);
-                col+=3;
             }
         })();
 
-        var drawMonsterCells = function(row,color) {
-            var i,f;
-            var col=0;
-            for (i=0; i<4; i++) { // dirEnum
-                for (f=0; f<2; f++) { // frame
+        const drawMonsterCells = function(row,color) {
+            for (let col=0, i=0; i<4; i++) { // dirEnum
+                for (let f=0; f<2; f++, col++) { // frame
                     drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, f, i, false, false, false, color); },   row,col);
-                    col++;
                 }
             }
         };
@@ -2644,11 +2582,8 @@ var atlas = (function(){
 
         row++;
         (function(){
-            var i;
-            var col = 0;
-            for (i=0; i<4; i++) { // dirEnum
+            for (let col=0, i=0; i<4; i++, col++) { // dirEnum
                 drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, i, false, false, true, "#fff"); },     row,col);
-                col++;
             }
         })();
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, false, false, "#fff"); }, row,4);
@@ -2656,11 +2591,9 @@ var atlas = (function(){
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 0, DIR_UP, true, true, false, "#fff"); },  row,6);
         drawAtCell(function(x,y) { drawMonsterSprite(ctx, x,y, 1, DIR_UP, true, true, false, "#fff"); },  row,7);
 
-        var drawOttoCells = function(row,col,dir) {
-            var i;
-            for (i=0; i<4; i++) { // frame
+        const drawOttoCells = function(row,col,dir) {
+            for (let i=0; i<4; i++, col++) { // frame
                 drawAtCell(function(x,y) { drawOttoSprite(ctx, x,y, dir, i); }, row, col);
-                col++;
             }
         };
         row++;
@@ -2700,11 +2633,9 @@ var atlas = (function(){
             drawSnail(ctx,x,y, "#FFF");
         }, row, 1);
 
-        var drawMsOttoCells = function(row,col,dir) {
-            var i;
-            for (i=0; i<4; i++) { // frame
+        const drawMsOttoCells = function(row,col,dir) {
+            for (let i=0; i<4; i++, col++) { // frame
                 drawAtCell(function(x,y) { drawMsOttoSprite(ctx, x,y, dir, i); }, row, col);
-                col++;
             }
         };
         row++;
@@ -2716,16 +2647,16 @@ var atlas = (function(){
 
     };
 
-    var copyCellTo = function(row, col, destCtx, x, y,display) {
-        var sx = col*size*renderScale;
-        var sy = row*size*renderScale;
-        var sw = renderScale*size;
-        var sh = renderScale*size;
+    const copyCellTo = function(row, col, destCtx, x, y,display) {
+        const sx = col*size*renderScale;
+        const sy = row*size*renderScale;
+        const sw = renderScale*size;
+        const sh = renderScale*size;
 
-        var dx = x - size/2;
-        var dy = y - size/2;
-        var dw = size;
-        var dh = size;
+        const dx = x - size/2;
+        const dy = y - size/2;
+        const dw = size;
+        const dh = size;
 
         if (display) {
             console.log(sx,sy,sw,sh,dw,dy,dw,dh);
@@ -2734,9 +2665,9 @@ var atlas = (function(){
         destCtx.drawImage(canvas,sx,sy,sw,sh,dx,dy,dw,dh);
     };
 
-    var copyGhostPoints = function(destCtx,x,y,points) {
-        var row = 16;
-        var col = {
+    const copyGhostPoints = function(destCtx,x,y,points) {
+        const row = 16;
+        const col = {
             200: 0,
             400: 1,
             800: 2,
@@ -2747,9 +2678,9 @@ var atlas = (function(){
         }
     };
 
-    var copyPacFruitPoints = function(destCtx,x,y,points) {
-        var row = 16;
-        var col = {
+    const copyPacFruitPoints = function(destCtx,x,y,points) {
+        const row = 16;
+        const col = {
             100: 4,
             300: 5,
             500: 6,
@@ -2764,9 +2695,9 @@ var atlas = (function(){
         }
     };
 
-    var copyMsPacFruitPoints = function(destCtx,x,y,points) {
-        var row = 17;
-        var col = {
+    const copyMsPacFruitPoints = function(destCtx,x,y,points) {
+        const row = 17;
+        const col = {
             100: 0,
             200: 1,
             500: 2,
@@ -2780,8 +2711,8 @@ var atlas = (function(){
         }
     };
 
-    var copyGhostSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
-        var row,col;
+    const copyGhostSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        let row,col;
         if (eyes_only) {
             row = 5;
             col = dirEnum;
@@ -2813,7 +2744,7 @@ var atlas = (function(){
         copyCellTo(row, col, destCtx, x, y);
     };
 
-    var copyMuppetSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+    const copyMuppetSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
         if (scared) {
             if (flash) {
                 copyFruitSprite(destCtx,x,y,"cookieface");
@@ -2827,8 +2758,8 @@ var atlas = (function(){
         }
     };
 
-    var copyMonsterSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
-        var row,col;
+    const copyMonsterSprite = function(destCtx,x,y,frame,dirEnum,scared,flash,eyes_only,color) {
+        let row,col;
         if (eyes_only) {
             row = 13;
             col = dirEnum;
@@ -2860,8 +2791,8 @@ var atlas = (function(){
         copyCellTo(row, col, destCtx, x, y);
     };
 
-    var copyOttoSprite = function(destCtx,x,y,dirEnum,frame) {
-        var col,row;
+    const copyOttoSprite = function(destCtx,x,y,dirEnum,frame) {
+        let col,row;
         if (dirEnum == DIR_UP) {
             col = frame;
             row = 14;
@@ -2881,8 +2812,8 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyMsOttoSprite = function(destCtx,x,y,dirEnum,frame) {
-        var col,row;
+    const copyMsOttoSprite = function(destCtx,x,y,dirEnum,frame) {
+        let col,row;
         if (dirEnum == DIR_UP) {
             col = frame;
             row = 19;
@@ -2902,15 +2833,15 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copySnail = function(destCtx,x,y,frame) {
-        var row = 18;
-        var col = frame;
+    const copySnail = function(destCtx,x,y,frame) {
+        const row = 18;
+        const col = frame;
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
-        var row = 6;
-        var col;
+    const copyPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
+        const row = 6;
+        let col;
         if (frame == 0) {
             col = 0;
         }
@@ -2920,23 +2851,23 @@ var atlas = (function(){
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyMsPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
+    const copyMsPacmanSprite = function(destCtx,x,y,dirEnum,frame) {
         // TODO: determine row, col
         //copyCellTo(row,col,destCtx,x,y);
-        var row = 7;
-        var col = dirEnum*3+frame;
+        const row = 7;
+        const col = dirEnum*3+frame;
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyCookiemanSprite = function(destCtx,x,y,dirEnum,frame) {
-        var row = 8;
-        var col = dirEnum*3+frame;
+    const copyCookiemanSprite = function(destCtx,x,y,dirEnum,frame) {
+        const row = 8;
+        const col = dirEnum*3+frame;
         copyCellTo(row,col,destCtx,x,y);
     };
 
-    var copyFruitSprite = function(destCtx,x,y,name) {
-        var row = 0;
-        var col = {
+    const copyFruitSprite = function(destCtx,x,y,name) {
+        const row = 0;
+        const col = {
             "cherry": 0,
             "strawberry": 1,
             "orange": 2,
@@ -2974,6 +2905,8 @@ var atlas = (function(){
     };
 })();
 //@line 1 "src/renderers.js"
+
+
 //////////////////////////////////////////////////////////////
 // Renderers
 
@@ -2981,32 +2914,32 @@ var atlas = (function(){
 // to enable to different front-end displays for Pac-Man.
 
 // list of available renderers
-var renderer_list;
+let renderer_list;
 
 // current renderer
-var renderer;
+let renderer;
 
-var renderScale;
+let renderScale;
 
-var mapMargin = 4*tileSize; // margin between the map and the screen
-var mapPad = tileSize/8; // padding between the map and its clipping
+const mapMargin = 4*tileSize; // margin between the map and the screen
+const mapPad = tileSize/8; // padding between the map and its clipping
 
-var mapWidth = 28*tileSize+mapPad*2;
-var mapHeight = 36*tileSize+mapPad*2;
+const mapWidth = 28*tileSize+mapPad*2;
+const mapHeight = 36*tileSize+mapPad*2;
 
-var screenWidth = mapWidth+mapMargin*2;
-var screenHeight = mapHeight+mapMargin*2;
+const screenWidth = mapWidth+mapMargin*2;
+const screenHeight = mapHeight+mapMargin*2;
 
 // all rendering will be shown on this canvas
-var canvas;
+let canvas;
 
 // switch to the given renderer index
-var switchRenderer = function(i) {
+const switchRenderer = function(i) {
     renderer = renderer_list[i];
     renderer.drawMap();
 };
 
-var getDevicePixelRatio = function() {
+const getDevicePixelRatio = function() {
     // Only consider the device pixel ratio for devices that are <= 320 pixels in width.
     // This is necessary for the iPhone4's retina display; otherwise the game would be blurry.
     // The iPad3's retina display @ 2048x1536 starts slowing the game down.
@@ -3017,28 +2950,31 @@ var getDevicePixelRatio = function() {
     return 1;
 };
 
-var initRenderer = function(){
+const initRenderer = function(){
 
-    var bgCanvas;
-    var ctx, bgCtx;
+    // create foreground and background canvases
+    canvas = document.getElementById('canvas');
+    const bgCanvas = document.createElement('canvas');
+    const ctx = canvas.getContext("2d");
+    const bgCtx = bgCanvas.getContext("2d");
 
     // drawing scale
-    var scale = 2;        // scale everything by this amount
+    let scale = 2;        // scale everything by this amount
 
     // (temporary global version of scale just to get things quickly working)
     renderScale = scale; 
 
-    var resets = 0;
+    let resets = 0;
 
     // rescale the canvases
-    var resetCanvasSizes = function() {
+    const resetCanvasSizes = function() {
 
         // set the size of the canvas in actual pixels
         canvas.width = screenWidth * scale;
         canvas.height = screenHeight * scale;
 
         // set the size of the canvas in browser pixels
-        var ratio = getDevicePixelRatio();
+        const ratio = getDevicePixelRatio();
         canvas.style.width = canvas.width / ratio;
         canvas.style.height = canvas.height / ratio;
 
@@ -3060,16 +2996,16 @@ var initRenderer = function(){
     };
 
     // get the target scale that will cause the canvas to fit the window
-    var getTargetScale = function() {
-        var sx = (window.innerWidth - 10) / screenWidth;
-        var sy = (window.innerHeight - 10) / screenHeight;
-        var s = Math.min(sx,sy);
+    const getTargetScale = function() {
+        const sx = (window.innerWidth - 10) / screenWidth;
+        const sy = (window.innerHeight - 10) / screenHeight;
+        let s = Math.min(sx,sy);
         s *= getDevicePixelRatio();
         return s;
     };
 
     // maximize the scale to fit the window
-    var fullscreen = function() {
+    const fullscreen = function() {
         // NOTE: css-scaling alternative at https://gist.github.com/1184900
         renderScale = scale = getTargetScale();
         resetCanvasSizes();
@@ -3081,11 +3017,11 @@ var initRenderer = function(){
     };
 
     // center the canvas in the window
-    var center = function() {
-        var s = getTargetScale()/getDevicePixelRatio();
-        var w = screenWidth*s;
-        var x = Math.max(0,(window.innerWidth-10)/2 - w/2);
-        var y = 0;
+    const center = function() {
+        const s = getTargetScale()/getDevicePixelRatio();
+        const w = screenWidth*s;
+        // const x = Math.max(0,(window.innerWidth-10)/2 - w/2);
+        // const y = 0;
         /*
         canvas.style.position = "absolute";
         canvas.style.left = x;
@@ -3095,17 +3031,11 @@ var initRenderer = function(){
         document.body.style.marginLeft = (window.innerWidth - w)/2 + "px";
     };
 
-    // create foreground and background canvases
-    canvas = document.getElementById('canvas');
-    bgCanvas = document.createElement('canvas');
-    ctx = canvas.getContext("2d");
-    bgCtx = bgCanvas.getContext("2d");
-
     // initialize placement and size
     fullscreen();
 
     // adapt placement and size to window resizes
-    var resizeTimeout;
+    let resizeTimeout;
     window.addEventListener('resize', function () {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(fullscreen, 100);
@@ -3113,13 +3043,13 @@ var initRenderer = function(){
 
     //////////////////////
 
-    var beginMapFrame = function() {
+    const beginMapFrame = function() {
         bgCtx.fillStyle = "#000";
         bgCtx.fillRect(0,0,mapWidth,mapHeight);
         bgCtx.translate(mapPad, mapPad);
     };
 
-    var endMapFrame = function() {
+    const endMapFrame = function() {
         bgCtx.translate(-mapPad, -mapPad);
     };
 
@@ -3128,7 +3058,7 @@ var initRenderer = function(){
     // (attributes and functionality that are currently common to all renderers)
 
     // constructor
-    var CommonRenderer = function() {
+    const CommonRenderer = function() {
         this.actorSize = (tileSize-1)*2;
         this.energizerSize = tileSize+2;
         this.pointsEarnedTextSize = tileSize;
@@ -3211,7 +3141,7 @@ var initRenderer = function(){
         // This function extends the width and height of the tile if it is adjacent to equivalent tiles
         // that are to the bottom or right of the given tile
         drawNoGroutTile: function(ctx,x,y,w) {
-            var tileChar = map.getTile(x,y);
+            const tileChar = map.getTile(x,y);
             this.drawCenterTileSq(ctx,x,y,tileSize,
                     map.getTile(x+1,y) == tileChar,
                     map.getTile(x,y+1) == tileChar,
@@ -3229,7 +3159,7 @@ var initRenderer = function(){
             ctx.fillRect(px-w/2, py-w/2,w,w);
 
             // fill "floating point grout" gaps between tiles
-            var gap = 1;
+            const gap = 1;
             if (rightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w);
             if (downGrout) ctx.fillRect(px-w/2, py-w/2,w,w+gap);
             //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
@@ -3249,23 +3179,21 @@ var initRenderer = function(){
 
         // draw the target visualizers for each actor
         drawTargets: function() {
-            var i;
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
             ctx.lineWidth = "1.5";
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
-            for (i=0;i<5;i++)
-                if (actors[i].isDrawTarget)
-                    actors[i].drawTarget(ctx);
+            for (const a of actors)
+                if (a.isDrawTarget)
+                    a.drawTarget(ctx);
         },
 
         drawPaths: function() {
-            var backupAlpha = ctx.globalAlpha;
+            const backupAlpha = ctx.globalAlpha;
             ctx.globalAlpha = 0.7;
-            var i;
-            for (i=0;i<5;i++)
-                if (actors[i].isDrawPath)
-                    this.drawPath(actors[i]);
+            for (const a of actors)
+                if (a.isDrawPath)
+                    this.drawPath(a);
             ctx.globalAlpha = backupAlpha;
         },
 
@@ -3274,11 +3202,11 @@ var initRenderer = function(){
             if (!actor.targetting) return;
 
             // current state of the predicted path
-            var tile = { x: actor.tile.x, y: actor.tile.y};
-            var target = actor.targetTile;
-            var dir = { x: actor.dir.x, y: actor.dir.y };
-            var dirEnum = actor.dirEnum;
-            var openTiles;
+            const tile = { x: actor.tile.x, y: actor.tile.y};
+            const target = actor.targetTile;
+            const dir = { x: actor.dir.x, y: actor.dir.y };
+            let dirEnum = actor.dirEnum;
+            let openTiles;
 
             // exit if we're already on the target
             if (tile.x == target.x && tile.y == target.y) {
@@ -3293,13 +3221,13 @@ var initRenderer = function(){
                 tile.x += dir.x;
                 tile.y += dir.y;
             }
-            var pixel = { x:tile.x*tileSize+midTile.x, y:tile.y*tileSize+midTile.y };
+            const pixel = { x:tile.x*tileSize+midTile.x, y:tile.y*tileSize+midTile.y };
             
             // dist keeps track of how far we're going along this path, stopping at maxDist
             // distLeft determines how long the last line should be
-            var dist = Math.abs(tile.x*tileSize+midTile.x - actor.pixel.x + tile.y*tileSize+midTile.y - actor.pixel.y);
-            var maxDist = actorPathLength*tileSize;
-            var distLeft;
+            let dist = Math.abs(tile.x*tileSize+midTile.x - actor.pixel.x + tile.y*tileSize+midTile.y - actor.pixel.y);
+            const maxDist = actorPathLength*tileSize;
+            let distLeft;
             
             // add the first line
             ctx.strokeStyle = actor.pathColor;
@@ -3357,12 +3285,12 @@ var initRenderer = function(){
             }
 
             // calculate final endpoint
-            var px = pixel.x+actor.pathCenter.x+distLeft*dir.x;
-            var py = pixel.y+actor.pathCenter.y+distLeft*dir.y;
+            const px = pixel.x+actor.pathCenter.x+distLeft*dir.x;
+            const py = pixel.y+actor.pathCenter.y+distLeft*dir.y;
 
             // add an arrow head
             ctx.lineTo(px,py);
-            var s = 3;
+            const s = 3;
             if (dirEnum == DIR_LEFT || dirEnum == DIR_RIGHT) {
                 ctx.lineTo(px-s*dir.x,py+s*dir.x);
                 ctx.moveTo(px,py);
@@ -3417,11 +3345,10 @@ var initRenderer = function(){
 
         // draw each actor (ghosts and pacman)
         drawActors: function() {
-            var i;
             // draw such that pacman appears on top
             if (energizer.isActive()) {
-                for (i=0; i<4; i++) {
-                    this.drawGhost(ghosts[i]);
+                for (const g of ghosts) {
+                    this.drawGhost(g);
                 }
                 if (!energizer.showingPoints())
                     this.drawPlayer();
@@ -3431,9 +3358,10 @@ var initRenderer = function(){
             // draw such that pacman appears on bottom
             else {
                 this.drawPlayer();
-                for (i=3; i>=0; i--) {
-                    if (ghosts[i].isVisible) {
-                        this.drawGhost(ghosts[i]);
+                for (let i=3; i>=0; i--) {
+                    const g = ghosts[i];
+                    if (g.isVisible) {
+                        this.drawGhost(g);
                     }
                 }
                 if (inky.isVisible && !blinky.isVisible) {
@@ -3449,7 +3377,7 @@ var initRenderer = function(){
     // (render a minimal Pac-Man display using nothing but squares)
 
     // constructor
-    var SimpleRenderer = function() {
+    const SimpleRenderer = function() {
 
         // inherit attributes from Common Renderer
         CommonRenderer.call(this,ctx,bgCtx);
@@ -3466,40 +3394,43 @@ var initRenderer = function(){
 
     SimpleRenderer.prototype = newChildObject(CommonRenderer.prototype, {
 
+        // copy background canvas to the foreground canvas
+        blitMap: function() {
+            ctx.scale(1/scale,1/scale);
+            ctx.drawImage(bgCanvas,-1-mapPad*scale,-1-mapPad*scale); // offset map to compenstate for misalignment
+            ctx.scale(scale,scale);
+            //ctx.clearRect(-mapPad,-mapPad,mapWidth,mapHeight);
+        },
+
+
         drawMap: function() {
 
             beginMapFrame();
 
-            var x,y;
-            var i;
-            var tile;
-
             // draw floor tiles
             bgCtx.fillStyle = (this.flashLevel ? this.flashFloorColor : this.floorColor);
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                tile = map.currentTiles[i++];
-                if (tile == ' ')
-                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
-            }
+            for (let i=0, y=0; y<map.numRows; y++)
+                for (let x=0; x<map.numCols; x++) {
+                    const tile = map.currentTiles[i++];
+                    if (tile == ' ')
+                        this.drawNoGroutTile(bgCtx,x,y,tileSize);
+                }
 
             // draw pellet tiles
             bgCtx.fillStyle = this.pelletColor;
-            i=0;
-            for (y=0; y<map.numRows; y++)
-            for (x=0; x<map.numCols; x++) {
-                tile = map.currentTiles[i++];
-                if (tile == '.')
-                    this.drawNoGroutTile(bgCtx,x,y,tileSize);
-            }
+            for (let i=0, y=0; y<map.numRows; y++)
+                for (let x=0; x<map.numCols; x++) {
+                    const tile = map.currentTiles[i++];
+                    if (tile == '.')
+                        this.drawNoGroutTile(bgCtx,x,y,tileSize);
+                }
 
             endMapFrame();
         },
 
         refreshPellet: function(x,y) {
-            var i = map.posToIndex(x,y);
-            var tile = map.currentTiles[i];
+            const i = map.posToIndex(x,y);
+            const tile = map.currentTiles[i];
             if (tile == ' ') {
                 this.erasePellet(x,y);
             }
@@ -3527,30 +3458,26 @@ var initRenderer = function(){
 
         // draw the extra lives indicator
         drawExtraLives: function() {
-            var i;
             ctx.fillStyle = "rgba(255,255,0,0.6)";
-            var lives = extraLives == Infinity ? 1 : extraLives;
-            for (i=0; i<extraLives; i++)
+            const lives = extraLives == Infinity ? 1 : extraLives;
+            for (let i=0; i<extraLives; i++)
                 this.drawCenterPixelSq(ctx, (2*i+3)*tileSize, (map.numRows-2)*tileSize+midTile.y,this.actorSize);
         },
 
         // draw the current level indicator
         drawLevelIcons: function() {
-            var i;
             ctx.fillStyle = "rgba(255,255,255,0.5)";
-            var w = 2;
-            var h = this.actorSize;
-            for (i=0; i<level; i++)
+            const w = 2;
+            const h = this.actorSize;
+            for (let i=0; i<level; i++)
                 ctx.fillRect((map.numCols-2)*tileSize - i*2*w, (map.numRows-2)*tileSize+midTile.y-h/2, w, h);
         },
 
         // draw energizer items on foreground
         drawEnergizers: function() {
             ctx.fillStyle = this.energizerColor;
-            var e;
-            var i;
-            for (i=0; i<map.numEnergizers; i++) {
-                e = map.energizers[i];
+            for (let i=0; i<map.numEnergizers; i++) {
+                const e = map.energizers[i];
                 if (map.currentTiles[e.x+e.y*map.numCols] == 'o')
                     this.drawCenterTileSq(ctx,e.x,e.y,this.energizerSize);
             }
@@ -3566,7 +3493,7 @@ var initRenderer = function(){
 
         // draw dying pacman animation (with 0<=t<=1)
         drawDyingPlayer: function(t) {
-            var f = t*85;
+            let f = t*85;
             if (f <= 60) {
                 t = f/60;
                 this.drawPlayer(1-t);
@@ -3582,7 +3509,7 @@ var initRenderer = function(){
         drawGhost: function(g) {
             if (g.mode == GHOST_EATEN)
                 return;
-            var color = g.color;
+            let color = g.color;
             if (g.scared)
                 color = energizer.isFlash() ? "#FFF" : "#2121ff";
             else if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
@@ -3613,7 +3540,7 @@ var initRenderer = function(){
     // (render a display close to the original arcade)
 
     // constructor
-    var ArcadeRenderer = function(ctx,bgCtx) {
+    const ArcadeRenderer = function(ctx,bgCtx) {
 
         // inherit attributes from Common Renderer
         CommonRenderer.call(this,ctx,bgCtx);
@@ -3652,20 +3579,14 @@ var initRenderer = function(){
                     this.flashLevel = false;
                 }
 
-                var x,y;
-                var i,j;
-                var tile;
-
                 // ghost house door
-                i=0;
-                for (y=0; y<map.numRows; y++)
-                for (x=0; x<map.numCols; x++) {
-                    if (map.currentTiles[i] == '-' && map.currentTiles[i+1] == '-') {
-                        bgCtx.fillStyle = "#ffb8de";
-                        bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize*2,2);
+                for (let i=0, y=0; y<map.numRows; y++)
+                    for (let x=0; x<map.numCols; x++, i++) {
+                        if (map.currentTiles[i] == '-' && map.currentTiles[i+1] == '-') {
+                            bgCtx.fillStyle = "#ffb8de";
+                            bgCtx.fillRect(x*tileSize,y*tileSize+tileSize-2,tileSize*2,2);
+                        }
                     }
-                    i++;
-                }
 
                 if (this.flashLevel) {
                     bgCtx.fillStyle = "#000";
@@ -3675,28 +3596,27 @@ var initRenderer = function(){
                     bgCtx.fillStyle = map.wallFillColor;
                     bgCtx.strokeStyle = map.wallStrokeColor;
                 }
-                for (i=0; i<map.paths.length; i++) {
-                    var path = map.paths[i];
+                for (let i=0; i<map.paths.length; i++) {
+                    const path = map.paths[i];
                     bgCtx.beginPath();
                     bgCtx.moveTo(path[0].x, path[0].y);
-                    for (j=1; j<path.length; j++) {
+                    for (let j=1; j<path.length; j++) {
                         if (path[j].cx != undefined)
                             bgCtx.quadraticCurveTo(path[j].cx, path[j].cy, path[j].x, path[j].y);
                         else
                             bgCtx.lineTo(path[j].x, path[j].y);
                     }
-                    bgCtx.quadraticCurveTo(path[j-1].x, path[0].y, path[0].x, path[0].y);
+                    bgCtx.quadraticCurveTo(path[path.length-1].x, path[0].y, path[0].x, path[0].y);
                     bgCtx.fill();
                     bgCtx.stroke();
                 }
 
                 // draw pellet tiles
                 bgCtx.fillStyle = map.pelletColor;
-                i=0;
-                for (y=0; y<map.numRows; y++)
-                for (x=0; x<map.numCols; x++) {
-                    this.refreshPellet(x,y,true);
-                }
+                for (let y=0; y<map.numRows; y++)
+                    for (let x=0; x<map.numCols; x++) {
+                        this.refreshPellet(x,y,true);
+                    }
 
                 if (map.onDraw) {
                     map.onDraw(bgCtx);
@@ -3709,38 +3629,37 @@ var initRenderer = function(){
             }
             if (level > 0) {
 
-                var numRows = 36;
-                var numCols = 28;
+                const numRows = 36;
+                const numCols = 28;
 
                 if (!isCutscene) {
                     // draw extra lives
-                    var i;
                     bgCtx.fillStyle = pacman.color;
 
                     bgCtx.save();
                     bgCtx.translate(3*tileSize, (numRows-1)*tileSize);
                     bgCtx.scale(0.85, 0.85);
-                    var lives = extraLives == Infinity ? 1 : extraLives;
+                    const lives = extraLives == Infinity ? 1 : extraLives;
                     if (gameMode == GAME_PACMAN) {
-                        for (i=0; i<lives; i++) {
+                        for (let i=0; i<lives; i++) {
                             drawPacmanSprite(bgCtx, 0,0, DIR_LEFT, Math.PI/6);
                             bgCtx.translate(2*tileSize,0);
                         }
                     }
                     else if (gameMode == GAME_MSPACMAN) {
-                        for (i=0; i<lives; i++) {
+                        for (let i=0; i<lives; i++) {
                             drawMsPacmanSprite(bgCtx, 0,0, DIR_RIGHT, 1);
                             bgCtx.translate(2*tileSize,0);
                         }
                     }
                     else if (gameMode == GAME_COOKIE) {
-                        for (i=0; i<lives; i++) {
+                        for (let i=0; i<lives; i++) {
                             drawCookiemanSprite(bgCtx, 0,0, DIR_RIGHT, 1, false);
                             bgCtx.translate(2*tileSize,0);
                         }
                     }
                     else if (gameMode == GAME_OTTO) {
-                        for (i=0; i<lives; i++) {
+                        for (let i=0; i<lives; i++) {
                             drawOttoSprite(bgCtx, 0,0,DIR_RIGHT, 0);
                             bgCtx.translate(2*tileSize,0);
                         }
@@ -3751,7 +3670,7 @@ var initRenderer = function(){
                         // draw X
                         /*
                         bgCtx.translate(-s*2,0);
-                        var s = 2; // radius of each stroke
+                        const s = 2; // radius of each stroke
                         bgCtx.beginPath();
                         bgCtx.moveTo(-s,-s);
                         bgCtx.lineTo(s,s);
@@ -3763,8 +3682,8 @@ var initRenderer = function(){
                         */
 
                         // draw Infinity symbol
-                        var r = 2; // radius of each half-circle
-                        var d = 3; // distance between the two focal points
+                        const r = 2; // radius of each half-circle
+                        const d = 3; // distance between the two focal points
                         bgCtx.beginPath();
                         bgCtx.moveTo(-d-r,0);
                         bgCtx.quadraticCurveTo(-d-r,-r,-d,-r);
@@ -3781,21 +3700,19 @@ var initRenderer = function(){
                 }
 
                 // draw level fruit
-                var fruits = fruit.fruitHistory;
-                var i,j;
-                var f,drawFunc;
-                var numFruit = 7;
-                var startLevel = Math.max(numFruit,level);
+                const fruits = fruit.fruitHistory;
+                const numFruit = 7;
+                let startLevel = Math.max(numFruit,level);
                 if (gameMode != GAME_PACMAN) {
                     // for the Pac-Man game, display the last 7 fruit
                     // for the Ms Pac-Man game, display stop after the 7th fruit
                     startLevel = Math.min(numFruit,startLevel);
                 }
-                var scale = 0.85;
-                for (i=0, j=startLevel-numFruit+1; i<numFruit && j<=level; j++, i++) {
-                    f = fruits[j];
+                const scale = 0.85;
+                for (let i=0, j=startLevel-numFruit+1; i<numFruit && j<=level; j++, i++) {
+                    const f = fruits[j];
                     if (f) {
-                        drawFunc = getSpriteFuncFromFruitName(f.name);
+                        const drawFunc = getSpriteFuncFromFruitName(f.name);
                         if (drawFunc) {
                             bgCtx.save();
                             bgCtx.translate((numCols-3)*tileSize - i*16*scale, (numRows-1)*tileSize);
@@ -3826,8 +3743,8 @@ var initRenderer = function(){
                 bgCtx.translate(mapPad,mapPad);
             }
             bgCtx.fillStyle = "#000";
-            var i = map.posToIndex(x,y);
-            var size = map.tiles[i] == 'o' ? this.energizerSize : this.pelletSize;
+            const i = map.posToIndex(x,y);
+            const size = map.tiles[i] == 'o' ? this.energizerSize : this.pelletSize;
             this.drawCenterTileSq(bgCtx,x,y,size+2);
             if (!isTranslated) {
                 bgCtx.translate(-mapPad,-mapPad);
@@ -3838,8 +3755,8 @@ var initRenderer = function(){
             if (!isTranslated) {
                 bgCtx.translate(mapPad,mapPad);
             }
-            var i = map.posToIndex(x,y);
-            var tile = map.currentTiles[i];
+            const i = map.posToIndex(x,y);
+            const tile = map.currentTiles[i];
             if (tile == ' ') {
                 this.erasePellet(x,y,isTranslated);
             }
@@ -3872,15 +3789,15 @@ var initRenderer = function(){
             //ctx.fillText("2UP", 25*tileSize, 0);
 
             // TODO: player two score
-            var score = getScore();
+            let score = getScore();
             if (score == 0) {
                 score = "00";
             }
-            var y = tileSize+1;
+            const y = tileSize+1;
             ctx.fillText(score, 7*tileSize, y);
 
             if (!practiceMode) {
-                var highScore = getHighScore();
+                let highScore = getHighScore();
                 if (highScore == 0) {
                     highScore = "00";
                 }
@@ -3890,20 +3807,20 @@ var initRenderer = function(){
 
         // draw ghost
         drawGhost: function(g,alpha) {
-            var backupAlpha;
+            let backupAlpha;
             if (alpha) {
                 backupAlpha = ctx.globalAlpha;
                 ctx.globalAlpha = alpha;
             }
 
-            var draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color, dirEnum) {
+            const draw = function(mode, pixel, frames, faceDirEnum, scared, isFlash,color, dirEnum) {
                 if (mode == GHOST_EATEN)
                     return;
-                var frame = g.getAnimFrame(frames);
-                var eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
-                var func = getGhostDrawFunc();
-                var y = g.getBounceY(pixel.x, pixel.y, dirEnum);
-                var x = (g == blinky && scared) ? pixel.x+1 : pixel.x; // blinky's sprite is shifted right when scared
+                const frame = g.getAnimFrame(frames);
+                const eyes = (mode == GHOST_GOING_HOME || mode == GHOST_ENTERING_HOME);
+                const func = getGhostDrawFunc();
+                const y = g.getBounceY(pixel.x, pixel.y, dirEnum);
+                const x = (g == blinky && scared) ? pixel.x+1 : pixel.x; // blinky's sprite is shifted right when scared
 
                 func(ctx,x,y,frame,faceDirEnum,scared,isFlash,eyes,color);
             };
@@ -3926,14 +3843,13 @@ var initRenderer = function(){
 
         // draw pacman
         drawPlayer: function() {
-            var frame = pacman.getAnimFrame();
             if (pacman.invincible) {
                 ctx.globalAlpha = 0.6;
             }
 
-            var draw = function(pixel, dirEnum, steps) {
-                var frame = pacman.getAnimFrame(pacman.getStepFrame(steps));
-                var func = getPlayerDrawFunc();
+            const draw = function(pixel, dirEnum, steps) {
+                const frame = pacman.getAnimFrame(pacman.getStepFrame(steps));
+                const func = getPlayerDrawFunc();
                 func(ctx, pixel.x, pixel.y, dirEnum, frame, true);
             };
 
@@ -3951,16 +3867,16 @@ var initRenderer = function(){
 
         // draw dying pacman animation (with 0<=t<=1)
         drawDyingPlayer: function(t) {
-            var frame = pacman.getAnimFrame();
+            const frame = pacman.getAnimFrame();
 
             if (gameMode == GAME_PACMAN) {
                 // 60 frames dying
                 // 15 frames exploding
-                var f = t*75;
+                let f = t*75;
                 if (f <= 60) {
                     // open mouth all the way while shifting corner of mouth forward
-                    t = f/60;
-                    var a = frame*Math.PI/6;
+                    const t = f/60;
+                    const a = frame*Math.PI/6;
                     drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, a + t*(Math.PI-a),4*t);
                 }
                 else {
@@ -3972,14 +3888,14 @@ var initRenderer = function(){
             else if (gameMode == GAME_OTTO) {
                 // TODO: spin around
                 if (t < 0.8) {
-                    var dirEnum = Math.floor((pacman.dirEnum - t*16))%4;
+                    let dirEnum = Math.floor((pacman.dirEnum - t*16))%4;
                     if (dirEnum < 0) {
                         dirEnum += 4;
                     }
                     drawOttoSprite(ctx, pacman.pixel.x, pacman.pixel.y, dirEnum, 0);
                 }
                 else if (t < 0.95) {
-                    var dirEnum = Math.floor((pacman.dirEnum - 0.8*16))%4;
+                    let dirEnum = Math.floor((pacman.dirEnum - 0.8*16))%4;
                     if (dirEnum < 0) {
                         dirEnum += 4;
                     }
@@ -3991,23 +3907,22 @@ var initRenderer = function(){
             }
             else if (gameMode == GAME_MSPACMAN) {
                 // spin 540 degrees
-                var maxAngle = Math.PI*5;
-                var step = (Math.PI/4) / maxAngle; // 45 degree steps
-                var angle = Math.floor(t/step)*step*maxAngle;
+                const maxAngle = Math.PI*5;
+                const step = (Math.PI/4) / maxAngle; // 45 degree steps
+                const angle = Math.floor(t/step)*step*maxAngle;
                 drawMsPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame, angle);
             }
             else if (gameMode == GAME_COOKIE) {
                 // spin 540 degrees
-                var maxAngle = Math.PI*5;
-                var step = (Math.PI/4) / maxAngle; // 45 degree steps
-                var angle = Math.floor(t/step)*step*maxAngle;
+                const maxAngle = Math.PI*5;
+                const step = (Math.PI/4) / maxAngle; // 45 degree steps
+                const angle = Math.floor(t/step)*step*maxAngle;
                 drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame, false, angle);
             }
         },
 
         // draw exploding pacman animation (with 0<=t<=1)
         drawExplodingPlayer: function(t) {
-            var frame = pacman.getAnimFrame();
             drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, 0, 0, t,-3,1-t);
         },
 
@@ -4015,12 +3930,12 @@ var initRenderer = function(){
         drawFruit: function() {
 
             if (fruit.getCurrentFruit()) {
-                var name = fruit.getCurrentFruit().name;
+                const {name} = fruit.getCurrentFruit();
 
                 // draw history trails of the fruit if applicable
                 if (fruit.savedPixel) {
                     vcr.drawHistory(ctx, function(t) {
-                        var pixel = fruit.savedPixel[t];
+                        const pixel = fruit.savedPixel[t];
                         if (pixel) {
                             atlas.drawFruitSprite(ctx, pixel.x, pixel.y, name);
                         }
@@ -4054,14 +3969,15 @@ var initRenderer = function(){
 };
 //@line 1 "src/hud.js"
 
-var hud = (function(){
 
-    var on = false;
+const hud = (function(){
+
+    let on = false;
 
     return {
 
         update: function() {
-            var valid = this.isValidState();
+            const valid = this.isValidState();
             if (valid != on) {
                 on = valid;
                 if (on) {
@@ -4093,27 +4009,27 @@ var hud = (function(){
 })();
 //@line 1 "src/galagaStars.js"
 
-var galagaStars = (function() {
 
-    var stars = {};
-    var numStars = 200;
+const galagaStars = (function() {
 
-    var width = mapWidth;
-    var height = Math.floor(mapHeight*1.5);
+    const stars = {};
+    const numStars = 200;
 
-    var ypos;
-    var yspeed=-0.5;
+    const width = mapWidth;
+    const height = Math.floor(mapHeight*1.5);
 
-    var t;
-    var flickerPeriod = 120;
-    var flickerSteps = 4;
-    var flickerGap = flickerPeriod / flickerSteps;
+    let ypos;
+    const yspeed=-0.5;
 
-    var init = function() {
+    let t;
+    const flickerPeriod = 120;
+    const flickerSteps = 4;
+    const flickerGap = flickerPeriod / flickerSteps;
+
+    const init = function() {
         t = 0;
         ypos = 0;
-        var i;
-        for (i=0; i<numStars; i++) {
+        for (let i=0; i<numStars; i++) {
             stars[i] = {
                 x: getRandomInt(0,width-1),
                 y: getRandomInt(0,height-1),
@@ -4123,7 +4039,7 @@ var galagaStars = (function() {
         }
     };
 
-    var update = function() {
+    const update = function() {
         t++;
         t %= flickerPeriod;
 
@@ -4134,17 +4050,13 @@ var galagaStars = (function() {
         }
     };
 
-    var draw = function(ctx) {
-        var i;
-        var star;
-        var time;
-        var y;
+    const draw = function(ctx) {
         ctx.fillStyle = "#FFF";
-        for (i=0; i<numStars; i++) {
-            star = stars[i];
-            time = (t + star.phase) % flickerPeriod;
+        for (let i=0; i<numStars; i++) {
+            const star = stars[i];
+            const time = (t + star.phase) % flickerPeriod;
             if (time >= flickerGap) {
-                y = star.y - ypos;
+                const y = star.y - ypos;
                 if (y < 0) {
                     y += height;
                 }
@@ -4162,10 +4074,12 @@ var galagaStars = (function() {
 
 })();
 //@line 1 "src/Button.js"
-var getPointerPos = function(evt) {
-    var obj = canvas;
-    var top = 0;
-    var left = 0;
+
+
+const getPointerPos = function(evt) {
+    let obj = canvas;
+    let top = 0;
+    let left = 0;
     while (obj.tagName != 'BODY') {
         top += obj.offsetTop;
         left += obj.offsetLeft;
@@ -4173,11 +4087,11 @@ var getPointerPos = function(evt) {
     }
 
     // calculate relative mouse position
-    var mouseX = evt.pageX - left;
-    var mouseY = evt.pageY - top;
+    let mouseX = evt.pageX - left;
+    let mouseY = evt.pageY - top;
 
     // make independent of scale
-    var ratio = getDevicePixelRatio();
+    const ratio = getDevicePixelRatio();
     mouseX /= (renderScale / ratio);
     mouseY /= (renderScale / ratio);
 
@@ -4188,7 +4102,7 @@ var getPointerPos = function(evt) {
     return { x: mouseX, y: mouseY };
 };
 
-var Button = function(x,y,w,h,onclick) {
+const Button = function(x,y,w,h,onclick) {
     this.x = x;
     this.y = y;
     this.w = w;
@@ -4210,24 +4124,24 @@ var Button = function(x,y,w,h,onclick) {
 
     // touch events
     this.startedInside = false;
-    var that = this;
-    var touchstart = function(evt) {
+    const that = this;
+    const touchstart = function(evt) {
         evt.preventDefault();
-        var fingerCount = evt.touches.length;
+        const fingerCount = evt.touches.length;
         if (fingerCount == 1) {
-            var pos = getPointerPos(evt.touches[0]);
+            const pos = getPointerPos(evt.touches[0]);
             (that.startedInside=that.contains(pos.x,pos.y)) ? that.focus() : that.blur();
         }
         else {
             touchcancel(evt);
         }
     };
-    var touchmove = function(evt) {
+    const touchmove = function(evt) {
         evt.preventDefault();
-        var fingerCount = evt.touches.length;
+        const fingerCount = evt.touches.length;
         if (fingerCount == 1) {
             if (that.startedInside) {
-                var pos = getPointerPos(evt.touches[0]);
+                const pos = getPointerPos(evt.touches[0]);
                 that.contains(pos.x, pos.y) ? that.focus() : that.blur();
             }
         }
@@ -4235,9 +4149,9 @@ var Button = function(x,y,w,h,onclick) {
             touchcancel(evt);
         }
     };
-    var touchend = function(evt) {
+    const touchend = function(evt) {
         evt.preventDefault();
-        var registerClick = (that.startedInside && that.isSelected);
+        const registerClick = (that.startedInside && that.isSelected);
         if (registerClick) {
             that.click();
         }
@@ -4247,7 +4161,7 @@ var Button = function(x,y,w,h,onclick) {
             that.focus();
         }
     };
-    var touchcancel = function(evt) {
+    const touchcancel = function(evt) {
         evt.preventDefault();
         this.startedInside = false;
         that.blur();
@@ -4255,17 +4169,17 @@ var Button = function(x,y,w,h,onclick) {
 
 
     // mouse events
-    var click = function(evt) {
-        var pos = getPointerPos(evt);
+    const click = function(evt) {
+        const pos = getPointerPos(evt);
         if (that.contains(pos.x, pos.y)) {
             that.click();
         }
     };
-    var mousemove = function(evt) {
-        var pos = getPointerPos(evt);
+    const mousemove = function(evt) {
+        const pos = getPointerPos(evt);
         that.contains(pos.x, pos.y) ? that.focus() : that.blur();
     };
-    var mouseleave = function(evt) {
+    const mouseleave = function(evt) {
         that.blur();
     };
 
@@ -4306,7 +4220,7 @@ Button.prototype = {
         clearTimeout(this.clickTimeout);
 
         // set a click delay
-        var that = this;
+        const that = this;
         if (that.onclick) {
             this.clickTimeout = setTimeout(function() { that.onclick(); }, 200);
         }
@@ -4349,8 +4263,8 @@ Button.prototype = {
         // draw border
         ctx.lineWidth = 2;
         ctx.beginPath();
-        var x=this.x, y=this.y, w=this.w, h=this.h;
-        var r=h/4;
+        const {x,y,w,h} = this;
+        const r=h/4;
         ctx.moveTo(x,y+r);
         ctx.quadraticCurveTo(x,y,x+r,y);
         ctx.lineTo(x+w-r,y);
@@ -4393,9 +4307,9 @@ Button.prototype = {
     },
 };
 
-var ToggleButton = function(x,y,w,h,isOn,setOn) {
-    var that = this;
-    var onclick = function() {
+const ToggleButton = function(x,y,w,h,isOn,setOn) {
+    const that = this;
+    const onclick = function() {
         setOn(!isOn());
         that.refreshMsg();
     };
@@ -4424,7 +4338,9 @@ ToggleButton.prototype = newChildObject(Button.prototype, {
 
 });
 //@line 1 "src/Menu.js"
-var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
+
+
+const Menu = function(title,x,y,w,h,pad,font,fontcolor) {
     this.title = title;
     this.x = x;
     this.y = y;
@@ -4449,8 +4365,7 @@ var Menu = function(title,x,y,w,h,pad,font,fontcolor) {
 Menu.prototype = {
 
     clickCurrentOption: function() {
-        var i;
-        for (i=0; i<this.buttonCount; i++) {
+        for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
                 this.buttons[i].onclick();
                 break;
@@ -4459,9 +4374,8 @@ Menu.prototype = {
     },
 
     selectNextOption: function() {
-        var i;
-        var nextBtn;
-        for (i=0; i<this.buttonCount; i++) {
+        let nextBtn;
+        for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
                 this.buttons[i].blur();
                 nextBtn = this.buttons[(i+1)%this.buttonCount];
@@ -4473,9 +4387,8 @@ Menu.prototype = {
     },
 
     selectPrevOption: function() {
-        var i;
-        var nextBtn;
-        for (i=0; i<this.buttonCount; i++) {
+        let nextBtn;
+        for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
                 this.buttons[i].blur();
                 nextBtn = this.buttons[i==0?this.buttonCount-1:i-1];
@@ -4487,14 +4400,14 @@ Menu.prototype = {
     },
 
     addToggleButton: function(isOn,setOn) {
-        var b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
+        const b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
     },
 
     addToggleTextButton: function(label,isOn,setOn) {
-        var b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
+        const b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
         b.setFont(this.font,this.fontcolor);
         b.setToggleLabel(label);
         this.buttons.push(b);
@@ -4503,7 +4416,7 @@ Menu.prototype = {
     },
 
     addTextButton: function(msg,onclick) {
-        var b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
+        const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setFont(this.font,this.fontcolor);
         b.setText(msg);
         this.buttons.push(b);
@@ -4512,7 +4425,7 @@ Menu.prototype = {
     },
 
     addTextIconButton: function(msg,onclick,drawIcon) {
-        var b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
+        const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setFont(this.font,this.fontcolor);
         b.setText(msg);
         b.setIcon(drawIcon);
@@ -4522,7 +4435,7 @@ Menu.prototype = {
     },
 
     addIconButton: function(drawIcon,onclick) {
-        var b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
+        const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setIcon(drawIcon);
         this.buttons.push(b);
         this.buttonCount++;
@@ -4537,16 +4450,14 @@ Menu.prototype = {
     },
 
     enable: function() {
-        var i;
-        for (i=0; i<this.buttonCount; i++) {
+        for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].enable();
         }
         this.enabled = true;
     },
 
     disable: function() {
-        var i;
-        for (i=0; i<this.buttonCount; i++) {
+        for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].disable();
         }
         this.enabled = false;
@@ -4564,38 +4475,38 @@ Menu.prototype = {
             ctx.fillStyle = "#FFF";
             ctx.fillText(this.title,this.x + this.w/2, this.y+this.pad + this.h/2);
         }
-        var i;
-        for (i=0; i<this.buttonCount; i++) {
+        for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].draw(ctx);
         }
     },
 
     update: function() {
-        var i;
-        for (i=0; i<this.buttonCount; i++) {
+        for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].update();
         }
     },
 };
 //@line 1 "src/inGameMenu.js"
+
+
 ////////////////////////////////////////////////////
 // In-Game Menu
-var inGameMenu = (function() {
+const inGameMenu = (function() {
 
-    var w=tileSize*6,h=tileSize*3;
+    const w=tileSize*6,h=tileSize*3;
 
-    var getMainMenu = function() {
+    const getMainMenu = function() {
         return practiceMode ? practiceMenu : menu;
     };
-    var showMainMenu = function() {
+    const showMainMenu = function() {
         getMainMenu().enable();
     };
-    var hideMainMenu = function() {
+    const hideMainMenu = function() {
         getMainMenu().disable();
     };
 
     // button to enable in-game menu
-    var btn = new Button(mapWidth/2 - w/2,mapHeight,w,h, function() {
+    const btn = new Button(mapWidth/2 - w/2,mapHeight,w,h, function() {
         showMainMenu();
         vcr.onHudDisable();
     });
@@ -4603,7 +4514,7 @@ var inGameMenu = (function() {
     btn.setFont(tileSize+"px ArcadeR","#FFF");
 
     // confirms a menu action
-    var confirmMenu = new Menu("QUESTION?",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const confirmMenu = new Menu("QUESTION?",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     confirmMenu.addTextButton("YES", function() {
         confirmMenu.disable();
         confirmMenu.onConfirm();
@@ -4618,7 +4529,7 @@ var inGameMenu = (function() {
     });
     confirmMenu.backButton = confirmMenu.buttons[confirmMenu.buttonCount-1];
 
-    var showConfirm = function(title,onConfirm) {
+    const showConfirm = function(title,onConfirm) {
         hideMainMenu();
         confirmMenu.title = title;
         confirmMenu.onConfirm = onConfirm;
@@ -4626,7 +4537,7 @@ var inGameMenu = (function() {
     };
 
     // regular menu
-    var menu = new Menu("PAUSED",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const menu = new Menu("PAUSED",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("RESUME", function() {
         menu.disable();
     });
@@ -4638,14 +4549,14 @@ var inGameMenu = (function() {
     menu.backButton = menu.buttons[0];
 
     // practice menu
-    var practiceMenu = new Menu("PAUSED",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const practiceMenu = new Menu("PAUSED",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     practiceMenu.addTextButton("RESUME", function() {
         hideMainMenu();
         vcr.onHudEnable();
     });
     practiceMenu.addTextButton("RESTART LEVEL", function() {
         showConfirm("RESTART LEVEL?", function() {
-            level--;
+            setLevel(level-1);
             switchState(readyNewState, 60);
         });
     });
@@ -4668,7 +4579,7 @@ var inGameMenu = (function() {
     practiceMenu.backButton = practiceMenu.buttons[0];
 
     // cheats menu
-    var cheatsMenu = new Menu("CHEATS",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const cheatsMenu = new Menu("CHEATS",2*tileSize,5*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     cheatsMenu.addToggleTextButton("INVINCIBLE",
         function() {
             return pacman.invincible;
@@ -4681,15 +4592,15 @@ var inGameMenu = (function() {
             return turboMode;
         },
         function(on) {
-            turboMode = on;
+            setTurboMode(on);
         });
     cheatsMenu.addToggleTextButton("SHOW TARGETS",
         function() {
             return blinky.isDrawTarget;
         },
         function(on) {
-            for (var i=0; i<4; i++) {
-                ghosts[i].isDrawTarget = on;
+            for (const g of ghosts) {
+                g.isDrawTarget = on;
             }
         });
     cheatsMenu.addToggleTextButton("SHOW PATHS",
@@ -4697,8 +4608,8 @@ var inGameMenu = (function() {
             return blinky.isDrawPath;
         },
         function(on) {
-            for (var i=0; i<4; i++) {
-                ghosts[i].isDrawPath = on;
+            for (const g of ghosts) {
+                g.isDrawPath = on;
             }
         });
     cheatsMenu.addSpacer(1);
@@ -4708,13 +4619,9 @@ var inGameMenu = (function() {
     });
     cheatsMenu.backButton = cheatsMenu.buttons[cheatsMenu.buttons.length-1];
 
-    var menus = [menu, practiceMenu, confirmMenu, cheatsMenu];
-    var getVisibleMenu = function() {
-        var len = menus.length;
-        var i;
-        var m;
-        for (i=0; i<len; i++) {
-            m = menus[i];
+    const menus = [menu, practiceMenu, confirmMenu, cheatsMenu];
+    const getVisibleMenu = function() {
+        for (const m of menus) {
             if (m.isEnabled()) {
                 return m;
             }
@@ -4734,7 +4641,7 @@ var inGameMenu = (function() {
             }
         },
         draw: function(ctx) {
-            var m = getVisibleMenu();
+            const m = getVisibleMenu();
             if (m) {
                 ctx.fillStyle = "rgba(0,0,0,0.8)";
                 ctx.fillRect(-mapPad-1,-mapPad-1,mapWidth+1,mapHeight+1);
@@ -4757,18 +4664,20 @@ var inGameMenu = (function() {
 })();
 
 //@line 1 "src/sprites.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Sprites
 // (sprites are created using canvas paths)
 
-var drawGhostSprite = (function(){
+const drawGhostSprite = (function(){
 
     // add top of the ghost head to the current canvas path
-    var addHead = (function() {
+    const addHead = (function() {
 
         // pixel coordinates for the top of the head
         // on the original arcade ghost sprite
-        var coords = [
+        const coords = [
             0,6,
             1,3,
             2,2,
@@ -4784,7 +4693,6 @@ var drawGhostSprite = (function(){
         ];
 
         return function(ctx) {
-            var i;
             ctx.save();
 
             // translate by half a pixel to the right
@@ -4798,7 +4706,7 @@ var drawGhostSprite = (function(){
             // draw lines between pixel coordinates
             /*
             ctx.moveTo(coords[0],coords[1]);
-            for (i=2; i<coords.length; i+=2)
+            for (let i=2; i<coords.length; i+=2)
                 ctx.lineTo(coords[i],coords[i+1]);
             */
 
@@ -4807,11 +4715,11 @@ var drawGhostSprite = (function(){
     })();
 
     // add first ghost animation frame feet to the current canvas path
-    var addFeet1 = (function(){
+    const addFeet1 = (function(){
 
         // pixel coordinates for the first feet animation
         // on the original arcade ghost sprite
-        var coords = [
+        const coords = [
             13,13,
             11,11,
             9,13,
@@ -4825,7 +4733,6 @@ var drawGhostSprite = (function(){
         ];
 
         return function(ctx) {
-            var i;
             ctx.save();
 
             // translate half a pixel right and down
@@ -4834,7 +4741,7 @@ var drawGhostSprite = (function(){
 
             // continue previous path (assuming ghost head)
             // by drawing lines to each of the pixel coordinates
-            for (i=0; i<coords.length; i+=2)
+            for (let i=0; i<coords.length; i+=2)
                 ctx.lineTo(coords[i],coords[i+1]);
 
             ctx.restore();
@@ -4843,11 +4750,11 @@ var drawGhostSprite = (function(){
     })();
 
     // add second ghost animation frame feet to the current canvas path
-    var addFeet2 = (function(){
+    const addFeet2 = (function(){
 
         // pixel coordinates for the second feet animation
         // on the original arcade ghost sprite
-        var coords = [
+        const coords = [
             13,12,
             12,13,
             11,13,
@@ -4861,7 +4768,6 @@ var drawGhostSprite = (function(){
         ];
 
         return function(ctx) {
-            var i;
             ctx.save();
 
             // translate half a pixel right and down
@@ -4870,7 +4776,7 @@ var drawGhostSprite = (function(){
 
             // continue previous path (assuming ghost head)
             // by drawing lines to each of the pixel coordinates
-            for (i=0; i<coords.length; i+=2)
+            for (let i=0; i<coords.length; i+=2)
                 ctx.lineTo(coords[i],coords[i+1]);
 
             ctx.restore();
@@ -4879,13 +4785,12 @@ var drawGhostSprite = (function(){
     })();
 
     // draw regular ghost eyes
-    var addEyes = function(ctx,dirEnum){
-        var i;
+    const addEyes = function(ctx,dirEnum){
 
         ctx.save();
         ctx.translate(2,3);
 
-        var coords = [
+        const coords = [
             0,1,
             1,0,
             2,0,
@@ -4896,11 +4801,11 @@ var drawGhostSprite = (function(){
             0,3
         ];
 
-        var drawEyeball = function() {
+        const drawEyeball = function() {
             ctx.translate(0.5,0.5);
             ctx.beginPath();
             ctx.moveTo(coords[0],coords[1]);
-            for (i=2; i<coords.length; i+=2)
+            for (let i=2; i<coords.length; i+=2)
                 ctx.lineTo(coords[i],coords[i+1]);
             ctx.closePath();
             ctx.fill();
@@ -4942,7 +4847,7 @@ var drawGhostSprite = (function(){
     };
 
     // draw scared ghost face
-    var addScaredFace = function(ctx,flash){
+    const addScaredFace = function(ctx,flash){
         ctx.strokeStyle = ctx.fillStyle = flash ? "#F00" : "#FF0";
 
         // eyes
@@ -4950,7 +4855,7 @@ var drawGhostSprite = (function(){
         ctx.fillRect(8,5,2,2);
 
         // mouth
-        var coords = [
+        const coords = [
             1,10,
             2,9,
             3,9,
@@ -4967,7 +4872,7 @@ var drawGhostSprite = (function(){
         ctx.translate(0.5,0.5);
         ctx.beginPath();
         ctx.moveTo(coords[0],coords[1]);
-        for (i=2; i<coords.length; i+=2)
+        for (let i=2; i<coords.length; i+=2)
             ctx.lineTo(coords[i],coords[i+1]);
         ctx.lineWidth = 1.0;
         ctx.stroke();
@@ -5021,16 +4926,15 @@ var drawGhostSprite = (function(){
 })();
 
 // draw points displayed when pac-man eats a ghost or a fruit
-var drawPacPoints = (function(){
-    var ctx;
-    var color;
+const drawPacPoints = (function(){
+    let ctx;
+    let color;
 
-    var plotOutline = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotOutline = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.closePath();
@@ -5040,12 +4944,11 @@ var drawPacPoints = (function(){
         ctx.stroke();
     };
 
-    var plotLine = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotLine = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.lineWidth = 1.0;
@@ -5054,7 +4957,7 @@ var drawPacPoints = (function(){
         ctx.stroke();
     };
 
-    var draw0 = function(x,y) {
+    const draw0 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotOutline([
@@ -5070,11 +4973,11 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw1narrow = function(x,y) {
+    const draw1narrow = function(x,y) {
         plotLine([x,y,x,y+6],color);
     };
 
-    var draw1 = function(x,y) {
+    const draw1 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5087,7 +4990,7 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw2 = function(x,y) {
+    const draw2 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5103,7 +5006,7 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw3 = function(x,y) {
+    const draw3 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5119,7 +5022,7 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw4 = function(x,y) {
+    const draw4 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5132,7 +5035,7 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw5 = function(x,y) {
+    const draw5 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5149,7 +5052,7 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw6 = function(x,y) {
+    const draw6 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5166,7 +5069,7 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw7 = function(x,y) {
+    const draw7 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5180,7 +5083,7 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw8 = function(x,y) {
+    const draw8 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotOutline([
@@ -5204,77 +5107,77 @@ var drawPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw100 = function() {
+    const draw100 = function() {
         draw1(-5,-3);
         draw0(-1,-3);
         draw0(4,-3);
     };
 
-    var draw200 = function() {
+    const draw200 = function() {
         draw2(-7,-3);
         draw0(-1,-3);
         draw0(4,-3);
     };
 
-    var draw300 = function() {
+    const draw300 = function() {
         draw3(-7,-3);
         draw0(-1,-3);
         draw0(4,-3);
     };
     
-    var draw400 = function() {
+    const draw400 = function() {
         draw4(-7,-3);
         draw0(-1,-3);
         draw0(4,-3);
     };
 
-    var draw500 = function() {
+    const draw500 = function() {
         draw5(-7,-3);
         draw0(-1,-3);
         draw0(4,-3);
     };
 
-    var draw700 = function() {
+    const draw700 = function() {
         draw7(-7,-3);
         draw0(-1,-3);
         draw0(4,-3);
     };
 
-    var draw800 = function() {
+    const draw800 = function() {
         draw8(-7,-3);
         draw0(-1,-3);
         draw0(4,-3);
     };
 
-    var draw1000 = function() {
+    const draw1000 = function() {
         draw1(-8,-3);
         draw0(-4,-3);
         draw0(1,-3);
         draw0(6,-3);
     };
     
-    var draw1600 = function() {
+    const draw1600 = function() {
         draw1narrow(-7,-3);
         draw6(-5,-3);
         draw0(0,-3);
         draw0(5,-3);
     };
 
-    var draw2000 = function() {
+    const draw2000 = function() {
         draw2(-10,-3);
         draw0(-4,-3);
         draw0(1,-3);
         draw0(6,-3);
     };
 
-    var draw3000 = function() {
+    const draw3000 = function() {
         draw3(-10,-3);
         draw0(-4,-3);
         draw0(1,-3);
         draw0(6,-3);
     };
 
-    var draw5000 = function() {
+    const draw5000 = function() {
         draw5(-10,-3);
         draw0(-4,-3);
         draw0(1,-3);
@@ -5289,7 +5192,7 @@ var drawPacPoints = (function(){
         ctx.translate(x+0.5,y+0.5);
         ctx.translate(0,-1);
 
-        var f = {
+        const f = {
             100: draw100,
             200: draw200,
             300: draw300,
@@ -5313,16 +5216,15 @@ var drawPacPoints = (function(){
 })();
 
 // draw points displayed when ms. pac-man eats a fruit
-var drawMsPacPoints = (function(){
-    var ctx;
-    var color = "#fff";
+const drawMsPacPoints = (function(){
+    let ctx;
+    const color = "#fff";
 
-    var plotOutline = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotOutline = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.closePath();
@@ -5332,12 +5234,11 @@ var drawMsPacPoints = (function(){
         ctx.stroke();
     };
 
-    var plotLine = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotLine = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.lineWidth = 1.0;
@@ -5347,7 +5248,7 @@ var drawMsPacPoints = (function(){
     };
 
 
-    var draw0 = function(x,y) {
+    const draw0 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotOutline([
@@ -5359,7 +5260,7 @@ var drawMsPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw1 = function(x,y) {
+    const draw1 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5369,7 +5270,7 @@ var drawMsPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw2 = function(x,y) {
+    const draw2 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5383,7 +5284,7 @@ var drawMsPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw5 = function(x,y) {
+    const draw5 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5397,7 +5298,7 @@ var drawMsPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw7 = function(x,y) {
+    const draw7 = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotLine([
@@ -5408,45 +5309,45 @@ var drawMsPacPoints = (function(){
         ctx.restore();
     };
 
-    var draw100 = function() {
+    const draw100 = function() {
         draw1(-5,-5);
         draw0(-1,-2);
         draw0(3,1);
     };
 
-    var draw200 = function() {
+    const draw200 = function() {
         draw2(-5,-5);
         draw0(-1,-2);
         draw0(3,1);
     };
 
-    var draw500 = function() {
+    const draw500 = function() {
         draw5(-5,-5);
         draw0(-1,-2);
         draw0(3,1);
     };
 
-    var draw700 = function() {
+    const draw700 = function() {
         draw7(-5,-5);
         draw0(-1,-2);
         draw0(3,1);
     };
 
-    var draw1000 = function() {
+    const draw1000 = function() {
         draw1(-7,-7);
         draw0(-3,-4);
         draw0(1,-1);
         draw0(5,2);
     };
 
-    var draw2000 = function() {
+    const draw2000 = function() {
         draw2(-7,-7);
         draw0(-3,-4);
         draw0(1,-1);
         draw0(5,2);
     };
 
-    var draw5000 = function() {
+    const draw5000 = function() {
         draw5(-7,-7);
         draw0(-3,-4);
         draw0(1,-1);
@@ -5459,7 +5360,7 @@ var drawMsPacPoints = (function(){
         ctx.save();
         ctx.translate(x+0.5,y+0.5);
 
-        var f = {
+        const f = {
             100: draw100,
             200: draw200,
             500: draw500,
@@ -5477,16 +5378,15 @@ var drawMsPacPoints = (function(){
     };
 })();
 
-var drawMonsterSprite = (function(){
-    var ctx;
-    var color;
+const drawMonsterSprite = (function(){
+    let ctx;
+    let color;
 
-    var plotOutline = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotOutline = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.closePath();
@@ -5496,12 +5396,11 @@ var drawMonsterSprite = (function(){
         ctx.stroke();
     };
 
-    var plotLine = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotLine = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.lineWidth = 1.0;
@@ -5510,12 +5409,11 @@ var drawMonsterSprite = (function(){
         ctx.stroke();
     };
 
-    var plotSolid = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotSolid = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.closePath();
@@ -5528,8 +5426,7 @@ var drawMonsterSprite = (function(){
 
 
     // draw regular ghost eyes
-    var drawEye = function(dirEnum,x,y){
-        var i;
+    const drawEye = function(dirEnum,x,y){
 
         ctx.save();
         ctx.translate(x,y);
@@ -5562,7 +5459,7 @@ var drawMonsterSprite = (function(){
         ctx.restore();
     };
 
-    var drawRightBody = function() {
+    const drawRightBody = function() {
         plotSolid([
             -7,-3,
             -3,-7,
@@ -5583,7 +5480,7 @@ var drawMonsterSprite = (function(){
         ],color);
     };
 
-    var drawRightShoe = function(x,y) {
+    const drawRightShoe = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
         plotSolid([
@@ -5597,7 +5494,7 @@ var drawMonsterSprite = (function(){
         ctx.restore();
     };
 
-    var drawRight0 = function() {
+    const drawRight0 = function() {
         // antenna tips
         plotLine([-1,-7,0,-6],"#FFF");
         plotLine([5,-7,6,-6],"#FFF");
@@ -5611,7 +5508,7 @@ var drawMonsterSprite = (function(){
         drawEye(DIR_RIGHT,2,-4);
     };
 
-    var drawRight1 = function() {
+    const drawRight1 = function() {
         // antenna tips
         plotLine([-1,-7,0,-7],"#FFF");
         plotLine([5,-7,6,-7],"#FFF");
@@ -5625,19 +5522,19 @@ var drawMonsterSprite = (function(){
         drawEye(DIR_RIGHT,2,-4);
     };
 
-    var drawLeft0 = function() {
+    const drawLeft0 = function() {
         ctx.scale(-1,1);
         ctx.translate(1,0);
         drawRight0();
     };
     
-    var drawLeft1 = function() {
+    const drawLeft1 = function() {
         ctx.scale(-1,1);
         ctx.translate(1,0);
         drawRight1();
     };
 
-    var drawUpDownBody0 = function() {
+    const drawUpDownBody0 = function() {
         plotLine([-6,-7,-7,-6],"#FFF");
         plotLine([5,-7,6,-6],"#FFF");
         plotSolid([
@@ -5668,7 +5565,7 @@ var drawMonsterSprite = (function(){
         ],color);
     };
 
-    var drawUpDownBody1 = function() {
+    const drawUpDownBody1 = function() {
         plotLine([-6,-6,-7,-5],"#FFF");
         plotLine([5,-6,6,-5],"#FFF");
         plotSolid([
@@ -5701,7 +5598,7 @@ var drawMonsterSprite = (function(){
         ],color);
     };
 
-    var drawUp0 = function() {
+    const drawUp0 = function() {
         drawUpDownBody0();
         drawEye(DIR_UP,-5,-5);
         drawEye(DIR_UP,1,-5);
@@ -5713,7 +5610,7 @@ var drawMonsterSprite = (function(){
         ],"#00F");
     };
 
-    var drawUp1 = function() {
+    const drawUp1 = function() {
         drawUpDownBody1();
         drawEye(DIR_UP,-5,-5);
         drawEye(DIR_UP,1,-5);
@@ -5725,7 +5622,7 @@ var drawMonsterSprite = (function(){
         ],"#00F");
     };
 
-    var drawDown0 = function() {
+    const drawDown0 = function() {
         drawUpDownBody0();
         drawEye(DIR_DOWN,-5,-4);
         drawEye(DIR_DOWN,1,-4);
@@ -5741,7 +5638,7 @@ var drawMonsterSprite = (function(){
         plotLine([-4,6,-2,6],"#00F");
     };
 
-    var drawDown1 = function() {
+    const drawDown1 = function() {
         drawUpDownBody1();
         drawEye(DIR_DOWN,-5,-4);
         drawEye(DIR_DOWN,1,-4);
@@ -5757,10 +5654,10 @@ var drawMonsterSprite = (function(){
         plotLine([1,6,3,6],"#00F");
     };
 
-    var borderColor;
-    var faceColor;
+    let borderColor;
+    let faceColor;
 
-    var drawScaredBody = function() {
+    const drawScaredBody = function() {
         plotOutline([
             -6,-2,
             -2,-5,
@@ -5791,7 +5688,7 @@ var drawMonsterSprite = (function(){
     };
 
 
-    var drawScared0 = function(flash) {
+    const drawScared0 = function() {
         plotLine([-2,-2,-2,0],faceColor);
         plotLine([-3,-1,-1,-1],faceColor);
         plotLine([2,-2,2,0],faceColor);
@@ -5801,7 +5698,7 @@ var drawMonsterSprite = (function(){
         drawScaredBody();
     };
 
-    var drawScared1 = function(flash) {
+    const drawScared1 = function() {
         plotLine([-3,-2,-1,0],faceColor);
         plotLine([-3,0,-1,-2],faceColor);
         plotLine([1,-2,3,0],faceColor);
@@ -5845,15 +5742,14 @@ var drawMonsterSprite = (function(){
     };
 })();
 
-var drawColoredOttoSprite = function(color,eyeColor) {
-    var ctx;
+const drawColoredOttoSprite = function(color,eyeColor) {
+    let ctx;
 
-    var plotLine = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotLine = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.lineWidth = 1.0;
@@ -5862,12 +5758,11 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ctx.stroke();
     };
 
-    var plotSolid = function(points,color) {
-        var len = points.length;
-        var i;
+    const plotSolid = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.closePath();
@@ -5878,7 +5773,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ctx.stroke();
     };
 
-    var drawRightEye = function() {
+    const drawRightEye = function() {
         plotSolid([
             -4,-5,
             -3,-6,
@@ -5889,7 +5784,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ],eyeColor);
     };
 
-    var drawRight0 = function() {
+    const drawRight0 = function() {
         plotSolid([
             -5,-4,
             -3,-6,
@@ -5917,7 +5812,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ],color);
         drawRightEye();
     };
-    var drawRight1 = function() {
+    const drawRight1 = function() {
         plotSolid([
             -5,-4,
             -3,-6,
@@ -5943,7 +5838,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ],color);
         drawRightEye();
     };
-    var drawRight2 = function() {
+    const drawRight2 = function() {
         plotSolid([
             -5,-4,
             -3,-6,
@@ -5967,7 +5862,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ],color);
         drawRightEye();
     };
-    var drawRight3 = function() {
+    const drawRight3 = function() {
         plotSolid([
             -5,-4,
             -3,-6,
@@ -5994,7 +5889,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         drawRightEye();
     };
 
-    var drawUpDownEyes = function() {
+    const drawUpDownEyes = function() {
         plotSolid([
             -5,-5,
             -4,-6,
@@ -6013,7 +5908,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ],eyeColor);
     };
 
-    var drawUpDownHead = function() {
+    const drawUpDownHead = function() {
         plotSolid([
             -4,-4,
             -2,-6,
@@ -6026,7 +5921,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ],color);
     };
 
-    var drawUpDownLeg0 = function(y,xs) {
+    const drawUpDownLeg0 = function(y,xs) {
         ctx.save();
         ctx.translate(0,y);
         ctx.scale(xs,1);
@@ -6043,7 +5938,7 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ctx.restore();
     };
 
-    var drawUpDownLeg1 = function(y,xs) {
+    const drawUpDownLeg1 = function(y,xs) {
         ctx.save();
         ctx.translate(0,y);
         ctx.scale(xs,1);
@@ -6063,44 +5958,44 @@ var drawColoredOttoSprite = function(color,eyeColor) {
 
         ctx.restore();
     };
-    var drawUpDownLegs0 = function() {
+    const drawUpDownLegs0 = function() {
         drawUpDownLeg0(0,-1);
         drawUpDownLeg1(-2,1);
     };
 
-    var drawUpDownLegs1 = function() {
+    const drawUpDownLegs1 = function() {
         drawUpDownLeg0(-2,-1);
         drawUpDownLeg1(-2,1);
     };
 
-    var drawUpDownLegs2 = function() {
+    const drawUpDownLegs2 = function() {
         drawUpDownLeg1(-2,-1);
         drawUpDownLeg0(0,1);
     };
 
-    var drawUpDownLegs3 = function() {
+    const drawUpDownLegs3 = function() {
         drawUpDownLeg1(0,-1);
         drawUpDownLeg0(0,1);
     };
 
-    var drawDown0 = function() {
+    const drawDown0 = function() {
         drawUpDownHead();
         drawUpDownEyes();
         drawUpDownLegs0();
         plotLine([-2,-3,2,-3],"#000");
     };
-    var drawDown1 = function() {
+    const drawDown1 = function() {
         drawUpDownHead();
         drawUpDownEyes();
         drawUpDownLegs1();
     };
-    var drawDown2 = function() {
+    const drawDown2 = function() {
         drawUpDownHead();
         drawUpDownEyes();
         drawUpDownLegs2();
         plotLine([-2,-3,2,-3],"#000");
     };
-    var drawDown3 = function() {
+    const drawDown3 = function() {
         drawUpDownHead();
         drawUpDownEyes();
         drawUpDownLegs3();
@@ -6112,22 +6007,22 @@ var drawColoredOttoSprite = function(color,eyeColor) {
         ],"#000");
     };
 
-    var drawUp0 = function() {
+    const drawUp0 = function() {
         drawUpDownEyes();
         drawUpDownHead();
         drawUpDownLegs0();
     };
-    var drawUp1 = function() {
+    const drawUp1 = function() {
         drawUpDownEyes();
         drawUpDownHead();
         drawUpDownLegs1();
     };
-    var drawUp2 = function() {
+    const drawUp2 = function() {
         drawUpDownEyes();
         drawUpDownHead();
         drawUpDownLegs2();
     };
-    var drawUp3 = function() {
+    const drawUp3 = function() {
         drawUpDownEyes();
         drawUpDownHead();
         drawUpDownLegs3();
@@ -6164,16 +6059,15 @@ var drawColoredOttoSprite = function(color,eyeColor) {
     };
 };
 
-var drawOttoSprite = drawColoredOttoSprite("#FF0","#00F");
-var drawMsOttoSprite = drawColoredOttoSprite("#F00","#FFF");
+const drawOttoSprite = drawColoredOttoSprite("#FF0","#00F");
+const drawMsOttoSprite = drawColoredOttoSprite("#F00","#FFF");
 
-var drawDeadOttoSprite = function(ctx,x,y) {
-    var plotOutline = function(points,color) {
-        var len = points.length;
-        var i;
+const drawDeadOttoSprite = function(ctx,x,y) {
+    const plotOutline = function(points,color) {
+        const len = points.length;
         ctx.beginPath();
         ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
+        for (let i=2; i<len; i+=2) {
             ctx.lineTo(points[i],points[i+1]);
         }
         ctx.closePath();
@@ -6199,7 +6093,7 @@ var drawDeadOttoSprite = function(ctx,x,y) {
 };
 
 // draw pacman body
-var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShift,alpha,color,rot_angle) {
+const drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShift,alpha,color,rot_angle) {
 
     if (mouthShift == undefined) mouthShift = 0;
     if (centerShift == undefined) centerShift = 0;
@@ -6218,7 +6112,7 @@ var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShi
     }
 
     // rotate to current heading direction
-    var d90 = Math.PI/2;
+    const d90 = Math.PI/2;
     if (dirEnum == DIR_UP) ctx.rotate(3*d90);
     else if (dirEnum == DIR_RIGHT) ctx.rotate(0);
     else if (dirEnum == DIR_DOWN) ctx.rotate(d90);
@@ -6241,11 +6135,11 @@ var drawPacmanSprite = function(ctx,x,y,dirEnum,angle,mouthShift,scale,centerShi
 };
 
 // draw giant pacman body
-var drawGiantPacmanSprite = function(ctx,x,y,dirEnum,frame) {
+const drawGiantPacmanSprite = function(ctx,x,y,dirEnum,frame) {
 
-    var color = "#FF0";
-    var mouthShift = 0;
-    var angle = 0;
+    const color = "#FF0";
+    let mouthShift = 0;
+    let angle = 0;
     if (frame == 1) {
         mouthShift = -4;
         angle = Math.atan(7/14);
@@ -6259,7 +6153,7 @@ var drawGiantPacmanSprite = function(ctx,x,y,dirEnum,frame) {
     ctx.translate(x,y);
 
     // rotate to current heading direction
-    var d90 = Math.PI/2;
+    const d90 = Math.PI/2;
     if (dirEnum == DIR_UP) ctx.rotate(3*d90);
     else if (dirEnum == DIR_RIGHT) ctx.rotate(0);
     else if (dirEnum == DIR_DOWN) ctx.rotate(d90);
@@ -6279,8 +6173,8 @@ var drawGiantPacmanSprite = function(ctx,x,y,dirEnum,frame) {
     ctx.restore();
 };
 
-var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
-    var angle = 0;
+const drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
+    let angle = 0;
 
     // draw body
     if (frame == 0) {
@@ -6307,7 +6201,7 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
     }
 
     // reflect or rotate sprite according to current direction
-    var d90 = Math.PI/2;
+    const d90 = Math.PI/2;
     if (dirEnum == DIR_UP)
         ctx.rotate(-d90);
     else if (dirEnum == DIR_DOWN)
@@ -6316,16 +6210,19 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
         ctx.scale(-1,1);
 
     // bow
-    var x=-7.5,y=-7.5;
-    ctx.fillStyle = "#F00";
-    ctx.beginPath(); ctx.arc(x+1,y+4,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+2,y+5,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+3,y+3,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+4,y+1,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+5,y+2,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = "#0031FF";
-    ctx.beginPath(); ctx.arc(x+2.5,y+3.5,0.5,0,Math.PI*2); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+3.5,y+2.5,0.5,0,Math.PI*2); ctx.closePath(); ctx.fill();
+    {
+        const x=-7.5;
+        const y=-7.5;
+        ctx.fillStyle = "#F00";
+        ctx.beginPath(); ctx.arc(x+1,y+4,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+2,y+5,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+3,y+3,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+4,y+1,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+5,y+2,1.25,0,Math.PI*2); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#0031FF";
+        ctx.beginPath(); ctx.arc(x+2.5,y+3.5,0.5,0,Math.PI*2); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+3.5,y+2.5,0.5,0,Math.PI*2); ctx.closePath(); ctx.fill();
+    }
 
     // lips
     ctx.strokeStyle = "#F00";
@@ -6339,10 +6236,10 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
         ctx.lineTo(6.5,1.5);
     }
     else {
-        var r1 = 7.5;
-        var r2 = 8.5;
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        const r1 = 7.5;
+        const r2 = 8.5;
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
         ctx.moveTo(-3+r1*c,r1*s);
         ctx.lineTo(-3+r2*c,r2*s);
         ctx.moveTo(-3+r1*c,-r1*s);
@@ -6365,10 +6262,10 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
         ctx.lineTo(-0.5,-2);
     }
     else {
-        var r1 = 0.5;
-        var r2 = 2.5;
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        const r1 = 0.5;
+        const r2 = 2.5;
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
         ctx.moveTo(-3+r1*c,-2-r1*s);
         ctx.lineTo(-3+r2*c,-2-r2*s);
     }
@@ -6377,25 +6274,25 @@ var drawMsPacmanSprite = function(ctx,x,y,dirEnum,frame,rot_angle) {
     ctx.restore();
 };
 
-var drawCookiemanSprite = (function(){
+const drawCookiemanSprite = (function(){
 
     // TODO: draw pupils separately in atlas
     //      composite the body frame and a random pupil frame when drawing cookie-man
 
-    var prevFrame = undefined;
-    var sx1 = 0; // shift x for first pupil
-    var sy1 = 0; // shift y for first pupil
-    var sx2 = 0; // shift x for second pupil
-    var sy2 = 0; // shift y for second pupil
+    let prevFrame = undefined;
+    let sx1 = 0; // shift x for first pupil
+    let sy1 = 0; // shift y for first pupil
+    let sx2 = 0; // shift x for second pupil
+    let sy2 = 0; // shift y for second pupil
 
-    var er = 2.1; // eye radius
-    var pr = 1; // pupil radius
+    const er = 2.1; // eye radius
+    const pr = 1; // pupil radius
 
-    var movePupils = function() {
-        var a1 = Math.random()*Math.PI*2;
-        var a2 = Math.random()*Math.PI*2;
-        var r1 = Math.random()*pr;
-        var r2 = Math.random()*pr;
+    const movePupils = function() {
+        const a1 = Math.random()*Math.PI*2;
+        const a2 = Math.random()*Math.PI*2;
+        const r1 = Math.random()*pr;
+        const r2 = Math.random()*pr;
 
         sx1 = Math.cos(a1)*r1;
         sy1 = Math.sin(a1)*r1;
@@ -6404,10 +6301,10 @@ var drawCookiemanSprite = (function(){
     };
 
     return function(ctx,x,y,dirEnum,frame,shake,rot_angle) {
-        var angle = 0;
+        let angle = 0;
 
         // draw body
-        var draw = function(angle) {
+        const draw = function(angle) {
             //angle = Math.PI/6*frame;
             drawPacmanSprite(ctx,x,y,dirEnum,angle,undefined,undefined,undefined,undefined,"#47b8ff",rot_angle);
         };
@@ -6435,7 +6332,7 @@ var drawCookiemanSprite = (function(){
         }
 
         // reflect or rotate sprite according to current direction
-        var d90 = Math.PI/2;
+        const d90 = Math.PI/2;
         if (dirEnum == DIR_UP)
             ctx.rotate(-d90);
         else if (dirEnum == DIR_DOWN)
@@ -6443,43 +6340,45 @@ var drawCookiemanSprite = (function(){
         else if (dirEnum == DIR_LEFT)
             ctx.scale(-1,1);
 
-        var x = -4; // pivot point
-        var y = -3.5;
-        var r1 = 3;   // distance from pivot of first eye
-        var r2 = 6; // distance from pivot of second eye
-        angle /= 3; // angle from pivot point
-        angle += Math.PI/8;
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        {
+            const x = -4; // pivot point
+            const y = -3.5;
+            const r1 = 3;   // distance from pivot of first eye
+            const r2 = 6; // distance from pivot of second eye
+            angle /= 3; // angle from pivot point
+            angle += Math.PI/8;
+            const c = Math.cos(angle);
+            const s = Math.sin(angle);
 
-        if (shake) {
-            if (frame != prevFrame) {
-                movePupils();
+            if (shake) {
+                if (frame != prevFrame) {
+                    movePupils();
+                }
+                prevFrame = frame;
             }
-            prevFrame = frame;
+
+            // second eyeball
+            ctx.beginPath();
+            ctx.arc(x+r2*c, y-r2*s, er, 0, Math.PI*2);
+            ctx.fillStyle = "#FFF";
+            ctx.fill();
+            // second pupil
+            ctx.beginPath();
+            ctx.arc(x+r2*c+sx2, y-r2*s+sy2, pr, 0, Math.PI*2);
+            ctx.fillStyle = "#000";
+            ctx.fill();
+
+            // first eyeball
+            ctx.beginPath();
+            ctx.arc(x+r1*c, y-r1*s, er, 0, Math.PI*2);
+            ctx.fillStyle = "#FFF";
+            ctx.fill();
+            // first pupil
+            ctx.beginPath();
+            ctx.arc(x+r1*c+sx1, y-r1*s+sy1, pr, 0, Math.PI*2);
+            ctx.fillStyle = "#000";
+            ctx.fill();
         }
-
-        // second eyeball
-        ctx.beginPath();
-        ctx.arc(x+r2*c, y-r2*s, er, 0, Math.PI*2);
-        ctx.fillStyle = "#FFF";
-        ctx.fill();
-        // second pupil
-        ctx.beginPath();
-        ctx.arc(x+r2*c+sx2, y-r2*s+sy2, pr, 0, Math.PI*2);
-        ctx.fillStyle = "#000";
-        ctx.fill();
-
-        // first eyeball
-        ctx.beginPath();
-        ctx.arc(x+r1*c, y-r1*s, er, 0, Math.PI*2);
-        ctx.fillStyle = "#FFF";
-        ctx.fill();
-        // first pupil
-        ctx.beginPath();
-        ctx.arc(x+r1*c+sx1, y-r1*s+sy1, pr, 0, Math.PI*2);
-        ctx.fillStyle = "#000";
-        ctx.fill();
 
         ctx.restore();
 
@@ -6489,10 +6388,10 @@ var drawCookiemanSprite = (function(){
 ////////////////////////////////////////////////////////////////////
 // FRUIT SPRITES
 
-var drawCherry = function(ctx,x,y) {
+const drawCherry = function(ctx,x,y) {
 
     // cherry
-    var cherry = function(x,y) {
+    const cherry = function(x,y) {
         ctx.save();
         ctx.translate(x,y);
 
@@ -6536,7 +6435,7 @@ var drawCherry = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawStrawberry = function(ctx,x,y) {
+const drawStrawberry = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -6553,7 +6452,7 @@ var drawStrawberry = function(ctx,x,y) {
     ctx.stroke();
 
     // white spots
-    var spots = [
+    const spots = [
         {x:-4,y:-1},
         {x:-3,y:2 },
         {x:-2,y:0 },
@@ -6566,9 +6465,8 @@ var drawStrawberry = function(ctx,x,y) {
         {x:4, y:-2 } ];
 
     ctx.fillStyle = "#fff";
-    var i,len;
-    for (i=0, len=spots.length; i<len; i++) {
-        var s = spots[i];
+    for (let i=0, len=spots.length; i<len; i++) {
+        const s = spots[i];
         ctx.beginPath();
         ctx.arc(s.x,s.y,0.75,0,2*Math.PI);
         ctx.fill();
@@ -6604,7 +6502,7 @@ var drawStrawberry = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawOrange = function(ctx,x,y) {
+const drawOrange = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -6649,7 +6547,7 @@ var drawOrange = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawApple = function(ctx,x,y) {
+const drawApple = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -6687,7 +6585,7 @@ var drawApple = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawMelon = function(ctx,x,y) {
+const drawMelon = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -6729,7 +6627,7 @@ var drawMelon = function(ctx,x,y) {
     ctx.stroke();
     */
     // dark spots
-    var spots = [
+    const darkSpots = [
         0,-2,
         -1,-1,
         -2,0,
@@ -6754,17 +6652,16 @@ var drawMelon = function(ctx,x,y) {
          ];
 
     ctx.fillStyle="#69b4af";
-    var i,len;
-    for (i=0, len=spots.length; i<len; i+=2) {
-        var x = spots[i];
-        var y = spots[i+1];
+    for (let i=0, len=darkSpots.length; i<len; i+=2) {
+        const x = darkSpots[i];
+        const y = darkSpots[i+1];
         ctx.beginPath();
         ctx.arc(x,y,0.65,0,2*Math.PI);
         ctx.fill();
     }
 
     // white spots
-    var spots = [
+    const whiteSpots = [
         {x: 0,y:-3},
         {x:-2,y:-1},
         {x:-4,y: 1},
@@ -6777,9 +6674,8 @@ var drawMelon = function(ctx,x,y) {
          ];
 
     ctx.fillStyle = "#fff";
-    var i,len;
-    for (i=0, len=spots.length; i<len; i++) {
-        var s = spots[i];
+    for (let i=0, len=whiteSpots.length; i<len; i++) {
+        const s = whiteSpots[i];
         ctx.beginPath();
         ctx.arc(s.x,s.y,0.65,0,2*Math.PI);
         ctx.fill();
@@ -6788,7 +6684,7 @@ var drawMelon = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawGalaxian = function(ctx,x,y) {
+const drawGalaxian = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -6844,7 +6740,7 @@ var drawGalaxian = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawBell = function(ctx,x,y) {
+const drawBell = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -6884,7 +6780,7 @@ var drawBell = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawKey = function(ctx,x,y) {
+const drawKey = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -6926,7 +6822,7 @@ var drawKey = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawPretzel = function(ctx,x,y) {
+const drawPretzel = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -6948,7 +6844,7 @@ var drawPretzel = function(ctx,x,y) {
     ctx.stroke();
 
     // salt
-    var spots = [
+    const spots = [
         -5,-6,
         1,-6,
         4,-4,
@@ -6960,10 +6856,9 @@ var drawPretzel = function(ctx,x,y) {
          ];
 
     ctx.fillStyle = "#fff";
-    var i,len;
-    for (i=0, len=spots.length; i<len; i+=2) {
-        var x = spots[i];
-        var y = spots[i+1];
+    for (let i=0, len=spots.length; i<len; i+=2) {
+        const x = spots[i];
+        const y = spots[i+1];
         ctx.beginPath();
         ctx.arc(x,y,0.65,0,2*Math.PI);
         ctx.fill();
@@ -6972,7 +6867,7 @@ var drawPretzel = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawPear = function(ctx,x,y) {
+const drawPear = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -7008,7 +6903,7 @@ var drawPear = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawBanana = function(ctx,x,y) {
+const drawBanana = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -7052,7 +6947,7 @@ var drawBanana = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawCookie = function(ctx,x,y) {
+const drawCookie = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -7064,7 +6959,7 @@ var drawCookie = function(ctx,x,y) {
     ctx.fill();
 
     // chocolate chips
-    var spots = [
+    const spots = [
         0,-3,
         -4,-1,
         0,2,
@@ -7073,10 +6968,9 @@ var drawCookie = function(ctx,x,y) {
          ];
 
     ctx.fillStyle = "#000";
-    var i,len;
-    for (i=0, len=spots.length; i<len; i+=2) {
-        var x = spots[i];
-        var y = spots[i+1];
+    for (let i=0, len=spots.length; i<len; i+=2) {
+        const x = spots[i];
+        const y = spots[i+1];
         ctx.beginPath();
         ctx.arc(x,y,0.75,0,2*Math.PI);
         ctx.fill();
@@ -7085,7 +6979,7 @@ var drawCookie = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawCookieFlash = function(ctx,x,y) {
+const drawCookieFlash = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
 
@@ -7099,7 +6993,7 @@ var drawCookieFlash = function(ctx,x,y) {
     ctx.stroke();
 
     // chocolate chips
-    var spots = [
+    const spots = [
         0,-3,
         -4,-1,
         0,2,
@@ -7108,10 +7002,9 @@ var drawCookieFlash = function(ctx,x,y) {
          ];
 
     ctx.fillStyle = "#f9bd6d";
-    var i,len;
-    for (i=0, len=spots.length; i<len; i+=2) {
-        var x = spots[i];
-        var y = spots[i+1];
+    for (let i=0, len=spots.length; i<len; i+=2) {
+        const x = spots[i];
+        const y = spots[i+1];
         ctx.beginPath();
         ctx.arc(x,y,0.75,0,2*Math.PI);
         ctx.fill();
@@ -7120,8 +7013,8 @@ var drawCookieFlash = function(ctx,x,y) {
     ctx.restore();
 };
 
-var getSpriteFuncFromFruitName = function(name) {
-    var funcs = {
+const getSpriteFuncFromFruitName = function(name) {
+    const funcs = {
         'cherry': drawCherry,
         'strawberry': drawStrawberry,
         'orange': drawOrange,
@@ -7139,7 +7032,7 @@ var getSpriteFuncFromFruitName = function(name) {
     return funcs[name];
 };
 
-var drawRecordSymbol = function(ctx,x,y,color) {
+const drawRecordSymbol = function(ctx,x,y,color) {
     ctx.save();
     ctx.fillStyle = color;
     ctx.translate(x,y);
@@ -7151,13 +7044,13 @@ var drawRecordSymbol = function(ctx,x,y,color) {
     ctx.restore();
 };
 
-var drawRewindSymbol = function(ctx,x,y,color) {
+const drawRewindSymbol = function(ctx,x,y,color) {
     ctx.save();
     ctx.fillStyle = color;
     ctx.translate(x,y);
 
-    var s = 3;
-    var drawTriangle = function(x) {
+    const s = 3;
+    const drawTriangle = function(x) {
         ctx.beginPath();
         ctx.moveTo(x,s);
         ctx.lineTo(x-2*s,0);
@@ -7171,10 +7064,10 @@ var drawRewindSymbol = function(ctx,x,y,color) {
     ctx.restore();
 };
 
-var drawUpSymbol = function(ctx,x,y,color) {
+const drawUpSymbol = function(ctx,x,y,color) {
     ctx.save();
     ctx.translate(x,y);
-    var s = tileSize;
+    const s = tileSize;
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(0,-s/2);
@@ -7185,10 +7078,10 @@ var drawUpSymbol = function(ctx,x,y,color) {
     ctx.restore();
 };
 
-var drawDownSymbol = function(ctx,x,y,color) {
+const drawDownSymbol = function(ctx,x,y,color) {
     ctx.save();
     ctx.translate(x,y);
-    var s = tileSize;
+    const s = tileSize;
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(0,s/2);
@@ -7199,69 +7092,52 @@ var drawDownSymbol = function(ctx,x,y,color) {
     ctx.restore();
 };
 
-var drawSnail = (function(){
-    var plotSolid = function(points,color) {
-        var len = points.length;
-        var i;
-        ctx.beginPath();
-        ctx.moveTo(points[0],points[1]);
-        for (i=2; i<len; i+=2) {
-            ctx.lineTo(points[i],points[i+1]);
-        }
-        ctx.closePath();
-        ctx.lineWidth = 1.0;
-        ctx.lineJoin = "round";
-        ctx.fillStyle = ctx.strokeStyle = color;
-        ctx.fill();
-        ctx.stroke();
-    };
-    return function(ctx,x,y,color) {
-        ctx.save();
-        ctx.translate(x,y);
-        ctx.beginPath();
-        ctx.moveTo(-7,3);
-        ctx.lineTo(-5,3);
-        ctx.bezierCurveTo(-6,0,-5,-3,-2,-3);
-        ctx.bezierCurveTo(0,-3,2,-2,2,2);
-        ctx.bezierCurveTo(3,-1,3,-2,5,-2);
-        ctx.bezierCurveTo(6,-2,6,0,5,0);
-        ctx.bezierCurveTo(4,1,4,3,2,3);
-        ctx.closePath();
+const drawSnail = function(ctx,x,y,color) {
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.beginPath();
+    ctx.moveTo(-7,3);
+    ctx.lineTo(-5,3);
+    ctx.bezierCurveTo(-6,0,-5,-3,-2,-3);
+    ctx.bezierCurveTo(0,-3,2,-2,2,2);
+    ctx.bezierCurveTo(3,-1,3,-2,5,-2);
+    ctx.bezierCurveTo(6,-2,6,0,5,0);
+    ctx.bezierCurveTo(4,1,4,3,2,3);
+    ctx.closePath();
 
-        ctx.lineWidth = 1.0;
-        ctx.lineCap = ctx.lineJoin = "round";
-        ctx.fillStyle = ctx.strokeStyle = color;
-        ctx.fill();
-        ctx.stroke();
+    ctx.lineWidth = 1.0;
+    ctx.lineCap = ctx.lineJoin = "round";
+    ctx.fillStyle = ctx.strokeStyle = color;
+    ctx.fill();
+    ctx.stroke();
 
-        ctx.beginPath();
-        ctx.moveTo(4,-2);
-        ctx.lineTo(3,-5);
-        ctx.moveTo(5,-1);
-        ctx.lineTo(7,-5);
-        ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(4,-2);
+    ctx.lineTo(3,-5);
+    ctx.moveTo(5,-1);
+    ctx.lineTo(7,-5);
+    ctx.stroke();
 
-        ctx.beginPath();
-        ctx.arc(3,-5, 1, 0, Math.PI*2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(7,-5, 1, 0, Math.PI*2);
-        ctx.fill();
+    ctx.beginPath();
+    ctx.arc(3,-5, 1, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(7,-5, 1, 0, Math.PI*2);
+    ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(-4,1);
-        ctx.bezierCurveTo(-5,-1,-3,-3, -1,-2);
-        ctx.bezierCurveTo(0,-1,0,0,-1,1);
-        ctx.bezierCurveTo(-2,1,-3,0,-2,-0.5);
-        ctx.lineWidth = 0.5;
-        ctx.strokeStyle = "#000";
-        ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-4,1);
+    ctx.bezierCurveTo(-5,-1,-3,-3, -1,-2);
+    ctx.bezierCurveTo(0,-1,0,0,-1,1);
+    ctx.bezierCurveTo(-2,1,-3,0,-2,-0.5);
+    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = "#000";
+    ctx.stroke();
 
-        ctx.restore();
-    };
-})();
+    ctx.restore();
+};
 
-var drawHeartSprite = function(ctx,x,y) {
+const drawHeartSprite = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
     ctx.fillStyle = "#ffb8ff";
@@ -7280,7 +7156,7 @@ var drawHeartSprite = function(ctx,x,y) {
     ctx.restore();
 };
 
-var drawExclamationPoint = function(ctx,x,y) {
+const drawExclamationPoint = function(ctx,x,y) {
     ctx.save();
     ctx.translate(x,y);
     ctx.lineWidth = 0.5;
@@ -7301,6 +7177,8 @@ var drawExclamationPoint = function(ctx,x,y) {
     ctx.restore();
 };
 //@line 1 "src/Actor.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // The actor class defines common data functions for the ghosts and pacman
 // It provides everything for updating position and direction.
@@ -7308,7 +7186,7 @@ var drawExclamationPoint = function(ctx,x,y) {
 // "Ghost" and "Player" inherit from this "Actor"
 
 // Actor constructor
-var Actor = function() {
+const Actor = function() {
 
     this.dir = {};          // facing direction vector
     this.pixel = {};        // pixel position
@@ -7411,13 +7289,13 @@ Actor.prototype.setDir = function(dirEnum) {
 };
 
 // used as "pattern" parameter in getStepSizeFromTable()
-var STEP_PACMAN = 0;
-var STEP_GHOST = 1;
-var STEP_PACMAN_FRIGHT = 2;
-var STEP_GHOST_FRIGHT = 3;
-var STEP_GHOST_TUNNEL = 4;
-var STEP_ELROY1 = 5;
-var STEP_ELROY2 = 6;
+const STEP_PACMAN = 0;
+const STEP_GHOST = 1;
+const STEP_PACMAN_FRIGHT = 2;
+const STEP_GHOST_FRIGHT = 3;
+const STEP_GHOST_TUNNEL = 4;
+const STEP_ELROY1 = 5;
+const STEP_ELROY2 = 6;
 
 // getter function to extract a step size from speed control table
 Actor.prototype.getStepSizeFromTable = (function(){
@@ -7428,7 +7306,7 @@ Actor.prototype.getStepSizeFromTable = (function(){
     // This method allows us to represent different speeds in a low-resolution space.
 
     // speed control table (from Jamey Pittman)
-    var stepSizes = (
+    const stepSizes = (
                          // LEVEL 1
     "1111111111111111" + // pac-man (normal)
     "0111111111111111" + // ghosts (normal)
@@ -7466,7 +7344,7 @@ Actor.prototype.getStepSizeFromTable = (function(){
     "1121121121121121"); // elroy 2
 
     return function(level, pattern) {
-        var entry;
+        let entry;
         if (level < 1) return;
         else if (level==1)                  entry = 0;
         else if (level >= 2 && level <= 4)  entry = 1;
@@ -7480,7 +7358,7 @@ Actor.prototype.getStepSizeFromTable = (function(){
 Actor.prototype.update = function(j) {
 
     // get number of steps to advance in this frame
-    var numSteps = this.getNumSteps();
+    const numSteps = this.getNumSteps();
     if (j >= numSteps) 
         return;
 
@@ -7491,19 +7369,21 @@ Actor.prototype.update = function(j) {
     this.steer();
 };
 //@line 1 "src/Ghost.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
 
 // modes representing the ghost's current state
-var GHOST_OUTSIDE = 0;
-var GHOST_EATEN = 1;
-var GHOST_GOING_HOME = 2;
-var GHOST_ENTERING_HOME = 3;
-var GHOST_PACING_HOME = 4;
-var GHOST_LEAVING_HOME = 5;
+const GHOST_OUTSIDE = 0;
+const GHOST_EATEN = 1;
+const GHOST_GOING_HOME = 2;
+const GHOST_ENTERING_HOME = 3;
+const GHOST_PACING_HOME = 4;
+const GHOST_LEAVING_HOME = 5;
 
 // Ghost constructor
-var Ghost = function() {
+const Ghost = function() {
     // inherit data from Actor
     Actor.apply(this);
 
@@ -7523,7 +7403,7 @@ Ghost.prototype.getBounceY = (function(){
     // When moving horizontal, bounce height is a function of x.
     // When moving vertical, bounce height is a function of y.
 
-    var bounceY = {};
+    const bounceY = {};
 
     // map y tile pixel to new y tile pixel
     bounceY[DIR_UP] =    [-4,-2,0,2,4,3,2,3];
@@ -7548,9 +7428,9 @@ Ghost.prototype.getBounceY = (function(){
             return py;
         }
 
-        var tilePixel = this.getTilePixel({x:px,y:py});
-        var tileY = Math.floor(py / tileSize);
-        var y = tileY*tileSize;
+        const tilePixel = this.getTilePixel({x:px,y:py});
+        const tileY = Math.floor(py / tileSize);
+        let y = tileY*tileSize;
 
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN) {
             y += bounceY[dirEnum][tilePixel.y];
@@ -7633,7 +7513,7 @@ Ghost.prototype.isSlowInTunnel = function() {
 // gets the number of steps to move in this frame
 Ghost.prototype.getNumSteps = function() {
 
-    var pattern = STEP_GHOST;
+    let pattern = STEP_GHOST;
 
     if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
         return 2;
@@ -7702,7 +7582,7 @@ Ghost.prototype.step = function() {
 Ghost.prototype.homeSteer = (function(){
 
     // steering functions to execute for each mode
-    var steerFuncs = {};
+    const steerFuncs = {};
 
     steerFuncs[GHOST_GOING_HOME] = function() {
         // at the doormat
@@ -7774,7 +7654,7 @@ Ghost.prototype.homeSteer = (function(){
 
     // return a function to execute appropriate steering function for a given ghost
     return function() { 
-        var f = steerFuncs[this.mode];
+        const f = steerFuncs[this.mode];
         if (f)
             f.apply(this);
     };
@@ -7783,7 +7663,7 @@ Ghost.prototype.homeSteer = (function(){
 
 // special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
 Ghost.prototype.isScatterBrain = function() {
-    var scatter = false;
+    let scatter = false;
     if (ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
         if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) {
             scatter = (this == blinky || this == pinky);
@@ -7798,10 +7678,10 @@ Ghost.prototype.isScatterBrain = function() {
 // determine direction
 Ghost.prototype.steer = function() {
 
-    var dirEnum;                         // final direction to update to
-    var openTiles;                       // list of four booleans indicating which surrounding tiles are open
-    var oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
-    var actor;                           // actor whose corner we will target
+    let dirEnum;                         // final direction to update to
+    let openTiles;                       // list of four booleans indicating which surrounding tiles are open
+    let oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
+    let actor;                           // actor whose corner we will target
 
     // special map-specific steering when going to, entering, pacing inside, or leaving home
     this.homeSteer();
@@ -7835,7 +7715,7 @@ Ghost.prototype.steer = function() {
             this.dirEnum == DIR_DOWN  && this.tilePixel.y == midTile.y+1) {
 
         // get next tile
-        var nextTile = {
+        const nextTile = {
             x: this.tile.x + this.dir.x,
             y: this.tile.y + this.dir.y,
         };
@@ -7875,13 +7755,13 @@ Ghost.prototype.steer = function() {
 
             /* CHOOSE TURN */
 
-            var dirDecided = false;
+            let dirDecided = false;
             if (this.mode == GHOST_GOING_HOME && map.getExitDir) {
                 // If the map has a 'getExitDir' function, then we are using
                 // a custom algorithm to choose the next direction.
                 // Currently, procedurally-generated maps use this function
                 // to ensure that ghosts can return home without looping forever.
-                var exitDir = map.getExitDir(nextTile.x,nextTile.y);
+                const exitDir = map.getExitDir(nextTile.x,nextTile.y);
                 if (exitDir != undefined && exitDir != oppDirEnum) {
                     dirDecided = true;
                     dirEnum = exitDir;
@@ -7908,8 +7788,8 @@ Ghost.prototype.steer = function() {
 };
 
 Ghost.prototype.getPathDistLeft = function(fromPixel, dirEnum) {
-    var distLeft = tileSize;
-    var pixel = this.getTargetPixel();
+    let distLeft = tileSize;
+    const pixel = this.getTargetPixel();
     if (this.targetting == 'pacman') {
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
             distLeft = Math.abs(fromPixel.y - pixel.y);
@@ -7934,11 +7814,13 @@ Ghost.prototype.setTarget = function() {
     }
 };
 //@line 1 "src/Player.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Player is the controllable character (Pac-Man)
 
 // Player constructor
-var Player = function() {
+const Player = function() {
 
     // inherit data from Actor
     Actor.apply(this);
@@ -8002,7 +7884,7 @@ Player.prototype.getNumSteps = function() {
     if (turboMode)
         return 2;
 
-    var pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
+    const pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
     return this.getStepSizeFromTable(level, pattern);
 };
 
@@ -8043,7 +7925,7 @@ Player.prototype.clearInputDir = function(dirEnum) {
 Player.prototype.step = (function(){
 
     // return sign of a number
-    var sign = function(x) {
+    const sign = function(x) {
         if (x<0) return -1;
         if (x>0) return 1;
         return 0;
@@ -8058,8 +7940,8 @@ Player.prototype.step = (function(){
         }
 
         // identify the axes of motion
-        var a = (this.dir.x != 0) ? 'x' : 'y'; // axis of motion
-        var b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
+        const a = (this.dir.x != 0) ? 'x' : 'y'; // axis of motion
+        const b = (this.dir.x != 0) ? 'y' : 'x'; // axis perpendicular to motion
 
         // Don't proceed past the middle of a tile if facing a wall
         this.stopped = this.stopped || (this.distToMid[a] == 0 && !isNextTileFloor(this.tile, this.dir));
@@ -8086,7 +7968,7 @@ Player.prototype.steer = function() {
             return;
 
         // make turn that is closest to target
-        var openTiles = getOpenTiles(this.tile, this.dirEnum);
+        const openTiles = getOpenTiles(this.tile, this.dirEnum);
         this.setTarget();
         this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
     }
@@ -8101,9 +7983,9 @@ Player.prototype.steer = function() {
     }
     else {
         // Determine if input direction is open.
-        var inputDir = {};
+        const inputDir = {};
         setDirFromEnum(inputDir, this.inputDirEnum);
-        var inputDirOpen = isNextTileFloor(this.tile, inputDir);
+        const inputDirOpen = isNextTileFloor(this.tile, inputDir);
 
         if (inputDirOpen) {
             this.setDir(this.inputDirEnum);
@@ -8122,7 +8004,7 @@ Player.prototype.steer = function() {
 // update this frame
 Player.prototype.update = function(j) {
 
-    var numSteps = this.getNumSteps();
+    const numSteps = this.getNumSteps();
     if (j >= numSteps)
         return;
 
@@ -8138,7 +8020,7 @@ Player.prototype.update = function(j) {
 
     // eat something
     if (map) {
-        var t = map.getTile(this.tile.x, this.tile.y);
+        const t = map.getTile(this.tile.x, this.tile.y);
         if (t == '.' || t == 'o') {
 
             // apply eating drag (unless in turbo mode)
@@ -8157,55 +8039,59 @@ Player.prototype.update = function(j) {
     }
 };
 //@line 1 "src/actors.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // create all the actors
 
-var blinky = new Ghost();
+const blinky = new Ghost();
 blinky.name = "blinky";
 blinky.color = "#FF0000";
 blinky.pathColor = "rgba(255,0,0,0.8)";
 blinky.isVisible = true;
 
-var pinky = new Ghost();
+const pinky = new Ghost();
 pinky.name = "pinky";
 pinky.color = "#FFB8FF";
 pinky.pathColor = "rgba(255,184,255,0.8)";
 pinky.isVisible = true;
 
-var inky = new Ghost();
+const inky = new Ghost();
 inky.name = "inky";
 inky.color = "#00FFFF";
 inky.pathColor = "rgba(0,255,255,0.8)";
 inky.isVisible = true;
 
-var clyde = new Ghost();
+const clyde = new Ghost();
 clyde.name = "clyde";
 clyde.color = "#FFB851";
 clyde.pathColor = "rgba(255,184,81,0.8)";
 clyde.isVisible = true;
 
-var pacman = new Player();
+const pacman = new Player();
 pacman.name = "pacman";
 pacman.color = "#FFFF00";
 pacman.pathColor = "rgba(255,255,0,0.8)";
 
 // order at which they appear in original arcade memory
 // (suggests drawing/update order)
-var actors = [blinky, pinky, inky, clyde, pacman];
-var ghosts = [blinky, pinky, inky, clyde];
+const actors = [blinky, pinky, inky, clyde, pacman];
+const ghosts = [blinky, pinky, inky, clyde];
 //@line 1 "src/targets.js"
+
+
 /////////////////////////////////////////////////////////////////
 // Targetting
 // (a definition for each actor's targetting algorithm and a draw function to visualize it)
 // (getPathDistLeft is used to obtain a smoothly interpolated path endpoint)
 
 // the tile length of the path drawn toward the target
-var actorPathLength = 16;
+const actorPathLength = 16;
 
 (function() {
 
 // the size of the square rendered over a target tile (just half a tile)
-var targetSize = midTile.y;
+const targetSize = midTile.y;
 
 // when drawing paths, use these offsets so they don't completely overlap each other
 pacman.pathCenter = { x:0, y:0};
@@ -8235,16 +8121,16 @@ blinky.drawTarget = function(ctx) {
 /////////////////////////////////////////////////////////////////
 // pinky targets four tiles ahead of pacman
 pinky.getTargetTile = function() {
-    var px = pacman.tile.x + 4*pacman.dir.x;
-    var py = pacman.tile.y + 4*pacman.dir.y;
+    let px = pacman.tile.x + 4*pacman.dir.x;
+    const py = pacman.tile.y + 4*pacman.dir.y;
     if (pacman.dirEnum == DIR_UP) {
         px -= 4;
     }
     return { x : px, y : py };
 };
 pinky.getTargetPixel = function() {
-    var px = pacman.pixel.x + 4*pacman.dir.x*tileSize;
-    var py = pacman.pixel.y + 4*pacman.dir.y*tileSize;
+    let px = pacman.pixel.x + 4*pacman.dir.x*tileSize;
+    const py = pacman.pixel.y + 4*pacman.dir.y*tileSize;
     if (pacman.dirEnum == DIR_UP) {
         px -= 4*tileSize;
     }
@@ -8254,7 +8140,7 @@ pinky.drawTarget = function(ctx) {
     if (!this.targetting) return;
     ctx.fillStyle = this.color;
 
-    var pixel = this.getTargetPixel();
+    const pixel = this.getTargetPixel();
 
     if (this.targetting == 'pacman') {
         ctx.beginPath();
@@ -8273,8 +8159,8 @@ pinky.drawTarget = function(ctx) {
 /////////////////////////////////////////////////////////////////
 // inky targets twice the distance from blinky to two tiles ahead of pacman
 inky.getTargetTile = function() {
-    var px = pacman.tile.x + 2*pacman.dir.x;
-    var py = pacman.tile.y + 2*pacman.dir.y;
+    let px = pacman.tile.x + 2*pacman.dir.x;
+    const py = pacman.tile.y + 2*pacman.dir.y;
     if (pacman.dirEnum == DIR_UP) {
         px -= 2;
     }
@@ -8284,16 +8170,16 @@ inky.getTargetTile = function() {
     };
 };
 inky.getJointPixel = function() {
-    var px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
-    var py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
+    let px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
+    const py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
     if (pacman.dirEnum == DIR_UP) {
         px -= 2*tileSize;
     }
     return { x: px, y: py };
 };
 inky.getTargetPixel = function() {
-    var px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
-    var py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
+    let px = pacman.pixel.x + 2*pacman.dir.x*tileSize;
+    const py = pacman.pixel.y + 2*pacman.dir.y*tileSize;
     if (pacman.dirEnum == DIR_UP) {
         px -= 2*tileSize;
     }
@@ -8304,12 +8190,11 @@ inky.getTargetPixel = function() {
 };
 inky.drawTarget = function(ctx) {
     if (!this.targetting) return;
-    var pixel;
 
-    var joint = this.getJointPixel();
+    const joint = this.getJointPixel();
 
     if (this.targetting == 'pacman') {
-        pixel = this.getTargetPixel();
+        const pixel = this.getTargetPixel();
         ctx.beginPath();
         ctx.moveTo(pacman.pixel.x, pacman.pixel.y);
         if (pacman.dirEnum == DIR_UP) {
@@ -8340,9 +8225,9 @@ inky.drawTarget = function(ctx) {
 // clyde targets pacman if >=8 tiles away, otherwise targets home
 
 clyde.getTargetTile = function() {
-    var dx = pacman.tile.x - (this.tile.x + this.dir.x);
-    var dy = pacman.tile.y - (this.tile.y + this.dir.y);
-    var dist = dx*dx+dy*dy;
+    const dx = pacman.tile.x - (this.tile.x + this.dir.x);
+    const dy = pacman.tile.y - (this.tile.y + this.dir.y);
+    const dist = dx*dx+dy*dy;
     if (dist >= 64) {
         this.targetting = 'pacman';
         return { x: pacman.tile.x, y: pacman.tile.y };
@@ -8370,9 +8255,9 @@ clyde.drawTarget = function(ctx) {
         else {
             // draw a distance stick
             ctx.moveTo(pacman.pixel.x, pacman.pixel.y);
-            var dx = clyde.pixel.x - pacman.pixel.x;
-            var dy = clyde.pixel.y - pacman.pixel.y;
-            var dist = Math.sqrt(dx*dx+dy*dy);
+            let dx = clyde.pixel.x - pacman.pixel.x;
+            let dy = clyde.pixel.y - pacman.pixel.y;
+            const dist = Math.sqrt(dx*dx+dy*dy);
             dx = dx/dist*tileSize*8;
             dy = dy/dist*tileSize*8;
             ctx.lineTo(pacman.pixel.x + dx, pacman.pixel.y + dy);
@@ -8411,11 +8296,10 @@ pacman.setTarget = function() {
 pacman.drawTarget = function(ctx) {
     if (!this.ai) return;
     ctx.fillStyle = this.color;
-    var px,py;
 
     if (this.targetting == 'flee') {
-        px = pacman.pixel.x - pinky.pixel.x;
-        py = pacman.pixel.y - pinky.pixel.y;
+        let px = pacman.pixel.x - pinky.pixel.x;
+        let py = pacman.pixel.y - pinky.pixel.y;
         px = pinky.pixel.x + 2*px;
         py = pinky.pixel.y + 2*py;
         ctx.beginPath();
@@ -8431,8 +8315,7 @@ pacman.drawTarget = function(ctx) {
 
 };
 pacman.getPathDistLeft = function(fromPixel, dirEnum) {
-    var distLeft = tileSize;
-    var px,py;
+    let distLeft = tileSize;
     if (this.targetting == 'pinky') {
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
             distLeft = Math.abs(fromPixel.y - pinky.pixel.y);
@@ -8440,8 +8323,8 @@ pacman.getPathDistLeft = function(fromPixel, dirEnum) {
             distLeft = Math.abs(fromPixel.x - pinky.pixel.x);
     }
     else { // 'flee'
-        px = pacman.pixel.x - pinky.pixel.x;
-        py = pacman.pixel.y - pinky.pixel.y;
+        let px = pacman.pixel.x - pinky.pixel.x;
+        let py = pacman.pixel.y - pinky.pixel.y;
         px = pinky.pixel.x + 2*px;
         py = pinky.pixel.y + 2*py;
         if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
@@ -8454,20 +8337,22 @@ pacman.getPathDistLeft = function(fromPixel, dirEnum) {
 
 })();
 //@line 1 "src/ghostCommander.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander
 // Determines when a ghost should be chasing a target
 
 // modes representing the ghosts' current command
-var GHOST_CMD_CHASE = 0;
-var GHOST_CMD_SCATTER = 1;
+const GHOST_CMD_CHASE = 0;
+const GHOST_CMD_SCATTER = 1;
 
-var ghostCommander = (function() {
+const ghostCommander = (function() {
 
     // determine if there is to be a new command issued at the given time
-    var getNewCommand = (function(){
-        var t;
-        var times = [{},{},{}];
+    const getNewCommand = (function(){
+        let t;
+        const times = [{},{},{}];
         // level 1
         times[0][t=7*60] = GHOST_CMD_CHASE;
         times[0][t+=20*60] = GHOST_CMD_SCATTER;
@@ -8494,14 +8379,14 @@ var ghostCommander = (function() {
         times[2][t+=1] = GHOST_CMD_CHASE;
 
         return function(frame) {
-            var i;
+            let i;
             if (level == 1)
                 i = 0;
             else if (level >= 2 && level <= 4)
                 i = 1;
             else
                 i = 2;
-            var newCmd = times[i][frame];
+            const newCmd = times[i][frame];
 
             if (gameMode == GAME_PACMAN) {
                 return newCmd;
@@ -8514,20 +8399,20 @@ var ghostCommander = (function() {
         };
     })();
 
-    var frame;   // current frame
-    var command; // last command given to ghosts
+    let frame;   // current frame
+    let command; // last command given to ghosts
 
-    var savedFrame = {};
-    var savedCommand = {};
+    const savedFrame = {};
+    const savedCommand = {};
 
     // save state at time t
-    var save = function(t) {
+    const save = function(t) {
         savedFrame[t] = frame;
         savedCommand[t] = command;
     };
 
     // load state at time t
-    var load = function(t) {
+    const load = function(t) {
         frame = savedFrame[t];
         command = savedCommand[t];
     };
@@ -8540,13 +8425,12 @@ var ghostCommander = (function() {
             frame = 0;
         },
         update: function() {
-            var newCmd;
             if (!energizer.isActive()) {
-                newCmd = getNewCommand(frame);
+                const newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
                     command = newCmd;
-                    for (i=0; i<4; i++)
-                        ghosts[i].reverse();
+                    for (const g of ghosts)
+                        g.reverse();
                 }
                 frame++;
             }
@@ -8560,26 +8444,28 @@ var ghostCommander = (function() {
     };
 })();
 //@line 1 "src/ghostReleaser.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Releaser
 
 // Determines when to release ghosts from home
 
-var ghostReleaser = (function(){
+const ghostReleaser = (function(){
     // two separate counter modes for releasing the ghosts from home
-    var MODE_PERSONAL = 0;
-    var MODE_GLOBAL = 1;
+    const MODE_PERSONAL = 0;
+    const MODE_GLOBAL = 1;
 
     // ghost enumerations
-    var PINKY = 1;
-    var INKY = 2;
-    var CLYDE = 3;
+    const PINKY = 1;
+    const INKY = 2;
+    const CLYDE = 3;
 
     // this is how many frames it will take to release a ghost after pacman stops eating
-    var getTimeoutLimit = function() { return (level < 5) ? 4*60 : 3*60; };
+    const getTimeoutLimit = function() { return (level < 5) ? 4*60 : 3*60; };
 
     // dot limits used in personal mode to release ghost after # of dots have been eaten
-    var personalDotLimit = {};
+    const personalDotLimit = {};
     personalDotLimit[PINKY] = function() { return 0; };
     personalDotLimit[INKY] = function() { return (level==1) ? 30 : 0; };
     personalDotLimit[CLYDE] = function() {
@@ -8589,22 +8475,22 @@ var ghostReleaser = (function(){
     };
 
     // dot limits used in global mode to release ghost after # of dots have been eaten
-    var globalDotLimit = {};
+    const globalDotLimit = {};
     globalDotLimit[PINKY] = 7;
     globalDotLimit[INKY] = 17;
     globalDotLimit[CLYDE] = 32;
 
-    var framesSinceLastDot; // frames elapsed since last dot was eaten
-    var mode;               // personal or global dot counter mode
-    var ghostCounts = {};   // personal dot counts for each ghost
-    var globalCount;        // global dot count
+    let framesSinceLastDot; // frames elapsed since last dot was eaten
+    let mode;               // personal or global dot counter mode
+    const ghostCounts = {};   // personal dot counts for each ghost
+    let globalCount;        // global dot count
 
-    var savedGlobalCount = {};
-    var savedFramesSinceLastDot = {};
-    var savedGhostCounts = {};
+    const savedGlobalCount = {};
+    const savedFramesSinceLastDot = {};
+    const savedGhostCounts = {};
 
     // save state at time t
-    var save = function(t) {
+    const save = function(t) {
         savedFramesSinceLastDot[t] = framesSinceLastDot;
         if (mode == MODE_GLOBAL) {
             savedGlobalCount[t] = globalCount;
@@ -8618,7 +8504,7 @@ var ghostReleaser = (function(){
     };
 
     // load state at time t
-    var load = function(t) {
+    const load = function(t) {
         framesSinceLastDot = savedFramesSinceLastDot[t];
         if (mode == MODE_GLOBAL) {
             globalCount = savedGlobalCount[t];
@@ -8646,15 +8532,13 @@ var ghostReleaser = (function(){
             globalCount = 0;
         },
         onDotEat: function() {
-            var i;
-
             framesSinceLastDot = 0;
 
             if (mode == MODE_GLOBAL) {
                 globalCount++;
             }
             else {
-                for (i=1;i<4;i++) {
+                for (let i=1;i<4;i++) {
                     if (ghosts[i].mode == GHOST_PACING_HOME) {
                         ghostCounts[i]++;
                         break;
@@ -8664,12 +8548,9 @@ var ghostReleaser = (function(){
 
         },
         update: function() {
-            var g;
-
             // use personal dot counter
             if (mode == MODE_PERSONAL) {
-                for (i=1;i<4;i++) {
-                    g = ghosts[i];
+                for (const [i,g] of ghosts.entries()) {
                     if (g.mode == GHOST_PACING_HOME) {
                         if (ghostCounts[i] >= personalDotLimit[i]()) {
                             g.leaveHome();
@@ -8700,8 +8581,7 @@ var ghostReleaser = (function(){
             // also use time since last dot was eaten
             if (framesSinceLastDot > getTimeoutLimit()) {
                 framesSinceLastDot = 0;
-                for (i=1;i<4;i++) {
-                    g = ghosts[i];
+                for (const g of ghosts) {
                     if (g.mode == GHOST_PACING_HOME) {
                         g.leaveHome();
                         break;
@@ -8714,38 +8594,40 @@ var ghostReleaser = (function(){
     };
 })();
 //@line 1 "src/elroyTimer.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Elroy Timer
 
 // Determines when to put blinky into faster elroy modes
 
-var elroyTimer = (function(){
+const elroyTimer = (function(){
 
     // get the number of dots left that should trigger elroy stage #1 or #2
-    var getDotsEatenLimit = (function(){
-        var dotsLeft = [
+    const getDotsEatenLimit = (function(){
+        const dotsLeft = [
             [20,30,40,40,40,50,50,50,60,60,60,70,70,70,100,100,100,100,120,120,120], // elroy1
             [10,15,20,20,20,25,25,25,30,30,30,40,40,40, 50, 50, 50, 50, 60, 60, 60]]; // elroy2
         return function(stage) {
-            var i = level;
+            let i = level;
             if (i>21) i = 21;
-            var pacman_max_pellets = 244;
+            const pacman_max_pellets = 244;
             return pacman_max_pellets - dotsLeft[stage-1][i-1];
         };
     })();
 
     // when level restarts, blinky must wait for clyde to leave home before resuming elroy mode
-    var waitForClyde;
+    let waitForClyde;
 
-    var savedWaitForClyde = {};
+    const savedWaitForClyde = {};
 
     // save state at time t
-    var save = function(t) {
+    const save = function(t) {
         savedWaitForClyde[t] = waitForClyde;
     };
 
     // load state at time t
-    var load = function(t) {
+    const load = function(t) {
         waitForClyde = savedWaitForClyde[t];
     };
 
@@ -8782,50 +8664,52 @@ var elroyTimer = (function(){
     };
 })();
 //@line 1 "src/energizer.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Energizer
 
 // This handles how long the energizer lasts as well as how long the
 // points will display after eating a ghost.
 
-var energizer = (function() {
+const energizer = (function() {
 
     // how many seconds to display points when ghost is eaten
-    var pointsDuration = 1;
+    const pointsDuration = 1;
 
     // how long to stay energized based on current level
-    var getDuration = (function(){
-        var seconds = [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
+    const getDuration = (function(){
+        const seconds = [6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1];
         return function() {
-            var i = level;
+            const i = level;
             return (i > 18) ? 0 : 60*seconds[i-1];
         };
     })();
 
     // how many ghost flashes happen near the end of frightened mode based on current level
-    var getFlashes = (function(){
-        var flashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
+    const getFlashes = (function(){
+        const flashes = [5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3];
         return function() {
-            var i = level;
+            const i = level;
             return (i > 18) ? 0 : flashes[i-1];
         };
     })();
 
     // "The ghosts change colors every 14 game cycles when they start 'flashing'" -Jamey Pittman
-    var flashInterval = 14;
+    const flashInterval = 14;
 
-    var count;  // how long in frames energizer has been active
-    var active; // indicates if energizer is currently active
-    var points; // points that the last eaten ghost was worth
-    var pointsFramesLeft; // number of frames left to display points earned from eating ghost
+    let count;  // how long in frames energizer has been active
+    let active; // indicates if energizer is currently active
+    let points; // points that the last eaten ghost was worth
+    let pointsFramesLeft; // number of frames left to display points earned from eating ghost
 
-    var savedCount = {};
-    var savedActive = {};
-    var savedPoints = {};
-    var savedPointsFramesLeft = {};
+    const savedCount = {};
+    const savedActive = {};
+    const savedPoints = {};
+    const savedPointsFramesLeft = {};
 
     // save state at time t
-    var save = function(t) {
+    const save = function(t) {
         savedCount[t] = count;
         savedActive[t] = active;
         savedPoints[t] = points;
@@ -8833,7 +8717,7 @@ var energizer = (function() {
     };
 
     // load state at time t
-    var load = function(t) {
+    const load = function(t) {
         count = savedCount[t];
         active = savedActive[t];
         points = savedPoints[t];
@@ -8848,11 +8732,10 @@ var energizer = (function() {
             active = false;
             points = 100;
             pointsFramesLeft = 0;
-            for (i=0; i<4; i++)
-                ghosts[i].scared = false;
+            for (const g of ghosts)
+                g.scared = false;
         },
         update: function() {
-            var i;
             if (active) {
                 if (count == getDuration())
                     this.reset();
@@ -8864,8 +8747,8 @@ var energizer = (function() {
             active = true;
             count = 0;
             points = 100;
-            for (i=0; i<4; i++) {
-                ghosts[i].onEnergized();
+            for (const g of ghosts) {
+                g.onEnergized();
             }
             if (getDuration() == 0) { // if no duration, then immediately reset
                 this.reset();
@@ -8873,7 +8756,7 @@ var energizer = (function() {
         },
         isActive: function() { return active; },
         isFlash: function() { 
-            var i = Math.floor((getDuration()-count)/flashInterval);
+            const i = Math.floor((getDuration()-count)/flashInterval);
             return (i<=2*getFlashes()-1) ? (i%2==0) : false;
         },
 
@@ -8889,10 +8772,12 @@ var energizer = (function() {
     };
 })();
 //@line 1 "src/fruit.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Fruit
 
-var BaseFruit = function() {
+const BaseFruit = function() {
     // pixel
     this.pixel = {x:0, y:0};
 
@@ -8951,7 +8836,7 @@ BaseFruit.prototype = {
 
 // PAC-MAN FRUIT
 
-var PacFruit = function() {
+const PacFruit = function() {
     BaseFruit.call(this);
     this.fruits = [
         {name:'cherry',     points:100},
@@ -9008,15 +8893,14 @@ PacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
     buildFruitHistory: function() {
         this.fruitHistory = {};
-        var i;
-        for (i=1; i<= level; i++) {
+        for (let i=1; i<= level; i++) {
             this.fruitHistory[i] = this.fruits[this.getFruitIndexFromLevel(i)];
         }
     },
 
     initiate: function() {
-        var x = 13;
-        var y = 20;
+        const x = 13;
+        const y = 20;
         this.pixel.x = tileSize*(1+x)-1;
         this.pixel.y = tileSize*y + midTile.y;
         this.framesLeft = 60*this.duration;
@@ -9051,11 +8935,11 @@ PacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
 // MS. PAC-MAN FRUIT
 
-var PATH_ENTER = 0;
-var PATH_PEN = 1;
-var PATH_EXIT = 2;
+const PATH_ENTER = 0;
+const PATH_PEN = 1;
+const PATH_EXIT = 2;
 
-var MsPacFruit = function() {
+const MsPacFruit = function() {
     BaseFruit.call(this);
     this.fruits = [
         {name: 'cherry',     points: 100},
@@ -9107,8 +8991,7 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
 
     buildFruitHistory: function() {
         this.fruitHistory = {};
-        var i;
-        for (i=1; i<= Math.max(level,7); i++) {
+        for (let i=1; i<= Math.max(level,7); i++) {
             this.fruitHistory[i] = this.fruits[i-1];
         }
     },
@@ -9131,8 +9014,8 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
         if (this.shouldRandomizeFruit()) {
             this.setCurrentFruit(getRandomInt(0,6));
         }
-        var entrances = map.fruitPaths.entrances;
-        var e = entrances[getRandomInt(0,entrances.length-1)];
+        const {entrances} = map.fruitPaths;
+        const e = entrances[getRandomInt(0,entrances.length-1)];
         this.initiatePath(e.path);
         this.pathMode = PATH_ENTER;
         this.pixel.x = e.start.x;
@@ -9144,15 +9027,15 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
     },
 
     bounceFrames: (function(){
-        var U = { dx:0, dy:-1 };
-        var D = { dx:0, dy:1 };
-        var L = { dx:-1, dy:0 };
-        var R = { dx:1, dy:0 };
-        var UL = { dx:-1, dy:-1 };
-        var UR = { dx:1, dy:-1 };
-        var DL = { dx:-1, dy:1 };
-        var DR = { dx:1, dy:1 };
-        var Z = { dx:0, dy:0 };
+        const U = { dx:0, dy:-1 };
+        const D = { dx:0, dy:1 };
+        const L = { dx:-1, dy:0 };
+        const R = { dx:1, dy:0 };
+        const UL = { dx:-1, dy:-1 };
+        const UR = { dx:1, dy:-1 };
+        const DL = { dx:-1, dy:1 };
+        const DR = { dx:1, dy:1 };
+        const Z = { dx:0, dy:0 };
 
         // A 16-frame animation for moving 8 pixels either up, down, left, or right.
         return {
@@ -9164,8 +9047,8 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
     })(),
 
     move: function() {
-        var p = this.path[Math.floor(this.frame/16)]; // get current path frame
-        var b = this.bounceFrames[p][this.frame%16]; // get current bounce animation frame
+        const p = this.path[Math.floor(this.frame/16)]; // get current path frame
+        const b = this.bounceFrames[p][this.frame%16]; // get current bounce animation frame
         this.pixel.x += b.dx;
         this.pixel.y += b.dy;
         this.frame++;
@@ -9178,8 +9061,8 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
         }
         else if (this.pathMode == PATH_PEN) {
             this.pathMode = PATH_EXIT;
-            var exits = map.fruitPaths.exits;
-            var e = exits[getRandomInt(0,exits.length-1)];
+            const {exits} = map.fruitPaths;
+            const e = exits[getRandomInt(0,exits.length-1)];
             this.initiatePath(e.path);
         }
         else if (this.pathMode == PATH_EXIT) {
@@ -9222,10 +9105,10 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
     },
 });
 
-var fruit;
-var setFruitFromGameMode = (function() {
-    var pacfruit = new PacFruit();
-    var mspacfruit = new MsPacFruit();
+let fruit;
+const setFruitFromGameMode = (function() {
+    const pacfruit = new PacFruit();
+    const mspacfruit = new MsPacFruit();
     fruit = pacfruit;
     return function() {
         if (gameMode == GAME_PACMAN) {
@@ -9237,13 +9120,15 @@ var setFruitFromGameMode = (function() {
     };
 })();
 //@line 1 "src/executive.js"
-var executive = (function(){
 
-    var framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
-    var gameTime; // virtual time of the last game update
 
-    var paused = false; // flag for pausing the state updates, while still drawing
-    var running = false; // flag for truly stopping everything
+const executive = (function(){
+
+    let framePeriod = 1000/60; // length of each frame at 60Hz (updates per second)
+    let gameTime; // virtual time of the last game update
+
+    let paused = false; // flag for pausing the state updates, while still drawing
+    let running = false; // flag for truly stopping everything
 
     /**********/
     // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
@@ -9253,9 +9138,9 @@ var executive = (function(){
     // fixes from Paul Irish and Tino Zijdel
 
     (function() {
-        var lastTime = 0;
-        var vendors = ['ms', 'moz', 'webkit', 'o'];
-        for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        let lastTime = 0;
+        const vendors = ['ms', 'moz', 'webkit', 'o'];
+        for(let x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
             window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
             window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
                                        || window[vendors[x]+'CancelRequestAnimationFrame'];
@@ -9263,9 +9148,9 @@ var executive = (function(){
      
         if (!window.requestAnimationFrame)
             window.requestAnimationFrame = function(callback, element) {
-                var currTime = new Date().getTime();
-                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-                var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+                const currTime = new Date().getTime();
+                const timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                const id = window.setTimeout(function() { callback(currTime + timeToCall); },
                   timeToCall);
                 lastTime = currTime + timeToCall;
                 return id;
@@ -9278,14 +9163,14 @@ var executive = (function(){
     }());
     /**********/
 
-    var fps;
-    var updateFps = (function(){
+    let fps;
+    const updateFps = (function(){
         // TODO: fix this to reflect the average rate of the last n frames, where 0 < n < 60
-        var length = 60;
-        var times = [];
-        var startIndex = 0;
-        var endIndex = -1;
-        var filled = false;
+        const length = 60;
+        const times = [];
+        let startIndex = 0;
+        let endIndex = -1;
+        let filled = false;
 
         return function(now) {
             if (filled) {
@@ -9298,8 +9183,8 @@ var executive = (function(){
 
             times[endIndex] = now;
 
-            var seconds = (now - times[startIndex]) / 1000;
-            var frames = endIndex - startIndex;
+            const seconds = (now - times[startIndex]) / 1000;
+            let frames = endIndex - startIndex;
             if (frames < 0) {
                 frames += length;
             }
@@ -9308,8 +9193,8 @@ var executive = (function(){
     })();
         
 
-    var reqFrame; // id of requestAnimationFrame object
-    var tick = function(now) {
+    let reqFrame; // id of requestAnimationFrame object
+    const tick = function(now) {
         if (gameTime == undefined) {
             gameTime = now;
         }
@@ -9318,7 +9203,7 @@ var executive = (function(){
         updateFps(now);
 
         // Control frame-skipping by only allowing gameTime to lag behind the current time by some amount.
-        var maxFrameSkip = 3;
+        const maxFrameSkip = 3;
         gameTime = Math.max(gameTime, now-maxFrameSkip*framePeriod);
 
         // Prevent any updates from being called when paused.
@@ -9357,7 +9242,7 @@ var executive = (function(){
             vcr.onFramePeriodChange();
         },
         init: function() {
-            var that = this;
+            const that = this;
             window.addEventListener('focus', function() {that.start();});
             window.addEventListener('blur', function() {that.stop();});
             this.start();
@@ -9380,16 +9265,19 @@ var executive = (function(){
     };
 })();
 //@line 1 "src/states.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // States
 // (main loops for each state of the game)
 // state is set to any of these states, each containing an init(), draw(), and update()
 
 // current game state
-var state;
+let state;
+const setState = function(s) { state = s; };
 
 // switches to another game state
-var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
+const switchState = function(nextState,fadeDuration, continueUpdate1, continueUpdate2) {
     state = (fadeDuration) ? fadeNextState(state,nextState,fadeDuration,continueUpdate1, continueUpdate2) : nextState;
     state.init();
     if (executive.isPaused()) {
@@ -9403,12 +9291,12 @@ var switchState = function(nextState,fadeDuration, continueUpdate1, continueUpda
 // Creates a state that will fade from a given state to another in the given amount of time.
 // if continueUpdate1 is true, then prevState.update will be called while fading out
 // if continueUpdate2 is true, then nextState.update will be called while fading in
-var fadeNextState = function (prevState, nextState, frameDuration, continueUpdate1, continueUpdate2) {
-    var frames;
-    var midFrame = Math.floor(frameDuration/2);
-    var inFirstState = function() { return frames < midFrame; };
-    var getStateTime = function() { return frames/frameDuration*2 + (inFirstState() ? 0 : -1); };
-    var initialized = false;
+const fadeNextState = function (prevState, nextState, frameDuration, continueUpdate1, continueUpdate2) {
+    let frames;
+    const midFrame = Math.floor(frameDuration/2);
+    const inFirstState = function() { return frames < midFrame; };
+    const getStateTime = function() { return frames/frameDuration*2 + (inFirstState() ? 0 : -1); };
+    let initialized = false;
 
     return {
         init: function() {
@@ -9417,7 +9305,7 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
         },
         draw: function() {
             if (!initialized) return;
-            var t = getStateTime();
+            const t = getStateTime();
             if (frames < midFrame) {
                 if (prevState) {
                     prevState.draw();
@@ -9455,22 +9343,22 @@ var fadeNextState = function (prevState, nextState, frameDuration, continueUpdat
 
             frames++;
         },
-    }
+    };
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Home State
 // (the home title screen state)
 
-var homeState = (function(){
+const homeState = (function(){
 
-    var exitTo = function(s) {
+    const exitTo = function(s) {
         switchState(s);
         menu.disable();
     };
 
-    var menu = new Menu("CHOOSE A GAME",2*tileSize,0*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-    var getIconAnimFrame = function(frame) {
+    const menu = new Menu("CHOOSE A GAME",2*tileSize,0*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const getIconAnimFrame = function(frame) {
         frame = Math.floor(frame/3)+1;
         frame %= 4;
         if (frame == 3) {
@@ -9478,14 +9366,14 @@ var homeState = (function(){
         }
         return frame;
     };
-    var getOttoAnimFrame = function(frame) {
+    const getOttoAnimFrame = function(frame) {
         frame = Math.floor(frame/3);
         frame %= 4;
         return frame;
     };
     menu.addTextIconButton(getGameName(GAME_PACMAN),
         function() {
-            gameMode = GAME_PACMAN;
+            setGameMode(GAME_PACMAN);
             exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
@@ -9493,7 +9381,7 @@ var homeState = (function(){
         });
     menu.addTextIconButton(getGameName(GAME_MSPACMAN),
         function() {
-            gameMode = GAME_MSPACMAN;
+            setGameMode(GAME_MSPACMAN);
             exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
@@ -9501,7 +9389,7 @@ var homeState = (function(){
         });
     menu.addTextIconButton(getGameName(GAME_COOKIE),
         function() {
-            gameMode = GAME_COOKIE;
+            setGameMode(GAME_COOKIE);
             exitTo(preNewGameState);
         },
         function(ctx,x,y,frame) {
@@ -9540,9 +9428,9 @@ var homeState = (function(){
 //////////////////////////////////////////////////////////////////////////////////////
 // Learn State
 
-var learnState = (function(){
+const learnState = (function(){
 
-    var exitTo = function(s) {
+    const exitTo = function(s) {
         switchState(s);
         menu.disable();
         forEachCharBtn(function (btn) {
@@ -9552,7 +9440,7 @@ var learnState = (function(){
         clearCheats();
     };
 
-    var menu = new Menu("LEARN", 2*tileSize,-tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const menu = new Menu("LEARN", 2*tileSize,-tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addSpacer(7);
     menu.addTextButton("BACK",
         function() {
@@ -9561,12 +9449,12 @@ var learnState = (function(){
     menu.backButton = menu.buttons[menu.buttonCount-1];
     menu.noArrowKeys = true;
 
-    var pad = tileSize;
-    var w = 30;
-    var h = 30;
-    var x = mapWidth/2 - 2*(w) - 1.5*pad;
-    var y = 4*tileSize;
-    var redBtn = new Button(x,y,w,h,function(){
+    const pad = tileSize;
+    const w = 30;
+    const h = 30;
+    let x = mapWidth/2 - 2*(w) - 1.5*pad;
+    const y = 4*tileSize;
+    const redBtn = new Button(x,y,w,h,function(){
         setAllVisibility(false);
         blinky.isVisible = true;
         setVisibility(blinky,true);
@@ -9575,7 +9463,7 @@ var learnState = (function(){
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_DOWN,undefined,undefined,undefined,blinky.color);
     });
     x += w+pad;
-    var pinkBtn = new Button(x,y,w,h,function(){
+    const pinkBtn = new Button(x,y,w,h,function(){
         setAllVisibility(false);
         setVisibility(pinky,true);
     });
@@ -9583,7 +9471,7 @@ var learnState = (function(){
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_DOWN,undefined,undefined,undefined,pinky.color);
     });
     x += w+pad;
-    var cyanBtn = new Button(x,y,w,h,function(){
+    const cyanBtn = new Button(x,y,w,h,function(){
         setAllVisibility(false);
         setVisibility(inky,true);
     });
@@ -9591,25 +9479,25 @@ var learnState = (function(){
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_DOWN,undefined,undefined,undefined,inky.color);
     });
     x += w+pad;
-    var orangeBtn = new Button(x,y,w,h,function(){
+    const orangeBtn = new Button(x,y,w,h,function(){
         setAllVisibility(false);
         setVisibility(clyde,true);
     });
     orangeBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_DOWN,undefined,undefined,undefined,clyde.color);
     });
-    var forEachCharBtn = function(callback) {
+    const forEachCharBtn = function(callback) {
         callback(redBtn);
         callback(pinkBtn);
         callback(cyanBtn);
         callback(orangeBtn);
     };
 
-    var setVisibility = function(g,visible) {
+    const setVisibility = function(g,visible) {
         g.isVisible = g.isDrawTarget = g.isDrawPath = visible;
     };
 
-    var setAllVisibility = function(visible) {
+    const setAllVisibility = function(visible) {
         setVisibility(blinky,visible);
         setVisibility(pinky,visible);
         setVisibility(inky,visible);
@@ -9625,14 +9513,14 @@ var learnState = (function(){
             });
 
             // set map
-            map = mapLearn;
+            setMap(mapLearn);
             renderer.drawMap();
 
             // set game parameters
-            level = 1;
-            practiceMode = false;
-            turboMode = false;
-            gameMode = GAME_PACMAN;
+            setLevel(1);
+            setPracticeMode(false);
+            setTurboMode(false);
+            setGameMode(GAME_PACMAN);
 
             // reset relevant game state
             ghostCommander.reset();
@@ -9642,10 +9530,9 @@ var learnState = (function(){
             elroyTimer.onNewLevel();
 
             // set ghost states
-            for (i=0; i<4; i++) {
-                var a = actors[i];
-                a.reset();
-                a.mode = GHOST_OUTSIDE;
+            for (const g of ghosts) {
+                g.reset();
+                g.mode = GHOST_OUTSIDE;
             }
             blinky.setPos(14*tileSize-1, 13*tileSize+midTile.y);
             pinky.setPos(15*tileSize+midTile.x, 13*tileSize+midTile.y);
@@ -9677,15 +9564,14 @@ var learnState = (function(){
             forEachCharBtn(function (btn) {
                 btn.update();
             });
-            var i,j;
-            for (j=0; j<2; j++) {
+            for (let j=0; j<2; j++) {
                 pacman.update(j);
-                for (i=0;i<4;i++) {
-                    actors[i].update(j);
+                for (const g of ghosts) {
+                    g.update(j);
                 }
             }
-            for (i=0; i<5; i++)
-                actors[i].frames++;
+            for (const a of actors)
+                a.frames++;
         },
         getMenu: function() {
             return menu;
@@ -9698,11 +9584,11 @@ var learnState = (function(){
 // Game Title
 // (provides functions for managing the game title with clickable player and enemies below it)
 
-var gameTitleState = (function() {
+const gameTitleState = (function() {
 
-    var name,nameColor;
+    let name,nameColor;
 
-    var resetTitle = function() {
+    const resetTitle = function() {
         if (yellowBtn.isSelected) {
             name = getGameName();
             nameColor = gameMode == GAME_COOKIE ? "#47b8ff" : pacman.color;
@@ -9729,16 +9615,16 @@ var gameTitleState = (function() {
         }
     };
 
-    var w = 20;
-    var h = 30;
-    var x = mapWidth/2 - 3*w;
-    var y = 3*tileSize;
-    var yellowBtn = new Button(x,y,w,h,function() {
+    const w = 20;
+    const h = 30;
+    let x = mapWidth/2 - 3*w;
+    const y = 3*tileSize;
+    const yellowBtn = new Button(x,y,w,h,function() {
         if (gameMode == GAME_MSPACMAN) {
-            gameMode = GAME_OTTO;
+            setGameMode(GAME_OTTO);
         }
         else if (gameMode == GAME_OTTO) {
-            gameMode = GAME_MSPACMAN;
+            setGameMode(GAME_MSPACMAN);
         }
     });
     yellowBtn.setIcon(function (ctx,x,y,frame) {
@@ -9746,30 +9632,30 @@ var gameTitleState = (function() {
     });
 
     x += 2*w;
-    var redBtn = new Button(x,y,w,h);
+    const redBtn = new Button(x,y,w,h);
     redBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,blinky.color);
     });
 
     x += w;
-    var pinkBtn = new Button(x,y,w,h);
+    const pinkBtn = new Button(x,y,w,h);
     pinkBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,pinky.color);
     });
 
     x += w;
-    var cyanBtn = new Button(x,y,w,h)
+    const cyanBtn = new Button(x,y,w,h);
     cyanBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,inky.color);
     });
 
     x += w;
-    var orangeBtn = new Button(x,y,w,h);
+    const orangeBtn = new Button(x,y,w,h);
     orangeBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,clyde.color);
     });
     
-    var forEachCharBtn = function(callback) {
+    const forEachCharBtn = function(callback) {
         callback(yellowBtn);
         callback(redBtn);
         callback(pinkBtn);
@@ -9822,35 +9708,35 @@ var gameTitleState = (function() {
 // Pre New Game State
 // (the main menu for the currently selected game)
 
-var preNewGameState = (function() {
+const preNewGameState = (function() {
 
-    var exitTo = function(s,fade) {
+    const exitTo = function(s,fade) {
         gameTitleState.shutdown();
         menu.disable();
         switchState(s,fade);
     };
 
-    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
 
     menu.addSpacer(2);
     menu.addTextButton("PLAY",
         function() { 
-            practiceMode = false;
-            turboMode = false;
+            setPracticeMode(false);
+            setTurboMode(false);
             newGameState.setStartLevel(1);
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PLAY TURBO",
         function() { 
-            practiceMode = false;
-            turboMode = true;
+            setPracticeMode(false);
+            setTurboMode(true);
             newGameState.setStartLevel(1);
             exitTo(newGameState, 60);
         });
     menu.addTextButton("PRACTICE",
         function() { 
-            practiceMode = true;
-            turboMode = false;
+            setPracticeMode(true);
+            setTurboMode(false);
             exitTo(selectActState);
         });
     menu.addSpacer(0.5);
@@ -9873,7 +9759,7 @@ var preNewGameState = (function() {
         init: function() {
             menu.enable();
             gameTitleState.init();
-            map = undefined;
+            setMap(undefined);
         },
         draw: function() {
             renderer.clearMapFrame();
@@ -9892,33 +9778,33 @@ var preNewGameState = (function() {
 //////////////////////////////////////////////////////////////////////////////////////
 // Select Act State
 
-var selectActState = (function() {
+const selectActState = (function() {
 
     // TODO: create ingame menu option to return to this menu (with last act played present)
 
-    var menu;
-    var numActs = 4;
-    var defaultStartAct = 1;
-    var startAct = defaultStartAct;
+    let menu;
+    const numActs = 4;
+    const defaultStartAct = 1;
+    let startAct = defaultStartAct;
 
-    var exitTo = function(state,fade) {
+    const exitTo = function(state,fade) {
         gameTitleState.shutdown();
         menu.disable();
         switchState(state,fade);
     };
 
-    var chooseLevelFromAct = function(act) {
+    const chooseLevelFromAct = function(act) {
         selectLevelState.setAct(act);
         exitTo(selectLevelState);
     };
 
-    var scrollToAct = function(act) {
+    const scrollToAct = function(act) {
         // just rebuild the menu
         selectActState.setStartAct(act);
         exitTo(selectActState);
     };
 
-    var drawArrow = function(ctx,x,y,dir) {
+    const drawArrow = function(ctx,x,y,dir) {
         ctx.save();
         ctx.translate(x,y);
         ctx.scale(1,dir);
@@ -9932,13 +9818,11 @@ var selectActState = (function() {
         ctx.restore();
     };
 
-    var buildMenu = function(act) {
+    const buildMenu = function(act) {
         // set buttons starting at the given act
         startAct = act;
 
         menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-        var i;
-        var range;
         menu.addSpacer(2);
         menu.addIconButton(
             function(ctx,x,y) {
@@ -9947,8 +9831,8 @@ var selectActState = (function() {
             function() {
                 scrollToAct(Math.max(1,act-numActs));
             });
-        for (i=0; i<numActs; i++) {
-            range = getActRange(act+i);
+        for (let i=0; i<numActs; i++) {
+            const range = getActRange(act+i);
             menu.addTextIconButton("LEVELS "+range[0]+"-"+range[1],
                 (function(j){
                     return function() { 
@@ -9957,8 +9841,8 @@ var selectActState = (function() {
                 })(i),
                 (function(j){
                     return function(ctx,x,y) {
-                        var s = tileSize/3*2;
-                        var r = tileSize/6;
+                        const s = tileSize/3*2;
+                        const r = tileSize/6;
                         ctx.save();
                         ctx.translate(x,y);
                         ctx.beginPath();
@@ -9972,7 +9856,7 @@ var selectActState = (function() {
                         ctx.lineTo(-r,s);
                         ctx.quadraticCurveTo(-s,s,-s,r);
                         ctx.closePath();
-                        var colors = getActColor(act+j);
+                        const colors = getActColor(act+j);
                         ctx.fillStyle = colors.wallFillColor;
                         ctx.strokeStyle = colors.wallStrokeColor;
                         ctx.fill();
@@ -10021,31 +9905,30 @@ var selectActState = (function() {
 //////////////////////////////////////////////////////////////////////////////////////
 // Select Level State
 
-var selectLevelState = (function() {
+const selectLevelState = (function() {
 
-    var menu;
-    var act = 1;
+    let menu;
+    let act = 1;
 
-    var exitTo = function(state,fade) {
+    const exitTo = function(state,fade) {
         gameTitleState.shutdown();
         menu.disable();
         switchState(state,fade);
     };
 
-    var playLevel = function(i) {
+    const playLevel = function(i) {
         // TODO: set level (will have to set up fruit history correctly)
         newGameState.setStartLevel(i);
         exitTo(newGameState, 60);
     };
 
-    var buildMenu = function(act) {
-        var range = getActRange(act);
+    const buildMenu = function(act) {
+        const range = getActRange(act);
 
         menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
-        var i;
         menu.addSpacer(2);
         if (range[0] < range[1]) {
-            for (i=range[0]; i<=range[1]; i++) {
+            for (let i=range[0]; i<=range[1]; i++) {
                 menu.addTextIconButton("LEVEL "+i,
                     (function(j){
                         return function() { 
@@ -10054,7 +9937,7 @@ var selectLevelState = (function() {
                     })(i),
                     (function(j){
                         return function(ctx,x,y) {
-                            var f = fruit.getFruitFromLevel(j);
+                            const f = fruit.getFruitFromLevel(j);
                             if (f) {
                                 atlas.drawFruitSprite(ctx,x,y,f.name);
                             }
@@ -10098,15 +9981,15 @@ var selectLevelState = (function() {
 // About Game State
 // (the screen shows some information about the game)
 
-var aboutGameState = (function() {
+const aboutGameState = (function() {
 
-    var exitTo = function(s,fade) {
+    const exitTo = function(s,fade) {
         gameTitleState.shutdown();
         menu.disable();
         switchState(s,fade);
     };
 
-    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
 
     menu.addSpacer(8);
     menu.addTextButton("BACK",
@@ -10115,17 +9998,16 @@ var aboutGameState = (function() {
         });
     menu.backButton = menu.buttons[menu.buttonCount-1];
 
-    var desc;
-    var numDescLines;
+    let desc;
+    let numDescLines;
 
-    var drawDesc = function(ctx){
+    const drawDesc = function(ctx){
         ctx.font = tileSize+"px ArcadeR";
         ctx.fillStyle = "#FFF";
         ctx.textBaseline = "top";
         ctx.textAlign = "center";
-        var y = 12*tileSize;
-        var i;
-        for (i=0; i<numDescLines; i++) {
+        const y = 12*tileSize;
+        for (let i=0; i<numDescLines; i++) {
             ctx.fillText(desc[i],14*tileSize,y+i*2*tileSize);
         }
     };
@@ -10156,15 +10038,15 @@ var aboutGameState = (function() {
 // Cut Scene Menu State
 // (the screen that shows a list of the available cutscenes for the current game)
 
-var cutSceneMenuState = (function() {
+const cutSceneMenuState = (function() {
 
-    var exitTo = function(s,fade) {
+    const exitTo = function(s,fade) {
         gameTitleState.shutdown();
         menu.disable();
         switchState(s,fade);
     };
 
-    var exitToCutscene = function(s) {
+    const exitToCutscene = function(s) {
         if (s) {
             gameTitleState.shutdown();
             menu.disable();
@@ -10172,7 +10054,7 @@ var cutSceneMenuState = (function() {
         }
     };
 
-    var menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const menu = new Menu("",2*tileSize,0,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
 
     menu.addSpacer(2);
     menu.addTextButton("CUTSCENE 1",
@@ -10198,7 +10080,7 @@ var cutSceneMenuState = (function() {
         init: function() {
             menu.enable();
             gameTitleState.init();
-            level = 0;
+            setLevel(0);
         },
         draw: function() {
             renderer.clearMapFrame();
@@ -10218,35 +10100,35 @@ var cutSceneMenuState = (function() {
 // Score State
 // (the high score screen state)
 
-var scoreState = (function(){
+const scoreState = (function(){
 
-    var exitTo = function(s) {
+    const exitTo = function(s) {
         switchState(s);
         menu.disable();
     };
 
-    var menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const menu = new Menu("", 2*tileSize,mapHeight-6*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("BACK",
         function() {
             exitTo(homeState);
         });
     menu.backButton = menu.buttons[menu.buttonCount-1];
 
-    var frame = 0;
+    let frame = 0;
 
-    var bulbs = {};
-    var numBulbs;
+    const bulbs = {};
+    let numBulbs;
     (function(){
-        var x = -1.5*tileSize;
-        var y = -1*tileSize;
-        var w = 18*tileSize;
-        var h = 29*tileSize;
-        var s = 3;
+        const x = -1.5*tileSize;
+        const y = -1*tileSize;
+        const w = 18*tileSize;
+        const h = 29*tileSize;
+        const s = 3;
 
-        var i=0;
-        var x0 = x;
-        var y0 = y;
-        var addBulb = function(x,y) { bulbs[i++] = { x:x, y:y }; };
+        let i=0;
+        let x0 = x;
+        let y0 = y;
+        const addBulb = function(x,y) { bulbs[i++] = { x:x, y:y }; };
         for (; y0<y+h; y0+=s) { addBulb(x0,y0); }
         for (; x0<x+w; x0+=s) { addBulb(x0,y0); }
         for (; y0>y; y0-=s) { addBulb(x0,y0); }
@@ -10255,34 +10137,33 @@ var scoreState = (function(){
         numBulbs = i;
     })();
 
-    var drawScoreBox = function(ctx) {
+    const drawScoreBox = function(ctx) {
 
         // draw chaser lights around the marquee
         ctx.fillStyle = "#555";
-        var i,b,s=2;
-        for (i=0; i<numBulbs; i++) {
-            b = bulbs[i];
+        const s=2;
+        for (let i=0; i<numBulbs; i++) {
+            const b = bulbs[i];
             ctx.fillRect(b.x, b.y, s, s);
         }
         ctx.fillStyle = "#FFF";
-        for (i=0; i<63; i++) {
-            b = bulbs[(i*4+Math.floor(frame/2))%numBulbs];
+        for (let i=0; i<63; i++) {
+            const b = bulbs[(i*4+Math.floor(frame/2))%numBulbs];
             ctx.fillRect(b.x, b.y, s, s);
         }
 
         ctx.font = tileSize+"px ArcadeR";
         ctx.textBaseline = "top";
         ctx.textAlign = "right";
-        var scoreColor = "#AAA";
-        var captionColor = "#444";
+        const scoreColor = "#AAA";
+        const captionColor = "#444";
 
-        var x,y;
-        x = 9*tileSize;
-        y = 0;
+        const x = 9*tileSize;
+        let y = 0;
         ctx.fillStyle = "#FFF"; ctx.fillText("HIGH SCORES", x+4*tileSize,y);
         y += tileSize*4;
 
-        var drawContrails = function(x,y) {
+        const drawContrails = function(x,y) {
             ctx.lineWidth = 1.0;
             ctx.lineCap = "round";
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
@@ -10290,8 +10171,7 @@ var scoreState = (function(){
             ctx.save();
             ctx.translate(-2.5,0);
 
-            var dy;
-            for (dy=-4; dy<=4; dy+=2) {
+            for (let dy=-4; dy<=4; dy+=2) {
                 ctx.beginPath();
                 ctx.moveTo(x+tileSize,y+dy);
                 ctx.lineTo(x+tileSize*(Math.random()*0.5+1.5),y+dy);
@@ -10333,14 +10213,14 @@ var scoreState = (function(){
         atlas.drawCookiemanSprite(ctx,x+2*tileSize,y+tileSize/2,DIR_LEFT,1);
     };
 
-    var drawFood = function(ctx) {
+    const drawFood = function(ctx) {
         ctx.globalAlpha = 0.5;
         ctx.font = tileSize + "px sans-serif";
         ctx.textBaseline = "middle";
         ctx.textAlign = "left";
 
-        var x = 20*tileSize;
-        var y = 0;
+        let x = 20*tileSize;
+        let y = 0;
 
         ctx.fillStyle = "#ffb8ae";
         ctx.fillRect(x-1,y-1.5,2,2);
@@ -10359,7 +10239,7 @@ var scoreState = (function(){
         atlas.drawGhostSprite(ctx,x,y,0,DIR_RIGHT,true);
         atlas.drawGhostPoints(ctx,x+2*tileSize,y,200);
 
-        var alpha = ctx.globalAlpha;
+        const alpha = ctx.globalAlpha;
 
         y += 2*tileSize;
         ctx.globalAlpha = alpha*0.5;
@@ -10385,7 +10265,7 @@ var scoreState = (function(){
         atlas.drawGhostSprite(ctx,x+6*tileSize,y,0,DIR_RIGHT,true);
         atlas.drawGhostPoints(ctx,x+8*tileSize,y,1600);
 
-        var mspac_fruits = [
+        const mspac_fruits = [
             {name: 'cherry',     points: 100},
             {name: 'strawberry', points: 200},
             {name: 'orange',     points: 500},
@@ -10395,7 +10275,7 @@ var scoreState = (function(){
             {name: 'banana',     points: 5000},
         ];
 
-        var pac_fruits = [
+        const pac_fruits = [
             {name:'cherry',     points:100},
             {name:'strawberry', points:300},
             {name:'orange',     points:500},
@@ -10406,18 +10286,17 @@ var scoreState = (function(){
             {name:'key',        points:5000},
         ];
 
-        var i,f;
         y += 3*tileSize;
-        for (i=0; i<pac_fruits.length; i++) {
-            f = pac_fruits[i];
+        for (let i=0; i<pac_fruits.length; i++) {
+            const f = pac_fruits[i];
             atlas.drawFruitSprite(ctx,x,y,f.name);
             atlas.drawPacFruitPoints(ctx,x+2*tileSize,y,f.points);
             y += 2*tileSize;
         }
         x += 6*tileSize;
         y = 13.5*tileSize;
-        for (i=0; i<mspac_fruits.length; i++) {
-            f = mspac_fruits[i];
+        for (let i=0; i<mspac_fruits.length; i++) {
+            const f = mspac_fruits[i];
             atlas.drawFruitSprite(ctx,x,y,f.name);
             atlas.drawMsPacFruitPoints(ctx,x+2*tileSize,y,f.points);
             y += 2*tileSize;
@@ -10450,14 +10329,14 @@ var scoreState = (function(){
 // About State
 // (the about screen state)
 
-var aboutState = (function(){
+const aboutState = (function(){
 
-    var exitTo = function(s) {
+    const exitTo = function(s) {
         switchState(s);
         menu.disable();
     };
 
-    var menu = new Menu("", 2*tileSize,mapHeight-11*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
+    const menu = new Menu("", 2*tileSize,mapHeight-11*tileSize,mapWidth-4*tileSize,3*tileSize,tileSize,tileSize+"px ArcadeR", "#EEE");
     menu.addTextButton("GO TO PROJECT PAGE",
         function() {
             window.open("https://github.com/shaunew/Pac-Man");
@@ -10468,14 +10347,13 @@ var aboutState = (function(){
         });
     menu.backButton = menu.buttons[menu.buttonCount-1];
 
-    var drawBody = function(ctx) {
+    const drawBody = function(ctx) {
         ctx.font = tileSize+"px ArcadeR";
         ctx.textBaseline = "top";
         ctx.textAlign = "left";
 
-        var x,y;
-        x = 2*tileSize;
-        y = 0*tileSize;
+        const x = 2*tileSize;
+        let y = 0*tileSize;
         ctx.fillStyle = "#0FF";
         ctx.fillText("DEVELOPER", x,y);
         y += tileSize*2;
@@ -10534,17 +10412,17 @@ var aboutState = (function(){
 // New Game state
 // (state when first starting a new game)
 
-var newGameState = (function() {
-    var frames;
-    var duration = 2;
-    var startLevel = 1;
+const newGameState = (function() {
+    let frames;
+    const duration = 2;
+    let startLevel = 1;
 
     return {
         init: function() {
             clearCheats();
             frames = 0;
-            level = startLevel-1;
-            extraLives = practiceMode ? Infinity : 3;
+            setLevel(startLevel-1);
+            setExtraLives(practiceMode ? Infinity : 3);
             setScore(0);
             setFruitFromGameMode();
             readyNewState.init();
@@ -10576,15 +10454,14 @@ var newGameState = (function() {
 // Ready state
 // (state when map is displayed and pausing before play)
 
-var readyState =  (function(){
-    var frames;
-    var duration = 2;
+const readyState =  (function(){
+    let frames;
+    const duration = 2;
     
     return {
         init: function() {
-            var i;
-            for (i=0; i<5; i++)
-                actors[i].reset();
+            for (const a of actors)
+                a.reset();
             ghostCommander.reset();
             fruit.reset();
             energizer.reset();
@@ -10613,14 +10490,14 @@ var readyState =  (function(){
 // Ready New Level state
 // (ready state when pausing before new level)
 
-var readyNewState = newChildObject(readyState, {
+const readyNewState = newChildObject(readyState, {
 
     init: function() {
 
         // increment level and ready the next map
-        level++;
+        setLevel(level+1);
         if (gameMode == GAME_PACMAN) {
-            map = mapPacman;
+            setMap(mapPacman);
         }
         else if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO) {
             setNextMsPacMap();
@@ -10645,7 +10522,7 @@ var readyNewState = newChildObject(readyState, {
 // Ready Restart Level state
 // (ready state when pausing before restarted level)
 
-var readyRestartState = newChildObject(readyState, {
+const readyRestartState = newChildObject(readyState, {
 
     init: function() {
         extraLives--;
@@ -10662,7 +10539,7 @@ var readyRestartState = newChildObject(readyState, {
 // Play state
 // (state when playing the game)
 
-var playState = {
+const playState = {
     init: function() { 
         if (practiceMode) {
             vcr.reset();
@@ -10683,9 +10560,7 @@ var playState = {
     // handles collision between pac-man and ghosts
     // returns true if collision happened
     isPacmanCollide: function() {
-        var i,g;
-        for (i = 0; i<4; i++) {
-            g = ghosts[i];
+        for (const g of ghosts) {
             if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y && g.mode == GHOST_OUTSIDE) {
                 if (g.scared) { // eat ghost
                     energizer.addPoints();
@@ -10711,25 +10586,24 @@ var playState = {
                 vcr.record();
             }
 
-            var i,j; // loop index
-            var maxSteps = 2;
-            var skip = false;
+            const maxSteps = 2;
+            let skip = false;
 
             // skip this frame if needed,
             // but update ghosts running home
             if (energizer.showingPoints()) {
-                for (j=0; j<maxSteps; j++)
-                    for (i=0; i<4; i++)
-                        if (ghosts[i].mode == GHOST_GOING_HOME || ghosts[i].mode == GHOST_ENTERING_HOME)
-                            ghosts[i].update(j);
+                for (let j=0; j<maxSteps; j++)
+                    for (const g of ghosts)
+                        if (g.mode == GHOST_GOING_HOME || g.mode == GHOST_ENTERING_HOME)
+                            g.update(j);
                 energizer.updatePointsTimer();
                 skip = true;
             }
             else { // make ghosts go home immediately after points disappear
-                for (i=0; i<4; i++)
-                    if (ghosts[i].mode == GHOST_EATEN) {
-                        ghosts[i].mode = GHOST_GOING_HOME;
-                        ghosts[i].targetting = 'door';
+                for (const g of ghosts)
+                    if (g.mode == GHOST_EATEN) {
+                        g.mode = GHOST_GOING_HOME;
+                        g.targetting = 'door';
                     }
             }
             
@@ -10743,7 +10617,7 @@ var playState = {
                 energizer.update();
 
                 // update actors one step at a time
-                for (j=0; j<maxSteps; j++) {
+                for (let j=0; j<maxSteps; j++) {
 
                     // advance pacman
                     pacman.update(j);
@@ -10762,13 +10636,13 @@ var playState = {
                     // (redundant to prevent pass-throughs)
                     // (if collision happens, stop immediately.)
                     if (this.isPacmanCollide()) break;
-                    for (i=0;i<4;i++) actors[i].update(j);
+                    for (const g of ghosts) g.update(j);
                     if (this.isPacmanCollide()) break;
                 }
 
                 // update frame counts
-                for (i=0; i<5; i++)
-                    actors[i].frames++;
+                for (const a of actors)
+                    a.frames++;
             }
         }
     },
@@ -10778,14 +10652,14 @@ var playState = {
 // Script state
 // (a state that triggers functions at certain times)
 
-var scriptState = (function(){
+const scriptState = (function(){
 
     return {
         init: function() {
             this.frames = 0;        // frames since state began
             this.triggerFrame = 0;  // frames since last trigger
 
-            var trigger = this.triggers[0];
+            const trigger = this.triggers[0];
             this.drawFunc = trigger ? trigger.draw : undefined;   // current draw function
             this.updateFunc = trigger ? trigger.update : undefined; // current update function
         },
@@ -10794,7 +10668,7 @@ var scriptState = (function(){
             // if trigger is found for current time,
             // call its init() function
             // and store its draw() and update() functions
-            var trigger = this.triggers[this.frames];
+            const trigger = this.triggers[this.frames];
             if (trigger) {
                 if (trigger.init) trigger.init();
                 this.drawFunc = trigger.draw;
@@ -10821,7 +10695,7 @@ var scriptState = (function(){
 // Seekable Script state
 // (a script state that can be controled by the VCR)
 
-var seekableScriptState = newChildObject(scriptState, {
+const seekableScriptState = newChildObject(scriptState, {
 
     init: function() {
         scriptState.init.call(this);
@@ -10865,10 +10739,10 @@ var seekableScriptState = newChildObject(scriptState, {
 // Dead state
 // (state when player has lost a life)
 
-var deadState = (function() {
+const deadState = (function() {
     
     // this state will always have these drawn
-    var commonDraw = function() {
+    const commonDraw = function() {
         renderer.blitMap();
         renderer.drawScore();
     };
@@ -10879,9 +10753,8 @@ var deadState = (function() {
         triggers: {
             0: { // freeze
                 update: function() {
-                    var i;
-                    for (i=0; i<4; i++) 
-                        actors[i].frames++; // keep animating ghosts
+                    for (const g of ghosts) 
+                        g.frames++; // keep animating ghosts
                 },
                 draw: function() {
                     commonDraw();
@@ -10934,10 +10807,10 @@ var deadState = (function() {
 // Finish state
 // (state when player has completed a level)
 
-var finishState = (function(){
+const finishState = (function(){
 
     // this state will always have these drawn
-    var commonDraw = function() {
+    const commonDraw = function() {
         renderer.blitMap();
         renderer.drawScore();
 
@@ -10947,7 +10820,7 @@ var finishState = (function(){
     };
     
     // flash the floor and draw
-    var flashFloorAndDraw = function(on) {
+    const flashFloorAndDraw = function(on) {
         renderer.setLevelFlash(on);
         commonDraw();
     };
@@ -10989,8 +10862,8 @@ var finishState = (function(){
 // Game Over state
 // (state when player has lost last life)
 
-var overState = (function() {
-    var frames;
+const overState = (function() {
+    let frames;
     return {
         init: function() {
             frames = 0;
@@ -11011,6 +10884,8 @@ var overState = (function() {
 })();
 
 //@line 1 "src/input.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Input
 // (Handles all key presses and touches)
@@ -11018,7 +10893,7 @@ var overState = (function() {
 (function(){
 
     // A Key Listener class (each key maps to an array of callbacks)
-    var KeyEventListener = function() {
+    const KeyEventListener = function() {
         this.listeners = {};
     };
     KeyEventListener.prototype = {
@@ -11030,14 +10905,13 @@ var overState = (function() {
             });
         },
         exec: function(key, e) {
-            var keyListeners = this.listeners[key];
+            const keyListeners = this.listeners[key];
             if (!keyListeners) {
                 return;
             }
-            var i,l;
-            var numListeners = keyListeners.length;
-            for (i=0; i<numListeners; i++) {
-                l = keyListeners[i];
+            const numListeners = keyListeners.length;
+            for (let i=0; i<numListeners; i++) {
+                const l = keyListeners[i];
                 if (!l.isActive || l.isActive()) {
                     e.preventDefault();
                     if (l.callback()) { // do not propagate keys if returns true
@@ -11049,19 +10923,19 @@ var overState = (function() {
     };
 
     // declare key event listeners
-    var keyDownListeners = new KeyEventListener();
-    var keyUpListeners = new KeyEventListener();
+    const keyDownListeners = new KeyEventListener();
+    const keyUpListeners = new KeyEventListener();
 
     // helper functions for adding custom key listeners
-    var addKeyDown = function(key,callback,isActive) { keyDownListeners.add(key,callback,isActive); };
-    var addKeyUp   = function(key,callback,isActive) { keyUpListeners.add(key,callback,isActive); };
+    const addKeyDown = function(key,callback,isActive) { keyDownListeners.add(key,callback,isActive); };
+    const addKeyUp   = function(key,callback,isActive) { keyUpListeners.add(key,callback,isActive); };
 
     // boolean states of each key
-    var keyStates = {};
+    const keyStates = {};
 
     // hook my key listeners to the window's listeners
     window.addEventListener("keydown", function(e) {
-        var key = (e||window.event).keyCode;
+        const key = (e||window.event).keyCode;
 
         // only execute at first press event
         if (!keyStates[key]) {
@@ -11070,7 +10944,7 @@ var overState = (function() {
         }
     });
     window.addEventListener("keyup",function(e) {
-        var key = (e||window.event).keyCode;
+        const key = (e||window.event).keyCode;
 
         keyStates[key] = false;
         keyUpListeners.exec(key, e);
@@ -11079,48 +10953,48 @@ var overState = (function() {
 
     // key enumerations
 
-    var KEY_ENTER = 13;
-    var KEY_ESC = 27;
+    const KEY_ENTER = 13;
+    const KEY_ESC = 27;
 
-    var KEY_LEFT = 37;
-    var KEY_RIGHT = 39;
-    var KEY_UP = 38;
-    var KEY_DOWN = 40;
+    const KEY_LEFT = 37;
+    const KEY_RIGHT = 39;
+    const KEY_UP = 38;
+    const KEY_DOWN = 40;
 
-    var KEY_SHIFT = 16;
-    var KEY_CTRL = 17;
-    var KEY_ALT = 18;
+    const KEY_SHIFT = 16;
+    const KEY_CTRL = 17;
+    const KEY_ALT = 18;
 
-    var KEY_SPACE = 32;
+    const KEY_SPACE = 32;
 
-    var KEY_M = 77;
-    var KEY_N = 78;
-    var KEY_Q = 81;
-    var KEY_W = 87;
-    var KEY_E = 69;
-    var KEY_R = 82;
-    var KEY_T = 84;
+    const KEY_M = 77;
+    const KEY_N = 78;
+    const KEY_Q = 81;
+    const KEY_W = 87;
+    const KEY_E = 69;
+    const KEY_R = 82;
+    const KEY_T = 84;
 
-    var KEY_A = 65;
-    var KEY_S = 83;
-    var KEY_D = 68;
-    var KEY_F = 70;
-    var KEY_G = 71;
+    const KEY_A = 65;
+    const KEY_S = 83;
+    const KEY_D = 68;
+    const KEY_F = 70;
+    const KEY_G = 71;
 
-    var KEY_I = 73;
-    var KEY_O = 79;
-    var KEY_P = 80;
+    const KEY_I = 73;
+    const KEY_O = 79;
+    const KEY_P = 80;
 
-    var KEY_1 = 49;
-    var KEY_2 = 50;
+    const KEY_1 = 49;
+    const KEY_2 = 50;
 
-    var KEY_END = 35;
+    const KEY_END = 35;
 
     // Custom Key Listeners
 
     // Menu Navigation Keys
-    var menu;
-    var isInMenu = function() {
+    let menu;
+    const isInMenu = function() {
         menu = (state.getMenu && state.getMenu());
         if (!menu && inGameMenu.isOpen()) {
             menu = inGameMenu.getMenu();
@@ -11129,19 +11003,19 @@ var overState = (function() {
     };
     addKeyDown(KEY_ESC,   function(){ menu.backButton ? menu.backButton.onclick():0; return true; }, isInMenu);
     addKeyDown(KEY_ENTER, function(){ menu.clickCurrentOption(); }, isInMenu);
-    var isMenuKeysAllowed = function() {
-        var menu = isInMenu();
+    const isMenuKeysAllowed = function() {
+        const menu = isInMenu();
         return menu && !menu.noArrowKeys;
     };
     addKeyDown(KEY_UP,    function(){ menu.selectPrevOption(); }, isMenuKeysAllowed);
     addKeyDown(KEY_DOWN,  function(){ menu.selectNextOption(); }, isMenuKeysAllowed);
-    var isInGameMenuButtonClickable = function() {
+    const isInGameMenuButtonClickable = function() {
         return hud.isValidState() && !inGameMenu.isOpen();
     };
     addKeyDown(KEY_ESC, function() { inGameMenu.getMenuButton().onclick(); return true; }, isInGameMenuButtonClickable);
 
     // Move Pac-Man
-    var isPlayState = function() { return !vcr.isSeeking() && (state == learnState || state == newGameState || state == playState || state == readyNewState || state == readyRestartState); };
+    const isPlayState = function() { return !vcr.isSeeking() && (state == learnState || state == newGameState || state == playState || state == readyNewState || state == readyRestartState); };
     addKeyDown(KEY_LEFT,  function() { pacman.setInputDir(DIR_LEFT); },  isPlayState);
     addKeyDown(KEY_RIGHT, function() { pacman.setInputDir(DIR_RIGHT); }, isPlayState);
     addKeyDown(KEY_UP,    function() { pacman.setInputDir(DIR_UP); },    isPlayState);
@@ -11152,7 +11026,7 @@ var overState = (function() {
     addKeyUp  (KEY_DOWN,  function() { pacman.clearInputDir(DIR_DOWN); },  isPlayState);
 
     // Slow-Motion
-    var isPracticeMode = function() { return isPlayState() && practiceMode; };
+    const isPracticeMode = function() { return isPlayState() && practiceMode; };
     //isPracticeMode = function() { return true; };
     addKeyDown(KEY_1, function() { executive.setUpdatesPerSecond(30); }, isPracticeMode);
     addKeyDown(KEY_2,  function() { executive.setUpdatesPerSecond(15); }, isPracticeMode);
@@ -11160,17 +11034,17 @@ var overState = (function() {
     addKeyUp  (KEY_2,  function() { executive.setUpdatesPerSecond(60); }, isPracticeMode);
 
     // Toggle VCR
-    var canSeek = function() { return !isInMenu() && vcr.getMode() != VCR_NONE; };
+    const canSeek = function() { return !isInMenu() && vcr.getMode() != VCR_NONE; };
     addKeyDown(KEY_SHIFT, function() { vcr.startSeeking(); },   canSeek);
     addKeyUp  (KEY_SHIFT, function() { vcr.startRecording(); }, canSeek);
 
     // Adjust VCR seeking
-    var isSeekState = function() { return vcr.isSeeking(); };
+    const isSeekState = function() { return vcr.isSeeking(); };
     addKeyDown(KEY_UP,   function() { vcr.nextSpeed(1); },  isSeekState);
     addKeyDown(KEY_DOWN, function() { vcr.nextSpeed(-1); }, isSeekState);
 
     // Skip Level
-    var canSkip = function() {
+    const canSkip = function() {
         return isPracticeMode() && 
             (state == newGameState ||
             state == readyNewState ||
@@ -11199,29 +11073,29 @@ var overState = (function() {
 
     // Miscellaneous Cheats
     addKeyDown(KEY_I, function() { pacman.invincible = !pacman.invincible; }, isPracticeMode);
-    addKeyDown(KEY_O, function() { turboMode = !turboMode; }, isPracticeMode);
+    addKeyDown(KEY_O, function() { setTurboMode(!turboMode); }, isPracticeMode);
     addKeyDown(KEY_P, function() { pacman.ai = !pacman.ai; }, isPracticeMode);
 
     addKeyDown(KEY_END, function() { executive.togglePause(); });
 
 })();
 
-var initSwipe = function() {
+const initSwipe = function() {
 
     // position of anchor
-    var x = 0;
-    var y = 0;
+    let x = 0;
+    let y = 0;
 
     // current distance from anchor
-    var dx = 0;
-    var dy = 0;
+    let dx = 0;
+    let dy = 0;
 
     // minimum distance from anchor before direction is registered
-    var r = 4;
+    const r = 4;
     
-    var touchStart = function(event) {
+    const touchStart = function(event) {
         event.preventDefault();
-        var fingerCount = event.touches.length;
+        const fingerCount = event.touches.length;
         if (fingerCount == 1) {
 
             // commit new anchor
@@ -11234,9 +11108,9 @@ var initSwipe = function() {
         }
     };
 
-    var touchMove = function(event) {
+    const touchMove = function(event) {
         event.preventDefault();
-        var fingerCount = event.touches.length;
+        const fingerCount = event.touches.length;
         if (fingerCount == 1) {
 
             // get current distance from anchor
@@ -11264,16 +11138,16 @@ var initSwipe = function() {
         }
     };
 
-    var touchEnd = function(event) {
+    const touchEnd = function(event) {
         event.preventDefault();
     };
 
-    var touchCancel = function(event) {
+    const touchCancel = function(event) {
         event.preventDefault();
         x=y=dx=dy=0;
     };
 
-    var touchTap = function(event) {
+    const touchTap = function(event) {
         // tap to clear input directions
         pacman.clearInputDir(undefined);
     };
@@ -11286,21 +11160,23 @@ var initSwipe = function() {
     document.ontouchcancel = touchCancel;
 };
 //@line 1 "src/cutscenes.js"
+
+
 ////////////////////////////////////////////////
 // Cutscenes
 //
 
-var playCutScene = function(cutScene, nextState) {
+const playCutScene = function(cutScene, nextState) {
 
     // redraw map buffer with fruit list but no map structure
-    map = undefined;
+    setMap(undefined);
     renderer.drawMap(true);
 
     cutScene.nextState = nextState;
     switchState(cutScene, 60);
 };
 
-var pacmanCutscene1 = newChildObject(scriptState, {
+const pacmanCutscene1 = newChildObject(scriptState, {
     init: function() {
         scriptState.init.call(this);
 
@@ -11338,8 +11214,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
         // Blinky chases Pac-Man
         0: {
             update: function() {
-                var j;
-                for (j=0; j<2; j++) {
+                for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
                 }
@@ -11378,8 +11253,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
                 };
             },
             update: function() {
-                var j;
-                for (j=0; j<2; j++) {
+                for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
                 }
@@ -11391,7 +11265,7 @@ var pacmanCutscene1 = newChildObject(scriptState, {
                 renderer.beginMapClip();
                 renderer.drawGhost(blinky);
                 renderer.renderFunc(function(ctx) {
-                    var frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
+                    const frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
                     if (frame == 3) {
                         frame = 1;
                     }
@@ -11420,16 +11294,16 @@ var pacmanCutscene1 = newChildObject(scriptState, {
     },
 });
 
-var mspacmanCutscene1 = (function() {
+const mspacmanCutscene1 = (function() {
 
     // create new players pac and mspac for this scene
-    var pac = new Player();
-    var mspac = new Player();
+    const pac = new Player();
+    const mspac = new Player();
 
     // draws pac or mspac
-    var drawPlayer = function(ctx,player) {
-        var frame = player.getAnimFrame();
-        var func;
+    const drawPlayer = function(ctx,player) {
+        const frame = player.getAnimFrame();
+        let func;
         if (player == pac) {
             func = gameMode == GAME_MSPACMAN ? atlas.drawPacmanSprite : atlas.drawOttoSprite;
         }
@@ -11440,7 +11314,7 @@ var mspacmanCutscene1 = (function() {
     };
 
     // draws all actors
-    var draw = function() {
+    const draw = function() {
         renderer.blitMap();
         renderer.beginMapClip();
         renderer.renderFunc(function(ctx) {
@@ -11453,9 +11327,8 @@ var mspacmanCutscene1 = (function() {
     };
 
     // updates all actors
-    var update = function() {
-        var j;
-        for (j=0; j<2; j++) {
+    const update = function() {
+        for (let j=0; j<2; j++) {
             pac.update(j);
             mspac.update(j);
             inky.update(j);
@@ -11467,7 +11340,7 @@ var mspacmanCutscene1 = (function() {
         pinky.frames++;
     };
 
-    var exit = function() {
+    const exit = function() {
         // disable custom steps
         delete inky.getNumSteps;
         delete pinky.getNumSteps;
@@ -11562,36 +11435,36 @@ var mspacmanCutscene1 = (function() {
             300: (function(){
 
                 // bounce animation when ghosts bump heads
-                var inkyBounceX =  [ 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
-                var inkyBounceY =  [-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1];
-                var pinkyBounceX = [ 0, 0, 0, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0];
-                var pinkyBounceY = [ 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
-                var inkyBounceFrame = 0;
-                var pinkyBounceFrame = 0;
-                var inkyBounceFrameLen = inkyBounceX.length;
-                var pinkyBounceFrameLen = pinkyBounceX.length;
+                const inkyBounceX =  [ 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+                const inkyBounceY =  [-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1];
+                const pinkyBounceX = [ 0, 0, 0, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0];
+                const pinkyBounceY = [ 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
+                let inkyBounceFrame = 0;
+                let pinkyBounceFrame = 0;
+                const inkyBounceFrameLen = inkyBounceX.length;
+                const pinkyBounceFrameLen = pinkyBounceX.length;
 
                 // ramp animation for players
-                var rampX = [0, 1, 1, 1, 1, 0, 0];
-                var rampY = [0, 0,-1,-1,-1, 0, 0];
-                var rampFrame = 0;
-                var rampFrameLen = rampX.length;
+                const rampX = [0, 1, 1, 1, 1, 0, 0];
+                const rampY = [0, 0,-1,-1,-1, 0, 0];
+                let rampFrame = 0;
+                const rampFrameLen = rampX.length;
 
                 // climbing
-                var climbFrame = 0;
+                let climbFrame = 0;
 
                 // meeting
-                var meetFrame = 0;
+                let meetFrame = 0;
 
-                var ghostMode;
-                var GHOST_RUN = 0;
-                var GHOST_BUMP = 1;
+                let ghostMode;
+                const GHOST_RUN = 0;
+                const GHOST_BUMP = 1;
 
-                var playerMode;
-                var PLAYER_RUN = 0;
-                var PLAYER_RAMP = 1;
-                var PLAYER_CLIMB = 2;
-                var PLAYER_MEET = 3;
+                let playerMode;
+                const PLAYER_RUN = 0;
+                const PLAYER_RAMP = 1;
+                const PLAYER_CLIMB = 2;
+                const PLAYER_MEET = 3;
                      
                 return {
                     init: function() {
@@ -11623,11 +11496,10 @@ var mspacmanCutscene1 = (function() {
                         };
                     },
                     update: function() {
-                        var j;
 
                         // update players
                         if (playerMode == PLAYER_RUN) {
-                            for (j=0; j<2; j++) {
+                            for (let j=0; j<2; j++) {
                                 pac.update(j);
                                 mspac.update(j);
                             }
@@ -11660,7 +11532,7 @@ var mspacmanCutscene1 = (function() {
                                 pac.setDir(DIR_UP);
                             }
                             else {
-                                for (j=0; j<2; j++) {
+                                for (let j=0; j<2; j++) {
                                     pac.update(j);
                                     mspac.update(j);
                                 }
@@ -11698,7 +11570,7 @@ var mspacmanCutscene1 = (function() {
 
                         // update ghosts
                         if (ghostMode == GHOST_RUN) {
-                            for (j=0; j<2; j++) {
+                            for (let j=0; j<2; j++) {
                                 inky.update(j);
                                 pinky.update(j);
                             }
@@ -11754,16 +11626,16 @@ var mspacmanCutscene1 = (function() {
     }); // returned object
 })(); // mspacCutscene1
 
-var mspacmanCutscene2 = (function() {
+const mspacmanCutscene2 = (function() {
 
     // create new players pac and mspac for this scene
-    var pac = new Player();
-    var mspac = new Player();
+    const pac = new Player();
+    const mspac = new Player();
 
     // draws pac or mspac
-    var drawPlayer = function(ctx,player) {
-        var frame = player.getAnimFrame();
-        var func;
+    const drawPlayer = function(ctx,player) {
+        const frame = player.getAnimFrame();
+        let func;
         if (player == pac) {
             func = gameMode == GAME_MSPACMAN ? atlas.drawPacmanSprite : atlas.drawOttoSprite;
         }
@@ -11774,7 +11646,7 @@ var mspacmanCutscene2 = (function() {
     };
 
     // draws all actors
-    var draw = function() {
+    const draw = function() {
         renderer.blitMap();
         renderer.beginMapClip();
         renderer.renderFunc(function(ctx) {
@@ -11785,9 +11657,8 @@ var mspacmanCutscene2 = (function() {
     };
 
     // updates all actors
-    var update = function() {
-        var j;
-        for (j=0; j<7; j++) {
+    const update = function() {
+        for (let j=0; j<7; j++) {
             pac.update(j);
             mspac.update(j);
         }
@@ -11795,15 +11666,15 @@ var mspacmanCutscene2 = (function() {
         mspac.frames++;
     };
 
-    var exit = function() {
+    const exit = function() {
         // exit to next level
         restoreCheats();
         switchState(mspacmanCutscene2.nextState, 60);
     };
 
-    var getChaseSteps = function() { return 3; };
-    var getFleeSteps = function() { return "32"[this.frames%2]; };
-    var getDartSteps = function() { return 7; };
+    const getChaseSteps = function() { return 3; };
+    const getFleeSteps = function() { return "32"[this.frames%2]; };
+    const getDartSteps = function() { return 7; };
 
     return newChildObject(scriptState, {
 
@@ -11904,7 +11775,7 @@ var mspacmanCutscene2 = (function() {
     }); // returned object
 })(); // mspacCutscene2
 
-var cookieCutscene1 = newChildObject(scriptState, {
+const cookieCutscene1 = newChildObject(scriptState, {
 
     init: function() {
         scriptState.init.call(this);
@@ -11943,8 +11814,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
         // Blinky chases Pac-Man
         0: {
             update: function() {
-                var j;
-                for (j=0; j<2; j++) {
+                for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
                 }
@@ -11983,8 +11853,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
                 };
             },
             update: function() {
-                var j;
-                for (j=0; j<2; j++) {
+                for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
                 }
@@ -11996,11 +11865,11 @@ var cookieCutscene1 = newChildObject(scriptState, {
                 renderer.beginMapClip();
                 renderer.drawPlayer();
                 renderer.renderFunc(function(ctx) {
-                    var y = blinky.getBounceY(blinky.pixel.x, blinky.pixel.y, DIR_RIGHT);
-                    var x = blinky.pixel.x;
+                    const y = blinky.getBounceY(blinky.pixel.x, blinky.pixel.y, DIR_RIGHT);
+                    const x = blinky.pixel.x;
                     ctx.save();
                     ctx.translate(x,y);
-                    var s = 16/6;
+                    const s = 16/6;
                     ctx.scale(s,s);
                     drawCookie(ctx,0,0);
                     ctx.restore();
@@ -12028,7 +11897,7 @@ var cookieCutscene1 = newChildObject(scriptState, {
     },
 });
 
-var cookieCutscene2 = (function() {
+const cookieCutscene2 = (function() {
 
     /*
     NOTE:
@@ -12038,17 +11907,17 @@ var cookieCutscene2 = (function() {
     */
 
     // create new players pac and mspac for this scene
-    var pac = new Ghost();
+    const pac = new Ghost();
     pac.scared = true;
     pac.mode = GHOST_OUTSIDE;
-    var mspac = new Player();
+    const mspac = new Player();
 
     // draws pac or mspac
-    var drawPlayer = function(ctx,player) {
-        var frame = player.getAnimFrame();
-        var func;
+    const drawPlayer = function(ctx,player) {
+        const frame = player.getAnimFrame();
+        let func;
         if (player == pac) {
-            var y = player.getBounceY(player.pixel.x, player.pixel.y, player.dirEnum);
+            const y = player.getBounceY(player.pixel.x, player.pixel.y, player.dirEnum);
             atlas.drawMuppetSprite(ctx, player.pixel.x, y, 0, player.dirEnum, true, false);
         }
         else if (player == mspac) {
@@ -12057,7 +11926,7 @@ var cookieCutscene2 = (function() {
     };
 
     // draws all actors
-    var draw = function() {
+    const draw = function() {
         renderer.blitMap();
         renderer.beginMapClip();
         renderer.renderFunc(function(ctx) {
@@ -12070,9 +11939,8 @@ var cookieCutscene2 = (function() {
     };
 
     // updates all actors
-    var update = function() {
-        var j;
-        for (j=0; j<2; j++) {
+    const update = function() {
+        for (let j=0; j<2; j++) {
             pac.update(j);
             mspac.update(j);
             inky.update(j);
@@ -12084,7 +11952,7 @@ var cookieCutscene2 = (function() {
         pinky.frames++;
     };
 
-    var exit = function() {
+    const exit = function() {
         // disable custom steps
         delete inky.getNumSteps;
         delete pinky.getNumSteps;
@@ -12179,36 +12047,36 @@ var cookieCutscene2 = (function() {
             300: (function(){
 
                 // bounce animation when ghosts bump heads
-                var inkyBounceX =  [ 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
-                var inkyBounceY =  [-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1];
-                var pinkyBounceX = [ 0, 0, 0, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0];
-                var pinkyBounceY = [ 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
-                var inkyBounceFrame = 0;
-                var pinkyBounceFrame = 0;
-                var inkyBounceFrameLen = inkyBounceX.length;
-                var pinkyBounceFrameLen = pinkyBounceX.length;
+                const inkyBounceX =  [ 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+                const inkyBounceY =  [-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1];
+                const pinkyBounceX = [ 0, 0, 0, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0,-1, 0,-1, 0,-1, 0, 0];
+                const pinkyBounceY = [ 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0,-1, 0,-1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
+                let inkyBounceFrame = 0;
+                let pinkyBounceFrame = 0;
+                const inkyBounceFrameLen = inkyBounceX.length;
+                const pinkyBounceFrameLen = pinkyBounceX.length;
 
                 // ramp animation for players
-                var rampX = [0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1];
-                var rampY = [0, 0,-1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0];
-                var rampFrame = 0;
-                var rampFrameLen = rampX.length;
+                const rampX = [0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1];
+                const rampY = [0, 0,-1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0];
+                let rampFrame = 0;
+                const rampFrameLen = rampX.length;
 
                 // climbing
-                var climbFrame = 0;
+                let climbFrame = 0;
 
                 // meeting
-                var meetFrame = 0;
+                let meetFrame = 0;
 
-                var ghostMode;
-                var GHOST_RUN = 0;
-                var GHOST_BUMP = 1;
+                let ghostMode;
+                const GHOST_RUN = 0;
+                const GHOST_BUMP = 1;
 
-                var playerMode;
-                var PLAYER_RUN = 0;
-                var PLAYER_RAMP = 1;
-                var PLAYER_CLIMB = 2;
-                var PLAYER_MEET = 3;
+                let playerMode;
+                const PLAYER_RUN = 0;
+                const PLAYER_RAMP = 1;
+                const PLAYER_CLIMB = 2;
+                const PLAYER_MEET = 3;
                      
                 return {
                     init: function() {
@@ -12240,11 +12108,10 @@ var cookieCutscene2 = (function() {
                         };
                     },
                     update: function() {
-                        var j;
 
                         // update players
                         if (playerMode == PLAYER_RUN) {
-                            for (j=0; j<2; j++) {
+                            for (let j=0; j<2; j++) {
                                 pac.update(j);
                                 mspac.update(j);
                             }
@@ -12272,7 +12139,7 @@ var cookieCutscene2 = (function() {
                                 mspac.setDir(DIR_UP);
                             }
                             else {
-                                for (j=0; j<2; j++) {
+                                for (let j=0; j<2; j++) {
                                     mspac.update(j);
                                 }
                             }
@@ -12302,7 +12169,7 @@ var cookieCutscene2 = (function() {
 
                         // update ghosts
                         if (ghostMode == GHOST_RUN) {
-                            for (j=0; j<2; j++) {
+                            for (let j=0; j<2; j++) {
                                 inky.update(j);
                                 pinky.update(j);
                             }
@@ -12360,17 +12227,17 @@ var cookieCutscene2 = (function() {
     }); // returned object
 })(); // mspacCutscene1
 
-var cutscenes = [
+const cutscenes = [
     [pacmanCutscene1], // GAME_PACMAN
     [mspacmanCutscene1, mspacmanCutscene2], // GAME_MSPACMAN
     [cookieCutscene1, cookieCutscene2], // GAME_COOKIE
     [mspacmanCutscene1, mspacmanCutscene2], // GAME_OTTO
 ];
 
-var isInCutScene = function() {
-    var scenes = cutscenes[gameMode];
-    var i,len = scenes.length;
-    for (i=0; i<len; i++) {
+const isInCutScene = function() {
+    const scenes = cutscenes[gameMode];
+    const len = scenes.length;
+    for (let i=0; i<len; i++) {
         if (state == scenes[i]) {
             return true;
         }
@@ -12379,7 +12246,7 @@ var isInCutScene = function() {
 };
 
 // TODO: no cutscene after board 17 (last one after completing board 17)
-var triggerCutsceneAtEndLevel = function() {
+const triggerCutsceneAtEndLevel = function() {
     if (gameMode == GAME_PACMAN) {
         if (level == 2) {
             playCutScene(pacmanCutscene1, readyNewState);
@@ -12422,13 +12289,16 @@ var triggerCutsceneAtEndLevel = function() {
 };
 
 //@line 1 "src/maps.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Maps
 
 // Definitions of playable maps
 
 // current map
-var map;
+let map;
+const setMap = function(m) { map = m; };
 
 // actor starting states
 
@@ -12487,7 +12357,7 @@ pacman.startPixel = {
 };
 
 // Learning Map
-var mapLearn = new Map(28, 36, (
+const mapLearn = new Map(28, 36, (
     "____________________________" +
     "____________________________" +
     "____________________________" +
@@ -12532,7 +12402,7 @@ mapLearn.pelletColor = "#ffb8ae";
 mapLearn.shouldDrawMapOnly = true;
 
 // Original Pac-Man map
-var mapPacman = new Map(28, 36, (
+const mapPacman = new Map(28, 36, (
     "____________________________" +
     "____________________________" +
     "____________________________" +
@@ -12587,7 +12457,7 @@ mapPacman.constrainGhostTurns = function(tile,openTiles) {
 // The levels within an act progress in difficulty.
 // But the beginning of an act is generally easier than the end of the previous act to stave frustration.
 // Completing an act results in a cutscene.
-var getLevelAct = function(level) {
+const getLevelAct = function(level) {
     // Act 1: (levels 1,2)
     // Act 2: (levels 3,4,5)
     // Act 3: (levels 6,7,8,9)
@@ -12605,7 +12475,7 @@ var getLevelAct = function(level) {
     }
 };
 
-var getActColor = function(act) {
+const getActColor = function(act) {
     if (gameMode == GAME_PACMAN) {
         return {
             wallFillColor: mapPacman.wallFillColor,
@@ -12621,7 +12491,7 @@ var getActColor = function(act) {
     }
 };
 
-var getActRange = function(act) {
+const getActRange = function(act) {
     if (act == 1) {
         return [1,2];
     }
@@ -12629,13 +12499,13 @@ var getActRange = function(act) {
         return [3,5];
     }
     else {
-        var start = act*4-6;
+        const start = act*4-6;
         return [start, start+3];
     }
 };
 
-var getCookieActColor = function(act) {
-    var colors = [
+const getCookieActColor = function(act) {
+    const colors = [
         "#359c9c", "#80d8fc", // turqoise
         "#c2b853", "#e6f1e7", // yellow
         "#86669c", "#f2c1db", // purple
@@ -12646,7 +12516,7 @@ var getCookieActColor = function(act) {
         "#5036d9", "#618dd4", // violet
         "#939473", "#fdfdf4", // grey
     ];
-    var i = ((act-1)*2) % colors.length;
+    const i = ((act-1)*2) % colors.length;
     return {
         wallFillColor: colors[i],
         wallStrokeColor: colors[i+1],
@@ -12654,13 +12524,12 @@ var getCookieActColor = function(act) {
     };
 };
 
-var setNextCookieMap = function() {
+const setNextCookieMap = function() {
     // cycle the colors
-    var i;
-    var act = getLevelAct(level);
+    const act = getLevelAct(level);
     if (!map || level == 1 || act != getLevelAct(level-1)) {
-        map = mapgen();
-        var colors = getCookieActColor(act);
+        setMap(mapgen());
+        const colors = getCookieActColor(act);
         map.wallFillColor = colors.wallFillColor;
         map.wallStrokeColor = colors.wallStrokeColor;
         map.pelletColor = colors.pelletColor;
@@ -12669,11 +12538,11 @@ var setNextCookieMap = function() {
 
 // Ms. Pac-Man map 1
 
-var getMsPacActColor = function(act) {
+const getMsPacActColor = function(act) {
     act -= 1;
-    var mapIndex = (act <= 1) ? act : (act%2)+2;
-    var maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
-    var map = maps[mapIndex];
+    const mapIndex = (act <= 1) ? act : (act%2)+2;
+    const maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
+    const map = maps[mapIndex];
     if (act >= 4) {
         return [
             {
@@ -12707,23 +12576,23 @@ var getMsPacActColor = function(act) {
     }
 };
 
-var setNextMsPacMap = function() {
-    var maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
+const setNextMsPacMap = function() {
+    const maps = [mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4];
 
     // The third and fourth maps repeat indefinitely after the second map.
     // (i.e. act1=map1, act2=map2, act3=map3, act4=map4, act5=map3, act6=map4, ...)
-    var act = getLevelAct(level)-1;
-    var mapIndex = (act <= 1) ? act : (act%2)+2;
-    map = maps[mapIndex];
+    const act = getLevelAct(level)-1;
+    const mapIndex = (act <= 1) ? act : (act%2)+2;
+    setMap(maps[mapIndex]);
     if (act >= 4) {
-        var colors = getMsPacActColor(act+1);
+        const colors = getMsPacActColor(act+1);
         map.wallFillColor = colors.wallFillColor;
         map.wallStrokeColor = colors.wallStrokeColor;
         map.pelletColor = colors.pelletColor;
     }
 };
 
-var mapMsPacman1 = new Map(28, 36, (
+const mapMsPacman1 = new Map(28, 36, (
     "____________________________" +
     "____________________________" +
     "____________________________" +
@@ -12782,7 +12651,7 @@ mapMsPacman1.fruitPaths = {
 
 // Ms. Pac-Man map 2
 
-var mapMsPacman2 = new Map(28, 36, (
+const mapMsPacman2 = new Map(28, 36, (
     "____________________________" +
     "____________________________" +
     "____________________________" +
@@ -12841,7 +12710,7 @@ mapMsPacman2.fruitPaths = {
 
 // Ms. Pac-Man map 3
 
-var mapMsPacman3 = new Map(28, 36, (
+const mapMsPacman3 = new Map(28, 36, (
     "____________________________" +
     "____________________________" +
     "____________________________" +
@@ -12908,7 +12777,7 @@ mapMsPacman3.constrainGhostTurns = function(tile,openTiles,dirEnum) {
 
 // Ms. Pac-Man map 4
 
-var mapMsPacman4 = new Map(28, 36, (
+const mapMsPacman4 = new Map(28, 36, (
     "____________________________" +
     "____________________________" +
     "____________________________" +
@@ -12965,32 +12834,34 @@ mapMsPacman4.fruitPaths = {
              ]
          };
 //@line 1 "src/vcr.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // VCR
 // This coordinates the recording, rewinding, and replaying of the game state.
 // Inspired by Braid.
 
-var VCR_NONE = -1;
-var VCR_RECORD = 0;
-var VCR_REWIND = 1;
-var VCR_FORWARD = 2;
-var VCR_PAUSE = 3;
+const VCR_NONE = -1;
+const VCR_RECORD = 0;
+const VCR_REWIND = 1;
+const VCR_FORWARD = 2;
+const VCR_PAUSE = 3;
 
-var vcr = (function() {
+const vcr = (function() {
 
-    var mode;
+    let mode;
 
     // controls whether to increment the frame before recording.
-    var initialized;
+    let initialized;
 
     // current time
-    var time;
+    let time;
 
     // tracking speed
-    var speedIndex;
-    var speeds = [-8,-4,-2,-1,0,1,2,4,8];
-    var speedCount = speeds.length;
-    var speedColors = [
+    let speedIndex;
+    const speeds = [-8,-4,-2,-1,0,1,2,4,8];
+    const speedCount = speeds.length;
+    const speedColors = [
         "rgba(255,255,0,0.25)",
         "rgba(255,255,0,0.20)",
         "rgba(255,255,0,0.15)",
@@ -13010,7 +12881,7 @@ var vcr = (function() {
     // For example: 
     //   nextFrames = speedPrints[speedIndex];
     //   prevFrames = speedPrints[speedCount-1-speedIndex];
-    var speedPrints = [
+    const speedPrints = [
         18,// -8x
         13,// -4x
         8, // -2x
@@ -13024,7 +12895,7 @@ var vcr = (function() {
 
     // The distance between each footprint used in the rewind/forward blurring.
     // Step size grows when seeking speed increases to show emphasize time dilation.
-    var speedPrintStep = [
+    const speedPrintStep = [
         6,  // -8x
         5,  // -4x
         4,  // -2x
@@ -13038,30 +12909,28 @@ var vcr = (function() {
 
     // current frame associated with current time
     // (frame == time % maxFrames)
-    var frame;
+    let frame;
 
     // maximum number of frames to record
-    var maxFrames = 15*60;
+    const maxFrames = 15*60;
 
     // rolling bounds of the recorded frames
-    var startFrame; // can't rewind past this
-    var stopFrame; // can't replay past this
+    let startFrame; // can't rewind past this
+    let stopFrame; // can't replay past this
 
     // reset the VCR
-    var reset = function() {
+    const reset = function() {
         time = 0;
         frame = 0;
         startFrame = 0;
         stopFrame = 0;
-        states = {};
         startRecording();
     };
 
     // load the state of the current time
-    var load = function() {
-        var i;
-        for (i=0; i<5; i++) {
-            actors[i].load(frame);
+    const load = function() {
+        for (const a of actors) {
+            a.load(frame);
         }
         elroyTimer.load(frame);
         energizer.load(frame);
@@ -13079,10 +12948,9 @@ var vcr = (function() {
     };
 
     // save the state of the current time
-    var save = function() {
-        var i;
-        for (i=0; i<5; i++) {
-            actors[i].save(frame);
+    const save = function() {
+        for (const a of actors) {
+            a.save(frame);
         }
         elroyTimer.save(frame);
         energizer.save(frame);
@@ -13101,13 +12969,13 @@ var vcr = (function() {
 
     // erase any states after the current time
     // (only necessary for saves that do interpolation)
-    var eraseFuture = function() {
+    const eraseFuture = function() {
         map.eraseFuture(time);
         stopFrame = frame;
     };
 
     // increment or decrement the time
-    var addTime = function(dt) {
+    const addTime = function(dt) {
         time += dt;
         frame = (frame+dt)%maxFrames;
         if (frame < 0) {
@@ -13116,26 +12984,26 @@ var vcr = (function() {
     };
 
     // measures the modular distance if increasing from x0 to x1 on our circular frame buffer.
-    var getForwardDist = function(x0,x1) {
+    const getForwardDist = function(x0,x1) {
         return (x0 <= x1) ? x1-x0 : x1+maxFrames-x0;
     };
 
     // caps the time increment or decrement to prevent going over our rolling bounds.
-    var capSeekTime = function(dt) {
+    const capSeekTime = function(dt) {
         if (!initialized || dt == 0) {
             return 0;
         }
-        var maxForward = getForwardDist(frame,stopFrame);
-        var maxReverse = getForwardDist(startFrame,frame);
+        const maxForward = getForwardDist(frame,stopFrame);
+        const maxReverse = getForwardDist(startFrame,frame);
         return (dt > 0) ? Math.min(maxForward,dt) : Math.max(-maxReverse,dt);
     };
 
-    var init = function() {
+    const init = function() {
         mode = VCR_NONE;
     };
 
     // seek to the state at the given relative time difference.
-    var seek = function(dt) {
+    const seek = function(dt) {
         if (dt == undefined) {
             dt = speeds[speedIndex];
         }
@@ -13146,7 +13014,7 @@ var vcr = (function() {
     };
 
     // record a new state.
-    var record = function() {
+    const record = function() {
         if (initialized) {
             addTime(1);
             if (frame == startFrame) {
@@ -13160,7 +13028,7 @@ var vcr = (function() {
         save();
     };
 
-    var startRecording = function() {
+    const startRecording = function() {
         mode = VCR_RECORD;
         initialized = false;
         eraseFuture();
@@ -13172,11 +13040,11 @@ var vcr = (function() {
         seekToggleBtn.setText();
     };
 
-    var refreshSeekDisplay = function() {
+    const refreshSeekDisplay = function() {
         seekToggleBtn.setText(speeds[speedIndex]+"x");
     };
 
-    var startSeeking = function() {
+    const startSeeking = function() {
         speedIndex = 3;
         updateMode();
         seekUpBtn.enable();
@@ -13185,7 +13053,7 @@ var vcr = (function() {
         refreshSeekDisplay();
     };
 
-    var nextSpeed = function(di) {
+    const nextSpeed = function(di) {
         if (speeds[speedIndex+di] != undefined) {
             speedIndex = speedIndex+di;
         }
@@ -13193,27 +13061,27 @@ var vcr = (function() {
         refreshSeekDisplay();
     };
 
-    var x,y,w,h;
-    var pad = 5;
-    x = mapWidth+1;
-    h = 25;
-    w = 25;
-    y = mapHeight/2-h/2;
-    var seekUpBtn = new Button(x,y-h-pad,w,h,
+    const pad = 5;
+    const x = mapWidth+1;
+    const h = 25;
+    const w = 25;
+    const y = mapHeight/2-h/2;
+
+    const seekUpBtn = new Button(x,y-h-pad,w,h,
         function() {
             nextSpeed(1);
         });
     seekUpBtn.setIcon(function(ctx,x,y,frame) {
         drawUpSymbol(ctx,x,y,"#FFF");
     });
-    var seekDownBtn = new Button(x,y+h+pad,w,h,
+    const seekDownBtn = new Button(x,y+h+pad,w,h,
         function() {
             nextSpeed(-1);
         });
     seekDownBtn.setIcon(function(ctx,x,y,frame) {
         drawDownSymbol(ctx,x,y,"#FFF");
     });
-    var seekToggleBtn = new ToggleButton(x,y,w,h,
+    const seekToggleBtn = new ToggleButton(x,y,w,h,
         function() {
             return mode != VCR_RECORD;
         },
@@ -13224,7 +13092,7 @@ var vcr = (function() {
         drawRewindSymbol(ctx,x,y,"#FFF");
     });
     seekToggleBtn.setFont((tileSize-1)+"px ArcadeR", "#FFF");
-    var slowBtn = new ToggleButton(-w-pad-1,y,w,h,
+    const slowBtn = new ToggleButton(-w-pad-1,y,w,h,
         function() {
             return executive.getFramePeriod() == 1000/15;
         },
@@ -13235,7 +13103,7 @@ var vcr = (function() {
         atlas.drawSnail(ctx,x,y,1);
     });
 
-    var onFramePeriodChange = function() {
+    const onFramePeriodChange = function() {
         if (slowBtn.isOn()) {
             slowBtn.setIcon(function(ctx,x,y) {
                 atlas.drawSnail(ctx,x,y,0);
@@ -13248,7 +13116,7 @@ var vcr = (function() {
         }
     };
 
-    var onHudEnable = function() {
+    const onHudEnable = function() {
         if (practiceMode) {
             if (mode == VCR_NONE || mode == VCR_RECORD) {
                 seekUpBtn.disable();
@@ -13263,7 +13131,7 @@ var vcr = (function() {
         }
     };
 
-    var onHudDisable = function() {
+    const onHudDisable = function() {
         if (practiceMode) {
             seekUpBtn.disable();
             seekDownBtn.disable();
@@ -13272,7 +13140,7 @@ var vcr = (function() {
         }
     };
 
-    var isValidState = function() {
+    const isValidState = function() {
         return (
             !inGameMenu.isOpen() && (
             state == playState ||
@@ -13280,7 +13148,7 @@ var vcr = (function() {
             state == deadState));
     };
 
-    var draw = function(ctx) {
+    const draw = function(ctx) {
         if (practiceMode) {
             if (isValidState() && vcr.getMode() != VCR_RECORD) {
                 // change the hue to reflect speed
@@ -13302,8 +13170,8 @@ var vcr = (function() {
         }
     };
 
-    var updateMode = function() {
-        var speed = speeds[speedIndex];
+    const updateMode = function() {
+        const speed = speeds[speedIndex];
         if (speed == 0) {
             mode = VCR_PAUSE;
         }
@@ -13344,21 +13212,21 @@ var vcr = (function() {
             }
 
             // determine start frame
-            var maxReverse = getForwardDist(startFrame,frame);
-            var start = (frame - Math.min(maxReverse,speedPrints[speedIndex])) % maxFrames;
+            const maxReverse = getForwardDist(startFrame,frame);
+            let start = (frame - Math.min(maxReverse,speedPrints[speedIndex])) % maxFrames;
             if (start < 0) {
                 start += maxFrames;
             }
 
             // determine end frame
-            var maxForward = getForwardDist(frame,stopFrame);
-            var end = (frame + Math.min(maxForward,speedPrints[speedCount-1-speedIndex])) % maxFrames;
+            const maxForward = getForwardDist(frame,stopFrame);
+            const end = (frame + Math.min(maxForward,speedPrints[speedCount-1-speedIndex])) % maxFrames;
 
-            var backupAlpha = ctx.globalAlpha;
+            const backupAlpha = ctx.globalAlpha;
             ctx.globalAlpha = 0.2;
             
-            var t = start;
-            var step = speedPrintStep[speedIndex];
+            let t = start;
+            const step = speedPrintStep[speedIndex];
             if (start > end) {
                 for (; t<maxFrames; t+=step) {
                     callback(t);
@@ -13374,6 +13242,8 @@ var vcr = (function() {
     };
 })();
 //@line 1 "src/main.js"
+
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Entry Point
 
@@ -13382,22 +13252,22 @@ window.addEventListener("load", function() {
     initRenderer();
     atlas.create();
     initSwipe();
-	var anchor = window.location.hash.substring(1);
-	if (anchor == "learn") {
-		switchState(learnState);
-	}
-	else if (anchor == "cheat_pac" || anchor == "cheat_mspac") {
-		gameMode = (anchor == "cheat_pac") ? GAME_PACMAN : GAME_MSPACMAN;
-		practiceMode = true;
+    const anchor = window.location.hash.substring(1);
+    if (anchor == "learn") {
+        switchState(learnState);
+    }
+    else if (anchor == "cheat_pac" || anchor == "cheat_mspac") {
+        setGameMode((anchor == "cheat_pac") ? GAME_PACMAN : GAME_MSPACMAN);
+        setPracticeMode(true);
         switchState(newGameState);
-		for (var i=0; i<4; i++) {
-			ghosts[i].isDrawTarget = true;
-			ghosts[i].isDrawPath = true;
-		}
-	}
-	else {
-		switchState(homeState);
-	}
+        for (const g of ghosts) {
+            g.isDrawTarget = true;
+            g.isDrawPath = true;
+        }
+    }
+    else {
+        switchState(homeState);
+    }
     executive.init();
 });
 })();

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # 1. build 'pacman.js' by concatenating files specified in js_order
 # 2. update time stamp in index.htm
@@ -32,6 +32,8 @@ echo "
 
 (function(){
 " > $output
+
+npx eslint src/*.js
 
 for file in \
     inherit.js \
@@ -71,8 +73,11 @@ do
     # if JSOPTION_ATLINE is set, this should work in firefox (but I don't know how to set it)
     echo "//@line 1 \"src/$file\"" >> $output 
 
-    # concatenate file to output
-    cat src/$file >> $output
+    # concatenate file to output (with global refs stripped)
+    cat src/$file \
+        | grep -v '^// REFERENCED GLOBALS' \
+        | grep -v '^/\*global' \
+        >> $output
 
     # add this file to debug includes
     debug_includes="$debug_includes<script src=\"src/$file\"></script>\n"
@@ -83,3 +88,6 @@ echo "})();" >> $output
 
 # build debug.htm from index.htm adding debug includes
 sed "s:.*$output.*:$debug_includes:" index.htm > debug.htm
+
+npx eslint $output
+

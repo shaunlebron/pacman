@@ -105,7 +105,6 @@ const vcr = (function() {
         frame = 0;
         startFrame = 0;
         stopFrame = 0;
-        states = {};
         startRecording();
     };
 

@@ -555,7 +555,7 @@ const drawPacPoints = (function(){
 // draw points displayed when ms. pac-man eats a fruit
 const drawMsPacPoints = (function(){
     let ctx;
-    let color = "#fff";
+    const color = "#fff";
 
     const plotOutline = function(points,color) {
         const len = points.length;
@@ -1025,7 +1025,7 @@ const drawMonsterSprite = (function(){
     };
 
 
-    const drawScared0 = function(flash) {
+    const drawScared0 = function() {
         plotLine([-2,-2,-2,0],faceColor);
         plotLine([-3,-1,-1,-1],faceColor);
         plotLine([2,-2,2,0],faceColor);
@@ -1035,7 +1035,7 @@ const drawMonsterSprite = (function(){
         drawScaredBody();
     };
 
-    const drawScared1 = function(flash) {
+    const drawScared1 = function() {
         plotLine([-3,-2,-1,0],faceColor);
         plotLine([-3,0,-1,-2],faceColor);
         plotLine([1,-2,3,0],faceColor);
@@ -2429,66 +2429,50 @@ const drawDownSymbol = function(ctx,x,y,color) {
     ctx.restore();
 };
 
-const drawSnail = (function(){
-    const plotSolid = function(points,color) {
-        const len = points.length;
-        ctx.beginPath();
-        ctx.moveTo(points[0],points[1]);
-        for (let i=2; i<len; i+=2) {
-            ctx.lineTo(points[i],points[i+1]);
-        }
-        ctx.closePath();
-        ctx.lineWidth = 1.0;
-        ctx.lineJoin = "round";
-        ctx.fillStyle = ctx.strokeStyle = color;
-        ctx.fill();
-        ctx.stroke();
-    };
-    return function(ctx,x,y,color) {
-        ctx.save();
-        ctx.translate(x,y);
-        ctx.beginPath();
-        ctx.moveTo(-7,3);
-        ctx.lineTo(-5,3);
-        ctx.bezierCurveTo(-6,0,-5,-3,-2,-3);
-        ctx.bezierCurveTo(0,-3,2,-2,2,2);
-        ctx.bezierCurveTo(3,-1,3,-2,5,-2);
-        ctx.bezierCurveTo(6,-2,6,0,5,0);
-        ctx.bezierCurveTo(4,1,4,3,2,3);
-        ctx.closePath();
+const drawSnail = function(ctx,x,y,color) {
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.beginPath();
+    ctx.moveTo(-7,3);
+    ctx.lineTo(-5,3);
+    ctx.bezierCurveTo(-6,0,-5,-3,-2,-3);
+    ctx.bezierCurveTo(0,-3,2,-2,2,2);
+    ctx.bezierCurveTo(3,-1,3,-2,5,-2);
+    ctx.bezierCurveTo(6,-2,6,0,5,0);
+    ctx.bezierCurveTo(4,1,4,3,2,3);
+    ctx.closePath();
 
-        ctx.lineWidth = 1.0;
-        ctx.lineCap = ctx.lineJoin = "round";
-        ctx.fillStyle = ctx.strokeStyle = color;
-        ctx.fill();
-        ctx.stroke();
+    ctx.lineWidth = 1.0;
+    ctx.lineCap = ctx.lineJoin = "round";
+    ctx.fillStyle = ctx.strokeStyle = color;
+    ctx.fill();
+    ctx.stroke();
 
-        ctx.beginPath();
-        ctx.moveTo(4,-2);
-        ctx.lineTo(3,-5);
-        ctx.moveTo(5,-1);
-        ctx.lineTo(7,-5);
-        ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(4,-2);
+    ctx.lineTo(3,-5);
+    ctx.moveTo(5,-1);
+    ctx.lineTo(7,-5);
+    ctx.stroke();
 
-        ctx.beginPath();
-        ctx.arc(3,-5, 1, 0, Math.PI*2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(7,-5, 1, 0, Math.PI*2);
-        ctx.fill();
+    ctx.beginPath();
+    ctx.arc(3,-5, 1, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(7,-5, 1, 0, Math.PI*2);
+    ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(-4,1);
-        ctx.bezierCurveTo(-5,-1,-3,-3, -1,-2);
-        ctx.bezierCurveTo(0,-1,0,0,-1,1);
-        ctx.bezierCurveTo(-2,1,-3,0,-2,-0.5);
-        ctx.lineWidth = 0.5;
-        ctx.strokeStyle = "#000";
-        ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-4,1);
+    ctx.bezierCurveTo(-5,-1,-3,-3, -1,-2);
+    ctx.bezierCurveTo(0,-1,0,0,-1,1);
+    ctx.bezierCurveTo(-2,1,-3,0,-2,-0.5);
+    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = "#000";
+    ctx.stroke();
 
-        ctx.restore();
-    };
-})();
+    ctx.restore();
+};
 
 const drawHeartSprite = function(ctx,x,y) {
     ctx.save();

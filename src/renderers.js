@@ -128,8 +128,8 @@ const initRenderer = function(){
     const center = function() {
         const s = getTargetScale()/getDevicePixelRatio();
         const w = screenWidth*s;
-        const x = Math.max(0,(window.innerWidth-10)/2 - w/2);
-        const y = 0;
+        // const x = Math.max(0,(window.innerWidth-10)/2 - w/2);
+        // const y = 0;
         /*
         canvas.style.position = "absolute";
         canvas.style.left = x;

@@ -381,8 +381,8 @@ const mapgen = (function(){
         const setResizeCandidates = function() {
             for (let i=0; i<rows*cols; i++) {
                 const c = cells[i];
-                const x = i % cols;
-                const y = Math.floor(i/cols);
+                // const x = i % cols;
+                // const y = Math.floor(i/cols);
 
                 // determine if it has flexible height
 
@@ -454,7 +454,7 @@ const mapgen = (function(){
                 let c2;
                 for (let x0=x; x0<cols; x0++) {
                     const c = cells[x0+y*cols];
-                    c2 = c.next[DOWN]
+                    c2 = c.next[DOWN];
                     if ((!c.connect[RIGHT] || cellIsCrossCenter(c)) &&
                         (!c2.connect[RIGHT] || cellIsCrossCenter(c2))) {
                         break;
@@ -515,7 +515,7 @@ const mapgen = (function(){
                 let c2;
                 for (let y0=y; y0>=0; y0--) {
                     const c = cells[x+y0*cols];
-                    c2 = c.next[RIGHT]
+                    c2 = c.next[RIGHT];
                     if ((!c.connect[UP] || cellIsCrossCenter(c)) && 
                         (!c2.connect[UP] || cellIsCrossCenter(c2))) {
                         break;
@@ -656,14 +656,14 @@ const mapgen = (function(){
             }
         };
 
-        const reassignGroup = function(oldg,newg) {
-            for (let i=0; i<rows*cols; i++) {
-                const c = cells[i];
-                if (c.group == oldg) {
-                    c.group = newg;
-                }
-            }
-        };
+        // const reassignGroup = function(oldg,newg) {
+        //     for (let i=0; i<rows*cols; i++) {
+        //         const c = cells[i];
+        //         if (c.group == oldg) {
+        //             c.group = newg;
+        //         }
+        //     }
+        // };
 
         const createTunnels = function() {
 
@@ -756,7 +756,9 @@ const mapgen = (function(){
                     c.next[DOWN].topTunnel = true;
                 }
             };
+
             if (numTunnelsDesired == 1) {
+                let c;
                 if (c = randomElement(voidTunnelCells)) {
                     c.topTunnel = true;
                 }
@@ -771,6 +773,7 @@ const mapgen = (function(){
                 }
             }
             else if (numTunnelsDesired == 2) {
+                let c;
                 if (c = randomElement(doubleDeadEndCells)) {
                     c.connect[RIGHT] = true;
                     c.topTunnel = true;
@@ -1008,7 +1011,7 @@ const mapgen = (function(){
         // set path tiles
         for (let y=0; y<subrows; y++) {
             for (let x=0; x<subcols; x++) {
-                c = getTileCell(x,y); // cell
+                const c = getTileCell(x,y); // cell
                 const cl = getTileCell(x-1,y); // left cell
                 const cu = getTileCell(x,y-1); // up cell
 
@@ -1136,10 +1139,12 @@ const mapgen = (function(){
                 }
             }
         };
-        x = subcols-1;
-        for (y=0; y<subrows; y++) {
-            if (getTile(x,y) == '.') {
-                eraseUntilIntersection(x,y);
+        {
+            const x = subcols-1;
+            for (let y=0; y<subrows; y++) {
+                if (getTile(x,y) == '.') {
+                    eraseUntilIntersection(x,y);
+                }
             }
         }
 
@@ -1359,21 +1364,21 @@ const mapgen = (function(){
                 path = dirChars[getDirFromPenult(node)] + path;
             }
             return reverse ? reversePath(path) : path;
-        }
+        };
 
         return function(map) {
 
-            paths = {entrances:[], exits:[]};
+            const paths = {entrances:[], exits:[]};
 
             const isFloorTile = function(x,y) {
                 if (x<0 || x>=28 || y<0 || y>=36) {
-                    return false
+                    return false;
                 }
                 return map.isFloorTile(x,y);
             };
 
-            enter_graph = getShortestDistGraph(map,15,20, function(x,y) { return (x==14 && y==20) ? false : isFloorTile(x,y); });
-            exit_graph =  getShortestDistGraph(map,16,20, function(x,y) { return (x==17 && y==20) ? false : isFloorTile(x,y); });
+            const enter_graph = getShortestDistGraph(map,15,20, function(x,y) { return (x==14 && y==20) ? false : isFloorTile(x,y); });
+            const exit_graph =  getShortestDistGraph(map,16,20, function(x,y) { return (x==17 && y==20) ? false : isFloorTile(x,y); });
 
             // start at (15,20)
             for (let y=0; y<36; y++) {

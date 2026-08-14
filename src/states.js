@@ -99,7 +99,7 @@ const fadeNextState = function (prevState, nextState, frameDuration, continueUpd
 
             frames++;
         },
-    }
+    };
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -209,7 +209,7 @@ const learnState = (function(){
     const w = 30;
     const h = 30;
     let x = mapWidth/2 - 2*(w) - 1.5*pad;
-    let y = 4*tileSize;
+    const y = 4*tileSize;
     const redBtn = new Button(x,y,w,h,function(){
         setAllVisibility(false);
         blinky.isVisible = true;
@@ -374,7 +374,7 @@ const gameTitleState = (function() {
     const w = 20;
     const h = 30;
     let x = mapWidth/2 - 3*w;
-    let y = 3*tileSize;
+    const y = 3*tileSize;
     const yellowBtn = new Button(x,y,w,h,function() {
         if (gameMode == GAME_MSPACMAN) {
             setGameMode(GAME_OTTO);
@@ -400,7 +400,7 @@ const gameTitleState = (function() {
     });
 
     x += w;
-    const cyanBtn = new Button(x,y,w,h)
+    const cyanBtn = new Button(x,y,w,h);
     cyanBtn.setIcon(function (ctx,x,y,frame) {
         getGhostDrawFunc()(ctx,x,y,Math.floor(frame/6)%2,DIR_LEFT,undefined,undefined,undefined,inky.color);
     });
@@ -1051,8 +1051,8 @@ const scoreState = (function(){
         }
         x += 6*tileSize;
         y = 13.5*tileSize;
-        for (i=0; i<mspac_fruits.length; i++) {
-            f = mspac_fruits[i];
+        for (let i=0; i<mspac_fruits.length; i++) {
+            const f = mspac_fruits[i];
             atlas.drawFruitSprite(ctx,x,y,f.name);
             atlas.drawMsPacFruitPoints(ctx,x+2*tileSize,y,f.points);
             y += 2*tileSize;
@@ -1108,9 +1108,8 @@ const aboutState = (function(){
         ctx.textBaseline = "top";
         ctx.textAlign = "left";
 
-        let x,y;
-        x = 2*tileSize;
-        y = 0*tileSize;
+        const x = 2*tileSize;
+        let y = 0*tileSize;
         ctx.fillStyle = "#0FF";
         ctx.fillText("DEVELOPER", x,y);
         y += tileSize*2;

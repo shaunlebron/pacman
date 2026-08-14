@@ -5,6 +5,7 @@
 /*global DIR_LEFT, DIR_DOWN, DIR_UP, DIR_RIGHT*/ // direction.js
 /*global gameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_OTTO, GAME_COOKIE, level*/ // game.js
 /*global mapgen*/ // mapgen.js
+/*global pacman, blinky, pinky, inky, clyde*/ // actors.js
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Maps

@@ -13,10 +13,10 @@
 /*global fruit, setFruitFromGameMode*/ // fruit.js
 /*global vcr, VCR_NONE, VCR_RECORD*/ // vcr.js
 /*global galagaStars*/ // galagaStars.js
-/*global gameMode, setGameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, setLevel, extraLives, setExtraLives, practiceMode, setPracticeMode, turboMode, setTurboMode, getScore, getHighScore, setScore, addScore, getGameName, getGameDescription, getGhostNames, getGhostDrawFunc, getPlayerDrawFunc, clearCheats, backupCheats, restoreCheats, saveGame, loadGame*/ // game.js
+/*global gameMode, setGameMode, highScores, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, setLevel, extraLives, setExtraLives, practiceMode, setPracticeMode, turboMode, setTurboMode, getScore, getHighScore, setScore, addScore, getGameName, getGameDescription, getGhostNames, getGhostDrawFunc, getPlayerDrawFunc, clearCheats, backupCheats, restoreCheats, saveGame, loadGame*/ // game.js
 /*global GHOST_EATEN, GHOST_GOING_HOME, GHOST_ENTERING_HOME, GHOST_PACING_HOME, GHOST_LEAVING_HOME, GHOST_OUTSIDE*/ // Ghost.js
 /*global DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN*/ // direction.js
-/*global cutscenes*/ // cutscenes.js
+/*global cutscenes, playCutScene, triggerCutsceneAtEndLevel */ // cutscenes.js
 /*global Button*/ // Button.js
 /*global Menu*/ // Menu.js
 /*global atlas*/ // atlas.js

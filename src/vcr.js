@@ -1,21 +1,21 @@
 
 // REFERENCED GLOBALS:
-// import { actors } from './actors.js';
-// import { elroyTimer } from './elroyTimer.js';
-// import { energizer } from './energizer.js';
-// import { fruit } from './fruit.js';
-// import { ghostCommander } from './ghostCommander.js';
-// import { ghostReleaser } from './ghostReleaser.js';
-// import { map } from './maps.js';
-// import { loadGame, saveGame, practiceMode } from './game.js';
-// import { state, deadState, finishState, playState } from './states.js';
-// import { inGameMenu } from './inGameMenu.js';
-// import { renderer, mapWidth, mapHeight } from './renderers.js';
-// import { atlas } from './atlas.js';
-// import { Button, ToggleButton } from './Button.js';
-// import { drawRewindSymbol, drawUpSymbol, drawDownSymbol } from './sprites.js';
-// import { executive } from './executive.js';
-// import { tileSize } from './Map.js';
+/*global actors*/ // actors.js
+/*global elroyTimer*/ // elroyTimer.js
+/*global energizer*/ // energizer.js
+/*global fruit*/ // fruit.js
+/*global ghostCommander*/ // ghostCommander.js
+/*global ghostReleaser*/ // ghostReleaser.js
+/*global map*/ // maps.js
+/*global loadGame, saveGame, practiceMode*/ // game.js
+/*global state, deadState, finishState, playState*/ // states.js
+/*global inGameMenu*/ // inGameMenu.js
+/*global renderer, mapWidth, mapHeight*/ // renderers.js
+/*global atlas*/ // atlas.js
+/*global Button, ToggleButton*/ // Button.js
+/*global drawRewindSymbol, drawUpSymbol, drawDownSymbol*/ // sprites.js
+/*global executive*/ // executive.js
+/*global tileSize*/ // Map.js
 
 //////////////////////////////////////////////////////////////////////////////////////
 // VCR

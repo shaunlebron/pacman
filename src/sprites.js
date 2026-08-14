@@ -1,7 +1,7 @@
 
 // REFERENCED GLOBALS:
-// import { DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN } from './direction.js';
-// import { tileSize } from './Map.js';
+/*global DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN*/ // direction.js
+/*global tileSize*/ // Map.js
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Sprites

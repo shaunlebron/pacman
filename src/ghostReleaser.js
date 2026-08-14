@@ -1,8 +1,8 @@
 
 // REFERENCED GLOBALS:
-// import { level } from './game.js';
-// import { ghosts, pinky, inky, clyde } from './actors.js';
-// import { GHOST_PACING_HOME } from './Ghost.js';
+/*global level*/ // game.js
+/*global ghosts, pinky, inky, clyde*/ // actors.js
+/*global GHOST_PACING_HOME*/ // Ghost.js
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Releaser

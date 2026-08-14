@@ -1,9 +1,9 @@
 
 // REFERENCED GLOBALS:
-// import { renderScale } from './renderers.js';
-// import { DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT } from './direction.js';
-// import { blinky, pinky, inky, clyde } from './actors.js';
-// import { drawGhostSprite, drawMonsterSprite, drawOttoSprite, drawMsOttoSprite, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawCherry, drawStrawberry, drawOrange, drawApple, drawMelon, drawGalaxian, drawBell, drawKey, drawPretzel, drawPear, drawBanana, drawCookie, drawCookieFlash, drawSnail, drawPacPoints, drawMsPacPoints } from './sprites.js';
+/*global renderScale*/ // renderers.js
+/*global DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT*/ // direction.js
+/*global blinky, pinky, inky, clyde*/ // actors.js
+/*global drawGhostSprite, drawMonsterSprite, drawOttoSprite, drawMsOttoSprite, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawCherry, drawStrawberry, drawOrange, drawApple, drawMelon, drawGalaxian, drawBell, drawKey, drawPretzel, drawPear, drawBanana, drawCookie, drawCookieFlash, drawSnail, drawPacPoints, drawMsPacPoints*/ // sprites.js
 
 const atlas = (function(){
 

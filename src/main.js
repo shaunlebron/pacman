@@ -1,12 +1,12 @@
 
 // REFERENCED GLOBALS:
-// import { loadHighScores, gameMode, setGameMode, GAME_PACMAN, GAME_MSPACMAN, setPracticeMode } from './game.js';
-// import { initRenderer } from './renderers.js';
-// import { atlas } from './atlas.js';
-// import { initSwipe } from './input.js';
-// import { switchState, learnState, homeState, newGameState } from './states.js';
-// import { ghosts } from './actors.js';
-// import { executive } from './executive.js';
+/*global loadHighScores, gameMode, setGameMode, GAME_PACMAN, GAME_MSPACMAN, setPracticeMode*/ // game.js
+/*global initRenderer*/ // renderers.js
+/*global atlas*/ // atlas.js
+/*global initSwipe*/ // input.js
+/*global switchState, learnState, homeState, newGameState*/ // states.js
+/*global ghosts*/ // actors.js
+/*global executive*/ // executive.js
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Entry Point

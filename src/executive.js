@@ -1,10 +1,10 @@
 
 // REFERENCED GLOBALS:
-// import { inGameMenu } from './inGameMenu.js';
-// import { hud } from './hud.js';
-// import { state } from './states.js';
-// import { renderer } from './renderers.js';
-// import { vcr } from './vcr.js';
+/*global inGameMenu*/ // inGameMenu.js
+/*global hud*/ // hud.js
+/*global state*/ // states.js
+/*global renderer*/ // renderers.js
+/*global vcr*/ // vcr.js
 
 const executive = (function(){
 

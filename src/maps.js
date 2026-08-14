@@ -1,10 +1,10 @@
 
 // REFERENCED GLOBALS:
-// import { tileSize, midTile, Map } from './Map.js';
-// import { GHOST_OUTSIDE, GHOST_PACING_HOME, GHOST_LEAVING_HOME } from './Ghost.js';
-// import { DIR_LEFT, DIR_DOWN, DIR_UP, DIR_RIGHT } from './direction.js';
-// import { gameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_OTTO, GAME_COOKIE, level } from './game.js';
-// import { mapgen } from './mapgen.js';
+/*global tileSize, midTile, Map*/ // Map.js
+/*global GHOST_OUTSIDE, GHOST_PACING_HOME, GHOST_LEAVING_HOME*/ // Ghost.js
+/*global DIR_LEFT, DIR_DOWN, DIR_UP, DIR_RIGHT*/ // direction.js
+/*global gameMode, GAME_PACMAN, GAME_MSPACMAN, GAME_OTTO, GAME_COOKIE, level*/ // game.js
+/*global mapgen*/ // mapgen.js
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Maps

@@ -1,8 +1,8 @@
 
 // REFERENCED GLOBALS:
-// import { level, gameMode, GAME_PACMAN } from './game.js';
-// import { energizer } from './energizer.js';
-// import { ghosts } from './actors.js';
+/*global level, gameMode, GAME_PACMAN*/ // game.js
+/*global energizer*/ // energizer.js
+/*global ghosts*/ // actors.js
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Commander

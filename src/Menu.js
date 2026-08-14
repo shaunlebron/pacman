@@ -1,7 +1,7 @@
 
 // REFERENCED GLOBALS:
-// import { tileSize } from './Map.js';
-// import { ToggleButton, Button } from './Button.js';
+/*global tileSize*/ // Map.js
+/*global ToggleButton, Button*/ // Button.js
 
 const Menu = function(title,x,y,w,h,pad,font,fontcolor) {
     this.title = title;

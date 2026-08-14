@@ -1,13 +1,13 @@
 
 // REFERENCED GLOBALS:
-/*global tileSize*/ // Map.js
-/*global mapWidth, mapHeight, mapPad, renderer*/ // renderers.js
-/*global Button*/ // Button.js
-/*global Menu*/ // Menu.js
-/*global vcr*/ // vcr.js
-/*global practiceMode, turboMode, setTurboMode, level, setLevel, clearCheats*/ // game.js
-/*global switchState, homeState, readyNewState*/ // states.js
-/*global blinky, pacman, ghosts*/ // actors.js
+/*global tileSize -- Map.js */
+/*global mapWidth, mapHeight, mapPad, renderer -- renderers.js */
+/*global Button -- Button.js */
+/*global Menu -- Menu.js */
+/*global vcr -- vcr.js */
+/*global practiceMode, turboMode, setTurboMode, level, setLevel, clearCheats -- game.js */
+/*global switchState, homeState, readyNewState -- states.js */
+/*global blinky, pacman, ghosts -- actors.js */
 
 ////////////////////////////////////////////////////
 // In-Game Menu

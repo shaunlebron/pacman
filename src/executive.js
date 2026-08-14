@@ -1,10 +1,10 @@
 
 // REFERENCED GLOBALS:
-/*global inGameMenu*/ // inGameMenu.js
-/*global hud*/ // hud.js
-/*global state*/ // states.js
-/*global renderer*/ // renderers.js
-/*global vcr*/ // vcr.js
+/*global inGameMenu -- inGameMenu.js */
+/*global hud -- hud.js */
+/*global state -- states.js */
+/*global renderer -- renderers.js */
+/*global vcr -- vcr.js */
 
 const executive = (function(){
 

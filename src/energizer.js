@@ -1,7 +1,7 @@
 
 // REFERENCED GLOBALS:
-/*global level, addScore*/ // game.js
-/*global ghosts*/ // actors.js
+/*global level, addScore -- game.js */
+/*global ghosts -- actors.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Energizer

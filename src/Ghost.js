@@ -1,14 +1,14 @@
 
 // REFERENCED GLOBALS:
-/*global Actor*/ // Actor.js
-/*global newChildObject*/ // inherit.js
-/*global tileSize, midTile*/ // Map.js
-/*global DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT, rotateAboutFace, getOpenTiles, getTurnClosestToTarget*/ // direction.js
-/*global ghostCommander, GHOST_CMD_SCATTER*/ // ghostCommander.js
-/*global blinky, pinky, clyde, actors*/ // actors.js
-/*global gameMode, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, GAME_PACMAN, level*/ // game.js
-/*global map*/ // maps.js
-/*global STEP_GHOST, STEP_GHOST_FRIGHT, STEP_GHOST_TUNNEL, STEP_ELROY1, STEP_ELROY2*/ // Actor.js
+/*global Actor -- Actor.js */
+/*global newChildObject -- inherit.js */
+/*global tileSize, midTile -- Map.js */
+/*global DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT, rotateAboutFace, getOpenTiles, getTurnClosestToTarget -- direction.js */
+/*global ghostCommander, GHOST_CMD_SCATTER -- ghostCommander.js */
+/*global blinky, pinky, clyde, actors -- actors.js */
+/*global gameMode, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, GAME_PACMAN, level -- game.js */
+/*global map -- maps.js */
+/*global STEP_GHOST, STEP_GHOST_FRIGHT, STEP_GHOST_TUNNEL, STEP_ELROY1, STEP_ELROY2 -- Actor.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class

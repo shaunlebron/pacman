@@ -1,27 +1,27 @@
 
 // REFERENCED GLOBALS:
-/*global newChildObject*/ // inherit.js
-/*global renderer, mapWidth, mapHeight*/ // renderers.js
-/*global executive*/ // executive.js
-/*global map, setMap, mapLearn, mapPacman, setNextMsPacMap, setNextCookieMap, getLevelAct, getActColor, getActRange, getMsPacActColor, getCookieActColor, mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4*/ // maps.js
-/*global tileSize, midTile*/ // Map.js
-/*global actors, ghosts, pacman, blinky, pinky, inky, clyde*/ // actors.js
-/*global ghostCommander, GHOST_CMD_CHASE*/ // ghostCommander.js
-/*global ghostReleaser*/ // ghostReleaser.js
-/*global elroyTimer*/ // elroyTimer.js
-/*global energizer*/ // energizer.js
-/*global fruit, setFruitFromGameMode*/ // fruit.js
-/*global vcr, VCR_NONE, VCR_RECORD*/ // vcr.js
-/*global galagaStars*/ // galagaStars.js
-/*global gameMode, setGameMode, highScores, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, setLevel, extraLives, setExtraLives, practiceMode, setPracticeMode, turboMode, setTurboMode, getScore, getHighScore, setScore, addScore, getGameName, getGameDescription, getGhostNames, getGhostDrawFunc, getPlayerDrawFunc, clearCheats, backupCheats, restoreCheats, saveGame, loadGame*/ // game.js
-/*global GHOST_EATEN, GHOST_GOING_HOME, GHOST_ENTERING_HOME, GHOST_PACING_HOME, GHOST_LEAVING_HOME, GHOST_OUTSIDE*/ // Ghost.js
-/*global DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN*/ // direction.js
-/*global cutscenes, playCutScene, triggerCutsceneAtEndLevel */ // cutscenes.js
-/*global Button*/ // Button.js
-/*global Menu*/ // Menu.js
-/*global atlas*/ // atlas.js
-/*global getSpriteFuncFromFruitName, drawHeartSprite, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawOttoSprite, drawMsOttoSprite, drawDeadOttoSprite, drawExclamationPoint*/ // sprites.js
-/*global STEP_PACMAN, STEP_GHOST*/ // Actor.js
+/*global newChildObject -- inherit.js */
+/*global renderer, mapWidth, mapHeight -- renderers.js */
+/*global executive -- executive.js */
+/*global map, setMap, mapLearn, mapPacman, setNextMsPacMap, setNextCookieMap, getLevelAct, getActColor, getActRange, getMsPacActColor, getCookieActColor, mapMsPacman1, mapMsPacman2, mapMsPacman3, mapMsPacman4 -- maps.js */
+/*global tileSize, midTile -- Map.js */
+/*global actors, ghosts, pacman, blinky, pinky, inky, clyde -- actors.js */
+/*global ghostCommander, GHOST_CMD_CHASE -- ghostCommander.js */
+/*global ghostReleaser -- ghostReleaser.js */
+/*global elroyTimer -- elroyTimer.js */
+/*global energizer -- energizer.js */
+/*global fruit, setFruitFromGameMode -- fruit.js */
+/*global vcr, VCR_NONE, VCR_RECORD -- vcr.js */
+/*global galagaStars -- galagaStars.js */
+/*global gameMode, setGameMode, highScores, GAME_PACMAN, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, level, setLevel, extraLives, setExtraLives, practiceMode, setPracticeMode, turboMode, setTurboMode, getScore, getHighScore, setScore, addScore, getGameName, getGameDescription, getGhostNames, getGhostDrawFunc, getPlayerDrawFunc, clearCheats, backupCheats, restoreCheats, saveGame, loadGame -- game.js */
+/*global GHOST_EATEN, GHOST_GOING_HOME, GHOST_ENTERING_HOME, GHOST_PACING_HOME, GHOST_LEAVING_HOME, GHOST_OUTSIDE -- Ghost.js */
+/*global DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN -- direction.js */
+/*global cutscenes, playCutScene, triggerCutsceneAtEndLevel  -- cutscenes.js */
+/*global Button -- Button.js */
+/*global Menu -- Menu.js */
+/*global atlas -- atlas.js */
+/*global getSpriteFuncFromFruitName, drawHeartSprite, drawPacmanSprite, drawMsPacmanSprite, drawCookiemanSprite, drawOttoSprite, drawMsOttoSprite, drawDeadOttoSprite, drawExclamationPoint -- sprites.js */
+/*global STEP_PACMAN, STEP_GHOST -- Actor.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // States

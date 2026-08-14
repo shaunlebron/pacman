@@ -1,8 +1,8 @@
 
 // REFERENCED GLOBALS:
-/*global level*/ // game.js
-/*global ghosts, pinky, inky, clyde*/ // actors.js
-/*global GHOST_PACING_HOME*/ // Ghost.js
+/*global level -- game.js */
+/*global ghosts, pinky, inky, clyde -- actors.js */
+/*global GHOST_PACING_HOME -- Ghost.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost Releaser

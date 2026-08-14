@@ -1,11 +1,11 @@
 
 // REFERENCED GLOBALS:
-/*global pacman, actors*/ // actors.js
-/*global executive*/ // executive.js
-/*global renderer*/ // renderers.js
-/*global atlas*/ // atlas.js
-/*global state, setState*/ // states.js
-/*global drawCookiemanSprite*/ // sprites.js
+/*global pacman, actors -- actors.js */
+/*global executive -- executive.js */
+/*global renderer -- renderers.js */
+/*global atlas -- atlas.js */
+/*global state, setState -- states.js */
+/*global drawCookiemanSprite -- sprites.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Game

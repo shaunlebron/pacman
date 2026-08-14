@@ -1,12 +1,12 @@
 
 // REFERENCED GLOBALS:
-/*global loadHighScores, gameMode, setGameMode, GAME_PACMAN, GAME_MSPACMAN, setPracticeMode*/ // game.js
-/*global initRenderer*/ // renderers.js
-/*global atlas*/ // atlas.js
-/*global initSwipe*/ // input.js
-/*global switchState, learnState, homeState, newGameState*/ // states.js
-/*global ghosts*/ // actors.js
-/*global executive*/ // executive.js
+/*global loadHighScores, gameMode, setGameMode, GAME_PACMAN, GAME_MSPACMAN, setPracticeMode -- game.js */
+/*global initRenderer -- renderers.js */
+/*global atlas -- atlas.js */
+/*global initSwipe -- input.js */
+/*global switchState, learnState, homeState, newGameState -- states.js */
+/*global ghosts -- actors.js */
+/*global executive -- executive.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Entry Point

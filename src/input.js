@@ -1,13 +1,13 @@
 
 // REFERENCED GLOBALS:
-/*global vcr, VCR_NONE, VCR_RECORD*/ // vcr.js
-/*global state, learnState, newGameState, playState, readyNewState, readyRestartState, switchState, finishState, deadState, overState*/ // states.js
-/*global pacman, blinky, pinky, inky, clyde*/ // actors.js
-/*global DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN*/ // direction.js
-/*global practiceMode, turboMode, setTurboMode*/ // game.js
-/*global executive*/ // executive.js
-/*global inGameMenu*/ // inGameMenu.js
-/*global hud*/ // hud.js
+/*global vcr, VCR_NONE, VCR_RECORD -- vcr.js */
+/*global state, learnState, newGameState, playState, readyNewState, readyRestartState, switchState, finishState, deadState, overState -- states.js */
+/*global pacman, blinky, pinky, inky, clyde -- actors.js */
+/*global DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN -- direction.js */
+/*global practiceMode, turboMode, setTurboMode -- game.js */
+/*global executive -- executive.js */
+/*global inGameMenu -- inGameMenu.js */
+/*global hud -- hud.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Input

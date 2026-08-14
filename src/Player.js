@@ -1,15 +1,15 @@
 
 // REFERENCED GLOBALS:
-/*global Actor*/ // Actor.js
-/*global newChildObject*/ // inherit.js
-/*global map*/ // maps.js
-/*global setDirFromEnum, isNextTileFloor, getOpenTiles, getTurnClosestToTarget*/ // direction.js
-/*global turboMode, level, gameMode, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, addScore*/ // game.js
-/*global energizer*/ // energizer.js
-/*global STEP_PACMAN_FRIGHT, STEP_PACMAN*/ // Actor.js
-/*global state, deadState*/ // states.js
-/*global ghostReleaser*/ // ghostReleaser.js
-/*global fruit*/ // fruit.js
+/*global Actor -- Actor.js */
+/*global newChildObject -- inherit.js */
+/*global map -- maps.js */
+/*global setDirFromEnum, isNextTileFloor, getOpenTiles, getTurnClosestToTarget -- direction.js */
+/*global turboMode, level, gameMode, GAME_MSPACMAN, GAME_COOKIE, GAME_OTTO, addScore -- game.js */
+/*global energizer -- energizer.js */
+/*global STEP_PACMAN_FRIGHT, STEP_PACMAN -- Actor.js */
+/*global state, deadState -- states.js */
+/*global ghostReleaser -- ghostReleaser.js */
+/*global fruit -- fruit.js */
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Player is the controllable character (Pac-Man)

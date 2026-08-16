@@ -1,6 +1,5 @@
 
 // REFERENCED GLOBALS:
-/* global newChildObject -- inherit.js */
 /* global map -- maps.js */
 /* global tileSize, midTile -- Map.js */
 /* global pacman -- actors.js */
@@ -10,161 +9,179 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Fruit
 
-const BaseFruit = function() {
-    // pixel
-    this.pixel = {x:0, y:0};
+const bounceFrames = (() => {
+    const U = { dx:0, dy:-1 };
+    const D = { dx:0, dy:1 };
+    const L = { dx:-1, dy:0 };
+    const R = { dx:1, dy:0 };
+    const UL = { dx:-1, dy:-1 };
+    const UR = { dx:1, dy:-1 };
+    const DL = { dx:-1, dy:1 };
+    const DR = { dx:1, dy:1 };
+    const Z = { dx:0, dy:0 };
 
-    this.fruitHistory = {};
+    // A 16-frame animation for moving 8 pixels either up, down, left, or right.
+    return {
+        '^': [U, U, U, U, U, U, U, U, U, Z, U, Z, Z, D, Z, D],
+        '>': [Z, UR,Z, R, Z, UR,Z, R, Z, R, Z, R, Z, DR,DR,Z],
+        '<': [Z, Z, UL,Z, L, Z, UL,Z, L, Z, L, Z, L, Z, DL,DL],
+        'v': [Z, D, D, D, D, D, D, D, D, D, D, D, U, U, Z, U],
+    };
+})();
 
-    this.scoreDuration = 2; // number of seconds that the fruit score is on the screen
-    this.scoreFramesLeft; // frames left until the picked-up fruit score is off the screen
-    this.savedScoreFramesLeft = {};
-};
+class BaseFruit {
+    constructor() {
+        // pixel
+        this.pixel = {x:0, y:0};
 
-BaseFruit.prototype = {
-    isScorePresent: function() {
+        this.fruitHistory = {};
+
+        this.scoreDuration = 2; // number of seconds that the fruit score is on the screen
+        this.scoreFramesLeft; // frames left until the picked-up fruit score is off the screen
+        this.savedScoreFramesLeft = {};
+    }
+    isScorePresent() {
         return this.scoreFramesLeft > 0;
-    },
-    onNewLevel: function() {
+    }
+    onNewLevel() {
         this.buildFruitHistory();
-    },
-    setCurrentFruit: function(i) {
+    }
+    setCurrentFruit(i) {
         this.currentFruitIndex = i;
-    },
-    onDotEat: function() {
+    }
+    onDotEat() {
         if (!this.isPresent() && (map.dotsEaten == this.dotLimit1 || map.dotsEaten == this.dotLimit2)) {
             this.initiate();
         }
-    },
-    save: function(t) {
+    }
+    save(t) {
         this.savedScoreFramesLeft[t] = this.scoreFramesLeft;
-    },
-    load: function(t) {
+    }
+    load(t) {
         this.scoreFramesLeft = this.savedScoreFramesLeft[t];
-    },
-    reset: function() {
+    }
+    reset() {
         this.scoreFramesLeft = 0;
-    },
-    getCurrentFruit: function() {
+    }
+    getCurrentFruit() {
         return this.fruits[this.currentFruitIndex];
-    },
-    getPoints: function() {
+    }
+    getPoints() {
         return this.getCurrentFruit().points;
-    },
-    update: function() {
+    }
+    update() {
         if (this.scoreFramesLeft > 0)
             this.scoreFramesLeft--;
-    },
-    isCollide: function() {
+    }
+    isCollide() {
         return Math.abs(pacman.pixel.y - this.pixel.y) <= midTile.y && Math.abs(pacman.pixel.x - this.pixel.x) <= midTile.x;
-    },
-    testCollide: function() {
+    }
+    testCollide() {
         if (this.isPresent() && this.isCollide()) {
             addScore(this.getPoints());
             this.reset();
             this.scoreFramesLeft = this.scoreDuration*60;
         }
-    },
-};
+    }
+}
 
 // PAC-MAN FRUIT
 
-const PacFruit = function() {
-    BaseFruit.call(this);
-    this.fruits = [
-        {name:'cherry',     points:100},
-        {name:'strawberry', points:300},
-        {name:'orange',     points:500},
-        {name:'apple',      points:700},
-        {name:'melon',      points:1000},
-        {name:'galaxian',   points:2000},
-        {name:'bell',       points:3000},
-        {name:'key',        points:5000},
-    ];
+class PacFruit extends BaseFruit {
+    constructor() {
+        super();
+        this.fruits = [
+            {name:'cherry',     points:100},
+            {name:'strawberry', points:300},
+            {name:'orange',     points:500},
+            {name:'apple',      points:700},
+            {name:'melon',      points:1000},
+            {name:'galaxian',   points:2000},
+            {name:'bell',       points:3000},
+            {name:'key',        points:5000},
+        ];
 
-    this.order = [
-        0,  // level 1
-        1,  // level 2 
-        2,  // level 3
-        2,  // level 4
-        3,  // level 5
-        3,  // level 6
-        4,  // level 7
-        4,  // level 8
-        5,  // level 9
-        5,  // level 10
-        6,  // level 11
-        6,  // level 12
-        7]; // level 13+
+        this.order = [
+            0,  // level 1
+            1,  // level 2 
+            2,  // level 3
+            2,  // level 4
+            3,  // level 5
+            3,  // level 6
+            4,  // level 7
+            4,  // level 8
+            5,  // level 9
+            5,  // level 10
+            6,  // level 11
+            6,  // level 12
+            7]; // level 13+
 
-    this.dotLimit1 = 70;
-    this.dotLimit2 = 170;
+        this.dotLimit1 = 70;
+        this.dotLimit2 = 170;
 
-    this.duration = 9; // number of seconds that the fruit is on the screen
-    this.framesLeft; // frames left until fruit is off the screen
+        this.duration = 9; // number of seconds that the fruit is on the screen
+        this.framesLeft; // frames left until fruit is off the screen
 
-    this.savedFramesLeft = {};
-};
+        this.savedFramesLeft = {};
+    }
 
-PacFruit.prototype = newChildObject(BaseFruit.prototype, {
-
-    onNewLevel: function() {
+    onNewLevel() {
         this.setCurrentFruit(this.getFruitIndexFromLevel(level));
         BaseFruit.prototype.onNewLevel.call(this);
-    },
+    }
 
-    getFruitFromLevel: function(i) {
+    getFruitFromLevel(i) {
         return this.fruits[this.getFruitIndexFromLevel(i)];
-    },
+    }
 
-    getFruitIndexFromLevel: function(i) {
+    getFruitIndexFromLevel(i) {
         if (i > 13) {
             i = 13;
         }
         return this.order[i-1];
-    },
+    }
 
-    buildFruitHistory: function() {
+    buildFruitHistory() {
         this.fruitHistory = {};
         for (let i=1; i<= level; i++) {
             this.fruitHistory[i] = this.fruits[this.getFruitIndexFromLevel(i)];
         }
-    },
+    }
 
-    initiate: function() {
+    initiate() {
         const x = 13;
         const y = 20;
         this.pixel.x = tileSize*(1+x)-1;
         this.pixel.y = tileSize*y + midTile.y;
         this.framesLeft = 60*this.duration;
-    },
+    }
 
-    isPresent: function() {
+    isPresent() {
         return this.framesLeft > 0;
-    },
+    }
 
-    reset: function() {
+    reset() {
         BaseFruit.prototype.reset.call(this);
 
         this.framesLeft = 0;
-    },
+    }
 
-    update: function() {
+    update() {
         BaseFruit.prototype.update.call(this);
 
         if (this.framesLeft > 0)
             this.framesLeft--;
-    },
+    }
 
-    save: function(t) {
+    save(t) {
         BaseFruit.prototype.save.call(this,t);
         this.savedFramesLeft[t] = this.framesLeft;
-    },
-    load: function(t) {
+    }
+    load(t) {
         BaseFruit.prototype.load.call(this,t);
         this.framesLeft = this.savedFramesLeft[t];
-    },
-});
+    }
+}
 
 // MS. PAC-MAN FRUIT
 
@@ -172,47 +189,46 @@ const PATH_ENTER = 0;
 const PATH_PEN = 1;
 const PATH_EXIT = 2;
 
-const MsPacFruit = function() {
-    BaseFruit.call(this);
-    this.fruits = [
-        {name: 'cherry',     points: 100},
-        {name: 'strawberry', points: 200},
-        {name: 'orange',     points: 500},
-        {name: 'pretzel',    points: 700},
-        {name: 'apple',      points: 1000},
-        {name: 'pear',       points: 2000},
-        {name: 'banana',     points: 5000},
-    ];
+class MsPacFruit extends BaseFruit {
+    constructor() {
+        super();
+        this.fruits = [
+            {name: 'cherry',     points: 100},
+            {name: 'strawberry', points: 200},
+            {name: 'orange',     points: 500},
+            {name: 'pretzel',    points: 700},
+            {name: 'apple',      points: 1000},
+            {name: 'pear',       points: 2000},
+            {name: 'banana',     points: 5000},
+        ];
 
-    this.dotLimit1 = 64;
-    this.dotLimit2 = 176;
+        this.dotLimit1 = 64;
+        this.dotLimit2 = 176;
 
-    this.pen_path = "<<<<<<^^^^^^>>>>>>>>>vvvvvv<<";
+        this.pen_path = "<<<<<<^^^^^^>>>>>>>>>vvvvvv<<";
 
-    this.savedIsPresent = {};
-    this.savedPixel = {};
-    this.savedPathMode = {};
-    this.savedFrame = {};
-    this.savedNumFrames = {};
-    this.savedPath = {};
-};
+        this.savedIsPresent = {};
+        this.savedPixel = {};
+        this.savedPathMode = {};
+        this.savedFrame = {};
+        this.savedNumFrames = {};
+        this.savedPath = {};
+    }
 
-MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
-
-    shouldRandomizeFruit: function() {
+    shouldRandomizeFruit() {
         return level > 7;
-    },
+    }
 
-    getFruitFromLevel: function(i) {
+    getFruitFromLevel(i) {
         if (i <= 7) {
             return this.fruits[i-1];
         }
         else {
             return undefined;
         }
-    },
+    }
 
-    onNewLevel: function() {
+    onNewLevel() {
         if (!this.shouldRandomizeFruit()) {
             this.setCurrentFruit(level-1);
         }
@@ -220,30 +236,30 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
             this.setCurrentFruit(0);
         }
         BaseFruit.prototype.onNewLevel.call(this);
-    },
+    }
 
-    buildFruitHistory: function() {
+    buildFruitHistory() {
         this.fruitHistory = {};
         for (let i=1; i<= Math.max(level,7); i++) {
             this.fruitHistory[i] = this.fruits[i-1];
         }
-    },
+    }
 
-    reset: function() {
+    reset() {
         BaseFruit.prototype.reset.call(this);
 
         this.frame = 0;
         this.numFrames = 0;
         this.path = undefined;
-    },
+    }
 
-    initiatePath: function(p) {
+    initiatePath(p) {
         this.frame = 0;
         this.numFrames = p.length*16;
         this.path = p;
-    },
+    }
 
-    initiate: function() {
+    initiate() {
         if (this.shouldRandomizeFruit()) {
             this.setCurrentFruit(getRandomInt(0,6));
         }
@@ -253,41 +269,21 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
         this.pathMode = PATH_ENTER;
         this.pixel.x = e.start.x;
         this.pixel.y = e.start.y;
-    },
+    }
 
-    isPresent: function() {
+    isPresent() {
         return this.frame < this.numFrames;
-    },
+    }
 
-    bounceFrames: (function(){
-        const U = { dx:0, dy:-1 };
-        const D = { dx:0, dy:1 };
-        const L = { dx:-1, dy:0 };
-        const R = { dx:1, dy:0 };
-        const UL = { dx:-1, dy:-1 };
-        const UR = { dx:1, dy:-1 };
-        const DL = { dx:-1, dy:1 };
-        const DR = { dx:1, dy:1 };
-        const Z = { dx:0, dy:0 };
-
-        // A 16-frame animation for moving 8 pixels either up, down, left, or right.
-        return {
-            '^': [U, U, U, U, U, U, U, U, U, Z, U, Z, Z, D, Z, D],
-            '>': [Z, UR,Z, R, Z, UR,Z, R, Z, R, Z, R, Z, DR,DR,Z],
-            '<': [Z, Z, UL,Z, L, Z, UL,Z, L, Z, L, Z, L, Z, DL,DL],
-            'v': [Z, D, D, D, D, D, D, D, D, D, D, D, U, U, Z, U],
-        };
-    })(),
-
-    move: function() {
+    move() {
         const p = this.path[Math.floor(this.frame/16)]; // get current path frame
-        const b = this.bounceFrames[p][this.frame%16]; // get current bounce animation frame
+        const b = bounceFrames[p][this.frame%16]; // get current bounce animation frame
         this.pixel.x += b.dx;
         this.pixel.y += b.dy;
         this.frame++;
-    },
+    }
 
-    setNextPath: function() {
+    setNextPath() {
         if (this.pathMode == PATH_ENTER) {
             this.pathMode = PATH_PEN;
             this.initiatePath(this.pen_path);
@@ -301,9 +297,9 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
         else if (this.pathMode == PATH_EXIT) {
             this.reset();
         }
-    },
+    }
 
-    update: function() {
+    update() {
         BaseFruit.prototype.update.call(this);
 
         if (this.isPresent()) {
@@ -312,9 +308,9 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
                 this.setNextPath();
             }
         }
-    },
+    }
 
-    save: function(t) {
+    save(t) {
         BaseFruit.prototype.save.call(this,t);
 
         this.savedPixel[t] =        this.isPresent() ? {x:this.pixel.x, y:this.pixel.y} : undefined;
@@ -322,9 +318,9 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
         this.savedFrame[t] =        this.frame;
         this.savedNumFrames[t] =    this.numFrames;
         this.savedPath[t] =         this.path;
-    },
+    }
 
-    load: function(t) {
+    load(t) {
         BaseFruit.prototype.load.call(this,t);
 
         if (this.savedPixel[t]) {
@@ -335,20 +331,18 @@ MsPacFruit.prototype = newChildObject(BaseFruit.prototype, {
         this.frame =        this.savedFrame[t];
         this.numFrames =    this.savedNumFrames[t]; 
         this.path =         this.savedPath[t];
-    },
-});
+    }
+}
 
 let fruit;
-const setFruitFromGameMode = (function() {
-    const pacfruit = new PacFruit();
-    const mspacfruit = new MsPacFruit();
-    fruit = pacfruit;
-    return function() {
-        if (gameMode == GAME_PACMAN) {
-            fruit = pacfruit;
-        }
-        else {
-            fruit = mspacfruit;
-        }
-    };
-})();
+const pacfruit = new PacFruit();
+const mspacfruit = new MsPacFruit();
+
+const setFruitFromGameMode = function() {
+    if (gameMode == GAME_PACMAN) {
+        fruit = pacfruit;
+    }
+    else {
+        fruit = mspacfruit;
+    }
+};

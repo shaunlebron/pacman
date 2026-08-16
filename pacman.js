@@ -7185,108 +7185,128 @@ const drawExclamationPoint = function(ctx,x,y) {
 
 // "Ghost" and "Player" inherit from this "Actor"
 
-// Actor constructor
-const Actor = function() {
+class Actor {
+    constructor() {
+        this.dir = {};          // facing direction vector
+        this.pixel = {};        // pixel position
+        this.tile = {};         // tile position
+        this.tilePixel = {};    // pixel location inside tile
+        this.distToMid = {};    // pixel distance to mid-tile
 
-    this.dir = {};          // facing direction vector
-    this.pixel = {};        // pixel position
-    this.tile = {};         // tile position
-    this.tilePixel = {};    // pixel location inside tile
-    this.distToMid = {};    // pixel distance to mid-tile
+        this.targetTile = {};   // tile position used for targeting
 
-    this.targetTile = {};   // tile position used for targeting
+        this.frames = 0;        // frame count
+        this.steps = 0;         // step count
 
-    this.frames = 0;        // frame count
-    this.steps = 0;         // step count
+        this.isDrawTarget = false;
+        this.isDrawPath = false;
 
-    this.isDrawTarget = false;
-    this.isDrawPath = false;
-
-    this.savedSteps = {};
-    this.savedFrames = {};
-    this.savedDirEnum = {};
-    this.savedPixel = {};
-    this.savedTargetting = {};
-    this.savedTargetTile = {};
-};
-
-// save state at time t
-Actor.prototype.save = function(t) {
-    this.savedSteps[t] = this.steps;
-    this.savedFrames[t] = this.frames;
-    this.savedDirEnum[t] = this.dirEnum;
-    this.savedPixel[t] = { x:this.pixel.x, y:this.pixel.y };
-    this.savedTargetting[t] = this.targetting;
-    this.savedTargetTile[t] = { x: this.targetTile.x, y: this.targetTile.y };
-};
-
-// load state at time t
-Actor.prototype.load = function(t) {
-    this.steps = this.savedSteps[t];
-    this.frames = this.savedFrames[t];
-    this.setDir(this.savedDirEnum[t]);
-    this.setPos(this.savedPixel[t].x, this.savedPixel[t].y);
-    this.targetting = this.savedTargetting[t];
-    this.targetTile.x = this.savedTargetTile[t].x;
-    this.targetTile.y = this.savedTargetTile[t].y;
-};
-
-
-// reset to initial position and direction
-Actor.prototype.reset = function() {
-    this.setDir(this.startDirEnum);
-    this.setPos(this.startPixel.x, this.startPixel.y);
-    this.frames = 0;
-    this.steps = 0;
-    this.targetting = false;
-};
-
-// sets the position and updates its dependent variables
-Actor.prototype.setPos = function(px,py) {
-    this.pixel.x = px;
-    this.pixel.y = py;
-    this.commitPos();
-};
-
-// returns the relative pixel inside a tile given a map pixel
-Actor.prototype.getTilePixel = function(pixel,tilePixel) {
-    if (pixel == undefined) {
-        pixel = this.pixel;
-    }
-    if (tilePixel == undefined) {
-        tilePixel = {};
-    }
-    tilePixel.x = pixel.x % tileSize;
-    tilePixel.y = pixel.y % tileSize;
-    if (tilePixel.x < 0) {
-        tilePixel.x += tileSize;
-    }
-    if (tilePixel.y < 0) {
-        tilePixel.y += tileSize;
-    }
-    return tilePixel;
-};
-
-// updates the position's dependent variables
-Actor.prototype.commitPos = function() {
-
-    // use map-specific tunnel teleport
-    if (map) {
-        map.teleport(this);
+        this.savedSteps = {};
+        this.savedFrames = {};
+        this.savedDirEnum = {};
+        this.savedPixel = {};
+        this.savedTargetting = {};
+        this.savedTargetTile = {};
     }
 
-    this.tile.x = Math.floor(this.pixel.x / tileSize);
-    this.tile.y = Math.floor(this.pixel.y / tileSize);
-    this.getTilePixel(this.pixel,this.tilePixel);
-    this.distToMid.x = midTile.x - this.tilePixel.x;
-    this.distToMid.y = midTile.y - this.tilePixel.y;
-};
+    // save state at time t
+    save(t) {
+        this.savedSteps[t] = this.steps;
+        this.savedFrames[t] = this.frames;
+        this.savedDirEnum[t] = this.dirEnum;
+        this.savedPixel[t] = { x:this.pixel.x, y:this.pixel.y };
+        this.savedTargetting[t] = this.targetting;
+        this.savedTargetTile[t] = { x: this.targetTile.x, y: this.targetTile.y };
+    }
 
-// sets the direction and updates its dependent variables
-Actor.prototype.setDir = function(dirEnum) {
-    setDirFromEnum(this.dir, dirEnum);
-    this.dirEnum = dirEnum;
-};
+    // load state at time t
+    load(t) {
+        this.steps = this.savedSteps[t];
+        this.frames = this.savedFrames[t];
+        this.setDir(this.savedDirEnum[t]);
+        this.setPos(this.savedPixel[t].x, this.savedPixel[t].y);
+        this.targetting = this.savedTargetting[t];
+        this.targetTile.x = this.savedTargetTile[t].x;
+        this.targetTile.y = this.savedTargetTile[t].y;
+    }
+
+    // reset to initial position and direction
+    reset() {
+        this.setDir(this.startDirEnum);
+        this.setPos(this.startPixel.x, this.startPixel.y);
+        this.frames = 0;
+        this.steps = 0;
+        this.targetting = false;
+    }
+
+    // sets the position and updates its dependent variables
+    setPos(px,py) {
+        this.pixel.x = px;
+        this.pixel.y = py;
+        this.commitPos();
+    }
+
+    // returns the relative pixel inside a tile given a map pixel
+    getTilePixel(pixel,tilePixel) {
+        if (pixel == undefined) {
+            pixel = this.pixel;
+        }
+        if (tilePixel == undefined) {
+            tilePixel = {};
+        }
+        tilePixel.x = pixel.x % tileSize;
+        tilePixel.y = pixel.y % tileSize;
+        if (tilePixel.x < 0) {
+            tilePixel.x += tileSize;
+        }
+        if (tilePixel.y < 0) {
+            tilePixel.y += tileSize;
+        }
+        return tilePixel;
+    }
+
+    // updates the position's dependent variables
+    commitPos() {
+
+        // use map-specific tunnel teleport
+        if (map) {
+            map.teleport(this);
+        }
+
+        this.tile.x = Math.floor(this.pixel.x / tileSize);
+        this.tile.y = Math.floor(this.pixel.y / tileSize);
+        this.getTilePixel(this.pixel,this.tilePixel);
+        this.distToMid.x = midTile.x - this.tilePixel.x;
+        this.distToMid.y = midTile.y - this.tilePixel.y;
+    }
+
+    // sets the direction and updates its dependent variables
+    setDir(dirEnum) {
+        setDirFromEnum(this.dir, dirEnum);
+        this.dirEnum = dirEnum;
+    }
+
+    // getter function to extract a step size from speed control table
+    getStepSizeFromTable(level, pattern) {
+        return getStepSizeFromTable(level, pattern, this.frames);
+    }
+
+    // updates the actor state
+    update(j) {
+
+        // get number of steps to advance in this frame
+        const numSteps = this.getNumSteps();
+        if (j >= numSteps) 
+            return;
+
+        // request to advance one step, and increment count if step taken
+        this.steps += this.step();
+
+        // update head direction
+        this.steer();
+    }
+}
+
 
 // used as "pattern" parameter in getStepSizeFromTable()
 const STEP_PACMAN = 0;
@@ -7297,17 +7317,12 @@ const STEP_GHOST_TUNNEL = 4;
 const STEP_ELROY1 = 5;
 const STEP_ELROY2 = 6;
 
-// getter function to extract a step size from speed control table
-Actor.prototype.getStepSizeFromTable = (function(){
+// Once the end of the list is reached, we cycle to the beginning.
+// This method allows us to represent different speeds in a low-resolution space.
 
-    // Actor speed is controlled by a list of 16 values.
-    // Each value is the number of steps to take in a specific frame.
-    // Once the end of the list is reached, we cycle to the beginning.
-    // This method allows us to represent different speeds in a low-resolution space.
-
-    // speed control table (from Jamey Pittman)
-    const stepSizes = (
-                         // LEVEL 1
+// speed control table (from Jamey Pittman)
+const stepSizes = (
+    // LEVEL 1
     "1111111111111111" + // pac-man (normal)
     "0111111111111111" + // ghosts (normal)
     "1111211111112111" + // pac-man (fright)
@@ -7316,7 +7331,7 @@ Actor.prototype.getStepSizeFromTable = (function(){
     "1111111111111111" + // elroy 1
     "1111111121111111" + // elroy 2
 
-                         // LEVELS 2-4
+    // LEVELS 2-4
     "1111211111112111" + // pac-man (normal)
     "1111111121111111" + // ghosts (normal)
     "1111211112111121" + // pac-man (fright)
@@ -7325,7 +7340,7 @@ Actor.prototype.getStepSizeFromTable = (function(){
     "1111211111112111" + // elroy 1
     "1111211112111121" + // elroy 2
 
-                         // LEVELS 5-20
+    // LEVELS 5-20
     "1121112111211121" + // pac-man (normal)
     "1111211112111121" + // ghosts (normal)
     "1121112111211121" + // pac-man (fright) (N/A for levels 17, 19 & 20)
@@ -7334,7 +7349,7 @@ Actor.prototype.getStepSizeFromTable = (function(){
     "1121112111211121" + // elroy 1
     "1121121121121121" + // elroy 2
 
-                         // LEVELS 21+
+    // LEVELS 21+
     "1111211111112111" + // pac-man (normal)
     "1111211112111121" + // ghosts (normal)
     "0000000000000000" + // pac-man (fright) N/A
@@ -7343,36 +7358,38 @@ Actor.prototype.getStepSizeFromTable = (function(){
     "1121112111211121" + // elroy 1
     "1121121121121121"); // elroy 2
 
-    return function(level, pattern) {
-        let entry;
-        if (level < 1) return;
-        else if (level==1)                  entry = 0;
-        else if (level >= 2 && level <= 4)  entry = 1;
-        else if (level >= 5 && level <= 20) entry = 2;
-        else if (level >= 21)               entry = 3;
-        return stepSizes[entry*7*16 + pattern*16 + this.frames%16];
-    };
-})();
+function getStepSizeFromTable(level, pattern, frames) {
+    // Actor speed is controlled by a list of 16 values.
+    // Each value is the number of steps to take in a specific frame.
+    let entry;
+    if (level < 1) return;
+    else if (level==1)                  entry = 0;
+    else if (level >= 2 && level <= 4)  entry = 1;
+    else if (level >= 5 && level <= 20) entry = 2;
+    else if (level >= 21)               entry = 3;
+    return stepSizes[entry*7*16 + pattern*16 + frames%16];
+}
 
-// updates the actor state
-Actor.prototype.update = function(j) {
-
-    // get number of steps to advance in this frame
-    const numSteps = this.getNumSteps();
-    if (j >= numSteps) 
-        return;
-
-    // request to advance one step, and increment count if step taken
-    this.steps += this.step();
-
-    // update head direction
-    this.steer();
-};
 //@line 1 "src/Ghost.js"
 
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Ghost class
+
+// NOTE: The bounce animation assumes an actor is moving in straight
+// horizontal or vertical lines between the centers of each tile.
+//
+// When moving horizontal, bounce height is a function of x.
+// When moving vertical, bounce height is a function of y.
+const bounceY = {
+    // map y tile pixel to new y tile pixel
+    [DIR_UP]:     [-4,-2,0,2,4,3,2,3],
+    [DIR_DOWN]:   [3,5,7,5,4,5,7,8],
+
+    // map x tile pixel to y tile pixel
+    [DIR_LEFT]:   [2,3,3,4,3,2,2,2],
+    [DIR_RIGHT]:  [2,2,3,4,3,3,2,2],
+};
 
 // modes representing the ghost's current state
 const GHOST_OUTSIDE = 0;
@@ -7383,37 +7400,15 @@ const GHOST_PACING_HOME = 4;
 const GHOST_LEAVING_HOME = 5;
 
 // Ghost constructor
-const Ghost = function() {
-    // inherit data from Actor
-    Actor.apply(this);
+class Ghost extends Actor {
+    constructor() {
+        super();
+        this.randomScatter = false;
+        this.faceDirEnum = this.dirEnum;
+    }
 
-    this.randomScatter = false;
-    this.faceDirEnum = this.dirEnum;
-};
-
-// inherit functions from Actor class
-Ghost.prototype = newChildObject(Actor.prototype);
-
-// displacements for ghost bouncing
-Ghost.prototype.getBounceY = (function(){
-
-    // NOTE: The bounce animation assumes an actor is moving in straight
-    // horizontal or vertical lines between the centers of each tile.
-    //
-    // When moving horizontal, bounce height is a function of x.
-    // When moving vertical, bounce height is a function of y.
-
-    const bounceY = {};
-
-    // map y tile pixel to new y tile pixel
-    bounceY[DIR_UP] =    [-4,-2,0,2,4,3,2,3];
-    bounceY[DIR_DOWN] =  [3,5,7,5,4,5,7,8];
-
-    // map x tile pixel to y tile pixel
-    bounceY[DIR_LEFT] =  [2,3,3,4,3,2,2,2];
-    bounceY[DIR_RIGHT] = [2,2,3,4,3,3,2,2];
-
-    return function(px,py,dirEnum) {
+    // displacements for ghost bouncing
+    getBounceY(px,py,dirEnum) {
         if (px == undefined) {
             px = this.pixel.x;
         }
@@ -7440,379 +7435,373 @@ Ghost.prototype.getBounceY = (function(){
         }
 
         return y;
-    };
-})();
-
-Ghost.prototype.getAnimFrame = function(frames) {
-    if (frames == undefined) {
-        frames = this.frames;
     }
-    return Math.floor(frames/8)%2; // toggle frame every 8 ticks
-};
 
-// reset the state of the ghost on new level or level restart
-Ghost.prototype.reset = function() {
-
-    // signals
-    this.sigReverse = false;
-    this.sigLeaveHome = false;
-
-    // modes
-    this.mode = this.startMode;
-    this.scared = false;
-
-    this.savedSigReverse = {};
-    this.savedSigLeaveHome = {};
-    this.savedMode = {};
-    this.savedScared = {};
-    this.savedElroy = {};
-    this.savedFaceDirEnum = {};
-
-    // call Actor's reset function to reset position and direction
-    Actor.prototype.reset.apply(this);
-
-    // faceDirEnum  = direction the ghost is facing
-    // dirEnum      = direction the ghost is moving
-    // (faceDirEnum represents what dirEnum will be once the ghost reaches the middle of the tile)
-    this.faceDirEnum = this.dirEnum;
-};
-
-Ghost.prototype.save = function(t) {
-    this.savedSigReverse[t] = this.sigReverse;
-    this.savedSigLeaveHome[t] = this.sigLeaveHome;
-    this.savedMode[t] = this.mode;
-    this.savedScared[t] = this.scared;
-    if (this == blinky) {
-        this.savedElroy[t] = this.elroy;
+    getAnimFrame(frames) {
+        if (frames == undefined) {
+            frames = this.frames;
+        }
+        return Math.floor(frames/8)%2; // toggle frame every 8 ticks
     }
-    this.savedFaceDirEnum[t] = this.faceDirEnum;
-    Actor.prototype.save.call(this,t);
-};
 
-Ghost.prototype.load = function(t) {
-    this.sigReverse = this.savedSigReverse[t];
-    this.sigLeaveHome = this.savedSigLeaveHome[t];
-    this.mode = this.savedMode[t];
-    this.scared = this.savedScared[t];
-    if (this == blinky) {
-        this.elroy = this.savedElroy[t];
-    }
-    this.faceDirEnum = this.savedFaceDirEnum[t];
-    Actor.prototype.load.call(this,t);
-};
+    // reset the state of the ghost on new level or level restart
+    reset() {
 
-// indicates if we slow down in the tunnel
-Ghost.prototype.isSlowInTunnel = function() {
-    // special case for Ms. Pac-Man (slow down only for the first three levels)
-    if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO || gameMode == GAME_COOKIE)
-        return level <= 3;
-    else
-        return true;
-};
+        // signals
+        this.sigReverse = false;
+        this.sigLeaveHome = false;
 
-// gets the number of steps to move in this frame
-Ghost.prototype.getNumSteps = function() {
+        // modes
+        this.mode = this.startMode;
+        this.scared = false;
 
-    let pattern = STEP_GHOST;
+        this.savedSigReverse = {};
+        this.savedSigLeaveHome = {};
+        this.savedMode = {};
+        this.savedScared = {};
+        this.savedElroy = {};
+        this.savedFaceDirEnum = {};
 
-    if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
-        return 2;
-    else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME)
-        return this.getStepSizeFromTable(1, STEP_GHOST_TUNNEL);
-    else if (map.isTunnelTile(this.tile.x, this.tile.y) && this.isSlowInTunnel())
-        pattern = STEP_GHOST_TUNNEL;
-    else if (this.scared)
-        pattern = STEP_GHOST_FRIGHT;
-    else if (this.elroy == 1)
-        pattern = STEP_ELROY1;
-    else if (this.elroy == 2)
-        pattern = STEP_ELROY2;
+        // call Actor's reset function to reset position and direction
+        super.reset();
 
-    return this.getStepSizeFromTable(level ? level : 1, pattern);
-};
-
-// signal ghost to reverse direction after leaving current tile
-Ghost.prototype.reverse = function() {
-    this.sigReverse = true;
-};
-
-// signal ghost to go home
-// It is useful to have this because as soon as the ghost gets eaten,
-// we have to freeze all the actors for 3 seconds, except for the
-// ones who are already traveling to the ghost home to be revived.
-// We use this signal to change mode to GHOST_GOING_HOME, which will be
-// set after the update() function is called so that we are still frozen
-// for 3 seconds before traveling home uninterrupted.
-Ghost.prototype.goHome = function() {
-    this.mode = GHOST_EATEN;
-};
-
-// Following the pattern that state changes be made via signaling (e.g. reversing, going home)
-// the ghost is commanded to leave home similarly.
-// (not sure if this is correct yet)
-Ghost.prototype.leaveHome = function() {
-    this.sigLeaveHome = true;
-};
-
-// function called when pacman eats an energizer
-Ghost.prototype.onEnergized = function() {
-
-    this.reverse();
-
-    // only scare me if not already going home
-    if (this.mode != GHOST_GOING_HOME && this.mode != GHOST_ENTERING_HOME) {
-        this.scared = true;
-        this.targetting = undefined;
-    }
-};
-
-// function called when this ghost gets eaten
-Ghost.prototype.onEaten = function() {
-    this.goHome();       // go home
-    this.scared = false; // turn off scared
-};
-
-// move forward one step
-Ghost.prototype.step = function() {
-    this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
-    return 1;
-};
-
-// ghost home-specific path steering
-Ghost.prototype.homeSteer = (function(){
-
-    // steering functions to execute for each mode
-    const steerFuncs = {};
-
-    steerFuncs[GHOST_GOING_HOME] = function() {
-        // at the doormat
-        if (this.tile.x == map.doorTile.x && this.tile.y == map.doorTile.y) {
-            this.faceDirEnum = DIR_DOWN;
-            this.targetting = false;
-            // walk to the door, or go through if already there
-            if (this.pixel.x == map.doorPixel.x) {
-                this.mode = GHOST_ENTERING_HOME;
-                this.setDir(DIR_DOWN);
-                this.faceDirEnum = this.dirEnum;
-            }
-            else {
-                this.setDir(DIR_RIGHT);
-                this.faceDirEnum = this.dirEnum;
-            }
-        }
-    };
-
-    steerFuncs[GHOST_ENTERING_HOME] = function() {
-        if (this.pixel.y == map.homeBottomPixel) {
-            // revive if reached its seat
-            if (this.pixel.x == this.startPixel.x) {
-                this.setDir(DIR_UP);
-                this.mode = this.arriveHomeMode;
-            }
-            // sidestep to its seat
-            else {
-                this.setDir(this.startPixel.x < this.pixel.x ? DIR_LEFT : DIR_RIGHT);
-            }
-            this.faceDirEnum = this.dirEnum;
-        }
-    };
-
-    steerFuncs[GHOST_PACING_HOME] = function() {
-        // head for the door
-        if (this.sigLeaveHome) {
-            this.sigLeaveHome = false;
-            this.mode = GHOST_LEAVING_HOME;
-            if (this.pixel.x == map.doorPixel.x)
-                this.setDir(DIR_UP);
-            else
-                this.setDir(this.pixel.x < map.doorPixel.x ? DIR_RIGHT : DIR_LEFT);
-        }
-        // pace back and forth
-        else {
-            if (this.pixel.y == map.homeTopPixel)
-                this.setDir(DIR_DOWN);
-            else if (this.pixel.y == map.homeBottomPixel)
-                this.setDir(DIR_UP);
-        }
+        // faceDirEnum  = direction the ghost is facing
+        // dirEnum      = direction the ghost is moving
+        // (faceDirEnum represents what dirEnum will be once the ghost reaches the middle of the tile)
         this.faceDirEnum = this.dirEnum;
-    };
+    }
 
-    steerFuncs[GHOST_LEAVING_HOME] = function() {
-        if (this.pixel.x == map.doorPixel.x) {
-            // reached door
-            if (this.pixel.y == map.doorPixel.y) {
-                this.mode = GHOST_OUTSIDE;
-                this.setDir(DIR_LEFT); // always turn left at door?
+    save(t) {
+        this.savedSigReverse[t] = this.sigReverse;
+        this.savedSigLeaveHome[t] = this.sigLeaveHome;
+        this.savedMode[t] = this.mode;
+        this.savedScared[t] = this.scared;
+        if (this == blinky) {
+            this.savedElroy[t] = this.elroy;
+        }
+        this.savedFaceDirEnum[t] = this.faceDirEnum;
+        super.save(t);
+    }
+
+    load(t) {
+        this.sigReverse = this.savedSigReverse[t];
+        this.sigLeaveHome = this.savedSigLeaveHome[t];
+        this.mode = this.savedMode[t];
+        this.scared = this.savedScared[t];
+        if (this == blinky) {
+            this.elroy = this.savedElroy[t];
+        }
+        this.faceDirEnum = this.savedFaceDirEnum[t];
+        super.load(t);
+    }
+
+    // indicates if we slow down in the tunnel
+    isSlowInTunnel() {
+        // special case for Ms. Pac-Man (slow down only for the first three levels)
+        if (gameMode == GAME_MSPACMAN || gameMode == GAME_OTTO || gameMode == GAME_COOKIE)
+            return level <= 3;
+        else
+            return true;
+    }
+
+    // gets the number of steps to move in this frame
+    getNumSteps() {
+
+        let pattern = STEP_GHOST;
+
+        if (this.mode == GHOST_GOING_HOME || this.mode == GHOST_ENTERING_HOME)
+            return 2;
+        else if (this.mode == GHOST_LEAVING_HOME || this.mode == GHOST_PACING_HOME)
+            return this.getStepSizeFromTable(1, STEP_GHOST_TUNNEL);
+        else if (map.isTunnelTile(this.tile.x, this.tile.y) && this.isSlowInTunnel())
+            pattern = STEP_GHOST_TUNNEL;
+        else if (this.scared)
+            pattern = STEP_GHOST_FRIGHT;
+        else if (this.elroy == 1)
+            pattern = STEP_ELROY1;
+        else if (this.elroy == 2)
+            pattern = STEP_ELROY2;
+
+        return this.getStepSizeFromTable(level ? level : 1, pattern);
+    }
+
+    // signal ghost to reverse direction after leaving current tile
+    reverse() {
+        this.sigReverse = true;
+    }
+
+    // signal ghost to go home
+    // It is useful to have this because as soon as the ghost gets eaten,
+    // we have to freeze all the actors for 3 seconds, except for the
+    // ones who are already traveling to the ghost home to be revived.
+    // We use this signal to change mode to GHOST_GOING_HOME, which will be
+    // set after the update() function is called so that we are still frozen
+    // for 3 seconds before traveling home uninterrupted.
+    goHome() {
+        this.mode = GHOST_EATEN;
+    }
+
+    // Following the pattern that state changes be made via signaling (e.g. reversing, going home)
+    // the ghost is commanded to leave home similarly.
+    // (not sure if this is correct yet)
+    leaveHome() {
+        this.sigLeaveHome = true;
+    }
+
+    // function called when pacman eats an energizer
+    onEnergized() {
+
+        this.reverse();
+
+        // only scare me if not already going home
+        if (this.mode != GHOST_GOING_HOME && this.mode != GHOST_ENTERING_HOME) {
+            this.scared = true;
+            this.targetting = undefined;
+        }
+    }
+
+    // function called when this ghost gets eaten
+    onEaten() {
+        this.goHome();       // go home
+        this.scared = false; // turn off scared
+    }
+
+    // move forward one step
+    step() {
+        this.setPos(this.pixel.x+this.dir.x, this.pixel.y+this.dir.y);
+        return 1;
+    }
+
+
+    // ghost home-specific path steering
+    homeSteer() {
+        switch (this.mode) {
+            case GHOST_GOING_HOME: {
+                // at the doormat
+                if (this.tile.x == map.doorTile.x && this.tile.y == map.doorTile.y) {
+                    this.faceDirEnum = DIR_DOWN;
+                    this.targetting = false;
+                    // walk to the door, or go through if already there
+                    if (this.pixel.x == map.doorPixel.x) {
+                        this.mode = GHOST_ENTERING_HOME;
+                        this.setDir(DIR_DOWN);
+                        this.faceDirEnum = this.dirEnum;
+                    }
+                    else {
+                        this.setDir(DIR_RIGHT);
+                        this.faceDirEnum = this.dirEnum;
+                    }
+                }
+                break;
+            };
+            case GHOST_ENTERING_HOME: {
+                if (this.pixel.y == map.homeBottomPixel) {
+                    // revive if reached its seat
+                    if (this.pixel.x == this.startPixel.x) {
+                        this.setDir(DIR_UP);
+                        this.mode = this.arriveHomeMode;
+                    }
+                    // sidestep to its seat
+                    else {
+                        this.setDir(this.startPixel.x < this.pixel.x ? DIR_LEFT : DIR_RIGHT);
+                    }
+                    this.faceDirEnum = this.dirEnum;
+                }
+                break;
+            };
+            case GHOST_PACING_HOME: {
+                // head for the door
+                if (this.sigLeaveHome) {
+                    this.sigLeaveHome = false;
+                    this.mode = GHOST_LEAVING_HOME;
+                    if (this.pixel.x == map.doorPixel.x)
+                        this.setDir(DIR_UP);
+                    else
+                        this.setDir(this.pixel.x < map.doorPixel.x ? DIR_RIGHT : DIR_LEFT);
+                }
+                // pace back and forth
+                else {
+                    if (this.pixel.y == map.homeTopPixel)
+                        this.setDir(DIR_DOWN);
+                    else if (this.pixel.y == map.homeBottomPixel)
+                        this.setDir(DIR_UP);
+                }
+                this.faceDirEnum = this.dirEnum;
+                break;
+            };
+            case GHOST_LEAVING_HOME: {
+                if (this.pixel.x == map.doorPixel.x) {
+                    // reached door
+                    if (this.pixel.y == map.doorPixel.y) {
+                        this.mode = GHOST_OUTSIDE;
+                        this.setDir(DIR_LEFT); // always turn left at door?
+                    }
+                    // keep walking up to the door
+                    else {
+                        this.setDir(DIR_UP);
+                    }
+                    this.faceDirEnum = this.dirEnum;
+                }
+                break;
+            };
+        }
+    }
+
+    // special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
+    isScatterBrain() {
+        let scatter = false;
+        if (ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
+            if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) {
+                scatter = (this == blinky || this == pinky);
             }
-            // keep walking up to the door
-            else {
-                this.setDir(DIR_UP);
+            else if (gameMode == GAME_OTTO) {
+                scatter = true;
             }
-            this.faceDirEnum = this.dirEnum;
         }
-    };
-
-    // return a function to execute appropriate steering function for a given ghost
-    return function() { 
-        const f = steerFuncs[this.mode];
-        if (f)
-            f.apply(this);
-    };
-
-})();
-
-// special case for Ms. Pac-Man game that randomly chooses a corner for blinky and pinky when scattering
-Ghost.prototype.isScatterBrain = function() {
-    let scatter = false;
-    if (ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
-        if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) {
-            scatter = (this == blinky || this == pinky);
-        }
-        else if (gameMode == GAME_OTTO) {
-            scatter = true;
-        }
-    }
-    return scatter;
-};
-
-// determine direction
-Ghost.prototype.steer = function() {
-
-    let dirEnum;                         // final direction to update to
-    let openTiles;                       // list of four booleans indicating which surrounding tiles are open
-    let oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
-    let actor;                           // actor whose corner we will target
-
-    // special map-specific steering when going to, entering, pacing inside, or leaving home
-    this.homeSteer();
-
-    // current opposite direction enum
-    oppDirEnum = rotateAboutFace(this.dirEnum); 
-
-    // only execute rest of the steering logic if we're pursuing a target tile
-    if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME) {
-        this.targetting = false;
-        return;
+        return scatter;
     }
 
-    // AT MID-TILE (update movement direction)
-    if (this.distToMid.x == 0 && this.distToMid.y == 0) {
+    // determine direction
+    steer() {
 
-        // trigger reversal
-        if (this.sigReverse) {
-            this.faceDirEnum = oppDirEnum;
-            this.sigReverse = false;
+        let dirEnum;                         // final direction to update to
+        let openTiles;                       // list of four booleans indicating which surrounding tiles are open
+        let oppDirEnum = rotateAboutFace(this.dirEnum); // current opposite direction enum
+        let actor;                           // actor whose corner we will target
+
+        // special map-specific steering when going to, entering, pacing inside, or leaving home
+        this.homeSteer();
+
+        // current opposite direction enum
+        oppDirEnum = rotateAboutFace(this.dirEnum); 
+
+        // only execute rest of the steering logic if we're pursuing a target tile
+        if (this.mode != GHOST_OUTSIDE && this.mode != GHOST_GOING_HOME) {
+            this.targetting = false;
+            return;
         }
 
-        // commit previous direction
-        this.setDir(this.faceDirEnum);
-    }
-    // JUST PASSED MID-TILE (update face direction)
-    else if (
+        // AT MID-TILE (update movement direction)
+        if (this.distToMid.x == 0 && this.distToMid.y == 0) {
+
+            // trigger reversal
+            if (this.sigReverse) {
+                this.faceDirEnum = oppDirEnum;
+                this.sigReverse = false;
+            }
+
+            // commit previous direction
+            this.setDir(this.faceDirEnum);
+        }
+        // JUST PASSED MID-TILE (update face direction)
+        else if (
             this.dirEnum == DIR_RIGHT && this.tilePixel.x == midTile.x+1 ||
             this.dirEnum == DIR_LEFT  && this.tilePixel.x == midTile.x-1 ||
             this.dirEnum == DIR_UP    && this.tilePixel.y == midTile.y-1 ||
             this.dirEnum == DIR_DOWN  && this.tilePixel.y == midTile.y+1) {
 
-        // get next tile
-        const nextTile = {
-            x: this.tile.x + this.dir.x,
-            y: this.tile.y + this.dir.y,
-        };
+            // get next tile
+            const nextTile = {
+                x: this.tile.x + this.dir.x,
+                y: this.tile.y + this.dir.y,
+            };
 
-        // get tiles surrounding next tile and their open indication
-        openTiles = getOpenTiles(nextTile, this.dirEnum);
+            // get tiles surrounding next tile and their open indication
+            openTiles = getOpenTiles(nextTile, this.dirEnum);
 
-        if (this.scared) {
-            // choose a random turn
-            dirEnum = Math.floor(Math.random()*4);
-            while (!openTiles[dirEnum])
-                dirEnum = (dirEnum+1)%4; // look at likelihood of random turns
-            this.targetting = false;
-        }
-        else {
-
-            /* SET TARGET */
-
-            // target ghost door
-            if (this.mode == GHOST_GOING_HOME) {
-                this.targetTile.x = map.doorTile.x;
-                this.targetTile.y = map.doorTile.y;
+            if (this.scared) {
+                // choose a random turn
+                dirEnum = Math.floor(Math.random()*4);
+                while (!openTiles[dirEnum])
+                    dirEnum = (dirEnum+1)%4; // look at likelihood of random turns
+                this.targetting = false;
             }
-            // target corner when scattering
-            else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
-
-                actor = this.isScatterBrain() ? actors[Math.floor(Math.random()*4)] : this;
-
-                this.targetTile.x = actor.cornerTile.x;
-                this.targetTile.y = actor.cornerTile.y;
-                this.targetting = 'corner';
-            }
-            // use custom function for each ghost when in attack mode
             else {
-                this.setTarget();
-            }
 
-            /* CHOOSE TURN */
+                /* SET TARGET */
 
-            let dirDecided = false;
-            if (this.mode == GHOST_GOING_HOME && map.getExitDir) {
-                // If the map has a 'getExitDir' function, then we are using
-                // a custom algorithm to choose the next direction.
-                // Currently, procedurally-generated maps use this function
-                // to ensure that ghosts can return home without looping forever.
-                const exitDir = map.getExitDir(nextTile.x,nextTile.y);
-                if (exitDir != undefined && exitDir != oppDirEnum) {
-                    dirDecided = true;
-                    dirEnum = exitDir;
+                // target ghost door
+                if (this.mode == GHOST_GOING_HOME) {
+                    this.targetTile.x = map.doorTile.x;
+                    this.targetTile.y = map.doorTile.y;
                 }
-            }
+                // target corner when scattering
+                else if (!this.elroy && ghostCommander.getCommand() == GHOST_CMD_SCATTER) {
 
-            if (!dirDecided) {
-                // Do not constrain turns for ghosts going home. (thanks bitwave)
-                if (this.mode != GHOST_GOING_HOME) {
-                    if (map.constrainGhostTurns) {
-                        // edit openTiles to reflect the current map's special contraints
-                        map.constrainGhostTurns(nextTile, openTiles, this.dirEnum);
+                    actor = this.isScatterBrain() ? actors[Math.floor(Math.random()*4)] : this;
+
+                    this.targetTile.x = actor.cornerTile.x;
+                    this.targetTile.y = actor.cornerTile.y;
+                    this.targetting = 'corner';
+                }
+                // use custom function for each ghost when in attack mode
+                else {
+                    this.setTarget();
+                }
+
+                /* CHOOSE TURN */
+
+                let dirDecided = false;
+                if (this.mode == GHOST_GOING_HOME && map.getExitDir) {
+                    // If the map has a 'getExitDir' function, then we are using
+                    // a custom algorithm to choose the next direction.
+                    // Currently, procedurally-generated maps use this function
+                    // to ensure that ghosts can return home without looping forever.
+                    const exitDir = map.getExitDir(nextTile.x,nextTile.y);
+                    if (exitDir != undefined && exitDir != oppDirEnum) {
+                        dirDecided = true;
+                        dirEnum = exitDir;
                     }
                 }
 
-                // choose direction that minimizes distance to target
-                dirEnum = getTurnClosestToTarget(nextTile, this.targetTile, openTiles);
+                if (!dirDecided) {
+                    // Do not constrain turns for ghosts going home. (thanks bitwave)
+                    if (this.mode != GHOST_GOING_HOME) {
+                        if (map.constrainGhostTurns) {
+                            // edit openTiles to reflect the current map's special contraints
+                            map.constrainGhostTurns(nextTile, openTiles, this.dirEnum);
+                        }
+                    }
+
+                    // choose direction that minimizes distance to target
+                    dirEnum = getTurnClosestToTarget(nextTile, this.targetTile, openTiles);
+                }
+            }
+
+            // Point eyeballs to the determined direction.
+            this.faceDirEnum = dirEnum;
+        }
+    }
+
+    getPathDistLeft(fromPixel, dirEnum) {
+        let distLeft = tileSize;
+        const pixel = this.getTargetPixel();
+        if (this.targetting == 'pacman') {
+            if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
+                distLeft = Math.abs(fromPixel.y - pixel.y);
+            else {
+                distLeft = Math.abs(fromPixel.x - pixel.x);
             }
         }
-
-        // Point eyeballs to the determined direction.
-        this.faceDirEnum = dirEnum;
+        return distLeft;
     }
-};
 
-Ghost.prototype.getPathDistLeft = function(fromPixel, dirEnum) {
-    let distLeft = tileSize;
-    const pixel = this.getTargetPixel();
-    if (this.targetting == 'pacman') {
-        if (dirEnum == DIR_UP || dirEnum == DIR_DOWN)
-            distLeft = Math.abs(fromPixel.y - pixel.y);
-        else {
-            distLeft = Math.abs(fromPixel.x - pixel.x);
+    setTarget() {
+        // This sets the target tile when in chase mode.
+        // The "target" is always Pac-Man when in this mode,
+        // except for Clyde.  He runs away back home sometimes,
+        // so the "targetting" parameter is set in getTargetTile
+        // for Clyde only.
+
+        this.targetTile = this.getTargetTile();
+
+        if (this != clyde) {
+            this.targetting = 'pacman';
         }
     }
-    return distLeft;
-};
+}
 
-Ghost.prototype.setTarget = function() {
-    // This sets the target tile when in chase mode.
-    // The "target" is always Pac-Man when in this mode,
-    // except for Clyde.  He runs away back home sometimes,
-    // so the "targetting" parameter is set in getTargetTile
-    // for Clyde only.
 
-    this.targetTile = this.getTargetTile();
-
-    if (this != clyde) {
-        this.targetting = 'pacman';
-    }
-};
 //@line 1 "src/Player.js"
 
 
@@ -7820,118 +7809,104 @@ Ghost.prototype.setTarget = function() {
 // Player is the controllable character (Pac-Man)
 
 // Player constructor
-const Player = function() {
+class Player extends Actor {
+    constructor() {
 
-    // inherit data from Actor
-    Actor.apply(this);
-    if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) {
-        this.frames = 1; // start with mouth open
+        // inherit data from Actor
+        super();
+        if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) {
+            this.frames = 1; // start with mouth open
+        }
+
+        this.nextDir = {};
+
+        // determines if this player should be AI controlled
+        this.ai = false;
+        this.invincible = false;
+
+        this.savedNextDirEnum = {};
+        this.savedStopped = {};
+        this.savedEatPauseFramesLeft = {};
     }
 
-    this.nextDir = {};
-
-    // determines if this player should be AI controlled
-    this.ai = false;
-    this.invincible = false;
-
-    this.savedNextDirEnum = {};
-    this.savedStopped = {};
-    this.savedEatPauseFramesLeft = {};
-};
-
-// inherit functions from Actor
-Player.prototype = newChildObject(Actor.prototype);
-
-Player.prototype.save = function(t) {
-    this.savedEatPauseFramesLeft[t] = this.eatPauseFramesLeft;
-    this.savedNextDirEnum[t] = this.nextDirEnum;
-    this.savedStopped[t] = this.stopped;
-
-    Actor.prototype.save.call(this,t);
-};
-
-Player.prototype.load = function(t) {
-    this.eatPauseFramesLeft = this.savedEatPauseFramesLeft[t];
-    this.setNextDir(this.savedNextDirEnum[t]);
-    this.stopped = this.savedStopped[t];
-    this.inputDirEnum = undefined;
-
-    Actor.prototype.load.call(this,t);
-};
-
-// reset the state of the player on new level or level restart
-Player.prototype.reset = function() {
-
-    this.setNextDir(this.startDirEnum);
-    this.stopped = false;
-    this.inputDirEnum = undefined;
-
-    this.eatPauseFramesLeft = 0;   // current # of frames left to pause after eating
-
-    // call Actor's reset function to reset to initial position and direction
-    Actor.prototype.reset.apply(this);
-
-};
-
-// sets the next direction and updates its dependent variables
-Player.prototype.setNextDir = function(nextDirEnum) {
-    setDirFromEnum(this.nextDir, nextDirEnum);
-    this.nextDirEnum = nextDirEnum;
-};
-
-// gets the number of steps to move in this frame
-Player.prototype.getNumSteps = function() {
-    if (turboMode)
-        return 2;
-
-    const pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
-    return this.getStepSizeFromTable(level, pattern);
-};
-
-Player.prototype.getStepFrame = function(steps) {
-    if (steps == undefined) {
-        steps = this.steps;
+    save(t) {
+        this.savedEatPauseFramesLeft[t] = this.eatPauseFramesLeft;
+        this.savedNextDirEnum[t] = this.nextDirEnum;
+        this.savedStopped[t] = this.stopped;
+        super.save(t);
     }
-    return Math.floor(steps/2)%4;
-};
 
-Player.prototype.getAnimFrame = function(frame) {
-    if (frame == undefined) {
-        frame = this.getStepFrame();
-    }
-    if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) { // ms. pacman starts with mouth open
-        frame = (frame+1)%4;
-        if (state == deadState)
-            frame = 1; // hack to force this frame when dead
-    }
-    if (gameMode != GAME_OTTO) {
-        if (frame == 3) 
-            frame = 1;
-    }
-    return frame;
-};
-
-Player.prototype.setInputDir = function(dirEnum) {
-    this.inputDirEnum = dirEnum;
-};
-
-Player.prototype.clearInputDir = function(dirEnum) {
-    if (dirEnum == undefined || this.inputDirEnum == dirEnum) {
+    load(t) {
+        this.eatPauseFramesLeft = this.savedEatPauseFramesLeft[t];
+        this.setNextDir(this.savedNextDirEnum[t]);
+        this.stopped = this.savedStopped[t];
         this.inputDirEnum = undefined;
+        super.load(t);
     }
-};
 
-// move forward one step
-Player.prototype.step = (function(){
+    // reset the state of the player on new level or level restart
+    reset() {
+        this.setNextDir(this.startDirEnum);
+        this.stopped = false;
+        this.inputDirEnum = undefined;
 
-    // return sign of a number
-    const sign = function(x) {
-        if (x<0) return -1;
-        if (x>0) return 1;
-        return 0;
-    };
+        this.eatPauseFramesLeft = 0;   // current # of frames left to pause after eating
 
-    return function() {
+        // call Actor's reset function to reset to initial position and direction
+        super.reset();
+
+    }
+
+    // sets the next direction and updates its dependent variables
+    setNextDir(nextDirEnum) {
+        setDirFromEnum(this.nextDir, nextDirEnum);
+        this.nextDirEnum = nextDirEnum;
+    }
+
+    // gets the number of steps to move in this frame
+    getNumSteps() {
+        if (turboMode)
+            return 2;
+
+        const pattern = energizer.isActive() ? STEP_PACMAN_FRIGHT : STEP_PACMAN;
+        return this.getStepSizeFromTable(level, pattern);
+    }
+
+    getStepFrame(steps) {
+        if (steps == undefined) {
+            steps = this.steps;
+        }
+        return Math.floor(steps/2)%4;
+    }
+
+    getAnimFrame(frame) {
+        if (frame == undefined) {
+            frame = this.getStepFrame();
+        }
+        if (gameMode == GAME_MSPACMAN || gameMode == GAME_COOKIE) { // ms. pacman starts with mouth open
+            frame = (frame+1)%4;
+            if (state == deadState)
+                frame = 1; // hack to force this frame when dead
+        }
+        if (gameMode != GAME_OTTO) {
+            if (frame == 3) 
+                frame = 1;
+        }
+        return frame;
+    }
+
+    setInputDir(dirEnum) {
+        this.inputDirEnum = dirEnum;
+    }
+
+    clearInputDir(dirEnum) {
+        if (dirEnum == undefined || this.inputDirEnum == dirEnum) {
+            this.inputDirEnum = undefined;
+        }
+    }
+
+    // move forward one step
+    step() {
 
         // just increment if we're not in a map
         if (!map) {
@@ -7950,94 +7925,92 @@ Player.prototype.step = (function(){
             this.pixel[a] += this.dir[a];
 
             // Drift toward the center of the track (a.k.a. cornering)
-            this.pixel[b] += sign(this.distToMid[b]);
+            this.pixel[b] += Math.sign(this.distToMid[b]);
         }
-
 
         this.commitPos();
         return this.stopped ? 0 : 1;
     };
-})();
 
-// determine direction
-Player.prototype.steer = function() {
+    // determine direction
+    steer() {
 
-    // if AI-controlled, only turn at mid-tile
-    if (this.ai) {
-        if (this.distToMid.x != 0 || this.distToMid.y != 0)
-            return;
+        // if AI-controlled, only turn at mid-tile
+        if (this.ai) {
+            if (this.distToMid.x != 0 || this.distToMid.y != 0)
+                return;
 
-        // make turn that is closest to target
-        const openTiles = getOpenTiles(this.tile, this.dirEnum);
-        this.setTarget();
-        this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
-    }
-    else {
-        this.targetting = undefined;
-    }
-
-    if (this.inputDirEnum == undefined) {
-        if (this.stopped) {
-            this.setDir(this.nextDirEnum);
-        }
-    }
-    else {
-        // Determine if input direction is open.
-        const inputDir = {};
-        setDirFromEnum(inputDir, this.inputDirEnum);
-        const inputDirOpen = isNextTileFloor(this.tile, inputDir);
-
-        if (inputDirOpen) {
-            this.setDir(this.inputDirEnum);
-            this.setNextDir(this.inputDirEnum);
-            this.stopped = false;
+            // make turn that is closest to target
+            const openTiles = getOpenTiles(this.tile, this.dirEnum);
+            this.setTarget();
+            this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
         }
         else {
-            if (!this.stopped) {
+            this.targetting = undefined;
+        }
+
+        if (this.inputDirEnum == undefined) {
+            if (this.stopped) {
+                this.setDir(this.nextDirEnum);
+            }
+        }
+        else {
+            // Determine if input direction is open.
+            const inputDir = {};
+            setDirFromEnum(inputDir, this.inputDirEnum);
+            const inputDirOpen = isNextTileFloor(this.tile, inputDir);
+
+            if (inputDirOpen) {
+                this.setDir(this.inputDirEnum);
                 this.setNextDir(this.inputDirEnum);
+                this.stopped = false;
+            }
+            else {
+                if (!this.stopped) {
+                    this.setNextDir(this.inputDirEnum);
+                }
             }
         }
     }
-};
 
+    // update this frame
+    update(j) {
 
-// update this frame
-Player.prototype.update = function(j) {
+        const numSteps = this.getNumSteps();
+        if (j >= numSteps)
+            return;
 
-    const numSteps = this.getNumSteps();
-    if (j >= numSteps)
-        return;
+        // skip frames
+        if (this.eatPauseFramesLeft > 0) {
+            if (j == numSteps-1)
+                this.eatPauseFramesLeft--;
+            return;
+        }
 
-    // skip frames
-    if (this.eatPauseFramesLeft > 0) {
-        if (j == numSteps-1)
-            this.eatPauseFramesLeft--;
-        return;
-    }
+        // call super function to update position and direction
+        super.update(j);
 
-    // call super function to update position and direction
-    Actor.prototype.update.call(this,j);
+        // eat something
+        if (map) {
+            const t = map.getTile(this.tile.x, this.tile.y);
+            if (t == '.' || t == 'o') {
 
-    // eat something
-    if (map) {
-        const t = map.getTile(this.tile.x, this.tile.y);
-        if (t == '.' || t == 'o') {
+                // apply eating drag (unless in turbo mode)
+                if (!turboMode) {
+                    this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
+                }
 
-            // apply eating drag (unless in turbo mode)
-            if (!turboMode) {
-                this.eatPauseFramesLeft = (t=='.') ? 1 : 3;
+                map.onDotEat(this.tile.x, this.tile.y);
+                ghostReleaser.onDotEat();
+                fruit.onDotEat();
+                addScore((t=='.') ? 10 : 50);
+
+                if (t=='o')
+                    energizer.activate();
             }
-
-            map.onDotEat(this.tile.x, this.tile.y);
-            ghostReleaser.onDotEat();
-            fruit.onDotEat();
-            addScore((t=='.') ? 10 : 50);
-
-            if (t=='o')
-                energizer.activate();
         }
     }
-};
+}
 //@line 1 "src/actors.js"
 
 

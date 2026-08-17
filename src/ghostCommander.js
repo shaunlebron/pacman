@@ -83,13 +83,13 @@ const ghostCommander = (function() {
     };
 
     return {
-        save: save,
-        load: load,
-        reset: function() { 
+        save,
+        load,
+        reset() { 
             command = GHOST_CMD_SCATTER;
             frame = 0;
         },
-        update: function() {
+        update() {
             if (!energizer.isActive()) {
                 const newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
@@ -100,10 +100,10 @@ const ghostCommander = (function() {
                 frame++;
             }
         },
-        getCommand: function() {
+        getCommand() {
             return command; 
         },
-        setCommand: function(cmd) {
+        setCommand(cmd) {
             command = cmd;
         },
     };

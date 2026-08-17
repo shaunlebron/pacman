@@ -60,9 +60,9 @@ const galagaStars = (function() {
     };
 
     return {
-        init: init,
-        draw: draw,
-        update: update,
+        init,
+        draw,
+        update,
     };
 
 })();

@@ -3,40 +3,39 @@
 /* global tileSize -- Map.js */
 /* global ToggleButton, Button -- Button.js */
 
-const Menu = function(title,x,y,w,h,pad,font,fontcolor) {
-    this.title = title;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.pad = pad;
-    this.buttons = [];
-    this.buttonCount = 0;
-    this.currentY = this.y+this.pad;
+class Menu {
+    constructor(title,x,y,w,h,pad,font,fontcolor) {
+        this.title = title;
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.pad = pad;
+        this.buttons = [];
+        this.buttonCount = 0;
+        this.currentY = this.y+this.pad;
 
-    if (title) {
-        this.currentY += 1*(this.h + this.pad);
+        if (title) {
+            this.currentY += 1*(this.h + this.pad);
+        }
+
+        this.font = font;
+        this.fontcolor = fontcolor;
+        this.enabled = false;
+
+        this.backButton = undefined;
     }
 
-    this.font = font;
-    this.fontcolor = fontcolor;
-    this.enabled = false;
-
-    this.backButton = undefined;
-};
-
-Menu.prototype = {
-
-    clickCurrentOption: function() {
+    clickCurrentOption() {
         for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
                 this.buttons[i].onclick();
                 break;
             }
         }
-    },
+    }
 
-    selectNextOption: function() {
+    selectNextOption() {
         let nextBtn;
         for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
@@ -47,9 +46,9 @@ Menu.prototype = {
         }
         nextBtn = nextBtn || this.buttons[0];
         nextBtn.focus();
-    },
+    }
 
-    selectPrevOption: function() {
+    selectPrevOption() {
         let nextBtn;
         for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
@@ -60,34 +59,34 @@ Menu.prototype = {
         }
         nextBtn = nextBtn || this.buttons[this.buttonCount-1];
         nextBtn.focus();
-    },
+    }
 
-    addToggleButton: function(isOn,setOn) {
+    addToggleButton(isOn,setOn) {
         const b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addToggleTextButton: function(label,isOn,setOn) {
+    addToggleTextButton(label,isOn,setOn) {
         const b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
         b.setFont(this.font,this.fontcolor);
         b.setToggleLabel(label);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addTextButton: function(msg,onclick) {
+    addTextButton(msg,onclick) {
         const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setFont(this.font,this.fontcolor);
         b.setText(msg);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addTextIconButton: function(msg,onclick,drawIcon) {
+    addTextIconButton(msg,onclick,drawIcon) {
         const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setFont(this.font,this.fontcolor);
         b.setText(msg);
@@ -95,42 +94,42 @@ Menu.prototype = {
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addIconButton: function(drawIcon,onclick) {
+    addIconButton(drawIcon,onclick) {
         const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setIcon(drawIcon);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addSpacer: function(count) {
+    addSpacer(count) {
         if (count == undefined) {
             count = 1;
         }
         this.currentY += count*(this.pad + this.h);
-    },
+    }
 
-    enable: function() {
+    enable() {
         for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].enable();
         }
         this.enabled = true;
-    },
+    }
 
-    disable: function() {
+    disable() {
         for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].disable();
         }
         this.enabled = false;
-    },
+    }
 
-    isEnabled: function() {
+    isEnabled() {
         return this.enabled;
-    },
+    }
 
-    draw: function(ctx) {
+    draw(ctx) {
         if (this.title) {
             ctx.font = tileSize+"px ArcadeR";
             ctx.textBaseline = "middle";
@@ -141,11 +140,11 @@ Menu.prototype = {
         for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].draw(ctx);
         }
-    },
+    }
 
-    update: function() {
+    update() {
         for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].update();
         }
-    },
+    }
 };

@@ -75,21 +75,21 @@ const ghostReleaser = (function(){
     };
 
     return {
-        save: save,
-        load: load,
-        onNewLevel: function() {
+        save,
+        load,
+        onNewLevel() {
             mode = MODE_PERSONAL;
             framesSinceLastDot = 0;
             ghostCounts[PINKY] = 0;
             ghostCounts[INKY] = 0;
             ghostCounts[CLYDE] = 0;
         },
-        onRestartLevel: function() {
+        onRestartLevel() {
             mode = MODE_GLOBAL;
             framesSinceLastDot = 0;
             globalCount = 0;
         },
-        onDotEat: function() {
+        onDotEat() {
             framesSinceLastDot = 0;
 
             if (mode == MODE_GLOBAL) {
@@ -105,7 +105,7 @@ const ghostReleaser = (function(){
             }
 
         },
-        update: function() {
+        update() {
             // use personal dot counter
             if (mode == MODE_PERSONAL) {
                 for (const [i,g] of ghosts.entries()) {

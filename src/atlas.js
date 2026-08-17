@@ -482,8 +482,8 @@ const atlas = (function(){
     };
 
     return {
-        create: create,
-        getCanvas: function() { return canvas; },
+        create,
+        getCanvas() { return canvas; },
         drawGhostSprite: copyGhostSprite,
         drawMonsterSprite: copyMonsterSprite,
         drawMuppetSprite: copyMuppetSprite,

@@ -30,7 +30,7 @@ const playCutScene = function(cutScene, nextState) {
 };
 
 const pacmanCutscene1 = newChildObject(scriptState, {
-    init: function() {
+    init() {
         scriptState.init.call(this);
 
         // initialize actor positions
@@ -66,7 +66,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
 
         // Blinky chases Pac-Man
         0: {
-            update: function() {
+            update() {
                 for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
@@ -74,7 +74,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
                 pacman.frames++;
                 blinky.frames++;
             },
-            draw: function() {
+            draw() {
                 renderer.blitMap();
                 renderer.beginMapClip();
                 renderer.drawPlayer();
@@ -85,7 +85,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
 
         // Pac-Man chases Blinky
         260: {
-            init: function() {
+            init() {
                 pacman.setPos(-193, 155);
                 blinky.setPos(-8, 164);
 
@@ -105,7 +105,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
                     return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
                 };
             },
-            update: function() {
+            update() {
                 for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
@@ -113,7 +113,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
                 pacman.frames++;
                 blinky.frames++;
             },
-            draw: function() {
+            draw() {
                 renderer.blitMap();
                 renderer.beginMapClip();
                 renderer.drawGhost(blinky);
@@ -130,7 +130,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
 
         // end
         640: {
-            init: function() {
+            init() {
                 // disable custom steps
                 delete pacman.getNumSteps;
                 delete blinky.getNumSteps;
@@ -213,7 +213,7 @@ const mspacmanCutscene1 = (function() {
 
     return newChildObject(scriptState, {
 
-        init: function() {
+        init() {
             scriptState.init.call(this);
 
             // chosen by trial-and-error to match animations
@@ -269,7 +269,7 @@ const mspacmanCutscene1 = (function() {
 
             // Inky chases Pac, Pinky chases Mspac
             0: {
-                update: function() {
+                update() {
                     update();
                     if (inky.pixel.x == 105) {
                         // speed up the ghosts
@@ -281,7 +281,7 @@ const mspacmanCutscene1 = (function() {
                         };
                     }
                 },
-                draw: draw,
+                draw,
             },
 
             // MsPac and Pac converge with ghosts chasing
@@ -320,7 +320,7 @@ const mspacmanCutscene1 = (function() {
                 const PLAYER_MEET = 3;
                      
                 return {
-                    init: function() {
+                    init() {
                         // reset frames
                         inkyBounceFrame = pinkyBounceFrame = rampFrame = climbFrame = meetFrame = 0;
 
@@ -348,7 +348,7 @@ const mspacmanCutscene1 = (function() {
                             return "11211212"[this.frames%8];
                         };
                     },
-                    update: function() {
+                    update() {
 
                         // update players
                         if (playerMode == PLAYER_RUN) {
@@ -453,7 +453,7 @@ const mspacmanCutscene1 = (function() {
                         inky.frames++;
                         pinky.frames++;
                     },
-                    draw: function() {
+                    draw() {
                         renderer.blitMap();
                         renderer.beginMapClip();
                         renderer.renderFunc(function(ctx) {
@@ -531,7 +531,7 @@ const mspacmanCutscene2 = (function() {
 
     return newChildObject(scriptState, {
 
-        init: function() {
+        init() {
             scriptState.init.call(this);
 
             // chosen by trial-and-error to match animations
@@ -551,13 +551,13 @@ const mspacmanCutscene2 = (function() {
         },
         triggers: {
             0: {
-                draw: function() {
+                draw() {
                     renderer.blitMap();
                 },
             },
 
             160: {
-                init: function() {
+                init() {
                     pac.setPos(-8, 67);
                     pac.setDir(DIR_RIGHT);
 
@@ -567,11 +567,11 @@ const mspacmanCutscene2 = (function() {
                     pac.getNumSteps = getFleeSteps;
                     mspac.getNumSteps = getChaseSteps;
                 },
-                update: update,
-                draw: draw,
+                update,
+                draw,
             },
             410: {
-                init: function() {
+                init() {
                     pac.setPos(329, 163);
                     pac.setDir(DIR_LEFT);
 
@@ -581,11 +581,11 @@ const mspacmanCutscene2 = (function() {
                     pac.getNumSteps = getChaseSteps;
                     mspac.getNumSteps = getFleeSteps;
                 },
-                update: update,
-                draw: draw,
+                update,
+                draw,
             },
             670: {
-                init: function() {
+                init() {
                     pac.setPos(-8,142);
                     pac.setDir(DIR_RIGHT);
 
@@ -595,11 +595,11 @@ const mspacmanCutscene2 = (function() {
                     pac.getNumSteps = getFleeSteps;
                     mspac.getNumSteps = getChaseSteps;
                 },
-                update: update,
-                draw: draw,
+                update,
+                draw,
             },
             930: {
-                init: function() {
+                init() {
                     pac.setPos(233+148,99);
                     pac.setDir(DIR_LEFT);
 
@@ -609,7 +609,7 @@ const mspacmanCutscene2 = (function() {
                     pac.getNumSteps = getDartSteps;
                     mspac.getNumSteps = getDartSteps;
                 },
-                update: function() {
+                update() {
                     if (pac.pixel.x <= 17 && pac.dirEnum == DIR_LEFT) {
                         pac.setPos(-2,195);
                         pac.setDir(DIR_RIGHT);
@@ -619,7 +619,7 @@ const mspacmanCutscene2 = (function() {
                     }
                     update();
                 },
-                draw: draw,
+                draw,
             },
             1140: {
                 init: exit,
@@ -630,7 +630,7 @@ const mspacmanCutscene2 = (function() {
 
 const cookieCutscene1 = newChildObject(scriptState, {
 
-    init: function() {
+    init() {
         scriptState.init.call(this);
 
         // initialize actor positions
@@ -666,7 +666,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
 
         // Blinky chases Pac-Man
         0: {
-            update: function() {
+            update() {
                 for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
@@ -674,7 +674,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
                 pacman.frames++;
                 blinky.frames++;
             },
-            draw: function() {
+            draw() {
                 renderer.blitMap();
                 renderer.beginMapClip();
                 renderer.drawPlayer();
@@ -685,7 +685,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
 
         // Pac-Man chases Blinky
         260: {
-            init: function() {
+            init() {
                 pacman.setPos(-193, 164);
                 blinky.setPos(-8, 155);
 
@@ -705,7 +705,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
                     return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
                 };
             },
-            update: function() {
+            update() {
                 for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
@@ -713,7 +713,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
                 pacman.frames++;
                 blinky.frames++;
             },
-            draw: function() {
+            draw() {
                 renderer.blitMap();
                 renderer.beginMapClip();
                 renderer.drawPlayer();
@@ -733,7 +733,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
 
         // end
         640: {
-            init: function() {
+            init() {
                 // disable custom steps
                 delete pacman.getNumSteps;
                 delete blinky.getNumSteps;
@@ -825,7 +825,7 @@ const cookieCutscene2 = (function() {
 
     return newChildObject(scriptState, {
 
-        init: function() {
+        init() {
             scriptState.init.call(this);
 
             // chosen by trial-and-error to match animations
@@ -881,7 +881,7 @@ const cookieCutscene2 = (function() {
 
             // Inky chases Pac, Pinky chases Mspac
             0: {
-                update: function() {
+                update() {
                     update();
                     if (inky.pixel.x == 105) {
                         // speed up the ghosts
@@ -893,7 +893,7 @@ const cookieCutscene2 = (function() {
                         };
                     }
                 },
-                draw: draw,
+                draw,
             },
 
             // MsPac and Pac converge with ghosts chasing
@@ -932,7 +932,7 @@ const cookieCutscene2 = (function() {
                 const PLAYER_MEET = 3;
                      
                 return {
-                    init: function() {
+                    init() {
                         // reset frames
                         inkyBounceFrame = pinkyBounceFrame = rampFrame = climbFrame = meetFrame = 0;
 
@@ -960,7 +960,7 @@ const cookieCutscene2 = (function() {
                             return "11211212"[this.frames%8];
                         };
                     },
-                    update: function() {
+                    update() {
 
                         // update players
                         if (playerMode == PLAYER_RUN) {
@@ -1052,7 +1052,7 @@ const cookieCutscene2 = (function() {
                         inky.frames++;
                         pinky.frames++;
                     },
-                    draw: function() {
+                    draw() {
                         renderer.blitMap();
                         renderer.beginMapClip();
                         renderer.renderFunc(function(ctx) {

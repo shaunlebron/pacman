@@ -2887,8 +2887,8 @@ const atlas = (function(){
     };
 
     return {
-        create: create,
-        getCanvas: function() { return canvas; },
+        create,
+        getCanvas() { return canvas; },
         drawGhostSprite: copyGhostSprite,
         drawMonsterSprite: copyMonsterSprite,
         drawMuppetSprite: copyMuppetSprite,
@@ -3967,7 +3967,7 @@ const hud = (function(){
 
     return {
 
-        update: function() {
+        update() {
             const valid = this.isValidState();
             if (valid != on) {
                 on = valid;
@@ -3981,11 +3981,11 @@ const hud = (function(){
                 }
             }
         },
-        draw: function(ctx) {
+        draw(ctx) {
             inGameMenu.draw(ctx);
             vcr.draw(ctx);
         },
-        isValidState: function() {
+        isValidState() {
             return (
                 state == playState ||
                 state == newGameState ||
@@ -4058,9 +4058,9 @@ const galagaStars = (function() {
     };
 
     return {
-        init: init,
-        draw: draw,
-        update: update,
+        init,
+        draw,
+        update,
     };
 
 })();
@@ -4326,40 +4326,39 @@ class ToggleButton extends Button {
 //@line 1 "src/Menu.js"
 
 
-const Menu = function(title,x,y,w,h,pad,font,fontcolor) {
-    this.title = title;
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.pad = pad;
-    this.buttons = [];
-    this.buttonCount = 0;
-    this.currentY = this.y+this.pad;
+class Menu {
+    constructor(title,x,y,w,h,pad,font,fontcolor) {
+        this.title = title;
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.pad = pad;
+        this.buttons = [];
+        this.buttonCount = 0;
+        this.currentY = this.y+this.pad;
 
-    if (title) {
-        this.currentY += 1*(this.h + this.pad);
+        if (title) {
+            this.currentY += 1*(this.h + this.pad);
+        }
+
+        this.font = font;
+        this.fontcolor = fontcolor;
+        this.enabled = false;
+
+        this.backButton = undefined;
     }
 
-    this.font = font;
-    this.fontcolor = fontcolor;
-    this.enabled = false;
-
-    this.backButton = undefined;
-};
-
-Menu.prototype = {
-
-    clickCurrentOption: function() {
+    clickCurrentOption() {
         for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
                 this.buttons[i].onclick();
                 break;
             }
         }
-    },
+    }
 
-    selectNextOption: function() {
+    selectNextOption() {
         let nextBtn;
         for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
@@ -4370,9 +4369,9 @@ Menu.prototype = {
         }
         nextBtn = nextBtn || this.buttons[0];
         nextBtn.focus();
-    },
+    }
 
-    selectPrevOption: function() {
+    selectPrevOption() {
         let nextBtn;
         for (let i=0; i<this.buttonCount; i++) {
             if (this.buttons[i].isSelected) {
@@ -4383,34 +4382,34 @@ Menu.prototype = {
         }
         nextBtn = nextBtn || this.buttons[this.buttonCount-1];
         nextBtn.focus();
-    },
+    }
 
-    addToggleButton: function(isOn,setOn) {
+    addToggleButton(isOn,setOn) {
         const b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addToggleTextButton: function(label,isOn,setOn) {
+    addToggleTextButton(label,isOn,setOn) {
         const b = new ToggleButton(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,isOn,setOn);
         b.setFont(this.font,this.fontcolor);
         b.setToggleLabel(label);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addTextButton: function(msg,onclick) {
+    addTextButton(msg,onclick) {
         const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setFont(this.font,this.fontcolor);
         b.setText(msg);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addTextIconButton: function(msg,onclick,drawIcon) {
+    addTextIconButton(msg,onclick,drawIcon) {
         const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setFont(this.font,this.fontcolor);
         b.setText(msg);
@@ -4418,42 +4417,42 @@ Menu.prototype = {
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addIconButton: function(drawIcon,onclick) {
+    addIconButton(drawIcon,onclick) {
         const b = new Button(this.x+this.pad,this.currentY,this.w-this.pad*2,this.h,onclick);
         b.setIcon(drawIcon);
         this.buttons.push(b);
         this.buttonCount++;
         this.currentY += this.pad + this.h;
-    },
+    }
 
-    addSpacer: function(count) {
+    addSpacer(count) {
         if (count == undefined) {
             count = 1;
         }
         this.currentY += count*(this.pad + this.h);
-    },
+    }
 
-    enable: function() {
+    enable() {
         for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].enable();
         }
         this.enabled = true;
-    },
+    }
 
-    disable: function() {
+    disable() {
         for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].disable();
         }
         this.enabled = false;
-    },
+    }
 
-    isEnabled: function() {
+    isEnabled() {
         return this.enabled;
-    },
+    }
 
-    draw: function(ctx) {
+    draw(ctx) {
         if (this.title) {
             ctx.font = tileSize+"px ArcadeR";
             ctx.textBaseline = "middle";
@@ -4464,13 +4463,13 @@ Menu.prototype = {
         for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].draw(ctx);
         }
-    },
+    }
 
-    update: function() {
+    update() {
         for (let i=0; i<this.buttonCount; i++) {
             this.buttons[i].update();
         }
-    },
+    }
 };
 //@line 1 "src/inGameMenu.js"
 
@@ -4615,18 +4614,18 @@ const inGameMenu = (function() {
     };
 
     return {
-        onHudEnable: function() {
+        onHudEnable() {
             btn.enable();
         },
-        onHudDisable: function() {
+        onHudDisable() {
             btn.disable();
         },
-        update: function() {
+        update() {
             if (btn.isEnabled) {
                 btn.update();
             }
         },
-        draw: function(ctx) {
+        draw(ctx) {
             const m = getVisibleMenu();
             if (m) {
                 ctx.fillStyle = "rgba(0,0,0,0.8)";
@@ -4637,13 +4636,13 @@ const inGameMenu = (function() {
                 btn.draw(ctx);
             }
         },
-        isOpen: function() {
+        isOpen() {
             return getVisibleMenu() != undefined;
         },
-        getMenu: function() {
+        getMenu() {
             return getVisibleMenu();
         },
-        getMenuButton: function() {
+        getMenuButton() {
             return btn;
         },
     };
@@ -8377,13 +8376,13 @@ const ghostCommander = (function() {
     };
 
     return {
-        save: save,
-        load: load,
-        reset: function() { 
+        save,
+        load,
+        reset() { 
             command = GHOST_CMD_SCATTER;
             frame = 0;
         },
-        update: function() {
+        update() {
             if (!energizer.isActive()) {
                 const newCmd = getNewCommand(frame);
                 if (newCmd != undefined) {
@@ -8394,10 +8393,10 @@ const ghostCommander = (function() {
                 frame++;
             }
         },
-        getCommand: function() {
+        getCommand() {
             return command; 
         },
-        setCommand: function(cmd) {
+        setCommand(cmd) {
             command = cmd;
         },
     };
@@ -8476,21 +8475,21 @@ const ghostReleaser = (function(){
     };
 
     return {
-        save: save,
-        load: load,
-        onNewLevel: function() {
+        save,
+        load,
+        onNewLevel() {
             mode = MODE_PERSONAL;
             framesSinceLastDot = 0;
             ghostCounts[PINKY] = 0;
             ghostCounts[INKY] = 0;
             ghostCounts[CLYDE] = 0;
         },
-        onRestartLevel: function() {
+        onRestartLevel() {
             mode = MODE_GLOBAL;
             framesSinceLastDot = 0;
             globalCount = 0;
         },
-        onDotEat: function() {
+        onDotEat() {
             framesSinceLastDot = 0;
 
             if (mode == MODE_GLOBAL) {
@@ -8506,7 +8505,7 @@ const ghostReleaser = (function(){
             }
 
         },
-        update: function() {
+        update() {
             // use personal dot counter
             if (mode == MODE_PERSONAL) {
                 for (const [i,g] of ghosts.entries()) {
@@ -8591,13 +8590,13 @@ const elroyTimer = (function(){
     };
 
     return {
-        onNewLevel: function() {
+        onNewLevel() {
             waitForClyde = false;
         },
-        onRestartLevel: function() {
+        onRestartLevel() {
             waitForClyde = true;
         },
-        update: function() {
+        update() {
 
             // stop waiting for clyde when clyde leaves home
             if (waitForClyde && clyde.mode != GHOST_PACING_HOME)
@@ -8618,8 +8617,8 @@ const elroyTimer = (function(){
                 }
             }
         },
-        save: save,
-        load: load,
+        save,
+        load,
     };
 })();
 //@line 1 "src/energizer.js"
@@ -8684,9 +8683,9 @@ const energizer = (function() {
     };
 
     return {
-        save: save,
-        load: load,
-        reset: function() {
+        save,
+        load,
+        reset() {
             count = 0;
             active = false;
             points = 100;
@@ -8694,7 +8693,7 @@ const energizer = (function() {
             for (const g of ghosts)
                 g.scared = false;
         },
-        update: function() {
+        update() {
             if (active) {
                 if (count == getDuration())
                     this.reset();
@@ -8702,7 +8701,7 @@ const energizer = (function() {
                     count++;
             }
         },
-        activate: function() { 
+        activate() { 
             active = true;
             count = 0;
             points = 100;
@@ -8713,21 +8712,21 @@ const energizer = (function() {
                 this.reset();
             }
         },
-        isActive: function() { return active; },
-        isFlash: function() { 
+        isActive() { return active; },
+        isFlash() { 
             const i = Math.floor((getDuration()-count)/flashInterval);
             return (i<=2*getFlashes()-1) ? (i%2==0) : false;
         },
 
-        getPoints: function() {
+        getPoints() {
             return points;
         },
-        addPoints: function() {
+        addPoints() {
             addScore(points*=2);
             pointsFramesLeft = pointsDuration*60;
         },
-        showingPoints: function() { return pointsFramesLeft > 0; },
-        updatePointsTimer: function() { if (pointsFramesLeft > 0) pointsFramesLeft--; },
+        showingPoints() { return pointsFramesLeft > 0; },
+        updatePointsTimer() { if (pointsFramesLeft > 0) pointsFramesLeft--; },
     };
 })();
 //@line 1 "src/fruit.js"
@@ -9186,35 +9185,35 @@ const executive = (function(){
 
     return {
 
-        getFramePeriod: function() {
+        getFramePeriod() {
             return framePeriod;
         },
-        setUpdatesPerSecond: function(ups) {
+        setUpdatesPerSecond(ups) {
             framePeriod = 1000/ups;
             //gameTime = undefined;
             vcr.onFramePeriodChange();
         },
-        init: function() {
+        init() {
             const that = this;
             window.addEventListener('focus', function() {that.start();});
             window.addEventListener('blur', function() {that.stop();});
             this.start();
         },
-        start: function() {
+        start() {
             if (!running) {
                 reqFrame = requestAnimationFrame(tick);
                 running = true;
             }
         },
-        stop: function() {
+        stop() {
             if (running) {
                 cancelAnimationFrame(reqFrame);
                 running = false;
             }
         },
-        togglePause: function() { paused = !paused; },
-        isPaused: function() { return paused; },
-        getFps: function() { return fps; },
+        togglePause() { paused = !paused; },
+        isPaused() { return paused; },
+        getFps() { return fps; },
     };
 })();
 //@line 1 "src/states.js"
@@ -11130,7 +11129,7 @@ const playCutScene = function(cutScene, nextState) {
 };
 
 const pacmanCutscene1 = newChildObject(scriptState, {
-    init: function() {
+    init() {
         scriptState.init.call(this);
 
         // initialize actor positions
@@ -11166,7 +11165,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
 
         // Blinky chases Pac-Man
         0: {
-            update: function() {
+            update() {
                 for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
@@ -11174,7 +11173,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
                 pacman.frames++;
                 blinky.frames++;
             },
-            draw: function() {
+            draw() {
                 renderer.blitMap();
                 renderer.beginMapClip();
                 renderer.drawPlayer();
@@ -11185,7 +11184,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
 
         // Pac-Man chases Blinky
         260: {
-            init: function() {
+            init() {
                 pacman.setPos(-193, 155);
                 blinky.setPos(-8, 164);
 
@@ -11205,7 +11204,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
                     return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
                 };
             },
-            update: function() {
+            update() {
                 for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
@@ -11213,7 +11212,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
                 pacman.frames++;
                 blinky.frames++;
             },
-            draw: function() {
+            draw() {
                 renderer.blitMap();
                 renderer.beginMapClip();
                 renderer.drawGhost(blinky);
@@ -11230,7 +11229,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
 
         // end
         640: {
-            init: function() {
+            init() {
                 // disable custom steps
                 delete pacman.getNumSteps;
                 delete blinky.getNumSteps;
@@ -11313,7 +11312,7 @@ const mspacmanCutscene1 = (function() {
 
     return newChildObject(scriptState, {
 
-        init: function() {
+        init() {
             scriptState.init.call(this);
 
             // chosen by trial-and-error to match animations
@@ -11369,7 +11368,7 @@ const mspacmanCutscene1 = (function() {
 
             // Inky chases Pac, Pinky chases Mspac
             0: {
-                update: function() {
+                update() {
                     update();
                     if (inky.pixel.x == 105) {
                         // speed up the ghosts
@@ -11381,7 +11380,7 @@ const mspacmanCutscene1 = (function() {
                         };
                     }
                 },
-                draw: draw,
+                draw,
             },
 
             // MsPac and Pac converge with ghosts chasing
@@ -11420,7 +11419,7 @@ const mspacmanCutscene1 = (function() {
                 const PLAYER_MEET = 3;
                      
                 return {
-                    init: function() {
+                    init() {
                         // reset frames
                         inkyBounceFrame = pinkyBounceFrame = rampFrame = climbFrame = meetFrame = 0;
 
@@ -11448,7 +11447,7 @@ const mspacmanCutscene1 = (function() {
                             return "11211212"[this.frames%8];
                         };
                     },
-                    update: function() {
+                    update() {
 
                         // update players
                         if (playerMode == PLAYER_RUN) {
@@ -11553,7 +11552,7 @@ const mspacmanCutscene1 = (function() {
                         inky.frames++;
                         pinky.frames++;
                     },
-                    draw: function() {
+                    draw() {
                         renderer.blitMap();
                         renderer.beginMapClip();
                         renderer.renderFunc(function(ctx) {
@@ -11631,7 +11630,7 @@ const mspacmanCutscene2 = (function() {
 
     return newChildObject(scriptState, {
 
-        init: function() {
+        init() {
             scriptState.init.call(this);
 
             // chosen by trial-and-error to match animations
@@ -11651,13 +11650,13 @@ const mspacmanCutscene2 = (function() {
         },
         triggers: {
             0: {
-                draw: function() {
+                draw() {
                     renderer.blitMap();
                 },
             },
 
             160: {
-                init: function() {
+                init() {
                     pac.setPos(-8, 67);
                     pac.setDir(DIR_RIGHT);
 
@@ -11667,11 +11666,11 @@ const mspacmanCutscene2 = (function() {
                     pac.getNumSteps = getFleeSteps;
                     mspac.getNumSteps = getChaseSteps;
                 },
-                update: update,
-                draw: draw,
+                update,
+                draw,
             },
             410: {
-                init: function() {
+                init() {
                     pac.setPos(329, 163);
                     pac.setDir(DIR_LEFT);
 
@@ -11681,11 +11680,11 @@ const mspacmanCutscene2 = (function() {
                     pac.getNumSteps = getChaseSteps;
                     mspac.getNumSteps = getFleeSteps;
                 },
-                update: update,
-                draw: draw,
+                update,
+                draw,
             },
             670: {
-                init: function() {
+                init() {
                     pac.setPos(-8,142);
                     pac.setDir(DIR_RIGHT);
 
@@ -11695,11 +11694,11 @@ const mspacmanCutscene2 = (function() {
                     pac.getNumSteps = getFleeSteps;
                     mspac.getNumSteps = getChaseSteps;
                 },
-                update: update,
-                draw: draw,
+                update,
+                draw,
             },
             930: {
-                init: function() {
+                init() {
                     pac.setPos(233+148,99);
                     pac.setDir(DIR_LEFT);
 
@@ -11709,7 +11708,7 @@ const mspacmanCutscene2 = (function() {
                     pac.getNumSteps = getDartSteps;
                     mspac.getNumSteps = getDartSteps;
                 },
-                update: function() {
+                update() {
                     if (pac.pixel.x <= 17 && pac.dirEnum == DIR_LEFT) {
                         pac.setPos(-2,195);
                         pac.setDir(DIR_RIGHT);
@@ -11719,7 +11718,7 @@ const mspacmanCutscene2 = (function() {
                     }
                     update();
                 },
-                draw: draw,
+                draw,
             },
             1140: {
                 init: exit,
@@ -11730,7 +11729,7 @@ const mspacmanCutscene2 = (function() {
 
 const cookieCutscene1 = newChildObject(scriptState, {
 
-    init: function() {
+    init() {
         scriptState.init.call(this);
 
         // initialize actor positions
@@ -11766,7 +11765,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
 
         // Blinky chases Pac-Man
         0: {
-            update: function() {
+            update() {
                 for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
@@ -11774,7 +11773,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
                 pacman.frames++;
                 blinky.frames++;
             },
-            draw: function() {
+            draw() {
                 renderer.blitMap();
                 renderer.beginMapClip();
                 renderer.drawPlayer();
@@ -11785,7 +11784,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
 
         // Pac-Man chases Blinky
         260: {
-            init: function() {
+            init() {
                 pacman.setPos(-193, 164);
                 blinky.setPos(-8, 155);
 
@@ -11805,7 +11804,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
                     return Actor.prototype.getStepSizeFromTable.call(this, 5, STEP_GHOST_FRIGHT);
                 };
             },
-            update: function() {
+            update() {
                 for (let j=0; j<2; j++) {
                     pacman.update(j);
                     blinky.update(j);
@@ -11813,7 +11812,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
                 pacman.frames++;
                 blinky.frames++;
             },
-            draw: function() {
+            draw() {
                 renderer.blitMap();
                 renderer.beginMapClip();
                 renderer.drawPlayer();
@@ -11833,7 +11832,7 @@ const cookieCutscene1 = newChildObject(scriptState, {
 
         // end
         640: {
-            init: function() {
+            init() {
                 // disable custom steps
                 delete pacman.getNumSteps;
                 delete blinky.getNumSteps;
@@ -11925,7 +11924,7 @@ const cookieCutscene2 = (function() {
 
     return newChildObject(scriptState, {
 
-        init: function() {
+        init() {
             scriptState.init.call(this);
 
             // chosen by trial-and-error to match animations
@@ -11981,7 +11980,7 @@ const cookieCutscene2 = (function() {
 
             // Inky chases Pac, Pinky chases Mspac
             0: {
-                update: function() {
+                update() {
                     update();
                     if (inky.pixel.x == 105) {
                         // speed up the ghosts
@@ -11993,7 +11992,7 @@ const cookieCutscene2 = (function() {
                         };
                     }
                 },
-                draw: draw,
+                draw,
             },
 
             // MsPac and Pac converge with ghosts chasing
@@ -12032,7 +12031,7 @@ const cookieCutscene2 = (function() {
                 const PLAYER_MEET = 3;
                      
                 return {
-                    init: function() {
+                    init() {
                         // reset frames
                         inkyBounceFrame = pinkyBounceFrame = rampFrame = climbFrame = meetFrame = 0;
 
@@ -12060,7 +12059,7 @@ const cookieCutscene2 = (function() {
                             return "11211212"[this.frames%8];
                         };
                     },
-                    update: function() {
+                    update() {
 
                         // update players
                         if (playerMode == PLAYER_RUN) {
@@ -12152,7 +12151,7 @@ const cookieCutscene2 = (function() {
                         inky.frames++;
                         pinky.frames++;
                     },
-                    draw: function() {
+                    draw() {
                         renderer.blitMap();
                         renderer.beginMapClip();
                         renderer.renderFunc(function(ctx) {
@@ -13137,29 +13136,29 @@ const vcr = (function() {
     };
 
     return {
-        init: init,
-        reset: reset,
-        seek: seek,
-        record: record,
-        draw: draw,
-        onFramePeriodChange: onFramePeriodChange,
-        onHudEnable: onHudEnable,
-        onHudDisable: onHudDisable,
-        eraseFuture: eraseFuture,
-        startRecording: startRecording,
-        startSeeking: startSeeking,
-        nextSpeed: nextSpeed,
-        isSeeking: function() {
+        init,
+        reset,
+        seek,
+        record,
+        draw,
+        onFramePeriodChange,
+        onHudEnable,
+        onHudDisable,
+        eraseFuture,
+        startRecording,
+        startSeeking,
+        nextSpeed,
+        isSeeking() {
             return (
                 mode == VCR_REWIND ||
                 mode == VCR_FORWARD ||
                 mode == VCR_PAUSE);
         },
-        getTime: function() { return time; },
-        getFrame: function() { return frame; },
-        getMode: function() { return mode; },
+        getTime() { return time; },
+        getFrame() { return frame; },
+        getMode() { return mode; },
 
-        drawHistory: function(ctx,callback) {
+        drawHistory(ctx,callback) {
             if (!this.isSeeking()) {
                 return;
             }

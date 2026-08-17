@@ -10,7 +10,7 @@ const hud = (function(){
 
     return {
 
-        update: function() {
+        update() {
             const valid = this.isValidState();
             if (valid != on) {
                 on = valid;
@@ -24,11 +24,11 @@ const hud = (function(){
                 }
             }
         },
-        draw: function(ctx) {
+        draw(ctx) {
             inGameMenu.draw(ctx);
             vcr.draw(ctx);
         },
-        isValidState: function() {
+        isValidState() {
             return (
                 state == playState ||
                 state == newGameState ||

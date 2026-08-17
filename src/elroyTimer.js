@@ -41,13 +41,13 @@ const elroyTimer = (function(){
     };
 
     return {
-        onNewLevel: function() {
+        onNewLevel() {
             waitForClyde = false;
         },
-        onRestartLevel: function() {
+        onRestartLevel() {
             waitForClyde = true;
         },
-        update: function() {
+        update() {
 
             // stop waiting for clyde when clyde leaves home
             if (waitForClyde && clyde.mode != GHOST_PACING_HOME)
@@ -68,7 +68,7 @@ const elroyTimer = (function(){
                 }
             }
         },
-        save: save,
-        load: load,
+        save,
+        load,
     };
 })();

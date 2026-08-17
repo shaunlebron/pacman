@@ -149,18 +149,18 @@ const inGameMenu = (function() {
     };
 
     return {
-        onHudEnable: function() {
+        onHudEnable() {
             btn.enable();
         },
-        onHudDisable: function() {
+        onHudDisable() {
             btn.disable();
         },
-        update: function() {
+        update() {
             if (btn.isEnabled) {
                 btn.update();
             }
         },
-        draw: function(ctx) {
+        draw(ctx) {
             const m = getVisibleMenu();
             if (m) {
                 ctx.fillStyle = "rgba(0,0,0,0.8)";
@@ -171,13 +171,13 @@ const inGameMenu = (function() {
                 btn.draw(ctx);
             }
         },
-        isOpen: function() {
+        isOpen() {
             return getVisibleMenu() != undefined;
         },
-        getMenu: function() {
+        getMenu() {
             return getVisibleMenu();
         },
-        getMenuButton: function() {
+        getMenuButton() {
             return btn;
         },
     };

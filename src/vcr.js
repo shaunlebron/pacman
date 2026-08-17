@@ -365,29 +365,29 @@ const vcr = (function() {
     };
 
     return {
-        init: init,
-        reset: reset,
-        seek: seek,
-        record: record,
-        draw: draw,
-        onFramePeriodChange: onFramePeriodChange,
-        onHudEnable: onHudEnable,
-        onHudDisable: onHudDisable,
-        eraseFuture: eraseFuture,
-        startRecording: startRecording,
-        startSeeking: startSeeking,
-        nextSpeed: nextSpeed,
-        isSeeking: function() {
+        init,
+        reset,
+        seek,
+        record,
+        draw,
+        onFramePeriodChange,
+        onHudEnable,
+        onHudDisable,
+        eraseFuture,
+        startRecording,
+        startSeeking,
+        nextSpeed,
+        isSeeking() {
             return (
                 mode == VCR_REWIND ||
                 mode == VCR_FORWARD ||
                 mode == VCR_PAUSE);
         },
-        getTime: function() { return time; },
-        getFrame: function() { return frame; },
-        getMode: function() { return mode; },
+        getTime() { return time; },
+        getFrame() { return frame; },
+        getMode() { return mode; },
 
-        drawHistory: function(ctx,callback) {
+        drawHistory(ctx,callback) {
             if (!this.isSeeking()) {
                 return;
             }

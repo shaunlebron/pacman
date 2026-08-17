@@ -62,9 +62,9 @@ const energizer = (function() {
     };
 
     return {
-        save: save,
-        load: load,
-        reset: function() {
+        save,
+        load,
+        reset() {
             count = 0;
             active = false;
             points = 100;
@@ -72,7 +72,7 @@ const energizer = (function() {
             for (const g of ghosts)
                 g.scared = false;
         },
-        update: function() {
+        update() {
             if (active) {
                 if (count == getDuration())
                     this.reset();
@@ -80,7 +80,7 @@ const energizer = (function() {
                     count++;
             }
         },
-        activate: function() { 
+        activate() { 
             active = true;
             count = 0;
             points = 100;
@@ -91,20 +91,20 @@ const energizer = (function() {
                 this.reset();
             }
         },
-        isActive: function() { return active; },
-        isFlash: function() { 
+        isActive() { return active; },
+        isFlash() { 
             const i = Math.floor((getDuration()-count)/flashInterval);
             return (i<=2*getFlashes()-1) ? (i%2==0) : false;
         },
 
-        getPoints: function() {
+        getPoints() {
             return points;
         },
-        addPoints: function() {
+        addPoints() {
             addScore(points*=2);
             pointsFramesLeft = pointsDuration*60;
         },
-        showingPoints: function() { return pointsFramesLeft > 0; },
-        updatePointsTimer: function() { if (pointsFramesLeft > 0) pointsFramesLeft--; },
+        showingPoints() { return pointsFramesLeft > 0; },
+        updatePointsTimer() { if (pointsFramesLeft > 0) pointsFramesLeft--; },
     };
 })();

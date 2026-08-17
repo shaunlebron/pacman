@@ -55,11 +55,11 @@ const fadeNextState = function (prevState, nextState, frameDuration, continueUpd
     let initialized = false;
 
     return {
-        init: function() {
+        init() {
             frames = 0;
             initialized = true;
         },
-        draw: function() {
+        draw() {
             if (!initialized) return;
             const t = getStateTime();
             if (frames < midFrame) {
@@ -73,7 +73,7 @@ const fadeNextState = function (prevState, nextState, frameDuration, continueUpd
                 renderer.setOverlayColor("rgba(0,0,0,"+(1-t)+")");
             }
         },
-        update: function() {
+        update() {
 
             // update prevState
             if (frames < midFrame) {
@@ -162,19 +162,19 @@ const homeState = (function(){
         });
 
     return {
-        init: function() {
+        init() {
             menu.enable();
         },
-        draw: function() {
+        draw() {
             renderer.clearMapFrame();
             renderer.beginMapClip();
             renderer.renderFunc(menu.draw,menu);
             renderer.endMapClip();
         },
-        update: function() {
+        update() {
             menu.update();
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -261,7 +261,7 @@ const learnState = (function(){
     };
 
     return {
-        init: function() {
+        init() {
 
             menu.enable();
             forEachCharBtn(function (btn) {
@@ -303,7 +303,7 @@ const learnState = (function(){
             redBtn.onclick();
 
         },
-        draw: function() {
+        draw() {
             renderer.blitMap();
             renderer.renderFunc(menu.draw,menu);
             forEachCharBtn(function (btn) {
@@ -315,7 +315,7 @@ const learnState = (function(){
             renderer.drawTargets();
             renderer.endMapClip();
         },
-        update: function() {
+        update() {
             menu.update();
             forEachCharBtn(function (btn) {
                 btn.update();
@@ -329,7 +329,7 @@ const learnState = (function(){
             for (const a of actors)
                 a.frames++;
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -423,18 +423,18 @@ const gameTitleState = (function() {
     });
 
     return {
-        init: function() {
+        init() {
             resetTitle();
             forEachCharBtn(function (btn) {
                 btn.enable();
             });
         },
-        shutdown: function() {
+        shutdown() {
             forEachCharBtn(function (btn) {
                 btn.disable();
             });
         },
-        draw: function() {
+        draw() {
             forEachCharBtn(function (btn) {
                 renderer.renderFunc(btn.draw,btn);
             });
@@ -448,12 +448,12 @@ const gameTitleState = (function() {
                 ctx.fillText(name, mapWidth/2, tileSize);
             });
         },
-        update: function() {
+        update() {
             forEachCharBtn(function (btn) {
                 btn.update();
             });
         },
-        getYellowBtn: function() {
+        getYellowBtn() {
             return yellowBtn;
         },
     };
@@ -512,20 +512,20 @@ const preNewGameState = (function() {
     menu.backButton = menu.buttons[menu.buttonCount-1];
 
     return {
-        init: function() {
+        init() {
             menu.enable();
             gameTitleState.init();
             setMap(undefined);
         },
-        draw: function() {
+        draw() {
             renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
             gameTitleState.draw();
         },
-        update: function() {
+        update() {
             gameTitleState.update();
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -637,22 +637,22 @@ const selectActState = (function() {
     };
 
     return {
-        init: function() {
+        init() {
             buildMenu(startAct);
             gameTitleState.init();
         },
-        setStartAct: function(act) {
+        setStartAct(act) {
             startAct = act;
         },
-        draw: function() {
+        draw() {
             renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
             gameTitleState.draw();
         },
-        update: function() {
+        update() {
             gameTitleState.update();
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -711,23 +711,23 @@ const selectLevelState = (function() {
     };
 
     return {
-        init: function() {
+        init() {
             setFruitFromGameMode();
             buildMenu(act);
             gameTitleState.init();
         },
-        setAct: function(a) {
+        setAct(a) {
             act = a;
         },
-        draw: function() {
+        draw() {
             renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
             gameTitleState.draw();
         },
-        update: function() {
+        update() {
             gameTitleState.update();
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -769,11 +769,11 @@ const aboutGameState = (function() {
     };
 
     return {
-        init: function() {
+        init() {
             menu.enable();
             gameTitleState.init();
         },
-        draw: function() {
+        draw() {
             renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
             gameTitleState.draw();
@@ -781,10 +781,10 @@ const aboutGameState = (function() {
             numDescLines = desc.length;
             renderer.renderFunc(drawDesc);
         },
-        update: function() {
+        update() {
             gameTitleState.update();
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -833,20 +833,20 @@ const cutSceneMenuState = (function() {
     menu.backButton = menu.buttons[menu.buttonCount-1];
 
     return {
-        init: function() {
+        init() {
             menu.enable();
             gameTitleState.init();
             setLevel(0);
         },
-        draw: function() {
+        draw() {
             renderer.clearMapFrame();
             renderer.renderFunc(menu.draw,menu);
             gameTitleState.draw();
         },
-        update: function() {
+        update() {
             gameTitleState.update();
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -1061,20 +1061,20 @@ const scoreState = (function(){
     };
 
     return {
-        init: function() {
+        init() {
             menu.enable();
         },
-        draw: function() {
+        draw() {
             renderer.clearMapFrame();
             renderer.renderFunc(drawScoreBox);
             renderer.renderFunc(drawFood);
             renderer.renderFunc(menu.draw,menu);
         },
-        update: function() {
+        update() {
             menu.update();
             frame++;
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -1141,11 +1141,11 @@ const aboutState = (function(){
     };
 
     return {
-        init: function() {
+        init() {
             menu.enable();
             galagaStars.init();
         },
-        draw: function() {
+        draw() {
             renderer.clearMapFrame();
             renderer.beginMapClip();
             renderer.renderFunc(galagaStars.draw);
@@ -1153,11 +1153,11 @@ const aboutState = (function(){
             renderer.renderFunc(menu.draw,menu);
             renderer.endMapClip();
         },
-        update: function() {
+        update() {
             galagaStars.update();
             menu.update();
         },
-        getMenu: function() {
+        getMenu() {
             return menu;
         },
     };
@@ -1174,7 +1174,7 @@ const newGameState = (function() {
     let startLevel = 1;
 
     return {
-        init: function() {
+        init() {
             clearCheats();
             frames = 0;
             setLevel(startLevel-1);
@@ -1183,10 +1183,10 @@ const newGameState = (function() {
             setFruitFromGameMode();
             readyNewState.init();
         },
-        setStartLevel: function(i) {
+        setStartLevel(i) {
             startLevel = i;
         },
-        draw: function() {
+        draw() {
             if (!map)
                 return;
             renderer.blitMap();
@@ -1194,7 +1194,7 @@ const newGameState = (function() {
             renderer.drawMessage("PLAYER ONE", "#0FF", 9, 14);
             renderer.drawReadyMessage();
         },
-        update: function() {
+        update() {
             if (frames == duration*60) {
                 extraLives--;
                 state = readyNewState;
@@ -1215,7 +1215,7 @@ const readyState =  (function(){
     const duration = 2;
     
     return {
-        init: function() {
+        init() {
             for (const a of actors)
                 a.reset();
             ghostCommander.reset();
@@ -1225,7 +1225,7 @@ const readyState =  (function(){
             frames = 0;
             vcr.init();
         },
-        draw: function() {
+        draw() {
             if (!map)
                 return;
             renderer.blitMap();
@@ -1233,7 +1233,7 @@ const readyState =  (function(){
             renderer.drawActors();
             renderer.drawReadyMessage();
         },
-        update: function() {
+        update() {
             if (frames == duration*60)
                 switchState(playState);
             else
@@ -1248,7 +1248,7 @@ const readyState =  (function(){
 
 const readyNewState = newChildObject(readyState, {
 
-    init: function() {
+    init() {
 
         // increment level and ready the next map
         setLevel(level+1);
@@ -1280,7 +1280,7 @@ const readyNewState = newChildObject(readyState, {
 
 const readyRestartState = newChildObject(readyState, {
 
-    init: function() {
+    init() {
         extraLives--;
         ghostReleaser.onRestartLevel();
         elroyTimer.onRestartLevel();
@@ -1296,12 +1296,12 @@ const readyRestartState = newChildObject(readyState, {
 // (state when playing the game)
 
 const playState = {
-    init: function() { 
+    init() { 
         if (practiceMode) {
             vcr.reset();
         }
     },
-    draw: function() {
+    draw() {
         renderer.setLevelFlash(false);
         renderer.blitMap();
         renderer.drawScore();
@@ -1315,7 +1315,7 @@ const playState = {
 
     // handles collision between pac-man and ghosts
     // returns true if collision happened
-    isPacmanCollide: function() {
+    isPacmanCollide() {
         for (const g of ghosts) {
             if (g.tile.x == pacman.tile.x && g.tile.y == pacman.tile.y && g.mode == GHOST_OUTSIDE) {
                 if (g.scared) { // eat ghost
@@ -1331,7 +1331,7 @@ const playState = {
         }
         return false;
     },
-    update: function() {
+    update() {
         
         if (vcr.isSeeking()) {
             vcr.seek();
@@ -1411,7 +1411,7 @@ const playState = {
 const scriptState = (function(){
 
     return {
-        init: function() {
+        init() {
             this.frames = 0;        // frames since state began
             this.triggerFrame = 0;  // frames since last trigger
 
@@ -1419,7 +1419,7 @@ const scriptState = (function(){
             this.drawFunc = trigger ? trigger.draw : undefined;   // current draw function
             this.updateFunc = trigger ? trigger.update : undefined; // current update function
         },
-        update: function() {
+        update() {
 
             // if trigger is found for current time,
             // call its init() function
@@ -1439,7 +1439,7 @@ const scriptState = (function(){
             this.frames++;
             this.triggerFrame++;
         },
-        draw: function() {
+        draw() {
             // call the last trigger's draw function
             if (this.drawFunc) 
                 this.drawFunc(this.triggerFrame);
@@ -1453,7 +1453,7 @@ const scriptState = (function(){
 
 const seekableScriptState = newChildObject(scriptState, {
 
-    init: function() {
+    init() {
         scriptState.init.call(this);
         this.savedFrames = {};
         this.savedTriggerFrame = {};
@@ -1461,19 +1461,19 @@ const seekableScriptState = newChildObject(scriptState, {
         this.savedUpdateFunc = {};
     },
 
-    save: function(t) {
+    save(t) {
         this.savedFrames[t] = this.frames;
         this.savedTriggerFrame[t] = this.triggerFrame;
         this.savedDrawFunc[t] = this.drawFunc;
         this.savedUpdateFunc[t] = this.updateFunc;
     },
-    load: function(t) {
+    load(t) {
         this.frames = this.savedFrames[t];
         this.triggerFrame = this.savedTriggerFrame[t];
         this.drawFunc = this.savedDrawFunc[t];
         this.updateFunc = this.savedUpdateFunc[t];
     },
-    update: function() {
+    update() {
         if (vcr.isSeeking()) {
             vcr.seek();
         }
@@ -1484,7 +1484,7 @@ const seekableScriptState = newChildObject(scriptState, {
             scriptState.update.call(this);
         }
     },
-    draw: function() {
+    draw() {
         if (this.drawFunc) {
             scriptState.draw.call(this);
         }
@@ -1508,11 +1508,11 @@ const deadState = (function() {
         // script functions for each time
         triggers: {
             0: { // freeze
-                update: function() {
+                update() {
                     for (const g of ghosts) 
                         g.frames++; // keep animating ghosts
                 },
-                draw: function() {
+                draw() {
                     commonDraw();
                     renderer.beginMapClip();
                     renderer.drawFruit();
@@ -1521,7 +1521,7 @@ const deadState = (function() {
                 }
             },
             60: {
-                draw: function() { // isolate pacman
+                draw() { // isolate pacman
                     commonDraw();
                     renderer.beginMapClip();
                     renderer.drawPlayer();
@@ -1529,7 +1529,7 @@ const deadState = (function() {
                 },
             },
             120: {
-                draw: function(t) { // dying animation
+                draw(t) { // dying animation
                     commonDraw();
                     renderer.beginMapClip();
                     renderer.drawDyingPlayer(t/75);
@@ -1537,7 +1537,7 @@ const deadState = (function() {
                 },
             },
             195: {
-                draw: function() {
+                draw() {
                     commonDraw();
                     renderer.beginMapClip();
                     renderer.drawDyingPlayer(1);
@@ -1545,13 +1545,13 @@ const deadState = (function() {
                 },
             },
             240: {
-                draw: function() {
+                draw() {
                     commonDraw();
                     renderer.beginMapClip();
                     renderer.drawDyingPlayer(1);
                     renderer.endMapClip();
                 },
-                init: function() { // leave
+                init() { // leave
                     switchState( extraLives == 0 ? overState : readyRestartState);
                 }
             },
@@ -1585,7 +1585,7 @@ const finishState = (function(){
 
         // script functions for each time
         triggers: {
-            0:   { draw: function() {
+            0:   { draw() {
                     renderer.setLevelFlash(false);
                     renderer.blitMap();
                     renderer.drawScore();
@@ -1595,16 +1595,16 @@ const finishState = (function(){
                     renderer.drawTargets();
                     renderer.endMapClip();
             } },
-            120:  { draw: function() { flashFloorAndDraw(true); } },
-            132: { draw: function() { flashFloorAndDraw(false); } },
-            144: { draw: function() { flashFloorAndDraw(true); } },
-            156: { draw: function() { flashFloorAndDraw(false); } },
-            168: { draw: function() { flashFloorAndDraw(true); } },
-            180: { draw: function() { flashFloorAndDraw(false); } },
-            192: { draw: function() { flashFloorAndDraw(true); } },
-            204: { draw: function() { flashFloorAndDraw(false); } },
+            120:  { draw() { flashFloorAndDraw(true); } },
+            132: { draw() { flashFloorAndDraw(false); } },
+            144: { draw() { flashFloorAndDraw(true); } },
+            156: { draw() { flashFloorAndDraw(false); } },
+            168: { draw() { flashFloorAndDraw(true); } },
+            180: { draw() { flashFloorAndDraw(false); } },
+            192: { draw() { flashFloorAndDraw(true); } },
+            204: { draw() { flashFloorAndDraw(false); } },
             216: {
-                init: function() {
+                init() {
                     if (!triggerCutsceneAtEndLevel()) {
                         switchState(readyNewState,60);
                     }
@@ -1621,15 +1621,15 @@ const finishState = (function(){
 const overState = (function() {
     let frames;
     return {
-        init: function() {
+        init() {
             frames = 0;
         },
-        draw: function() {
+        draw() {
             renderer.blitMap();
             renderer.drawScore();
             renderer.drawMessage("GAME  OVER", "#F00", 9, 20);
         },
-        update: function() {
+        update() {
             if (frames == 120) {
                 switchState(homeState,60);
             }

@@ -8868,7 +8868,7 @@ class PacFruit extends BaseFruit {
 
     onNewLevel() {
         this.setCurrentFruit(this.getFruitIndexFromLevel(level));
-        BaseFruit.prototype.onNewLevel.call(this);
+        super.onNewLevel();
     }
 
     getFruitFromLevel(i) {
@@ -8902,24 +8902,23 @@ class PacFruit extends BaseFruit {
     }
 
     reset() {
-        BaseFruit.prototype.reset.call(this);
-
+        super.reset();
         this.framesLeft = 0;
     }
 
     update() {
-        BaseFruit.prototype.update.call(this);
+        super.update();
 
         if (this.framesLeft > 0)
             this.framesLeft--;
     }
 
     save(t) {
-        BaseFruit.prototype.save.call(this,t);
+        super.save(t);
         this.savedFramesLeft[t] = this.framesLeft;
     }
     load(t) {
-        BaseFruit.prototype.load.call(this,t);
+        super.load(t);
         this.framesLeft = this.savedFramesLeft[t];
     }
 }
@@ -8976,7 +8975,7 @@ class MsPacFruit extends BaseFruit {
         else {
             this.setCurrentFruit(0);
         }
-        BaseFruit.prototype.onNewLevel.call(this);
+        super.onNewLevel();
     }
 
     buildFruitHistory() {
@@ -8987,7 +8986,7 @@ class MsPacFruit extends BaseFruit {
     }
 
     reset() {
-        BaseFruit.prototype.reset.call(this);
+        super.reset();
 
         this.frame = 0;
         this.numFrames = 0;
@@ -9041,7 +9040,7 @@ class MsPacFruit extends BaseFruit {
     }
 
     update() {
-        BaseFruit.prototype.update.call(this);
+        super.update();
 
         if (this.isPresent()) {
             this.move();
@@ -9052,7 +9051,7 @@ class MsPacFruit extends BaseFruit {
     }
 
     save(t) {
-        BaseFruit.prototype.save.call(this,t);
+        super.save(t);
 
         this.savedPixel[t] =        this.isPresent() ? {x:this.pixel.x, y:this.pixel.y} : undefined;
         this.savedPathMode[t] =     this.pathMode;
@@ -9062,7 +9061,7 @@ class MsPacFruit extends BaseFruit {
     }
 
     load(t) {
-        BaseFruit.prototype.load.call(this,t);
+        super.load(t);
 
         if (this.savedPixel[t]) {
             this.pixel.x =      this.savedPixel[t].x;

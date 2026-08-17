@@ -2950,7 +2950,7 @@ const getDevicePixelRatio = function() {
     return 1;
 };
 
-const initRenderer = function(){
+const initRenderer = function() {
 
     // create foreground and background canvases
     canvas = document.getElementById('canvas');
@@ -3057,25 +3057,23 @@ const initRenderer = function(){
     // Common Renderer
     // (attributes and functionality that are currently common to all renderers)
 
-    // constructor
-    const CommonRenderer = function() {
-        this.actorSize = (tileSize-1)*2;
-        this.energizerSize = tileSize+2;
-        this.pointsEarnedTextSize = tileSize;
+    class CommonRenderer {
+        constructor() {
+            this.actorSize = (tileSize-1)*2;
+            this.energizerSize = tileSize+2;
+            this.pointsEarnedTextSize = tileSize;
 
-        this.energizerColor = "#FFF";
-        this.pelletColor = "#888";
+            this.energizerColor = "#FFF";
+            this.pelletColor = "#888";
 
-        this.flashLevel = false;
-    };
+            this.flashLevel = false;
+        }
 
-    CommonRenderer.prototype = {
-
-        setOverlayColor: function(color) {
+        setOverlayColor(color) {
             this.overlayColor = color;
-        },
+        }
 
-        beginMapClip: function() {
+        beginMapClip() {
             ctx.save();
             ctx.beginPath();
 
@@ -3084,13 +3082,13 @@ const initRenderer = function(){
             ctx.rect(-mapPad,-mapPad,mapWidth-1,mapHeight-1); 
 
             ctx.clip();
-        },
+        }
 
-        endMapClip: function() {
+        endMapClip() {
             ctx.restore();
-        },
+        }
 
-        beginFrame: function() {
+        beginFrame() {
             this.setOverlayColor(undefined);
             ctx.save();
 
@@ -3112,50 +3110,50 @@ const initRenderer = function(){
 
             // translate to map space
             ctx.translate(mapMargin+mapPad, mapMargin+mapPad);
-        },
+        }
 
-        endFrame: function() {
+        endFrame() {
             ctx.restore();
             if (this.overlayColor != undefined) {
                 ctx.fillStyle = this.overlayColor;
                 ctx.fillRect(0,0,screenWidth,screenHeight);
             }
-        },
+        }
 
-        clearMapFrame: function() {
+        clearMapFrame() {
             ctx.fillStyle = "#000";
             ctx.fillRect(-1,-1,mapWidth+1,mapHeight+1);
-        },
+        }
 
-        renderFunc: function(f,that) {
+        renderFunc(f,that) {
             if (that) {
                 f.call(that,ctx);
             }
             else {
                 f(ctx);
             }
-        },
+        }
 
         // scaling the canvas can incur floating point roundoff errors
         // which manifest as "grout" between tiles that are otherwise adjacent in integer-space
         // This function extends the width and height of the tile if it is adjacent to equivalent tiles
         // that are to the bottom or right of the given tile
-        drawNoGroutTile: function(ctx,x,y,w) {
+        drawNoGroutTile(ctx,x,y,w) {
             const tileChar = map.getTile(x,y);
             this.drawCenterTileSq(ctx,x,y,tileSize,
                     map.getTile(x+1,y) == tileChar,
                     map.getTile(x,y+1) == tileChar,
                     map.getTile(x+1,y+1) == tileChar);
-        },
+        }
 
         // draw square centered at the given tile with optional "floating point grout" filling
-        drawCenterTileSq: function (ctx,tx,ty,w, rightGrout, downGrout, downRightGrout) {
+        drawCenterTileSq(ctx,tx,ty,w, rightGrout, downGrout, downRightGrout) {
             this.drawCenterPixelSq(ctx, tx*tileSize+midTile.x, ty*tileSize+midTile.y,w,
                     rightGrout, downGrout, downRightGrout);
-        },
+        }
 
         // draw square centered at the given pixel
-        drawCenterPixelSq: function (ctx,px,py,w,rightGrout, downGrout, downRightGrout) {
+        drawCenterPixelSq(ctx,px,py,w,rightGrout, downGrout, downRightGrout) {
             ctx.fillRect(px-w/2, py-w/2,w,w);
 
             // fill "floating point grout" gaps between tiles
@@ -3163,22 +3161,22 @@ const initRenderer = function(){
             if (rightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w);
             if (downGrout) ctx.fillRect(px-w/2, py-w/2,w,w+gap);
             //if (rightGrout && downGrout && downRightGrout) ctx.fillRect(px-w/2, py-w/2,w+gap,w+gap);
-        },
+        }
 
         // this flag is used to flash the level upon its successful completion
-        toggleLevelFlash: function () {
+        toggleLevelFlash() {
             this.flashLevel = !this.flashLevel;
-        },
+        }
 
-        setLevelFlash: function(on) {
+        setLevelFlash(on) {
             if (on != this.flashLevel) {
                 this.flashLevel = on;
                 this.drawMap();
             }
-        },
+        }
 
         // draw the target visualizers for each actor
-        drawTargets: function() {
+        drawTargets() {
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
             ctx.lineWidth = "1.5";
             ctx.lineCap = "round";
@@ -3186,19 +3184,19 @@ const initRenderer = function(){
             for (const a of actors)
                 if (a.isDrawTarget)
                     a.drawTarget(ctx);
-        },
+        }
 
-        drawPaths: function() {
+        drawPaths() {
             const backupAlpha = ctx.globalAlpha;
             ctx.globalAlpha = 0.7;
             for (const a of actors)
                 if (a.isDrawPath)
                     this.drawPath(a);
             ctx.globalAlpha = backupAlpha;
-        },
+        }
 
         // draw a predicted path for the actor if it continues pursuing current target
-        drawPath: function(actor) {
+        drawPath(actor) {
             if (!actor.targetting) return;
 
             // current state of the predicted path
@@ -3304,10 +3302,10 @@ const initRenderer = function(){
 
             // draw path    
             ctx.stroke();
-        },
+        }
 
         // erase pellet from background
-        erasePellet: function(x,y) {
+        erasePellet(x,y) {
             bgCtx.translate(mapPad,mapPad);
             bgCtx.fillStyle = this.floorColor;
             this.drawNoGroutTile(bgCtx,x,y,tileSize);
@@ -3321,30 +3319,30 @@ const initRenderer = function(){
             // TODO: fill in adjacent wall tiles?
 
             bgCtx.translate(-mapPad,-mapPad);
-        },
+        }
 
         // draw a center screen message (e.g. "start", "ready", "game over")
-        drawMessage: function(text, color, x,y) {
+        drawMessage(text, color, x,y) {
             ctx.font = tileSize + "px ArcadeR";
             ctx.textBaseline = "top";
             ctx.textAlign = "right";
             ctx.fillStyle = color;
             x += text.length;
             ctx.fillText(text, x*tileSize, y*tileSize);
-        },
+        }
 
-        drawReadyMessage: function() {
+        drawReadyMessage() {
             this.drawMessage("READY ","#FF0",11,20);
             drawExclamationPoint(ctx,16*tileSize+3, 20*tileSize+3);
-        },
+        }
 
         // draw the points earned from the most recently eaten ghost
-        drawEatenPoints: function() {
+        drawEatenPoints() {
             atlas.drawGhostPoints(ctx, pacman.pixel.x, pacman.pixel.y, energizer.getPoints());
-        },
+        }
 
         // draw each actor (ghosts and pacman)
-        drawActors: function() {
+        drawActors() {
             // draw such that pacman appears on top
             if (energizer.isActive()) {
                 for (const g of ghosts) {
@@ -3368,42 +3366,40 @@ const initRenderer = function(){
                     this.drawGhost(blinky,0.5);
                 }
             }
-        },
+        }
 
-    };
+    }
 
     //////////////////////////////////////////////////////////////
     // Simple Renderer
     // (render a minimal Pac-Man display using nothing but squares)
 
-    // constructor
-    const SimpleRenderer = function() {
+    class SimpleRenderer extends CommonRenderer {
 
-        // inherit attributes from Common Renderer
-        CommonRenderer.call(this,ctx,bgCtx);
+        constructor() {
+            // inherit attributes from Common Renderer
+            super();
 
-        this.messageRow = 21.7;
-        this.pointsEarnedTextSize = 1.5*tileSize;
+            this.messageRow = 21.7;
+            this.pointsEarnedTextSize = 1.5*tileSize;
 
-        this.backColor = "#222";
-        this.floorColor = "#444";
-        this.flashFloorColor = "#999";
+            this.backColor = "#222";
+            this.floorColor = "#444";
+            this.flashFloorColor = "#999";
 
-        this.name = "Minimal";
-    };
-
-    SimpleRenderer.prototype = newChildObject(CommonRenderer.prototype, {
+            this.name = "Minimal";
+        }
 
         // copy background canvas to the foreground canvas
-        blitMap: function() {
+        blitMap() {
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,-1-mapPad*scale,-1-mapPad*scale); // offset map to compenstate for misalignment
             ctx.scale(scale,scale);
             //ctx.clearRect(-mapPad,-mapPad,mapWidth,mapHeight);
-        },
+        }
 
 
-        drawMap: function() {
+        drawMap() {
 
             beginMapFrame();
 
@@ -3426,9 +3422,9 @@ const initRenderer = function(){
                 }
 
             endMapFrame();
-        },
+        }
 
-        refreshPellet: function(x,y) {
+        refreshPellet(x,y) {
             const i = map.posToIndex(x,y);
             const tile = map.currentTiles[i];
             if (tile == ' ') {
@@ -3438,11 +3434,11 @@ const initRenderer = function(){
                 bgCtx.fillStyle = this.pelletColor;
                 this.drawNoGroutTile(bgCtx,x,y,tileSize);
             }
-        },
+        }
 
 
         // draw the current score and high score
-        drawScore: function() {
+        drawScore() {
             ctx.font = 1.5*tileSize + "px sans-serif";
             ctx.textBaseline = "top";
             ctx.textAlign = "left";
@@ -3454,45 +3450,45 @@ const initRenderer = function(){
             ctx.textAlign = "center";
             ctx.fillText("high score", tileSize*map.numCols/2, 3);
             ctx.fillText(getHighScore(), tileSize*map.numCols/2, tileSize*2);
-        },
+        }
 
         // draw the extra lives indicator
-        drawExtraLives: function() {
+        drawExtraLives() {
             ctx.fillStyle = "rgba(255,255,0,0.6)";
             const lives = extraLives == Infinity ? 1 : extraLives;
             for (let i=0; i<extraLives; i++)
                 this.drawCenterPixelSq(ctx, (2*i+3)*tileSize, (map.numRows-2)*tileSize+midTile.y,this.actorSize);
-        },
+        }
 
         // draw the current level indicator
-        drawLevelIcons: function() {
+        drawLevelIcons() {
             ctx.fillStyle = "rgba(255,255,255,0.5)";
             const w = 2;
             const h = this.actorSize;
             for (let i=0; i<level; i++)
                 ctx.fillRect((map.numCols-2)*tileSize - i*2*w, (map.numRows-2)*tileSize+midTile.y-h/2, w, h);
-        },
+        }
 
         // draw energizer items on foreground
-        drawEnergizers: function() {
+        drawEnergizers() {
             ctx.fillStyle = this.energizerColor;
             for (let i=0; i<map.numEnergizers; i++) {
                 const e = map.energizers[i];
                 if (map.currentTiles[e.x+e.y*map.numCols] == 'o')
                     this.drawCenterTileSq(ctx,e.x,e.y,this.energizerSize);
             }
-        },
+        }
 
         // draw pacman
-        drawPlayer: function(scale, opacity) {
+        drawPlayer(scale, opacity) {
             if (scale == undefined) scale = 1;
             if (opacity == undefined) opacity = 1;
             ctx.fillStyle = "rgba(255,255,0,"+opacity+")";
             this.drawCenterPixelSq(ctx, pacman.pixel.x, pacman.pixel.y, this.actorSize*scale);
-        },
+        }
 
         // draw dying pacman animation (with 0<=t<=1)
-        drawDyingPlayer: function(t) {
+        drawDyingPlayer(t) {
             let f = t*85;
             if (f <= 60) {
                 t = f/60;
@@ -3503,10 +3499,10 @@ const initRenderer = function(){
                 t = f/15;
                 this.drawPlayer(t,1-t);
             }
-        },
+        }
 
         // draw ghost
-        drawGhost: function(g) {
+        drawGhost(g) {
             if (g.mode == GHOST_EATEN)
                 return;
             let color = g.color;
@@ -3516,9 +3512,9 @@ const initRenderer = function(){
                 color = "rgba(255,255,255,0.3)";
             ctx.fillStyle = color;
             this.drawCenterPixelSq(ctx, g.pixel.x, g.pixel.y, this.actorSize);
-        },
+        }
 
-        drawFruit: function() {
+        drawFruit() {
             if (fruit.isPresent()) {
                 ctx.fillStyle = "#0F0";
                 this.drawCenterPixelSq(ctx, fruit.pixel.x, fruit.pixel.y, tileSize+2);
@@ -3530,43 +3526,39 @@ const initRenderer = function(){
                 ctx.fillStyle = "#FFF";
                 ctx.fillText(fruit.getPoints(), fruit.pixel.x, fruit.pixel.y);
             }
-        },
+        }
 
-    });
+    }
 
 
     //////////////////////////////////////////////////////////////
     // Arcade Renderer
     // (render a display close to the original arcade)
 
-    // constructor
-    const ArcadeRenderer = function(ctx,bgCtx) {
+    class ArcadeRenderer extends CommonRenderer {
+        constructor(ctx,bgCtx) {
+            super();
 
-        // inherit attributes from Common Renderer
-        CommonRenderer.call(this,ctx,bgCtx);
+            this.messageRow = 20;
+            this.pelletSize = 2;
+            this.energizerSize = tileSize;
 
-        this.messageRow = 20;
-        this.pelletSize = 2;
-        this.energizerSize = tileSize;
+            this.backColor = "#000";
+            this.floorColor = "#000";
+            this.flashWallColor = "#FFF";
 
-        this.backColor = "#000";
-        this.floorColor = "#000";
-        this.flashWallColor = "#FFF";
-
-        this.name = "Arcade";
-    };
-
-    ArcadeRenderer.prototype = newChildObject(CommonRenderer.prototype, {
+            this.name = "Arcade";
+        }
 
         // copy background canvas to the foreground canvas
-        blitMap: function() {
+        blitMap() {
             ctx.scale(1/scale,1/scale);
             ctx.drawImage(bgCanvas,-1-mapPad*scale,-1-mapPad*scale); // offset map to compenstate for misalignment
             ctx.scale(scale,scale);
             //ctx.clearRect(-mapPad,-mapPad,mapWidth,mapHeight);
-        },
+        }
 
-        drawMap: function(isCutscene) {
+        drawMap(isCutscene) {
 
             // fill background
             beginMapFrame();
@@ -3736,9 +3728,9 @@ const initRenderer = function(){
                 }
             }
             endMapFrame();
-        },
+        }
 
-        erasePellet: function(x,y,isTranslated) {
+        erasePellet(x,y,isTranslated) {
             if (!isTranslated) {
                 bgCtx.translate(mapPad,mapPad);
             }
@@ -3749,9 +3741,9 @@ const initRenderer = function(){
             if (!isTranslated) {
                 bgCtx.translate(-mapPad,-mapPad);
             }
-        },
+        }
 
-        refreshPellet: function(x,y,isTranslated) {
+        refreshPellet(x,y,isTranslated) {
             if (!isTranslated) {
                 bgCtx.translate(mapPad,mapPad);
             }
@@ -3775,10 +3767,10 @@ const initRenderer = function(){
             if (!isTranslated) {
                 bgCtx.translate(-mapPad,-mapPad);
             }
-        },
+        }
 
         // draw the current score and high score
-        drawScore: function() {
+        drawScore() {
             ctx.font = tileSize + "px ArcadeR";
             ctx.textBaseline = "top";
             ctx.fillStyle = "#FFF";
@@ -3803,10 +3795,10 @@ const initRenderer = function(){
                 }
                 ctx.fillText(highScore, 17*tileSize, y);
             }
-        },
+        }
 
         // draw ghost
-        drawGhost: function(g,alpha) {
+        drawGhost(g,alpha) {
             let backupAlpha;
             if (alpha) {
                 backupAlpha = ctx.globalAlpha;
@@ -3839,10 +3831,10 @@ const initRenderer = function(){
             if (alpha) {
                 ctx.globalAlpha = backupAlpha;
             }
-        },
+        }
 
         // draw pacman
-        drawPlayer: function() {
+        drawPlayer() {
             if (pacman.invincible) {
                 ctx.globalAlpha = 0.6;
             }
@@ -3863,10 +3855,10 @@ const initRenderer = function(){
             if (pacman.invincible) {
                 ctx.globalAlpha = 1;
             }
-        },
+        }
 
         // draw dying pacman animation (with 0<=t<=1)
-        drawDyingPlayer: function(t) {
+        drawDyingPlayer(t) {
             const frame = pacman.getAnimFrame();
 
             if (gameMode == GAME_PACMAN) {
@@ -3919,15 +3911,15 @@ const initRenderer = function(){
                 const angle = Math.floor(t/step)*step*maxAngle;
                 drawCookiemanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, frame, false, angle);
             }
-        },
+        }
 
         // draw exploding pacman animation (with 0<=t<=1)
-        drawExplodingPlayer: function(t) {
+        drawExplodingPlayer(t) {
             drawPacmanSprite(ctx, pacman.pixel.x, pacman.pixel.y, pacman.dirEnum, 0, 0, t,-3,1-t);
-        },
+        }
 
         // draw fruit
-        drawFruit: function() {
+        drawFruit() {
 
             if (fruit.getCurrentFruit()) {
                 const {name} = fruit.getCurrentFruit();
@@ -3954,9 +3946,8 @@ const initRenderer = function(){
                     }
                 }
             }
-        },
-
-    });
+        }
+    }
 
     //
     // Create list of available renderers

@@ -20,6 +20,14 @@
     <link rel="icon" type="image/png" href="icon/favicon.png"/>
 
     <style>
+        html {
+            user-select: "none";
+            touch-action: "none";
+            overscroll-behavior: "none";
+            -webkit-user-select: "none"; /* needed by Safari */
+            -webkit-touch-callout: "none"; /* <-- try to prevent long tap on iOS */
+            -webkit-overscroll-behavior: "none";
+        }
         body {
             margin:0;
             background: #000;
@@ -31,6 +39,7 @@
             src: url('font/PressStart2P.ttf');
             */
         }
+
         #canvas-warning {
             color: #FF0;
             font-size: 1.5em;

@@ -26,8 +26,7 @@ button:active { background: #ddd; color: #000; }
 
 <h1>Ms. Pac-Man — Namco WSG Sound Demo</h1>
 <p>Data decoded from <code>scott.asm</code>. 3 channels, 3.072 MHz clock, 60 Hz frame rate.
-   Waveforms are approximate — replace <code>WAVES</code> array with exact values from the
-   sound PROM (<code>82S126</code> / <code>sound.1</code>) for authentic tones.</p>
+   Waveforms from the <code>82S126</code> sound PROM dump.</p>
 
 <h2>Songs</h2>
 <div id="songs"></div>
@@ -54,33 +53,33 @@ const FREQ_TBL = [
 const DUR_TBL = [1, 2, 4, 8, 16, 32, 64, 128];
 
 // 8 WSG waveforms × 32 unsigned 4-bit samples (0–15).
-// These are approximate shapes. Replace with the actual PROM dump for authentic sound.
-// audio output = (sample - 7.5) / 7.5 * vol/15
+// Exact values from the 82S126 sound PROM (82s126.1m).
+// audio output = (sample - 8) / 8 * vol/15
 const WAVES = [
-  // 0 – half-sine  (melody in most songs)
-  [0, 2, 5, 8, 11, 13, 15, 15, 14, 12, 9, 6, 3, 1, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  // 1 – sawtooth descend  (act 2 ch2 harmony)
-  [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
-   15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
-  // 2 – soft square  (harmony)
-  [15, 15, 15, 15, 14, 13, 11, 9, 7, 5, 3, 1, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  // 3 – triangle  (act 1 harmony)
-  [0, 1, 2, 4, 5, 7, 9, 11, 13, 14, 15, 14, 13, 11, 9, 7,
-   5, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  // 4 – quarter-duty pulse
-  [15, 15, 15, 15, 15, 15, 15, 15, 0, 0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  // 5 – softer pulse
-  [10, 13, 15, 15, 13, 10, 7, 4, 2, 0, 0, 2, 4, 7, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  // 6 – narrow pulse  (eyes returning, dot eating)
-  [15, 15, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  // 7 – square
-  [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  // 0 – sine
+  [ 7,  9, 10, 11, 12, 13, 13, 14, 14, 14, 13, 13, 12, 11, 10,  9,
+    7,  5,  4,  3,  2,  1,  1,  0,  0,  0,  1,  1,  2,  3,  4,  5],
+  // 1 – complex
+  [ 7, 12, 14, 14, 13, 11,  9, 10, 11, 11, 10,  9,  6,  4,  3,  5,
+    7,  9, 11, 10,  8,  5,  4,  3,  3,  4,  5,  3,  1,  0,  0,  2],
+  // 2 – double-frequency sine
+  [ 7, 10, 12, 13, 14, 13, 12, 10,  7,  4,  2,  1,  0,  1,  2,  4,
+    7, 11, 13, 14, 13, 11,  7,  3,  1,  0,  1,  3,  7, 14,  7,  0],
+  // 3 – complex
+  [ 7, 13, 11,  8, 11, 13,  9,  6, 11, 14, 12,  7,  9, 10,  6,  2,
+    7, 12,  8,  4,  5,  7,  2,  0,  3,  8,  5,  1,  3,  6,  3,  1],
+  // 4 – sawtooth variant
+  [ 0,  8, 15,  7,  1,  8, 14,  7,  2,  8, 13,  7,  3,  8, 12,  7,
+    4,  8, 11,  7,  5,  8, 10,  7,  6,  8,  9,  7,  7,  8,  8,  7],
+  // 5 – zigzag
+  [ 7,  8,  6,  9,  5, 10,  4, 11,  3, 12,  2, 13,  1, 14,  0, 15,
+    0, 15,  1, 14,  2, 13,  3, 12,  4, 11,  5, 10,  6,  9,  7,  8],
+  // 6 – triangle
+  [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+   15, 14, 13, 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0],
+  // 7 – sawtooth (double-speed)
+  [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15],
 ];
 
 // ─── SONG DATA ───────────────────────────────────────────────────────────────

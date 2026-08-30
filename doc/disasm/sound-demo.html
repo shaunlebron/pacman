@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ms. Pac-Man — WSG Sound Demo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #111; color: #ddd; font-family: monospace; padding: 24px; max-width: 680px; }
+h1  { color: #fc0; font-size: 1.3em; margin-bottom: 6px; }
+h2  { color: #f80; font-size: 1em; border-bottom: 1px solid #333; padding-bottom: 4px;
+      margin-top: 28px; margin-bottom: 10px; }
+p   { color: #777; font-size: 0.85em; line-height: 1.5; margin-bottom: 6px; }
+code{ color: #aaa; }
+.row { display: flex; align-items: center; gap: 12px; margin: 5px 0; }
+.lbl { flex: 1; color: #bbb; font-size: 0.9em; }
+button {
+  background: #222; color: #ccc; border: 1px solid #444;
+  padding: 4px 16px; font-family: monospace; cursor: pointer;
+  min-width: 48px;
+}
+button:hover  { background: #444; }
+button:active { background: #ddd; color: #000; }
+</style>
+</head>
+<body>
+
+<h1>Ms. Pac-Man — Namco WSG Sound Demo</h1>
+<p>Data decoded from <code>scott.asm</code>. 3 channels, 3.072 MHz clock, 60 Hz frame rate.
+   Waveforms are approximate — replace <code>WAVES</code> array with exact values from the
+   sound PROM (<code>82S126</code> / <code>sound.1</code>) for authentic tones.</p>
+
+<h2>Songs</h2>
+<div id="songs"></div>
+
+<h2>SFX — Channel 1</h2>
+<div id="sfx1"></div>
+
+<h2>SFX — Channel 2</h2>
+<div id="sfx2"></div>
+
+<h2>SFX — Channel 3</h2>
+<div id="sfx3"></div>
+
+<script>
+// ─── ROM DATA ────────────────────────────────────────────────────────────────
+
+// Note frequency table  ROM 0x3BB8  (16 entries; index 0 = rest/silence)
+const FREQ_TBL = [
+  0x00, 0x57, 0x5C, 0x61, 0x67, 0x6D, 0x74, 0x7B,
+  0x82, 0x8A, 0x92, 0x9A, 0xA3, 0xAD, 0xB8, 0xC3,
+];
+
+// Duration table  ROM 0x3BB0  (frames @ 60 Hz)
+const DUR_TBL = [1, 2, 4, 8, 16, 32, 64, 128];
+
+// 8 WSG waveforms × 32 unsigned 4-bit samples (0–15).
+// These are approximate shapes. Replace with the actual PROM dump for authentic sound.
+// audio output = (sample - 7.5) / 7.5 * vol/15
+const WAVES = [
+  // 0 – half-sine  (melody in most songs)
+  [0, 2, 5, 8, 11, 13, 15, 15, 14, 12, 9, 6, 3, 1, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  // 1 – sawtooth descend  (act 2 ch2 harmony)
+  [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
+   15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+  // 2 – soft square  (harmony)
+  [15, 15, 15, 15, 14, 13, 11, 9, 7, 5, 3, 1, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  // 3 – triangle  (act 1 harmony)
+  [0, 1, 2, 4, 5, 7, 9, 11, 13, 14, 15, 14, 13, 11, 9, 7,
+   5, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  // 4 – quarter-duty pulse
+  [15, 15, 15, 15, 15, 15, 15, 15, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  // 5 – softer pulse
+  [10, 13, 15, 15, 13, 10, 7, 4, 2, 0, 0, 2, 4, 7, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  // 6 – narrow pulse  (eyes returning, dot eating)
+  [15, 15, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  // 7 – square
+  [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+];
+
+// ─── SONG DATA ───────────────────────────────────────────────────────────────
+// Each song has 1–2 channels playing simultaneously.
+// base: ROM address — used to resolve F0 loop targets (addr → array index = addr - base).
+// data: raw bytes from ROM.
+//
+// Note byte format:
+//   bits[7:5] = duration index → DUR_TBL[idx] frames
+//   bits[4:0] = 0 → sustain current note
+//              != 0 → bits[3:0] = FREQ_TBL index, bit[4] shifts octave (+1 to shift)
+//
+// Special bytes:
+//   F0 lo hi   loop to ROM address (hi<<8|lo)
+//   F1 xx      set waveform (0–7)
+//   F2 xx      set frequency shift base (W_4)
+//   F3 xx      set note volume (0–15, reset each note)
+//   F4 xx      set volume decay type (0=const 1=–1/fr 2=–1/2fr 3=–1/4fr 4=–1/8fr)
+//   FF         end
+
+// voice1: true  → channel maps to hardware voice 1 (20-bit, lower freq range)
+//         false → hardware voice 2/3 (16-bit effective, 16× higher range)
+const SONGS = [
+  {
+    name: 'Startup',
+    channels: [
+      { voice1: true,  base: 0x96B6, data: [
+        0xF1,0x02, 0xF2,0x03, 0xF3,0x0A, 0xF4,0x02,
+        0x50,0x70, 0x86,0x90, 0x81,0x90, 0x86,0x90,
+        0x68,0x6A, 0x6B,0x68, 0x6A,0x68, 0x66,0x6A,
+        0x68,0x66, 0x65,0x68, 0x86,0x81, 0x86,0xFF,
+      ]},
+      { voice1: false, base: 0x9695, data: [
+        0xF1,0x00, 0xF2,0x02, 0xF3,0x0A, 0xF4,0x00,
+        0x41,0x43,0x45, 0x86,0x8A,0x88,0x8B,
+        0x6A,0x6B,0x71, 0x6A,0x88,0x8B,
+        0x6A,0x6B,0x71, 0x6A,0x6B,0x71, 0x73,0x75,
+        0x96,0x95,0x96, 0xFF,
+      ]},
+    ],
+  },
+  {
+    name: 'Act 1',
+    channels: [
+      { voice1: true,  base: 0x9719, data: [
+        0xF1,0x03, 0xF2,0x03, 0xF3,0x0A, 0xF4,0x02,
+        0x70,0x66,0x70,0x46,0x50,0x86,0x90,
+        0x70,0x66,0x70,0x46,0x50,0x86,0x90,
+        0x70,0x66,0x70,0x46,0x50,0x86,0x90,
+        0x70,0x61,0x70,0x41,0x50,0x81,0x90,
+        0xF4,0x00, 0xA6,0xA4,0xA2,0xA1,
+        0xF4,0x01, 0x86,0x89,0x8B,0x81,0x74,0x71,0x6B,0x69,0xA6,0xFF,
+      ]},
+      { voice1: false, base: 0x96D6, data: [
+        0xF1,0x00, 0xF2,0x02, 0xF3,0x0A, 0xF4,0x00,
+        0x69,0x6B,0x69,0x86, 0x61,0x64,0x65,0x86,
+        0x86,0x64,0x66,0x64, 0x61,0x69,0x6B,0x69,
+        0x86,0x61,0x64,0x64, 0xA1,0x70,0x71,0x74,
+        0x75,0x35,0x76,0x30, 0x50,0x35,0x76,0x30,
+        0x50,0x54,0x56,0x54, 0x51,0x6B,0x69,0x6B,
+        0x69,0x6B,0x91,0x6B, 0x69,0x66,
+        0xF2,0x01, 0x74,0x76,0x74,0x71,0x74,0x71,0x6B,0x69,0xA6,0xA6,0xFF,
+      ]},
+    ],
+  },
+  {
+    name: 'Act 2',
+    channels: [
+      { voice1: true,  base: 0x3BD4, data: [
+        0xF1,0x02, 0xF2,0x03, 0xF3,0x0F, 0xF4,0x01,
+        0x82,0x70,0x69, 0x82,0x70,0x69,
+        0x83,0x70,0x6A, 0x83,0x70,0x6A,
+        0x82,0x70,0x69, 0x82,0x70,0x69,
+        0x89,0x8B,0x8D,0x8E,0xFF,
+      ]},
+      // ROM 0x3C58: melody A (plays once through, then game would cue 0x3C95 loop)
+      { voice1: false, base: 0x3C58, data: [
+        0xF1,0x00, 0xF2,0x02, 0xF3,0x0F, 0xF4,0x00,
+        0x42,0x50,0x4E,0x50, 0x49,0x50,0x46,0x50,
+        0x4E,0x49,0x70,0x66,0x70,
+        0x43,0x50,0x4F,0x50, 0x4A,0x50,0x47,0x50,
+        0x4F,0x4A,0x70,0x67,0x70,
+        0x42,0x50,0x4E,0x50, 0x49,0x50,0x46,0x50,
+        0x4E,0x49,0x70,0x66,0x70,
+        0x45,0x46,0x47,0x50, 0x47,0x48,0x49,0x50,
+        0x49,0x4A,0x4B,0x50, 0x6E,0xFF,
+      ]},
+    ],
+  },
+  {
+    name: 'Act 3',
+    channels: [
+      { voice1: true,  base: 0x9772, data: [
+        0xF1,0x02, 0xF2,0x03, 0xF3,0x0A, 0xF4,0x02,
+        0x65,0x90,0x68,0x70, 0x68,0x67,0x66,0x65,
+        0x90,0x61,0x70,0x61, 0x65,0x68,0x66,0x90,
+        0x63,0x90,0x86,0x90, 0x85,0x90,0x85,0x70,
+        0x86,0x68,0x65,0xFF,
+      ]},
+      { voice1: false, base: 0x974F, data: [
+        0xF1,0x00, 0xF2,0x02, 0xF3,0x0A, 0xF4,0x00,
+        0x65,0x64,0x65,0x88, 0x67,0x88,
+        0x61,0x63,0x64,0x85, 0x64,0x85,
+        0x6A,0x69,0x6A,0x8C,
+        0x75,0x93,0x90,0x91, 0x90,0x91,
+        0x70,0x8A,0x68,0x71,0xFF,
+      ]},
+    ],
+  },
+];
+
+// ─── EFFECT DATA ─────────────────────────────────────────────────────────────
+// 8 bytes per effect (ROM tables at 0x3B30 / 0x3B40 / 0x3B80):
+//   [0] T0: bits[6:4]=freq shift, bits[2:0]=waveform
+//   [1] T1: initial BASE_FREQ (8-bit)
+//   [2] T2: FREQ_INC per frame (signed 8-bit)
+//   [3] T3: bits[6:0]=duration in frames, bit7=bounce flag
+//   [4] T4: BASE_FREQ delta per cycle (signed 8-bit)
+//   [5] T5: cycle count  (0=infinite, n=n cycles)
+//   [6] T6: bits[7:4]=vol decay type, bits[3:0]=initial volume
+//   [7] T7: vol delta per cycle (signed 8-bit)
+
+const SFX = [
+  // Channel 1
+  { ch:1, voice1:true,  name:'extra life',         d:[0x73,0x20,0x00,0x0C,0x00,0x0A,0x1F,0x00] },
+  { ch:1, voice1:true,  name:'credit',             d:[0x72,0x20,0xFB,0x87,0x00,0x02,0x0F,0x00] },
+  // Channel 2
+  { ch:2, voice1:false, name:'siren (base)',        d:[0x59,0x01,0x06,0x08,0x00,0x00,0x02,0x00] },
+  { ch:2, voice1:false, name:'siren lv2 (155 dots)',d:[0x59,0x01,0x06,0x09,0x00,0x00,0x02,0x00] },
+  { ch:2, voice1:false, name:'siren lv3 (179 dots)',d:[0x59,0x02,0x06,0x0A,0x00,0x00,0x02,0x00] },
+  { ch:2, voice1:false, name:'siren lv4 (12 dots)', d:[0x59,0x03,0x06,0x0B,0x00,0x00,0x02,0x00] },
+  { ch:2, voice1:false, name:'siren reset',         d:[0x59,0x04,0x06,0x0C,0x00,0x06,0x02,0x00] },
+  { ch:2, voice1:false, name:'energizer eaten',     d:[0x24,0x00,0x06,0x08,0x02,0x00,0x0A,0x00] },
+  { ch:2, voice1:false, name:'eyes returning',      d:[0x36,0x07,0x87,0x6F,0x00,0x00,0x04,0x00] },
+  { ch:2, voice1:false, name:'(unused)',            d:[0x70,0x04,0x00,0x00,0x00,0x00,0x08,0x00] },
+  // Channel 3
+  { ch:3, name:'dot eat 1',           d:[0x1C,0x70,0x8B,0x08,0x00,0x01,0x06,0x00] },
+  { ch:3, name:'dot eat 2',           d:[0x1C,0x70,0x8B,0x08,0x00,0x01,0x06,0x00] },
+  { ch:3, name:'fruit eaten',         d:[0x56,0x0C,0xFF,0x8C,0x00,0x02,0x08,0x00] },
+  { ch:3, name:'ghost eaten (blue)',  d:[0x56,0x00,0x02,0x0A,0x07,0x03,0x0C,0x00] },
+  { ch:3, name:'ghosts bumping',      d:[0x36,0x38,0xFE,0x12,0xF8,0x04,0x0F,0xFC] },
+  { ch:3, name:'fruit bouncing',      d:[0x22,0x01,0x01,0x06,0x00,0x01,0x07,0x00] },
+];
+
+// ─── HARDWARE CONSTANTS ───────────────────────────────────────────────────────
+
+// The chip runs at 96 kHz (3.072 MHz ÷ 32).  At each 96 kHz tick the 20-bit
+// accumulator increments by the frequency register value.
+// Top 5 bits of the accumulator index the 32-sample waveform.
+//
+// Voice 1 (channel 1):  hardware_freq = freqReg        (IY → CH1_FREQ0, 20-bit)
+// Voice 2/3 (ch 2/3):   hardware_freq = freqReg << 4   (IY → CH2/3_FREQ1, missing lowest nibble)
+//
+// audio_freq = hardware_freq × 96000 / 2^20
+// => ch1:  audio_freq = freqReg × 96000 / 2^20   ≈ freqReg × 0.0916 Hz
+// => ch2/3 audio_freq = freqReg × 16 × 96000 / 2^20 ≈ freqReg × 1.465 Hz
+
+const CHIP_CLOCK = 96_000;  // 3.072 MHz / 32
+const RATE       = 44_100;  // output sample rate
+const SPF        = RATE / 60;  // samples per 60 Hz frame = 735
+
+// isVoice1: true for channel 1 songs/effects, false for channels 2 and 3
+function phaseInc(freqReg, isVoice1) {
+  const hw = isVoice1 ? freqReg : freqReg * 16;
+  return hw * CHIP_CLOCK * 32 / RATE / (1 << 20);
+}
+
+// ─── SONG PARSER ─────────────────────────────────────────────────────────────
+// Returns an array of { wave, freqReg, vol } — one entry per 60 Hz frame.
+
+function parseSong({ base, data }, maxFrames = 60 * 15) {
+  let wave = 0, freqInc = 0, vol = 15, volType = 0;
+  let baseFreq = 0, dirByte = 0;
+  const frames = [];
+  let ticker = 0;  // sound counter (used for rate-limited vol decay)
+  let loopCount = 0;
+  let i = 0;
+
+  while (i < data.length && frames.length < maxFrames) {
+    const b = data[i++];
+
+    if (b === 0xFF) break;
+
+    if (b === 0xF0) {
+      // Loop: 2 bytes little-endian ROM address → array index = addr - base
+      const lo = data[i++], hi = data[i++];
+      i = ((hi << 8) | lo) - base;
+      if (++loopCount > 3) break;  // cap loops
+      continue;
+    }
+
+    if (b >= 0xF1 && b <= 0xF4) {
+      const arg = data[i++];
+      if      (b === 0xF1) wave    = arg & 0x07;
+      else if (b === 0xF2) freqInc = arg;
+      else if (b === 0xF3) vol     = arg & 0x0F;
+      else if (b === 0xF4) volType = arg;
+      continue;
+    }
+
+    // Regular note byte
+    const durIdx = (b >> 5) & 0x07;
+    const dur    = DUR_TBL[durIdx];
+    const note5  = b & 0x1F;
+
+    if (note5 !== 0) {
+      dirByte  = b;
+      baseFreq = FREQ_TBL[note5 & 0x0F];
+    }
+
+    // Frequency: shift = (bit4 of dirByte ? 1 : 0) + freqInc
+    const shift   = ((dirByte & 0x10) ? 1 : 0) + freqInc;
+    const freqReg = baseFreq << shift;
+    let   curVol  = vol;  // volume resets to F3 value each note
+
+    for (let f = 0; f < dur && frames.length < maxFrames; f++) {
+      frames.push({ wave: wave & 7, freqReg, vol: curVol });
+      // Vol decay after output (type 0 = constant, 1–4 = varying rates)
+      switch (volType) {
+        case 1: if (curVol > 0) curVol--; break;
+        case 2: if ((ticker & 1) === 0 && curVol > 0) curVol--; break;
+        case 3: if ((ticker & 3) === 0 && curVol > 0) curVol--; break;
+        case 4: if ((ticker & 7) === 0 && curVol > 0) curVol--; break;
+      }
+      ticker++;
+    }
+  }
+  return frames;
+}
+
+// ─── EFFECT PARSER ───────────────────────────────────────────────────────────
+// Returns an array of { wave, freqReg, vol } — one entry per 60 Hz frame.
+//
+// Hardware behaviour per frame:
+//   baseFreq += FREQ_INC  (signed 8-bit, wraps)
+//   freqReg   = baseFreq << shift
+//   vol output, then vol decays
+// End of each duration cycle:
+//   if T5 != 0 — decrement; if now 0, stop; else restart
+//   if T5 == 0 — restart forever
+//   if bounce  — flip FREQ_INC sign; only update T1/volByte every other cycle
+
+function parseEffect(d) {
+  const shift   = (d[0] & 0x70) >> 4;
+  const wave    = d[0] & 0x07;
+  let   t1      = d[1];                              // stored base freq (updated per cycle)
+  const fi0     = d[2] >= 0x80 ? d[2] - 256 : d[2]; // initial FREQ_INC (signed)
+  const dur     = d[3] & 0x7F;                       // duration in frames
+  const bounce  = !!(d[3] & 0x80);
+  const t4      = d[4] >= 0x80 ? d[4] - 256 : d[4]; // BASE_FREQ delta per cycle (signed)
+  let   t5      = d[5];                              // cycle count (0=infinite)
+  let   volB    = d[6];                              // hi-nibble=type, lo-nibble=vol
+  const t7      = d[7] >= 0x80 ? d[7] - 256 : d[7]; // vol delta per cycle (signed)
+
+  const MAX_FRAMES = t5 === 0 ? 60 * 3 : 60 * 20;   // cap infinite effects at 3 s
+  const frames = [];
+  let fi = fi0;
+  let dirBit = false;
+  let ticker = 0;
+
+  while (frames.length < MAX_FRAMES) {
+    // Each cycle: reset BASE_FREQ from t1, reset E_VOL from volB
+    let bFreq = t1;
+    let eVol  = volB & 0x0F;
+    const eType = (volB >> 4) & 0x0F;
+
+    for (let f = 0; f < dur && frames.length < MAX_FRAMES; f++) {
+      bFreq = (bFreq + fi) & 0xFF;                   // signed wrap
+      frames.push({ wave: wave & 7, freqReg: bFreq << shift, vol: eVol });
+      switch (eType) {
+        case 1: if (eVol > 0) eVol--; break;
+        case 2: if ((ticker & 1) === 0 && eVol > 0) eVol--; break;
+        case 3: if ((ticker & 3) === 0 && eVol > 0) eVol--; break;
+        case 4: if ((ticker & 7) === 0 && eVol > 0) eVol--; break;
+      }
+      ticker++;
+    }
+
+    // Cycle end: check repeat
+    if (t5 !== 0) {
+      t5--;
+      if (t5 === 0) break;
+    }
+
+    // Restart: bounce flips freq direction, T1/volB update skipped on odd bounces
+    if (bounce) {
+      fi = -fi;
+      dirBit = !dirBit;
+      if (dirBit) continue;  // skip T1/volB update this half-cycle
+    }
+    t1   = (t1 + t4) & 0xFF;
+    volB = (volB + t7) & 0xFF;
+  }
+  return frames;
+}
+
+// ─── RENDERER ────────────────────────────────────────────────────────────────
+// channels: array of { frames, voice1 }
+//   frames: array of { wave, freqReg, vol } — one per 60 Hz frame
+//   voice1: true = hardware voice 1 (low range), false = voice 2/3 (high range)
+// Returns a Float32Array at RATE Hz, mixing all channels equally.
+
+function render(channels) {
+  const nFrames  = Math.max(...channels.map(c => c.frames.length));
+  if (!nFrames) return new Float32Array(1);
+  const nSamples = Math.ceil(nFrames * SPF) | 0;
+  const out      = new Float32Array(nSamples);
+  const phases   = channels.map(() => 0);
+
+  for (let s = 0; s < nSamples; s++) {
+    const fi = (s / SPF) | 0;
+    let mix = 0;
+    for (let c = 0; c < channels.length; c++) {
+      const fr = channels[c].frames[fi];
+      if (!fr || !fr.freqReg || !fr.vol) { phases[c] = 0; continue; }
+      phases[c] = (phases[c] + phaseInc(fr.freqReg, channels[c].voice1)) % 32;
+      const smp = WAVES[fr.wave][phases[c] | 0]; // 0–15
+      mix += ((smp - 8) / 8) * (fr.vol / 15);   // center at 8, per namcowsg3.cxx
+    }
+    out[s] = mix / channels.length;
+  }
+  return out;
+}
+
+// ─── PLAYBACK ────────────────────────────────────────────────────────────────
+
+let actx;
+function play(pcm) {
+  if (!actx) actx = new AudioContext({ sampleRate: RATE });
+  if (actx.state === 'suspended') actx.resume();
+  const buf = actx.createBuffer(1, pcm.length, RATE);
+  buf.copyToChannel(pcm, 0);
+  const src = actx.createBufferSource();
+  src.buffer = buf;
+  src.connect(actx.destination);
+  src.start();
+}
+
+// ─── UI ──────────────────────────────────────────────────────────────────────
+
+function addBtn(container, label, onclick) {
+  const row = Object.assign(document.createElement('div'), { className: 'row' });
+  const lbl = Object.assign(document.createElement('span'), { className: 'lbl', textContent: label });
+  const btn = Object.assign(document.createElement('button'), { textContent: '▶', onclick });
+  row.append(lbl, btn);
+  container.append(row);
+}
+
+// Songs
+const songDiv = document.getElementById('songs');
+for (const song of SONGS) {
+  addBtn(songDiv, song.name, () => {
+    const channels = song.channels.map(ch => ({ frames: parseSong(ch), voice1: ch.voice1 }));
+    play(render(channels));
+  });
+}
+
+// SFX grouped by channel
+const sfxDivs = { 1: document.getElementById('sfx1'),
+                  2: document.getElementById('sfx2'),
+                  3: document.getElementById('sfx3') };
+for (const sfx of SFX) {
+  addBtn(sfxDivs[sfx.ch], sfx.name, () =>
+    play(render([{ frames: parseEffect(sfx.d), voice1: sfx.voice1 }])));
+}
+</script>
+</body>
+</html>

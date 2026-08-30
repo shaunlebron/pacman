@@ -1,0 +1,61 @@
+
+--------------------------------------------------------------------------------
+	;;
+	;; MSPACMAN sound tables
+	;;
+
+	;; 2 effects for channel 1
+
+3b30  73 20 00 0c 00 0a 1f 00  		; extra life sound
+3B38  72 20 fb 87 00 02 0f 00		; credit sound
+
+	;; 8 effects for channel 2
+
+3B40  59 01 06 08 00 00 02 00		; end of energizer
+3B48  59 01 06 09 00 00 02 00		; higher frequency when 155 dots eaten
+3B50  59 02 06 0a 00 00 02 00  		; higher frequency when 179 dots eaten
+3B58  59 03 06 0b 00 00 02 00		; higher frequency when 12 dots left
+3B60  59 04 06 0c 00 06 02 00  		; reset higher frequency when 12 or less dots left
+3b68  24 00 06 08 02 00 0a 00		; engergizer eaten
+3B70  36 07 87 6f 00 00 04 00		; eyes returning sound
+3B78  70 04 00 00 00 00 08 00		; unused ???
+
+	;; 6 effects for channel 3
+
+3b80  1c 70 8b 08 00 01 06 00		; dot eating sound 1
+3B88  1c 70 8b 08 00 01 06 00		; dot eating sound 2
+3b90  56 0c ff 8c 00 02 08 00		; fruit eating sound
+3B98  56 00 02 0a 07 03 0c 00		; blue ghost eaten sound
+3bA0  36 38 fe 12 f8 04 0f fc 		; ghosts bumping during act 1 sound
+3BA8  22 01 01 06 00 01 07 00		; fruit bouncing sound
+        
+
+--------------------------------------------------------------------------------
+
+SOUND_COUNTER   EQU     4c84    ; counter, incremented each VBLANK
+                                ; (used to adjust sound volume)
+
+EFFECT_TABLE_1  EQU     3b30    ; channel 1 effects. 8 bytes per effect
+EFFECT_TABLE_2  EQU     3b40    ; channel 2 effects. 8 bytes per effect
+EFFECT_TABLE_3  EQU     3b80    ; channel 3 effects. 8 bytes per effect
+
+#if MSPACMAN
+SONG_TABLE_1    EQU     9685    ; channel 1 song table
+SONG_TABLE_2    EQU     967d    ; channel 2 song table
+SONG_TABLE_3    EQU     968d    ; channel 3 song table
+#else
+SONG_TABLE_1    EQU     3bc8
+SONG_TABLE_2    EQU     3bcc
+SONG_TABLE_3    EQU     3bd0
+#endif
+
+
+--------------------------------------------------------------------------------
+
+        ;; channel 1 : jump table to song data
+
+9685  B6 96				; #96B6	; startup song
+9687  19 97				; #9719	; act 1 song
+9689  d4 3b				; #3BD4	; act 2 song
+968B  72 97				; #9772	; act 3 song
+

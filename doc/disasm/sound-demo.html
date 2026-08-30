@@ -238,13 +238,11 @@ const SFX = [
 // => ch2/3 audio_freq = freqReg × 16 × 96000 / 2^20 ≈ freqReg × 1.465 Hz
 
 const CHIP_CLOCK = 96_000;  // 3.072 MHz / 32
-const RATE       = 44_100;  // output sample rate
-const SPF        = RATE / 60;  // samples per 60 Hz frame = 735
 
 // isVoice1: true for channel 1 songs/effects, false for channels 2 and 3
-function phaseInc(freqReg, isVoice1) {
+function phaseInc(freqReg, isVoice1, rate) {
   const hw = isVoice1 ? freqReg : freqReg * 16;
-  return hw * CHIP_CLOCK * 32 / RATE / (1 << 20);
+  return hw * CHIP_CLOCK * 32 / rate / (1 << 20);
 }
 
 // ─── SONG PARSER ─────────────────────────────────────────────────────────────
@@ -380,22 +378,24 @@ function parseEffect(d) {
 // channels: array of { frames, voice1 }
 //   frames: array of { wave, freqReg, vol } — one per 60 Hz frame
 //   voice1: true = hardware voice 1 (low range), false = voice 2/3 (high range)
-// Returns a Float32Array at RATE Hz, mixing all channels equally.
+// rate: AudioContext.sampleRate (passed in so rendering matches playback exactly)
+// Returns a Float32Array at `rate` Hz, mixing all channels equally.
 
-function render(channels) {
+function render(channels, rate) {
+  const spf      = rate / 60;
   const nFrames  = Math.max(...channels.map(c => c.frames.length));
   if (!nFrames) return new Float32Array(1);
-  const nSamples = Math.ceil(nFrames * SPF) | 0;
+  const nSamples = Math.ceil(nFrames * spf) | 0;
   const out      = new Float32Array(nSamples);
   const phases   = channels.map(() => 0);
 
   for (let s = 0; s < nSamples; s++) {
-    const fi = (s / SPF) | 0;
+    const fi = (s / spf) | 0;
     let mix = 0;
     for (let c = 0; c < channels.length; c++) {
       const fr = channels[c].frames[fi];
       if (!fr || !fr.freqReg || !fr.vol) { phases[c] = 0; continue; }
-      phases[c] = (phases[c] + phaseInc(fr.freqReg, channels[c].voice1)) % 32;
+      phases[c] = (phases[c] + phaseInc(fr.freqReg, channels[c].voice1, rate)) % 32;
       const smp = WAVES[fr.wave][phases[c] | 0]; // 0–15
       mix += ((smp - 8) / 8) * (fr.vol / 15);   // center at 8, per namcowsg3.cxx
     }
@@ -407,14 +407,19 @@ function render(channels) {
 // ─── PLAYBACK ────────────────────────────────────────────────────────────────
 
 let actx;
-function play(pcm) {
-  if (!actx) actx = new AudioContext({ sampleRate: RATE });
-  if (actx.state === 'suspended') actx.resume();
-  const buf = actx.createBuffer(1, pcm.length, RATE);
+function getActx() {
+  if (!actx) actx = new AudioContext();  // use browser's native rate
+  return actx;
+}
+
+function play(pcm, rate) {
+  const a = getActx();
+  if (a.state === 'suspended') a.resume();
+  const buf = a.createBuffer(1, pcm.length, rate);
   buf.copyToChannel(pcm, 0);
-  const src = actx.createBufferSource();
+  const src = a.createBufferSource();
   src.buffer = buf;
-  src.connect(actx.destination);
+  src.connect(a.destination);
   src.start();
 }
 
@@ -432,8 +437,9 @@ function addBtn(container, label, onclick) {
 const songDiv = document.getElementById('songs');
 for (const song of SONGS) {
   addBtn(songDiv, song.name, () => {
+    const rate = getActx().sampleRate;
     const channels = song.channels.map(ch => ({ frames: parseSong(ch), voice1: ch.voice1 }));
-    play(render(channels));
+    play(render(channels, rate), rate);
   });
 }
 
@@ -442,8 +448,10 @@ const sfxDivs = { 1: document.getElementById('sfx1'),
                   2: document.getElementById('sfx2'),
                   3: document.getElementById('sfx3') };
 for (const sfx of SFX) {
-  addBtn(sfxDivs[sfx.ch], sfx.name, () =>
-    play(render([{ frames: parseEffect(sfx.d), voice1: sfx.voice1 }])));
+  addBtn(sfxDivs[sfx.ch], sfx.name, () => {
+    const rate = getActx().sampleRate;
+    play(render([{ frames: parseEffect(sfx.d), voice1: sfx.voice1 }], rate), rate);
+  });
 }
 </script>
 </body>

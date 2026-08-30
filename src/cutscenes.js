@@ -118,7 +118,7 @@ const pacmanCutscene1 = newChildObject(scriptState, {
                 renderer.beginMapClip();
                 renderer.drawGhost(blinky);
                 renderer.renderFunc(function(ctx) {
-                    const frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
+                    let frame = Math.floor(pacman.steps/4) % 4; // slower to switch animation frame when giant
                     if (frame == 3) {
                         frame = 1;
                     }

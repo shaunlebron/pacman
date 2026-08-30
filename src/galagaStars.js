@@ -49,7 +49,7 @@ const galagaStars = (function() {
             const star = stars[i];
             const time = (t + star.phase) % flickerPeriod;
             if (time >= flickerGap) {
-                const y = star.y - ypos;
+                let y = star.y - ypos;
                 if (y < 0) {
                     y += height;
                 }

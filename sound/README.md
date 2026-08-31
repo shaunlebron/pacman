@@ -17,3 +17,7 @@ My plan:
 1. go through demo.html and understand what was put together
 2. find a way to manually move the data for the songs and effects into the game in a way that can be read
 3. move the sound engine to its own file src/sound.js
+
+## current
+
+scott-sound.asm has my highlights of the sound sections of scott.asm as i study them

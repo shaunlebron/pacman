@@ -89,12 +89,12 @@ const WAVES = [
 
 // ─── SONG DATA ───────────────────────────────────────────────────────────────
 // Songs play on channels 1 and 2 simultaneously; channel 3 has no song data.
-// vecoven-sound: "Songs are played on voices 1 and 2 simultaneously."
+// vecoven-article: "Songs are played on voices 1 and 2 simultaneously."
 //
 // Song addresses from scott.asm:
 //   SONG_TABLE_1 (ch1) at ROM 0x9685 — four 2-byte little-endian pointers
 //   SONG_TABLE_2 (ch2) at ROM 0x967D — same layout
-// (Also listed in vecoven-sound as SONG_TABLE_1 EQU 9685, SONG_TABLE_2 EQU 967d)
+// (Also listed in vecoven-article as SONG_TABLE_1 EQU 9685, SONG_TABLE_2 EQU 967d)
 //
 // Each channel entry:
 //   voice1: true  → hardware voice 1, IY→CH1_FREQ0 (scott.asm 0x2D13)
@@ -103,7 +103,7 @@ const WAVES = [
 //   data:   raw ROM bytes
 //
 // ── Note byte format ─────────────────────────────────────────────────────────
-// vecoven-sound "Regular byte": upper 3 bits = duration, lower 5 bits = W_DIR
+// vecoven-article "Regular byte": upper 3 bits = duration, lower 5 bits = W_DIR
 // scott.asm 0x2DA5–0x2DC3 (process regular byte):
 //   bits[7:5] → duration index into DUR_TBL  (scott.asm 0x2DBD–0x2DC3)
 //   bits[4:0] = 0 → sustain (keep current baseFreq / dirByte)
@@ -116,7 +116,7 @@ const WAVES = [
 //   freqReg = baseFreq << shift              (0x2EE4–0x2EE6: djnz add hl,hl)
 //
 // ── Special bytes ────────────────────────────────────────────────────────────
-// vecoven-sound "Special bytes" / scott.asm 0x2D82 jump table + handlers:
+// vecoven-article "Special bytes" / scott.asm 0x2D82 jump table + handlers:
 //   F0 lo hi  → loop: i = (hi<<8|lo) - base           (scott.asm 0x2F55)
 //   F1 xx     → set waveform 0–7                       (scott.asm 0x2F65)
 //   F2 xx     → set W_4 (freq shift base)              (scott.asm 0x2F77)
@@ -270,12 +270,12 @@ const SONGS = [
 ];
 
 // ─── EFFECT DATA ─────────────────────────────────────────────────────────────
-// Effect tables in ROM (vecoven-sound: EFFECT_TABLE_* constants):
+// Effect tables in ROM (vecoven-article: EFFECT_TABLE_* constants):
 //   Channel 1: ROM 0x3B30  (2 effects)
 //   Channel 2: ROM 0x3B40  (8 effects)
 //   Channel 3: ROM 0x3B80  (6 effects)
 //
-// Each effect is 8 bytes.  vecoven-sound "Effects are encoded with 8 bytes":
+// Each effect is 8 bytes.  vecoven-article "Effects are encoded with 8 bytes":
 //   [0] T0: bits[6:4]=freq shift, bits[2:0]=waveform        (scott.asm 0x2EDC–0x2EE3)
 //   [1] T1: BASE_FREQ initial value (8-bit unsigned)         (scott.asm 0x2E34: E_TABLE1)
 //   [2] T2: FREQ_INC per frame (signed 8-bit)               (scott.asm 0x2E38: E_TABLE2)
@@ -313,7 +313,7 @@ const SFX = [
 // doc/pie/namcowsg3.cxx playSound(): wave_data[(offset >> 25) & 0x1F]
 //
 // Voice 1 frequency range differs from voices 2/3.
-// vecoven-sound: "channel 1 has a 20 bits adder, and therefore frequency range
+// vecoven-article: "channel 1 has a 20 bits adder, and therefore frequency range
 //   is different. Note that you cannot play songs or effects designed for
 //   channel 1 on channel 2 or 3."
 //

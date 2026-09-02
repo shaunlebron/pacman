@@ -6,21 +6,26 @@
 ### Channel 1
 
 ```
-EFFECT_TABLE_1  EQU     3b30
-```
-
-```
+PAC
     1. 3b30  73 20 00 0c 00 0a 1f 00  ; extra life sound
     2. 3b38  72 20 fb 87 00 02 0f 00  ; credit sound
+MSPAC
+    (same)
 ```
 
 ### Channel 2
 
 ```
-EFFECT_TABLE_2  EQU     3b40
-```
-
-```
+PAC
+    1. 3b40  36 20 04 8c 00 00 06 00  ; end of energizer
+    2. 3b48  36 28 05 8b 00 00 06 00  ; higher frequency when 155 dots eaten
+    3. 3b50  36 30 06 8a 00 00 06 00  ; higher frequency when 179 dots eaten
+    4. 3b58  36 3c 07 89 00 00 06 00  ; higher frequency when 12 dots left
+    5. 3b60  36 48 08 88 00 00 06 00  ; reset higher frequency when 12 or less dots left
+    6. 3b68  24 00 06 08 00 00 0a 00  ; engergizer eaten
+    7. 3b70  40 70 fa 10 00 00 0a 00  ; eyes returning sound
+    8. 3b78  70 04 00 00 00 00 08 00  ; unused ???
+MSPAC
     1. 3b40  59 01 06 08 00 00 02 00  ; end of energizer
     2. 3b48  59 01 06 09 00 00 02 00  ; higher frequency when 155 dots eaten
     3. 3b50  59 02 06 0a 00 00 02 00  ; higher frequency when 179 dots eaten
@@ -34,10 +39,14 @@ EFFECT_TABLE_2  EQU     3b40
 ### Channel 3
 
 ```
-EFFECT_TABLE_3  EQU     3b80
-```
-
-```
+PAC
+    1. 3b80  42 18 fd 06 00 01 0c 00  ; dot eating sound 1
+    2. 3b88  42 04 03 06 00 01 0c 00  ; dot eating sound 2
+    3. 3b90  56 0c ff 8c 00 02 0f 00  ; fruit eating sound
+    4. 3b98  05 00 02 20 00 01 0c 00  ; blue ghost eaten sound
+    5. 3ba0  41 20 ff 86 fe 1c 0f ff  ; ghosts bumping during act 1 sound
+    6. 3ba8  70 00 01 0c 00 01 08 00  ; fruit bouncing sound
+MSPAC
     1. 3b80  1c 70 8b 08 00 01 06 00  ; dot eating sound 1
     2. 3b88  1c 70 8b 08 00 01 06 00  ; dot eating sound 2
     3. 3b90  56 0c ff 8c 00 02 08 00  ; fruit eating sound

@@ -119,12 +119,12 @@ SONG_TABLE_3    EQU     968d    ; channel 3 song table
 
 ### PACMAN
 
-SONG_TABLE_1    EQU     3bc8
-    3bc8  d4 3b ; #3bd4
+SONG_TABLE_1    EQU     3bc8    ; channel 1 song table
+    3bc8  d4 3b ; #3bd4 ; startup song
 	3bd4  f1 02 f2 03 f3 0f f4 01  82 70 69 82 70 69 83 70
 	3be4  6a 83 70 6a 82 70 69 82  70 69 89 8b 8d 8e ff
 
-    3bca  f3 3b ; #3bf3
+    3bca  f3 3b ; #3bf3 ; cutscene song
 	3bf3  f1 02 f2 03 f3 0f f4 01  67 50 30 47 30 67 50 30
 	3c03  47 30 67 50 30 47 30 4b  10 4c 10 4d 10 4e 10 67
 	3c13  50 30 47 30 67 50 30 47  30 67 50 30 47 30 4b 10
@@ -134,14 +134,14 @@ SONG_TABLE_1    EQU     3bc8
 	3c53  40 70 f0 fb 3b
 
 
-SONG_TABLE_2    EQU     3bcc
-    3bcc  58 3c ; #3c58
+SONG_TABLE_2    EQU     3bcc    ; channel 2 song table
+    3bcc  58 3c ; #3c58 ; startup song
 	3c58  f1 00 f2 02 f3 0f f4 00  42 50 4e 50 49 50 46 50
 	3c68  4e 49 70 66 70 43 50 4f  50 4a 50 47 50 4f 4a 70
 	3c78  67 70 42 50 4e 50 49 50  46 50 4e 49 70 66 70 45
 	3c88  46 47 50 47 48 49 50 49  4a 4b 50 6e ff
 
-    3bce  95 3c ; #3c95
+    3bce  95 3c ; #3c95 ; cutscene song
 	3c95  f1 01 f2 01 f3 0f f4 00  26 67 26 67 26 67 23 44
 	3ca4  42 47 30 67 2a 8b 70 26  67 26 67 26 67 23 44 42
 	3cb4  47 30 67 23 84 70 26 67  26 67 26 67 23 44 42 47

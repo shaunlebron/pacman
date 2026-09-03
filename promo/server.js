@@ -4,6 +4,12 @@ var fs = require('fs');
 var app = express();
 
 app.post('/frames/:name', function(req,res) {
+	var origin = req.headers.origin || req.headers.referer || "";
+	if (!/^https?:\/\/localhost(:\d+)?\//.test(origin)) {
+		res.status(403).send('forbidden');
+		return;
+	}
+
 	var filename = 'frames/'+req.params.name;
 
 	var dataURI = "";

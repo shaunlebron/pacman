@@ -1,0 +1,351 @@
+                 Programming For Pac-Man And Pengo Hardware
+
+                               The Hardware
+
+
+	                   Scott "Jerry" Lawrence
+	                   pacman@umlautllama.com
+
+	                       2003-March-05
+
+
+	     This document and all of the information in it is
+	    freely distributable.  I only ask that you leave it 
+	      intact, without modifying its contents.  Enjoy!
+
+
+          The most recent version of this document can be found at:
+                 http://www.cis.rit.edu/~jerry/Software/pengo
+
+	    $Id: Hardware,v 1.10 2003/03/06 02:51:54 jerry Exp $
+
+========================================
+                            THE HARDWARE
+========================================
+
+Contents:
+	...
+	Sound Hardware
+	Sound ROM Layout
+	...
+
+----------------------------------------
+
+...
+
+----------------------------------------
+                          Sound Hardware
+
+The sound hardware is actually pretty easy to work with.  There are a
+set of registers, each for a single 'voice'.  Each voice is independant
+of the other ones.  The hardware supports three such voices.
+
+  Register Name			Pac Address(es)         Pengo Address(es)
+
+  Voice 1 Waveform		0x5045			0x9005
+  Voice 1 Volume		0x5055			0x9015
+  Voice 1 Frequency		0x5050 - 0x5054		0x9011 - 0x9013
+  Voice 1 Accumulator		0x5040 - 0x5044		n/a
+
+  Voice 2 Waveform		0x504A			0x900A
+  Voice 2 Volume		0x505A			0x901A
+  Voice 2 Frequency		0x5056 - 0x5059		0x9016 - 0x9018
+  Voice 2 Accumulator		0x5046 - 0x5049		n/a
+
+  Voice 3 Waveform		0x504F			0x900F
+  Voice 3 Volume		0x505F			0x901F
+  Voice 3 Frequency		0x505B - 0x505E		0x901B - 0X901D
+  Voice 3 Accumulator		0x504B - 0x504E		n/a
+
+Each of these only look at the bottom nibble at that location, so
+instead of 256 possible values for each address, it instead is only
+16.
+
+  == Waveform ==
+
+    This is a selector to choose which 'waveform' or tonal quality will
+    be played on the voice.  There are only 8 waveforms to select from,
+    so really, only the bottom three bits of the bottom nibble are looked
+    at.  Here's my best guess at what each of them sound like:
+
+    Waveform Number	low 			high
+
+	0x00		Synth Bass (smooth)	smooth tone
+	0x01		Idling Engine		higher tone
+	0x02		Tank Engine		sawtoothy tone
+	0x03		Noisy Bass		bell-like noise
+	0x04		Pingy Bass		electric razor
+	0x05		Chirpy 			almost silent
+	0x06		almost silent		smooth nice tone
+	0x07		brappy 			droning high pitch
+
+    ...Your milage may vary.  Try out Dave Widel's test rom to experiment
+    with these. (http://www.widel.com)
+
+
+  == Frequency ==
+
+    For all voices, there are four registers which control the tone.
+    Voice 0 has an extra register which adds in ``very low''
+    frequencies, below the other standard four.  These, as with the
+    other sound registers, only use the bottom nibble of each byte.
+    Each byte is a complete octave/suboctave of the next/previous
+    byte.
+
+    The following table shows how these line up.  The addresses used in
+    this example are for Pac-Man.
+
+    Voice	0x5050	0x5051	0x5052	0x5053	0x5054
+	1	0x0f	0x0f	0x0f	0x0f	0x0f
+
+    Voice		0x5056	0x5057	0x5058	0x5054
+	2		0x0f	0x0f	0x0f	0x0f	
+
+    Voice		0x505B	0x505C	0x505D	0x505E
+	3		0x0f	0x0f	0x0f	0x0f
+
+    The way that this works is that from 0x00 to 0x0F in register 0x505C
+    is a complete octave. For example, to get a tone halfway between
+    0x01 and 0x02 in register 0x505C, you would put an 0x07 in 0x505B.
+    It should be noted that in the typical scale, there are 12 halftones
+    per octave, while here, there are 16 steps per octave.
+
+    Pengo only has three registers for frequency for each of the voices,
+    as opposed to Pac-Man's 5, 4, and 4 registers for each of the
+    voices.
+
+    Here is a table of one octave As you can see, the least significant
+    bits are in the base register, with the more significant bits being
+    in the offset registers:
+
+	Note	freg	freg+1	freg+2	freg+3
+	 C-1	0d	05	01	00	
+	 C#1	03	07	01	00
+	 D-1	09	08	01	00
+	 D#1	0a	0a	01	00
+	 E-1	0f	0b	01	00
+	 F-1	05	0d	01	00
+	 F#1	06	0f	01	00
+	 G-1	07	01	02	00
+	 G#1	08	03	02	00
+	 A-1	08	05	02	00
+	 A#1	09	07	02	00
+	 B-1	0a	09	02	00
+
+    You could store these table lookups as either one word, or four
+    bytes.  The trade off is between speed of execution and rom
+    space.  For example, you could store "F-1" as chars:
+
+    char_f1:
+	.byte	0x05, 0x0d, 0x01, 0x00
+
+    or as a word:
+
+    word_f1:
+	.word	0x01d5
+
+    That is a decision that you, as the programmer, will have to
+    figure out for yourself.  Decoding from the word requires much
+    more code.  Instead of a single reference per frequency register,
+    you need to do a bunch of shifts.  You can probably get away
+    with not doing the bitmasking after the shift, since the sound
+    hardware probably ignores that anyway.
+
+in c:
+	char * v1_frequency;
+
+        v1_frequency = 0x5050; /* 0x9010 for Pengo */
+
+	*(v1_frequency+0) = (word_f1) & 0x000f;  /* play F-1, 0x01d5 */
+	*(v1_frequency+1) = (word_f1 >> 0x04) & 0x0f;
+	*(v1_frequency+2) = (word_f1 >> 0x08) & 0x0f;
+	*(v1_frequency+3) = (word_f1 >> 0x0C) & 0x0f;
+
+in Z80 asm:
+	; this code is left as an exercise for the user.  ;)
+
+
+    Anyway, to set the hardware up to play the note, "F-1", you
+    would do it this way:
+
+in c:
+        char * v1_frequency;
+
+        v1_frequency = 0x5050; /* 0x9010 for Pengo */
+
+	*(v1_frequency+0) = 0x05;  /* play F-1, 0x01d5 */
+	*(v1_frequency+1) = 0x0d;
+	*(v1_frequency+2) = 0x01;
+	*(v1_frequency+3) = 0x00;
+
+in Z80 asm:
+        .equ    v1_freq,	0x5050  ; 0x9010 for Pengo
+
+	ld 	hl, v1_freq	; hl = v1_freq
+	ld	a, 0x05
+	ld	(hl), a		; v1_freq = 0x05
+	inc	hl
+	ld	a, 0x0d
+	ld	(hl), a		; v1_freq+1 = 0x0d
+	inc	hl
+	ld	a, 0x01
+	ld	(hl), a		; v1_freq+2 = 0x01
+	inc	hl
+	xor	a
+	ld	(hl), a		; v1_freq+3 = 0x00
+
+    Obviously, there are other things you need to do to play the sound,
+    like set the waveform, as well as enable the sound hardware itself.
+    All of that is covered in the following text.
+
+
+  == Volume ==
+
+    The volume is perhaps the simplest of the sound registers.  It
+    basically controls the volume of the tone generated by that voice.
+    There are 16 steps to the volume, starting with the voice silent at
+    0x00, and ending with the voice at maximum volume at 0x0F.
+
+
+  == Accumulator ==
+
+    Pac-Man also adds some registers which are used by the sound
+    hardware and should not be touched by your programs.  These are the
+    "accumulator" registers.  They do not exist on Pengo hardware, so
+    don't expect them to be there.
+
+  == Sound Enable Register ==
+
+    It should also be noted that there is a register that will mute all
+    of the channels.  It enables and disables all of the voices
+    simultaneously.  You should never assume that this is set or unset
+    when the machine starts up.  Set it to be the way you want it to
+    be. Generally, the first thing you do at power up should be to
+    disable sound, just in case the machine's sound hardware is filled
+    with junk data.
+
+	Pac-Man Sound Enable Register:	0x50C0
+	Pengo Sound Enable Register:	0x9041
+
+
+
+It is as easy to use as you might expect.  All that you need to do is
+to write out values to the different sound register locations to make sound.
+To get a tone to come out, you need to basically:
+    
+    * enable the sound on the hardware
+    * set the tone of a voice
+    * set the frequency of a voice
+    * set the volume of a voice
+
+If any of those are 0x00, you will not hear any tone from the
+voice(s).  Here is some example code that makes a noise:
+
+in c:
+        char * snd_en;		/* sound enable */
+        char * v1_volume;
+        char * v1_waveform;
+        char * v1_frequency2;
+
+        snd_en	      = 0x5001; /* 0x9041 for Pengo */
+        v1_volume     = 0x5055; /* 0x9015 for Pengo */
+        v1_waveform   = 0x5045; /* 0x9005 for Pengo */
+        v1_frequency2 = 0x5052; /* 0x9012 for Pengo */
+
+        *snd_en        = 1;	/* enable audio */
+        *v1_volume     = 0x0F;	/* Set the volume to maximum */
+        *v1_waveform   = 0x02;	/* switch to waveform 3 */
+	*v1_frequency2 = 0x0E;  /* set one of the frequency registers */
+
+in Z80 asm:
+        .equ    snd_en,		0x5001  ; 0x9041 for Pengo
+        .equ    v1_volume,	0x5055  ; 0x9015 for Pengo
+        .equ    v1_waveform,	0x5045  ; 0x9005 for Pengo
+        .equ    v1_freq2,	0x5052  ; 0x9012 for Pengo
+
+        ld      a, #1		; a = 1
+        ld      (snd_en),a	; enable audio
+
+        ld      a, #0x0f	; a = 0x0f
+        ld      (v1_volume),a	; Set the volume to maximum
+        ld      a, #0x02	; a = 0x02
+        ld      (v1_waveform),a	; switch to waveform 3 
+        ld      a, #0x0E	; a = 0x0E
+        ld      (v1_freq2),a	; set one of the frequency registers
+
+You can also change these from a timer interrupt, or somesuch to play
+music in the background of your program, reading simply from a table of
+predefined values.  You can also do interesting effects by varying the
+volume (tremolo) or frequency (vibrato) at a rapid rate.
+
+
+----------------------------------------
+                        Sound ROM Layout
+
+The Pac sound rom (82s126.1m) is a 256 byte rom, similar to the color
+roms mentioned previously in this document.  The rom contains the 8
+waveforms which you select with the waveform register above.
+
+The data in the Pengo roms can be seen in the following PNG images:
+
+    http://www.cis.rit.edu/~sdlpci/Software/pengo/waves/pengowaves01.png
+    http://www.cis.rit.edu/~sdlpci/Software/pengo/waves/pengowaves23.png
+    http://www.cis.rit.edu/~sdlpci/Software/pengo/waves/pengowaves45.png
+    http://www.cis.rit.edu/~sdlpci/Software/pengo/waves/pengowaves67.png
+
+The data in the Pac roms can be seen in the following PNG images:
+
+    http://www.cis.rit.edu/~sdlpci/Software/pengo/waves/pacwaves01.png
+    http://www.cis.rit.edu/~sdlpci/Software/pengo/waves/pacwaves23.png
+    http://www.cis.rit.edu/~sdlpci/Software/pengo/waves/pacwaves45.png
+    http://www.cis.rit.edu/~sdlpci/Software/pengo/waves/pacwaves67.png
+
+The waveforms are each 32 one-byte samples, with data only in the
+lower nibble.  Each sample can contain a value from 0 to 0x0f.  To
+play different wave shapes, just convert them to be 32 samples
+long, and only ranging in amplitude from 0 to 15.
+
+For example, an imperfect triangle wave (starts at 0x01, ramps up
+to 0x0F, then ramps back down to 0x1) would be stored as:
+
+	; triangle wave, similar to Pacman's waveform 6
+	.byte	0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08
+	.byte	0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
+	.byte	0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08
+	.byte	0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01
+
+Then immediately following that is the next waveform.  Here's a 
+sine wave as a second example.
+
+	; sine wave, just similar to Pac-Man's waveform 0
+	.byte	0x07, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0d, 0x0e
+	.byte	0x0e, 0x0e, 0x0d, 0x0d, 0x0c, 0x0b, 0x0a, 0x09
+	.byte	0x07, 0x05, 0x04, 0x03, 0x02, 0x01, 0x01, 0x00
+	.byte	0x00, 0x00, 0x01, 0x01, 0x02, 0x03, 0x04, 0x05
+
+Notice how it crosses the zero point at the beginning and middle
+of the waveform.
+
+If the waveform repeats twice in the 32 bytes of the sample, then
+the frequencies played back will be double what the frequency
+registers are set at.
+
+----------------------------------------
+
+...
+
+----------------------------------------
+                          Acknowledgment
+
+Many thanks go out to Clayton Cowgill for many key bits of information
+which will help your program work on real hardware.  Visit his cool
+site at http://www.multigame.com   Thanks Clay!
+
+Thanks to Dave Widel for providing his "PacTest" rom, along with
+answering oodles of little questions via email.  Check out his site,
+chock full of awesome games that run on Pac hardware at
+http://www.widel.com   Awesome!
+
+And of course, Kev "Mowerman" for supplying me a Pac-Man board with
+which I will be testing later on.  Visit his fact-filled site at
+http://users.erols.com/mowerman/   You rock, Kev!

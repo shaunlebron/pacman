@@ -1,0 +1,182 @@
+;;;--------------------------------------------------------------------------------
+;;;
+;;; VOICES:
+;;;
+;;;   The pacman hardware has basically a 3-voices. Each voice requires:
+;;;
+;;;     * Frequency: 20 bits for voice 1, 16 bits for voices 2 and 3
+;;;     * Wave number: 3 bits
+;;;     * Volume: 4 bits
+;;;
+;;;   1. The software refreshes these values every 1/60 sec, during the vblank interrupt.
+;;;   2. Each voice can play an EFFECT or a WAVE (for song). [Shaun: but effects include a wave reference?]
+;;;   3. Effects are played on any channel.
+;;;   4. Songs are played on voices 1 and 2 simultaneously.
+;;;   5. Neither Pacman nor MsPacman play song on channel 3.
+;;;
+;;;   NOTE: you cannot play songs or effects designed for channel 1 on channel 2 or 3,
+;;;   and vice-versa. This is due to the fact that channel 1 has a 20 bits adder, and therefore
+;;;   frequency range is different.
+;;;
+;;;--------------------------------------------------------------------------------
+
+(def waves "each waveform has 32 4-bit samples (taken from the sound PROM chip, not in memory)"
+  {0 "79 ab cd de ee dd cb a9  75 43 21 10 00 11 23 45"
+   1 "7c ee db 9a bb a9 64 35  79 ba 85 43 34 53 10 02"
+   2 "7a cd ed ca 74 21 01 24  7b de db 73 10 13 7e 70"
+   3 "7d b8 bd 96 be c7 9a 62  7c 84 57 20 38 51 36 31"
+   4 "08 f7 18 e7 28 d7 38 c7  48 b7 58 a7 68 97 78 87"
+   5 "78 69 5a 4b 3c 2d 1e 0f  0f 1e 2d 3c 4b 5a 69 78"
+   6 "01 23 45 67 89 ab cd ef  fe dc ba 98 76 54 32 10"
+   7 "01 23 45 67 89 ab cd ef  01 23 45 67 89 ab cd ef"})
+
+
+;; MEMORY NOTATION:
+;;
+;;   <BYTES> is string or strings.
+;;   string is prefixed with <CPU-MEM-ADDR:> to make it easier to check for copy errors
+
+(def wave-dur-table "preset wave durations (used by songs)"
+  "3bb0: 01 02 04 08 10 20 40 80")
+
+(def wave-freq-table "preset wave frequencies (used by songs)"
+  "3bb8: 00 57 5c 61 67 6d 74 7b  82 8a 92 9a a3 ad b8 c3")
+
+
+;;;--------------------------------------------------------------------------------
+;;;
+;;; EFFECTS:
+;;;
+;;;   Effects are encoded with 8 bytes :
+;;;
+;;;     * 0 : upper 3 bits = frequency shift, lower 3 bits = wave select
+;;;     * 1 : initial base frequency
+;;;     * 2 : frequency increment (added to base freq)
+;;;     * 3 : upper bit = reverse   lower 7 bits = duration
+;;;     * 4 : frequency increment (added to initial base frequency). Used when repeat > 1
+;;;     * 5 : repeat
+;;;     * 6 : upper 4 bits = volume adjust type   lower 4 bits = volume
+;;;     * 7 : volume increment
+;;;
+;;;--------------------------------------------------------------------------------
+
+(def sfx "SFX NAME -> CHANNEL -> <BYTES>"
+  {:extra-life         {1 "3b30: 73 20 00 0c 00 0a 1f 00"}
+   :credit             {1 "3b38: 72 20 fb 87 00 02 0f 00"}
+
+   :pac-siren-1        {2 "3b40: 36 20 04 8c 00 00 06 00"}
+   :pac-siren-2        {2 "3b48: 36 28 05 8b 00 00 06 00"}
+   :pac-siren-3        {2 "3b50: 36 30 06 8a 00 00 06 00"}
+   :pac-siren-4        {2 "3b58: 36 3c 07 89 00 00 06 00"}
+   :pac-siren-5        {2 "3b60: 36 48 08 88 00 00 06 00"}
+   :pac-energizer      {2 "3b68: 24 00 06 08 00 00 0a 00"}
+   :pac-eyes-return    {2 "3b70: 40 70 fa 10 00 00 0a 00"}
+   :pac-unused?        {2 "3b78: 70 04 00 00 00 00 08 00"}
+   :pac-eat-dot-1      {3 "3b80: 42 18 fd 06 00 01 0c 00"}
+   :pac-eat-dot-2      {3 "3b88: 42 04 03 06 00 01 0c 00"}
+   :pac-eat-fruit      {3 "3b90: 56 0c ff 8c 00 02 0f 00"}
+   :pac-eat-ghost      {3 "3b98: 05 00 02 20 00 01 0c 00"}
+   :pac-?1             {3 "3ba0: 41 20 ff 86 fe 1c 0f ff"}
+   :pac-?2             {3 "3ba8: 70 00 01 0c 00 01 08 00"}
+
+   :mspac-siren-1      {2 "3b40: 59 01 06 08 00 00 02 00"}
+   :mspac-siren-2      {2 "3b48: 59 01 06 09 00 00 02 00"}
+   :mspac-siren-3      {2 "3b50: 59 02 06 0a 00 00 02 00"}
+   :mspac-siren-4      {2 "3b58: 59 03 06 0b 00 00 02 00"}
+   :mspac-siren-5      {2 "3b60: 59 04 06 0c 00 06 02 00"}
+   :mspac-energizer    {2 "3b68: 24 00 06 08 02 00 0a 00"}
+   :mspac-eyes-return  {2 "3b70: 36 07 87 6f 00 00 04 00"}
+   :mspac-unused?      {2 "3b78: 70 04 00 00 00 00 08 00"}
+   :mspac-eat-dot-1    {3 "3b80: 1c 70 8b 08 00 01 06 00"}
+   :mspac-eat-dot-2    {3 "3b88: 1c 70 8b 08 00 01 06 00"}
+   :mspac-eat-fruit    {3 "3b90: 56 0c ff 8c 00 02 08 00"}
+   :mspac-eat-ghost    {3 "3b98: 56 00 02 0a 07 03 0c 00"}
+   :mspac-bump-act-1   {3 "3ba0: 36 38 fe 12 f8 04 0f fc"}
+   :mspac-fruit-bounce {3 "3ba8: 22 01 01 06 00 01 07 00"}
+   })
+
+;;;--------------------------------------------------------------------------------
+;;;
+;;; SONGS:
+;;;
+;;;   Songs are coded using a combination of special bytes and tone information.
+;;;   Special bytes allow selection of wave, volume, etc...
+;;;
+;;;   Regular byte :
+;;;
+;;;     * upper 3 bits = duration (power of 2 of these bits = duration)
+;;;     * lower 4 bits = base frequency (using a lookup table)
+;;;     * lower 5 bits are also assigned to W_DIR, where the 5th bit has a signification
+;;;
+;;;   Special byte patterns:
+;;;
+;;;     * F0 <XX> <YY> : address where song continues (allows loop or jump in rom)
+;;;     * F1 <XX>      : wave select
+;;;     * F2 <XX>      : frequency increment
+;;;     * F3 <XX>      : volume
+;;;     * F4 <XX>      : type
+;;;     * FF           : mark end of song
+;;;
+;;;--------------------------------------------------------------------------------
+
+(def songs "SONG NAME -> CHANNEL -> <BYTES>"
+  {:pac-start        {1 ["3bd4: f1 02 f2 03 f3 0f f4 01  82 70 69 82 70 69 83 70"
+                         "3be4: 6a 83 70 6a 82 70 69 82  70 69 89 8b 8d 8e ff"]
+                      2 ["3c58: f1 00 f2 02 f3 0f f4 00  42 50 4e 50 49 50 46 50"
+                         "3c68: 4e 49 70 66 70 43 50 4f  50 4a 50 47 50 4f 4a 70"
+                         "3c78: 67 70 42 50 4e 50 49 50  46 50 4e 49 70 66 70 45"
+                         "3c88: 46 47 50 47 48 49 50 49  4a 4b 50 6e ff"]}
+
+   :pac-act          {1 ["3bf3: f1 02 f2 03 f3 0f f4 01  67 50 30 47 30 67 50 30"
+                         "3c03: 47 30 67 50 30 47 30 4b  10 4c 10 4d 10 4e 10 67"
+                         "3c13: 50 30 47 30 67 50 30 47  30 67 50 30 47 30 4b 10"
+                         "3c23: 4c 10 4d 10 4e 10 67 50  30 47 30 67 50 30 47 30"
+                         "3c33: 67 50 30 47 30 4b 10 4c  10 4d 10 4e 10 77 20 4e"
+                         "3c43: 10 4d 10 4c 10 4a 10 47  10 46 10 65 30 66 30 67"
+                         "3c53: 40 70 f0 fb 3b"]
+                      2 ["3c95: f1 01 f2 01 f3 0f f4 00  26 67 26 67 26 67 23 44"
+                         "3ca4: 42 47 30 67 2a 8b 70 26  67 26 67 26 67 23 44 42"
+                         "3cb4: 47 30 67 23 84 70 26 67  26 67 26 67 23 44 42 47"
+                         "3cc4: 30 67 29 6a 2b 6c 30 2c  6d 40 2b 6c 29 6a 67 20"
+                         "3cd4: 29 6a 40 26 87 70 f0 9d  3c"
+                         "3cdd: 00 00 00"]}
+
+   :mspac-start      {1 ["96b6: f1 02 f2 03 f3 0a f4 02  50 70 86 90 81 90 86 90"
+                         "96c6: 68 6a 6b 68 6a 68 66 6a  68 66 65 68 86 81 86 ff"]
+                      2 ["9695: f1 00 f2 02 f3 0a f4 00  41 43 45 86 8a 88 8b 6a"
+                         "96a5: 6b 71 6a 88 8b 6a 6b 71  6a 6b 71 73 75 96 95 96"
+                         "96b5: ff"]}
+
+   :mspac-act-1      {1 ["9719: f1 03 f2 03 f3 0a f4 02  70 66 70 46 50 86 90 70"
+                         "9729: 66 70 46 50 86 90 70 66  70 46 50 86 90 70 61 70"
+                         "9739: 41 50 81 90 f4 00 a6 a4  a2 a1 f4 01 86 89 8b 81"
+                         "9749: 74 71 6b 69 a6 ff"]
+                      2 ["96d6: f1 00 f2 02 f3 0a f4 00  69 6b 69 86 61 64 65 86"
+                         "96e6: 86 64 66 64 61 69 6b 69  86 61 64 64 a1 70 71 74"
+                         "96f6: 75 35 76 30 50 35 76 30  50 54 56 54 51 6b 69 6b"
+                         "9706: 69 6b 91 6b 69 66 f2 01  74 76 74 71 74 71 6b 69"
+                         "9716: a6 a6 ff"]}
+
+   :mspac-act-2      {1 ["3bd4: f1 03 f2 03 f3 0a f4 02  90 7c 7b 7a 79 79 78 97"
+                         "3be4: 76 75 74 73 73 72 91 a8  88 60 4a 4c 91 95 88 95"
+                         "3bf4: 91 95 88 95 91 95 88 95  95 98 94 97 93 96 88 96"
+                         "3c04: 93 96 88 96 93 96 88 96  b6 b3 75 76 77 78 78 75"
+                         "3c14: 73 68 91 95 88 95 91 95  88 95 86 96 95 92 93 8c"
+                         "3c24: 8a 88 86 90 90 96 95 90  90 86 90 96 90 96 91 88"
+                         "3c34: 81 ff"]
+                      2 ["3c58: f1 00 f2 02 f3 0a f4 00  88 6c 71 72 73 73 71 93"
+                         "3c68: 6c 73 75 76 76 75 96 7c  7a 78 76 75 96 6c 91 a0"
+                         "3c78: 88 75 76 77 78 71 73 74  75 71 75 71 68 68 65 66"
+                         "3d78: 67 a8 ab ac 8c 86 76 75  6c 71 75 73 6b 6c 73 76"
+                         "3d88: 7a 78 78 76 73 6c aa a8  71 73 74 75 6a 6b 6c 73"
+                         "3d98: 75 76 77 78 71 73 74 75  71 75 71 68 48 40 68 67"
+                         "3da8: 68 aa a9 aa 6a 60 8a 76  75 73 71 71 73 95 75 73"
+                         "3db8: 71 68 68 61 63 6a a8 6c  76 6a 6c 91 90 91 ff"]}
+
+   :mspac-act-3      {1 ["9772: f1 02 f2 03 f3 0a f4 02  65 90 68 70 68 67 66 65"
+                         "9782: 90 61 70 61 65 68 66 90  63 90 86 90 85 90 85 70"
+                         "9792: 86 68 65 ff"
+                         "9796: ff"]
+                      2 ["974f: f1 00 f2 02 f3 0a f4 00  65 64 65 88 67 88 61 63"
+                         "975f: 64 85 64 85 6a 69 6a 8c  75 93 90 91 90 91 70 8a"
+                         "976f: 68 71 ff"]}})

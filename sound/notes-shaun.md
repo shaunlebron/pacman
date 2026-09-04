@@ -1,3 +1,4 @@
+Just reorganizing what I found from notes-vecoven.asm
 
 ## Effects
 
